@@ -1,67 +1,57 @@
-# Payload Blank Template
+# Payload v3 — контент-схема (scaffold)
 
-This template comes configured with the bare minimum to get started on anything you need.
+Стартовая схема CMS для sealife.info / sealrescue.info. Кладётся в проект **Payload v3 (внутри Next.js)**.
 
-## Quick start
+## Установка
 
-This template can be deployed directly from our Cloud hosting and it will setup MongoDB and cloud S3 object storage for media.
+```bash
+# создать проект Payload v3 + Next
+npx create-payload-app@latest
+# выбрать: Postgres, blank template
 
-## Quick Start - local setup
+# затем заменить/положить эти файлы и собрать типы
+npm install
+npm run generate:types   # сгенерирует payload-types.ts
+npm run dev              # админка на /admin
+```
 
-To spin up this template locally, follow these steps:
+Файлы из этого scaffold кладутся в `src/`:
+```
+src/
+  payload.config.ts
+  access/roles.ts
+  hooks/contentHooks.ts
+  collections/
+    Users.ts  RescueCenters.ts  Content.ts  Quizzes.ts
+    Sources.ts  Agents.ts  Community.ts
+```
 
-### Clone
+> Сеть в этой среде отключена, поэтому файлы не собирались/не проверялись здесь —
+> это готовый каркас, который компилируется в реальном проекте Payload v3 после
+> `generate:types`. Версии API могут слегка отличаться между минорными релизами Payload.
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. If you've already cloned this repo, skip to [Development](#development).
+## ENV
 
-### Development
+```
+DATABASE_URI=postgres://...        # БД в EU/EEA-регионе (персональные данные)
+PAYLOAD_SECRET=...                 # длинная случайная строка
+SERVER_URL=https://...
+```
 
-1. First [clone the repo](#clone) if you have not done so already
-2. `cd my-project && cp .env.example .env` to copy the example environment variables. You'll need to add the `MONGODB_URL` from your Cloud project to your `.env` if you want to use S3 storage and the MongoDB database that was created for you.
+## Что уже заложено (привязка к мастер-плану)
 
-3. `pnpm install && pnpm dev` to install dependencies and start the dev server
-4. open `http://localhost:3000` to open the app in your browser
+- **Локализация ru/en** нативно (Payload `localization`). DE — одна закомментированная строка в `payload.config.ts` + добавить в `TARGET_LOCALES` в `hooks/contentHooks.ts`.
+- **Human-in-the-loop**: `versions.drafts` даёт статус draft/published. Роль `agent` + хук `forceAgentDrafts` — агенты создают только черновики, публиковать/удалять не могут.
+- **Очередь на ревью**: `agent-proposals`. Агент создаёт, approve/reject — только человек.
+- **Integrity перевода**: поле `localeStatus` + хук `markTranslationsStale` (помечает перевод устаревшим при изменении русского).
+- **Каталог центров** с `socialLinks` (Instagram/FB/TikTok/LinkedIn/YouTube/VK/TG/X), статусами, `verifiedByAgentAt` / `verifiedByHumanAt`.
+- **EU compliance**: минимизация PII в UGC (email не запрашиваем), `alt` обязателен (WCAG/EAA), флаг `aiGenerated` (AI Act), хостинг БД в EU.
+- **Безопасность AI** (OWASP): отдельный API-ключ на агента, роль без DELETE, `Source.trustLevel` под allowlist, `AgentRun.cost` под бюджет-контроль, `evidence`/`sources` в каждом предложении.
 
-That's it! Changes made in `./src` will be reflected in your app. Follow the on-screen instructions to login and create your first admin user. Then check out [Production](#production) once you're ready to build and serve your app, and [Deployment](#deployment) when you're ready to go live.
+## Что НЕ входит в этот scaffold (следующие шаги)
 
-#### Docker (Optional)
-
-If you prefer to use Docker for local development instead of a local MongoDB instance, the provided docker-compose.yml file can be used.
-
-To do so, follow these steps:
-
-- Modify the `MONGODB_URL` in your `.env` file to `mongodb://127.0.0.1/<dbname>`
-- Modify the `docker-compose.yml` file's `MONGODB_URL` to match the above `<dbname>`
-- Run `docker-compose up` to start the database, optionally pass `-d` to run in the background.
-
-## How it works
-
-The Payload config is tailored specifically to the needs of most websites. It is pre-configured in the following ways:
-
-### Collections
-
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
-
-- #### Users (Authentication)
-
-  Users are auth-enabled collections that have access to the admin panel.
-
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/3.x/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
-
-- #### Media
-
-  This is the uploads enabled collection. It features pre-configured sizes, focal point and manual resizing to help you manage your pictures.
-
-### Docker
-
-Alternatively, you can use [Docker](https://www.docker.com) to spin up this template locally. To do so, follow these steps:
-
-1. Follow [steps 1 and 2 from above](#development), the docker-compose file will automatically use the `.env` file in your project root
-1. Next run `docker-compose up`
-1. Follow [steps 4 and 5 from above](#development) to login and create your first admin user
-
-That's it! The Docker instance will help you get up and running quickly while also standardizing the development environment across your teams.
-
-## Questions
-
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+1. **Эндпоинт инкремента реакций** (атомарный +1, rate-limit) — реакции без авторизации.
+2. **Контракт вывода Агента-1** (researcher) → как именно он пишет `agent-proposals`.
+3. **Кнопка «Применить предложение»** в дашборде (берёт `diff` → обновляет целевой документ как черновик).
+4. Коллекция `media` использует локальное хранилище — для прод подключить Cloudflare R2 (`@payloadcms/storage-s3`).
+5. Field-level доступ для роли `translator` (правка только переводов).

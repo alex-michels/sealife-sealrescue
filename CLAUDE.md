@@ -1,4 +1,49 @@
-# Claude Code
+# sealife-sealrescue
 
-This project uses the Payload CMS skill at `.claude/skills/payload/`.
-Start with `.claude/skills/payload/SKILL.md` for a quick reference, then see `.claude/skills/payload/reference/` for detailed docs.
+Соло-разработка + AI. Два сайта на одном бэкенде Payload v3 (внутри Next.js) + Postgres.
+
+- **sealife.info** — медиа-хаб: статьи, новости, мемы, квизы, игры. Лёгкий тон («Тюлента»).
+- **sealrescue.info** — справочник реабилитационных центров + «нашёл тюленя — что делать». Строгий тон.
+- Перелинковка sealife ↔ sealrescue в обе стороны.
+- Языки: **ru (исходный) + en**. DE добавляется позже одной строкой в `payload.config.ts` и в `TARGET_LOCALES` (`src/hooks/contentHooks.ts`).
+
+## Инварианты архитектуры (НЕ нарушать)
+
+Эти правила уже зашиты в код (access control Payload). Держать их в коде, не ослаблять:
+
+1. **Human-in-the-loop.** Агенты НИКОГДА не публикуют и не удаляют. Роль `agent` может только создавать черновики и записи в `agent-proposals`. Approve/reject — только человек (роль editor/admin).
+2. **Агенты предлагают через `agent-proposals`** (очередь на ревью). Прямо в опубликованный контент агенты не пишут.
+3. **Исходная локаль — `ru`.** Не переводить: имена центров, телефоны, адреса, URL. Перевод — заранее, в хранилище, с hreflang. Никакого перевода «на лету» на каждый запрос.
+4. **Минимизация данных (GDPR).** Email у пользователей не собираем; UGC всегда на премодерации; реакции анонимные (счётчики). Аналитика — Plausible/Umami, НЕ Google Analytics.
+5. **Маркировка AI** (EU AI Act): для AI-сгенерированного/переведённого контента ставить `aiGenerated`.
+6. **Жёсткие ограничения — в коде, а не в этом файле.** Добавляешь агенту возможность — ограничивай её в access control Payload и хуках, а не только в инструкции.
+
+## Стек и структура
+
+- Payload v3 в Next.js, Postgres (регион EU/EEA — там персональные данные).
+- `src/collections/` — коллекции; `src/access/roles.ts` — RBAC; `src/hooks/contentHooks.ts` — хуки.
+- Rich text: lexical. Локализация: нативная в Payload (`localized: true`).
+- Роли: admin / editor / translator / viewer / **agent** (служебный, по API-ключу).
+
+## Конвенции
+
+- TypeScript strict. После изменения схемы: `npm run generate:types`.
+- В каждой новой коллекции явно задавать access (read/create/update/delete). `delete` НИКОГДА не открывать роли `agent`.
+- `slug` канонический, общий для всех локалей (`/ru/slug`, `/en/slug`).
+- У `media` поле `alt` обязательно (accessibility WCAG/EAA + SEO).
+
+## Текущее состояние и следующие шаги
+
+- **Сделано:** схема контента (коллекции, RBAC, drafts, очередь `agent-proposals`).
+- **Дальше (по порядку):**
+  1. Эндпоинт инкремента реакций (атомарный +1, rate-limit) — реакции без авторизации.
+  2. Контракт вывода Агента-1 (researcher) → как он формирует `agent-proposals` (JSON: diff + evidence + confidence + sources).
+  3. Действие «Применить предложение» в дашборде (берёт `diff` → обновляет целевой документ КАК ЧЕРНОВИК).
+- **Приоритет проекта:** сначала запустить сайт с контентом → потом агенты → игры/квизы → монетизация.
+
+## Чего не делать
+
+- Не давать агентам publish/delete.
+- Не делать перевод per-request на лету (заранее + hreflang).
+- Не подключать Google Analytics.
+- Не использовать localStorage как «базу» во фронтенд-артефактах.

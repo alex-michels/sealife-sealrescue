@@ -68,6 +68,14 @@ export interface Config {
   blocks: {};
   collections: {
     users: User;
+    'rescue-centers': RescueCenter;
+    content: Content;
+    quizzes: Quiz;
+    sources: Source;
+    'agent-proposals': AgentProposal;
+    'agent-runs': AgentRun;
+    'user-submissions': UserSubmission;
+    reactions: Reaction;
     media: Media;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -77,6 +85,14 @@ export interface Config {
   collectionsJoins: {};
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
+    'rescue-centers': RescueCentersSelect<false> | RescueCentersSelect<true>;
+    content: ContentSelect<false> | ContentSelect<true>;
+    quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
+    sources: SourcesSelect<false> | SourcesSelect<true>;
+    'agent-proposals': AgentProposalsSelect<false> | AgentProposalsSelect<true>;
+    'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>;
+    'user-submissions': UserSubmissionsSelect<false> | UserSubmissionsSelect<true>;
+    reactions: ReactionsSelect<false> | ReactionsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -84,12 +100,12 @@ export interface Config {
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
-    defaultIDType: string;
+    defaultIDType: number;
   };
-  fallbackLocale: null;
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en') | ('ru' | 'en')[];
   globals: {};
   globalsSelect: {};
-  locale: null;
+  locale: 'ru' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -122,9 +138,14 @@ export interface UserAuthOperations {
  * via the `definition` "users".
  */
 export interface User {
-  id: string;
+  id: number;
+  role: 'admin' | 'editor' | 'translator' | 'viewer' | 'agent';
+  displayName?: string | null;
   updatedAt: string;
   createdAt: string;
+  enableAPIKey?: boolean | null;
+  apiKey?: string | null;
+  apiKeyIndex?: string | null;
   email: string;
   resetPasswordToken?: string | null;
   resetPasswordExpiration?: string | null;
@@ -143,12 +164,160 @@ export interface User {
   collection: 'users';
 }
 /**
+ * Каталог реабилитационных центров (sealrescue.info). Поддерживается Агентом-1.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rescue-centers".
+ */
+export interface RescueCenter {
+  id: number;
+  /**
+   * НЕ переводится — имя центра одинаково во всех локалях (правило глоссария).
+   */
+  name: string;
+  slug: string;
+  country: string;
+  region?: string | null;
+  website?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  /**
+   * @minItems 2
+   * @maxItems 2
+   */
+  location?: [number, number] | null;
+  /**
+   * Соцсети центра: Instagram / Facebook / TikTok / LinkedIn / YouTube / VK / Telegram / X.
+   */
+  socialLinks?:
+    | {
+        platform: 'instagram' | 'facebook' | 'tiktok' | 'linkedin' | 'youtube' | 'vk' | 'telegram' | 'x' | 'other';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  operatingLanguages?: ('ru' | 'en' | 'de' | 'other')[] | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  status: 'active' | 'unconfirmed' | 'link_broken' | 'needs_check';
+  verificationScore?: number | null;
+  lastCheckedAt?: string | null;
+  /**
+   * Показываем на странице: «Проверено агентом».
+   */
+  verifiedByAgentAt?: string | null;
+  /**
+   * Показываем на странице: «Проверено человеком».
+   */
+  verifiedByHumanAt?: string | null;
+  sources?: (number | Source)[] | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Источники для фактчекинга. trustLevel = allowlist (OWASP).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources".
+ */
+export interface Source {
+  id: number;
+  url: string;
+  type: 'official' | 'news' | 'social' | 'manual';
+  /**
+   * Официальным источникам — высокий trust; для критичных данных используем allowlist.
+   */
+  trustLevel?: number | null;
+  lastFetchedAt?: string | null;
+  notes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Статьи, новости, мемы, страницы (sealife.info).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content".
+ */
+export interface Content {
+  id: number;
+  type: 'article' | 'news' | 'meme' | 'page';
+  title: string;
+  /**
+   * Canonical slug — общий для всех локалей (/ru/slug, /en/slug).
+   */
+  slug: string;
+  excerpt?: string | null;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  coverImage?: (number | null) | Media;
+  /**
+   * Перелинковка sealife <-> sealrescue.
+   */
+  crossLink?: {
+    rescueCenter?: (number | null) | RescueCenter;
+  };
+  seo?: {
+    metaTitle?: string | null;
+    metaDescription?: string | null;
+  };
+  /**
+   * EU AI Act: маркировать AI-сгенерированный/переведённый контент.
+   */
+  aiGenerated?: boolean | null;
+  /**
+   * Integrity перевода (Агент 3). Заполняется автоматически.
+   */
+  localeStatus?:
+    | {
+        locale?: string | null;
+        status?: ('current' | 'stale' | 'review') | null;
+        sourceHash?: string | null;
+        translatedAt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
-  id: string;
-  alt: string;
+  id: number;
+  /**
+   * Accessibility (WCAG 2.1 AA / EAA) + SEO. Заполнять обязательно.
+   */
+  alt?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -163,10 +332,161 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quizzes".
+ */
+export interface Quiz {
+  id: number;
+  title: string;
+  slug: string;
+  description?: string | null;
+  questions?:
+    | {
+        question: string;
+        options?:
+          | {
+              text: string;
+              isCorrect?: boolean | null;
+              id?: string | null;
+            }[]
+          | null;
+        explanation?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * EU AI Act: маркировать, если вопросы сгенерированы AI.
+   */
+  aiGenerated?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
+ * Очередь на ревью. Агенты предлагают — человек решает.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-proposals".
+ */
+export interface AgentProposal {
+  id: number;
+  summary: string;
+  proposalType:
+    | 'center_update'
+    | 'new_center'
+    | 'news_draft'
+    | 'broken_link'
+    | 'stale_translation'
+    | 'seo_suggestion'
+    | 'other';
+  /**
+   * slug целевой коллекции, напр. rescue-centers
+   */
+  targetCollection?: string | null;
+  /**
+   * id целевого документа (если обновление)
+   */
+  targetId?: string | null;
+  /**
+   * Что меняется: { field: { from, to } }
+   */
+  diff?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Доказательства: URL, снапшот HTML, цитаты
+   */
+  evidence?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  sources?: (number | Source)[] | null;
+  confidence?: number | null;
+  status: 'pending' | 'approved' | 'rejected' | 'applied';
+  reviewerNotes?: string | null;
+  agentRun?: (number | null) | AgentRun;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-runs".
+ */
+export interface AgentRun {
+  id: number;
+  agentName: 'researcher' | 'content_admin' | 'translator' | 'sysadmin' | 'seo';
+  status?: ('running' | 'success' | 'failed') | null;
+  startedAt?: string | null;
+  finishedAt?: string | null;
+  proposalsCreated?: number | null;
+  /**
+   * Стоимость прогона, USD (бюджет-контроль AI API).
+   */
+  cost?: number | null;
+  logs?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Присланное пользователями: мем-подписи, правки, новые центры, жалобы.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-submissions".
+ */
+export interface UserSubmission {
+  id: number;
+  summary?: string | null;
+  submissionType: 'meme_caption' | 'correction' | 'new_center' | 'report' | 'other';
+  content: string;
+  relatedCollection?: string | null;
+  relatedId?: string | null;
+  /**
+   * НЕОБЯЗАТЕЛЬНО. Ник в TG/VK для ответа. Email не запрашиваем (минимизация данных).
+   */
+  contactHandle?: string | null;
+  status?: ('pending' | 'approved' | 'rejected') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reactions".
+ */
+export interface Reaction {
+  id: number;
+  /**
+   * collection:id, напр. content:123
+   */
+  key: string;
+  emoji: string;
+  count?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
-  id: string;
+  id: number;
   key: string;
   data:
     | {
@@ -183,20 +503,52 @@ export interface PayloadKv {
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
-  id: string;
+  id: number;
   document?:
     | ({
         relationTo: 'users';
-        value: string | User;
+        value: number | User;
+      } | null)
+    | ({
+        relationTo: 'rescue-centers';
+        value: number | RescueCenter;
+      } | null)
+    | ({
+        relationTo: 'content';
+        value: number | Content;
+      } | null)
+    | ({
+        relationTo: 'quizzes';
+        value: number | Quiz;
+      } | null)
+    | ({
+        relationTo: 'sources';
+        value: number | Source;
+      } | null)
+    | ({
+        relationTo: 'agent-proposals';
+        value: number | AgentProposal;
+      } | null)
+    | ({
+        relationTo: 'agent-runs';
+        value: number | AgentRun;
+      } | null)
+    | ({
+        relationTo: 'user-submissions';
+        value: number | UserSubmission;
+      } | null)
+    | ({
+        relationTo: 'reactions';
+        value: number | Reaction;
       } | null)
     | ({
         relationTo: 'media';
-        value: string | Media;
+        value: number | Media;
       } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   updatedAt: string;
   createdAt: string;
@@ -206,10 +558,10 @@ export interface PayloadLockedDocument {
  * via the `definition` "payload-preferences".
  */
 export interface PayloadPreference {
-  id: string;
+  id: number;
   user: {
     relationTo: 'users';
-    value: string | User;
+    value: number | User;
   };
   key?: string | null;
   value?:
@@ -229,7 +581,7 @@ export interface PayloadPreference {
  * via the `definition` "payload-migrations".
  */
 export interface PayloadMigration {
-  id: string;
+  id: number;
   name?: string | null;
   batch?: number | null;
   updatedAt: string;
@@ -240,8 +592,13 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  role?: T;
+  displayName?: T;
   updatedAt?: T;
   createdAt?: T;
+  enableAPIKey?: T;
+  apiKey?: T;
+  apiKeyIndex?: T;
   email?: T;
   resetPasswordToken?: T;
   resetPasswordExpiration?: T;
@@ -256,6 +613,174 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rescue-centers_select".
+ */
+export interface RescueCentersSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  country?: T;
+  region?: T;
+  website?: T;
+  email?: T;
+  phone?: T;
+  address?: T;
+  location?: T;
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  operatingLanguages?: T;
+  description?: T;
+  status?: T;
+  verificationScore?: T;
+  lastCheckedAt?: T;
+  verifiedByAgentAt?: T;
+  verifiedByHumanAt?: T;
+  sources?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content_select".
+ */
+export interface ContentSelect<T extends boolean = true> {
+  type?: T;
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  body?: T;
+  coverImage?: T;
+  crossLink?:
+    | T
+    | {
+        rescueCenter?: T;
+      };
+  seo?:
+    | T
+    | {
+        metaTitle?: T;
+        metaDescription?: T;
+      };
+  aiGenerated?: T;
+  localeStatus?:
+    | T
+    | {
+        locale?: T;
+        status?: T;
+        sourceHash?: T;
+        translatedAt?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "quizzes_select".
+ */
+export interface QuizzesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  description?: T;
+  questions?:
+    | T
+    | {
+        question?: T;
+        options?:
+          | T
+          | {
+              text?: T;
+              isCorrect?: T;
+              id?: T;
+            };
+        explanation?: T;
+        id?: T;
+      };
+  aiGenerated?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sources_select".
+ */
+export interface SourcesSelect<T extends boolean = true> {
+  url?: T;
+  type?: T;
+  trustLevel?: T;
+  lastFetchedAt?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-proposals_select".
+ */
+export interface AgentProposalsSelect<T extends boolean = true> {
+  summary?: T;
+  proposalType?: T;
+  targetCollection?: T;
+  targetId?: T;
+  diff?: T;
+  evidence?: T;
+  sources?: T;
+  confidence?: T;
+  status?: T;
+  reviewerNotes?: T;
+  agentRun?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "agent-runs_select".
+ */
+export interface AgentRunsSelect<T extends boolean = true> {
+  agentName?: T;
+  status?: T;
+  startedAt?: T;
+  finishedAt?: T;
+  proposalsCreated?: T;
+  cost?: T;
+  logs?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "user-submissions_select".
+ */
+export interface UserSubmissionsSelect<T extends boolean = true> {
+  summary?: T;
+  submissionType?: T;
+  content?: T;
+  relatedCollection?: T;
+  relatedId?: T;
+  contactHandle?: T;
+  status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "reactions_select".
+ */
+export interface ReactionsSelect<T extends boolean = true> {
+  key?: T;
+  emoji?: T;
+  count?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
