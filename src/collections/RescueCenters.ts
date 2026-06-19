@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isEditor, canCreateContent, canUpdateContent } from '../access/roles'
+import { isEditor } from '../access/roles'
 
 export const RescueCenters: CollectionConfig = {
   slug: 'rescue-centers',
@@ -10,9 +10,11 @@ export const RescueCenters: CollectionConfig = {
   },
   access: {
     read: () => true, // публичный справочник
-    create: canCreateContent,
-    update: canUpdateContent,
-    delete: isEditor, // агент удалять не может
+    // Агенты НЕ пишут в прод напрямую (CLAUDE.md §1–2): изменения центров идут
+    // через agent-proposals → ревью человека. Прямая запись — только людям-редакторам.
+    create: isEditor,
+    update: isEditor,
+    delete: isEditor,
   },
   fields: [
     {

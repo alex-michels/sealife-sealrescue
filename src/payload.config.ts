@@ -26,6 +26,7 @@ const Media: CollectionConfig = {
       name: 'alt',
       type: 'text',
       localized: true,
+      required: true, // Accessibility (WCAG 2.1 AA / EAA) + SEO — обязательно, а не на словах.
       admin: { description: 'Accessibility (WCAG 2.1 AA / EAA) + SEO. Заполнять обязательно.' },
     },
   ],

@@ -26,14 +26,20 @@ export const forceAgentDrafts: CollectionBeforeChangeHook = ({ data, req }) => {
  * мультилокальную сверку удобнее делать отдельным сервисом/агентом, который
  * читает документ во всех локалях. Здесь — рабочий каркас для исходной локали.
  */
-export const markTranslationsStale: CollectionBeforeChangeHook = ({ data, req }) => {
+export const markTranslationsStale: CollectionBeforeChangeHook = ({ data, req, originalDoc }) => {
   if (req.locale && req.locale !== SOURCE_LOCALE) return data
 
   const sourceText = `${data?.title ?? ''}\n${JSON.stringify(data?.body ?? '')}`
   const hash = crypto.createHash('sha256').update(sourceText).digest('hex')
 
+  // На partial-update `data.localeStatus` может отсутствовать — берём прежнее состояние
+  // из originalDoc, иначе потеряем translatedAt/sourceHash и зря пометим перевод stale.
   const existing: Array<{ locale: string; status?: string; sourceHash?: string; translatedAt?: string }> =
-    Array.isArray(data.localeStatus) ? data.localeStatus : []
+    Array.isArray(data.localeStatus)
+      ? data.localeStatus
+      : Array.isArray(originalDoc?.localeStatus)
+        ? originalDoc.localeStatus
+        : []
 
   const localeStatus = TARGET_LOCALES.map((loc) => {
     const prev = existing.find((r) => r.locale === loc)

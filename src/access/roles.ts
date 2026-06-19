@@ -1,4 +1,4 @@
-import type { Access } from 'payload'
+import type { Access, FieldAccess } from 'payload'
 
 // Роли проекта (master-plan §11 RBAC).
 // 'agent' — служебный аккаунт для AI-агентов: может ПРЕДЛАГАТЬ и писать черновики,
@@ -12,6 +12,9 @@ export const isAdmin: Access = ({ req: { user } }) => hasRole(user, 'admin')
 
 // Менять контент могут люди-редакторы; удалять — только admin/editor (агент исключён).
 export const isEditor: Access = ({ req: { user } }) => hasRole(user, 'admin', 'editor')
+
+// Field-level вариант isEditor (для access на отдельных полях, напр. status в agent-proposals).
+export const isEditorField: FieldAccess = ({ req: { user } }) => hasRole(user, 'admin', 'editor')
 
 export const isStaff: Access = ({ req: { user } }) =>
   hasRole(user, 'admin', 'editor', 'translator')

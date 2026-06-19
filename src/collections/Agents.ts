@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isEditor, isLoggedIn, canCreateContent, canUpdateContent } from '../access/roles'
+import { isEditor, isEditorField, isLoggedIn, canCreateContent, canUpdateContent } from '../access/roles'
 
 /**
  * AgentProposal — СЕРДЦЕ human-in-the-loop.
@@ -45,6 +45,8 @@ export const AgentProposals: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'pending',
+      // Статус меняет ТОЛЬКО человек: агент-созданное предложение принудительно остаётся 'pending'.
+      access: { create: isEditorField, update: isEditorField },
       options: [
         { label: 'Ожидает', value: 'pending' },
         { label: 'Одобрено', value: 'approved' },

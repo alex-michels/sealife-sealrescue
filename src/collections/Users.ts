@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isAdmin, isLoggedIn } from '../access/roles'
+import { isAdmin } from '../access/roles'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -10,7 +10,13 @@ export const Users: CollectionConfig = {
   admin: { useAsTitle: 'email', defaultColumns: ['email', 'role', 'displayName'] },
   access: {
     create: isAdmin,
-    read: isLoggedIn,
+    // Минимизация/least-privilege: список аккаунтов (email, API-ключи) видит только admin;
+    // остальные роли видят лишь себя.
+    read: ({ req: { user } }) => {
+      if (!user) return false
+      if (user.role === 'admin') return true
+      return { id: { equals: user.id } }
+    },
     update: isAdmin,
     delete: isAdmin,
   },

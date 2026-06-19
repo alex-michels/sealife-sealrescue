@@ -317,7 +317,7 @@ export interface Media {
   /**
    * Accessibility (WCAG 2.1 AA / EAA) + SEO. Заполнять обязательно.
    */
-  alt?: string | null;
+  alt: string;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
