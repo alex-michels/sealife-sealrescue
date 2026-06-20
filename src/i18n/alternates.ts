@@ -1,0 +1,35 @@
+import type { Metadata } from 'next'
+import { locales, fallbackLocale, type Locale } from './config'
+import { siteBaseUrl, type SiteConfig } from '@/site/config'
+
+/**
+ * Строит абсолютные canonical + hreflang alternates для Next metadata (M0-T10).
+ *
+ * Базовый origin берётся из конфига САЙТА (sealife.info / sealrescue.info), а не из
+ * одной env-переменной — иначе при мультидомене (M0-T08) ссылки были бы неверны,
+ * а без SERVER_URL — относительными (плохо для SEO).
+ *
+ * @param pathSuffix путь после локали ('' для главной, '/slug' для страницы)
+ * @param current    текущая локаль (для canonical)
+ * @param site       текущий сайт (источник домена)
+ *
+ * Канонический slug общий для всех локалей; x-default → fallbackLocale (en, международный фолбэк).
+ */
+export function buildAlternates(
+  pathSuffix: string,
+  current: Locale,
+  site: SiteConfig,
+): Metadata['alternates'] {
+  const base = siteBaseUrl(site)
+  const languages: Record<string, string> = {}
+  for (const locale of locales) {
+    languages[locale] = `${base}/${locale}${pathSuffix}`
+  }
+  // x-default = международный фолбэк (en): для посетителей, чей язык не ru/en.
+  languages['x-default'] = `${base}/${fallbackLocale}${pathSuffix}`
+
+  return {
+    canonical: `${base}/${current}${pathSuffix}`,
+    languages,
+  }
+}

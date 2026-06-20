@@ -1,10 +1,11 @@
 import crypto from 'crypto'
 import type { CollectionBeforeChangeHook } from 'payload'
+import { defaultLocale, targetLocales } from '../i18n/config'
 
-// Исходная локаль и целевые локали перевода.
-// DE добавляется сюда же позже одной строкой.
-const SOURCE_LOCALE = 'ru'
-const TARGET_LOCALES = ['en'] // ['en', 'de']
+// Исходная локаль и целевые локали перевода берутся из единого источника
+// (src/i18n/config.ts). DE добавляется там одной строкой — здесь ничего менять не надо.
+const SOURCE_LOCALE: string = defaultLocale
+const TARGET_LOCALES: string[] = targetLocales
 
 /**
  * Агенты публиковать не могут: любое изменение от роли 'agent'

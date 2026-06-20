@@ -72,6 +72,7 @@ export interface Config {
     content: Content;
     quizzes: Quiz;
     sources: Source;
+    glossary: Glossary;
     'agent-proposals': AgentProposal;
     'agent-runs': AgentRun;
     'user-submissions': UserSubmission;
@@ -89,6 +90,7 @@ export interface Config {
     content: ContentSelect<false> | ContentSelect<true>;
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
+    glossary: GlossarySelect<false> | GlossarySelect<true>;
     'agent-proposals': AgentProposalsSelect<false> | AgentProposalsSelect<true>;
     'agent-runs': AgentRunsSelect<false> | AgentRunsSelect<true>;
     'user-submissions': UserSubmissionsSelect<false> | UserSubmissionsSelect<true>;
@@ -362,6 +364,43 @@ export interface Quiz {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Словарь терминов и тюль-сленга: ru → перевод. Для переводчиков и Агента 3.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "glossary".
+ */
+export interface Glossary {
+  id: number;
+  /**
+   * Исходный термин на ru (ключ, общий для всех локалей). Не переводится.
+   */
+  source: string;
+  /**
+   * Эквивалент в текущей локали (en сейчас, de позже).
+   */
+  translation?: string | null;
+  category: 'term' | 'slang' | 'meme';
+  /**
+   * Альтернативные формы (напр. тюласты, тюласточки, тюль-ласты).
+   */
+  variants?:
+    | {
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Контекст/пояснение: «по контексту», «уточнять вид», смысл жаргона.
+   */
+  note?: string | null;
+  /**
+   * Не переводить (имена/бренды/телефоны). Подсказка для integrity-проверки Агента 3.
+   */
+  doNotTranslate?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Очередь на ревью. Агенты предлагают — человек решает.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -524,6 +563,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'sources';
         value: number | Source;
+      } | null)
+    | ({
+        relationTo: 'glossary';
+        value: number | Glossary;
       } | null)
     | ({
         relationTo: 'agent-proposals';
@@ -719,6 +762,25 @@ export interface SourcesSelect<T extends boolean = true> {
   trustLevel?: T;
   lastFetchedAt?: T;
   notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "glossary_select".
+ */
+export interface GlossarySelect<T extends boolean = true> {
+  source?: T;
+  translation?: T;
+  category?: T;
+  variants?:
+    | T
+    | {
+        value?: T;
+        id?: T;
+      };
+  note?: T;
+  doNotTranslate?: T;
   updatedAt?: T;
   createdAt?: T;
 }

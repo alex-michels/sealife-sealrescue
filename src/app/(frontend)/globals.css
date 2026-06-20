@@ -1,0 +1,147 @@
+@import 'tailwindcss';
+
+/*
+ * Дизайн-токены — DESIGN_BRIEF v1. Одна токен-система, два режима.
+ * Палитра общая для sealife/sealrescue; различаются плотность, радиусы и смелость акцента.
+ * Тема переключается через [data-theme] на <html> (позже — по домену, M0-T08).
+ */
+@theme {
+  /* — Палитра (сырые токены → утилиты bg-fog / text-ink / …) — */
+  --color-fog: #e9ecec; /* холодная туманная база (НЕ тёплый крем) */
+  --color-ink: #16262b; /* чернильно-сине-зелёный текст */
+  --color-baltic: #1e5b5b; /* балтийский тил — primary */
+  --color-pebble: #a99c8c; /* серо-бежевый, «тюленья шкура» */
+  --color-buoy: #ee5a36; /* сигнальный коралл — ТОЛЬКО критичные CTA */
+  --color-sandbank: #e7d9c0; /* тёплый песок — фон карточек, дозированно */
+
+  /* — Семантические токены (значения подставляются темой ниже) — */
+  --color-canvas: var(--t-canvas);
+  --color-fg: var(--t-fg);
+  --color-card: var(--t-card);
+  --color-primary: var(--t-primary);
+  --color-accent: var(--t-accent);
+  --color-muted: var(--t-muted);
+  --color-line: var(--t-line);
+
+  /* — Шрифты (CSS-переменные из next/font) — */
+  --font-sans: var(--ff-body);
+  --font-display: var(--ff-display);
+  --font-mono: var(--ff-mono);
+
+  /* — Тип-шкала (модульная, единая для обоих сайтов) — */
+  --text-xs: 0.78rem;
+  --text-sm: 0.9rem;
+  --text-base: 1rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.95rem;
+  --text-3xl: 2.6rem;
+  --text-4xl: clamp(2.6rem, 6vw, 3.6rem);
+  --text-5xl: clamp(3.2rem, 8vw, 4.6rem);
+
+  /* — Радиусы (значения подставляются темой) — */
+  --radius-card: var(--t-radius-card);
+  --radius-btn: var(--t-radius-btn);
+}
+
+/* По умолчанию = sealife (игривый: крупный радиус, тёплые карточки, смелее акцент). */
+:root,
+[data-theme='sealife'] {
+  --t-canvas: var(--color-fog);
+  --t-fg: var(--color-ink);
+  --t-card: var(--color-sandbank);
+  --t-primary: var(--color-baltic);
+  --t-accent: var(--color-buoy);
+  --t-muted: var(--color-pebble);
+  --t-line: color-mix(in srgb, var(--color-ink) 14%, transparent);
+
+  --t-radius-card: 1.5rem; /* tactile, «умиляющийся» */
+  --t-radius-btn: 999px;
+}
+
+/* sealrescue (серьёзный: умереннее радиус, больше воздуха, фото-forward). */
+[data-theme='sealrescue'] {
+  --t-canvas: var(--color-fog);
+  --t-fg: var(--color-ink);
+  --t-card: #ffffff;
+  --t-primary: var(--color-baltic);
+  --t-accent: var(--color-buoy);
+  --t-muted: var(--color-pebble);
+  --t-line: color-mix(in srgb, var(--color-ink) 12%, transparent);
+
+  --t-radius-card: 0.6rem;
+  --t-radius-btn: 0.5rem;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-canvas);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    line-height: 1.05;
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  /* Видимый keyboard-focus — требование WCAG 2.1 AA / EAA. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  }
+}
+
+@layer components {
+  /* Лёгкая типографика для richText-контента (без плагина typography). */
+  .article-body {
+    max-width: 68ch;
+    line-height: 1.7;
+  }
+  .article-body p {
+    margin: 1rem 0;
+  }
+  .article-body h2 {
+    margin: 2rem 0 0.75rem;
+    font-size: var(--text-2xl);
+  }
+  .article-body h3 {
+    margin: 1.5rem 0 0.5rem;
+    font-size: var(--text-xl);
+  }
+  .article-body ul,
+  .article-body ol {
+    margin: 1rem 0;
+    padding-left: 1.4rem;
+  }
+  .article-body li {
+    margin: 0.35rem 0;
+  }
+  .article-body a {
+    color: var(--color-primary);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
+/* Уважать prefers-reduced-motion (DESIGN_BRIEF §5). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
