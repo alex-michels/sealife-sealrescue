@@ -10,8 +10,10 @@ import { RescueCenters } from './collections/RescueCenters'
 import { Content } from './collections/Content'
 import { Quizzes } from './collections/Quizzes'
 import { Sources } from './collections/Sources'
+import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
+import { locales, defaultLocale, localeLabels } from './i18n/config'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -42,6 +44,7 @@ export default buildConfig({
     Content,
     Quizzes,
     Sources,
+    Glossary,
     AgentProposals,
     AgentRuns,
     UserSubmissions,
@@ -49,12 +52,10 @@ export default buildConfig({
     Media,
   ],
   localization: {
-    locales: [
-      { label: 'Русский', code: 'ru' },
-      { label: 'English', code: 'en' },
-      // { label: 'Deutsch', code: 'de' }, // включить позже одной строкой
-    ],
-    defaultLocale: 'ru',
+    // Локали берутся из единого источника (src/i18n/config.ts).
+    // Добавить DE = одна строка там, не здесь.
+    locales: locales.map((code) => ({ code, label: localeLabels[code] })),
+    defaultLocale,
     fallback: true,
   },
   db: postgresAdapter({
