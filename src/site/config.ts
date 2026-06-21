@@ -11,8 +11,7 @@ export const siteIds = ['sealife', 'sealrescue'] as const
 export type SiteId = (typeof siteIds)[number]
 
 export interface SiteConfig {
-  id: SiteId
-  theme: 'sealife' | 'sealrescue' // режим дизайн-токенов (DESIGN_BRIEF)
+  id: SiteId // = режим дизайна; ставится как [data-site] на <html>
   domain: string
   brand: Record<Locale, string>
   tagline: Record<Locale, string>
@@ -21,17 +20,16 @@ export interface SiteConfig {
 export const sites: Record<SiteId, SiteConfig> = {
   sealife: {
     id: 'sealife',
-    theme: 'sealife',
     domain: 'sealife.info',
-    brand: { ru: 'Тюлень-Инфо', en: 'SeaLife Info' },
+    // Вордмарк с точкой (DESIGN_BRIEF §5 / CLAUDE.md).
+    brand: { ru: 'Тюлень.Инфо', en: 'SeaLife.Info' },
     tagline: {
-      ru: 'Всё о тюленях: факты, новости, мемы.',
-      en: 'Everything about seals: facts, news, memes.',
+      ru: 'Всё о тюленях: факты, новости, мемы, квизы и тюленевая наука без занудства.',
+      en: 'Everything about seals: facts, news, memes, quizzes and seal science without the boredom.',
     },
   },
   sealrescue: {
     id: 'sealrescue',
-    theme: 'sealrescue',
     domain: 'sealrescue.info',
     brand: { ru: 'Спасение тюленей', en: 'Seal Rescue' },
     tagline: {

@@ -1,26 +1,26 @@
 import type { ButtonHTMLAttributes } from 'react'
 import { cx } from './cx'
 
-export type ButtonVariant = 'primary' | 'accent' | 'ghost'
+export type ButtonVariant = 'primary' | 'critical' | 'ghost'
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
+// min-h-11 (≈44px) для md/lg — комфортная цель на мобиле; sm ≥ 24px (WCAG 2.2 §2.5.8).
 const base =
   'inline-flex items-center justify-center gap-2 rounded-btn font-medium transition-opacity disabled:opacity-50 disabled:pointer-events-none'
 
 const variants: Record<ButtonVariant, string> = {
-  // primary — балтийский тил, основной CTA.
-  primary: 'bg-primary text-fog hover:opacity-90',
-  // accent — сигнальный коралл (--buoy). ТОЛЬКО критичные CTA («что делать»).
-  // Текст светлый + крупный/жирный → контраст AA для large-text (DESIGN_BRIEF §6).
-  accent: 'bg-accent text-fog font-semibold hover:opacity-90',
+  // primary — балтийский тил (baltic + white ≈ 7.8:1 ✅).
+  primary: 'bg-primary text-white hover:opacity-90',
+  // critical — emergency CTA. --buoy-dark + white (✅), НЕ --buoy (3.4:1 ❌).
+  critical: 'bg-critical text-white font-semibold hover:opacity-90',
   // ghost — второстепенные действия.
-  ghost: 'bg-transparent text-fg border border-line hover:bg-card',
+  ghost: 'border border-border bg-transparent text-text hover:bg-surface',
 }
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-base',
-  lg: 'px-6 py-3 text-lg',
+  sm: 'min-h-6 px-3 py-1.5 text-sm',
+  md: 'min-h-11 px-4 py-2 text-base',
+  lg: 'min-h-11 px-6 py-3 text-lg',
 }
 
 /** Классы кнопки для переиспользования на ссылках (`<a>` / `<Link>`). */

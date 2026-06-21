@@ -11,12 +11,16 @@ import { StatusDot, type CenterStatus } from '@/app/(frontend)/_components/ui/St
 export const metadata: Metadata = { title: 'Styleguide', robots: { index: false, follow: false } }
 
 const palette = [
-  ['--fog', '#E9ECEC', 'bg-fog'],
-  ['--ink', '#16262B', 'bg-ink'],
+  ['--fog', '#EDF1F3', 'bg-fog'],
+  ['--ink', '#15303A', 'bg-ink'],
   ['--baltic', '#1E5B5B', 'bg-baltic'],
+  ['--azure (текст/ссылки)', '#2C6A8F', 'bg-azure'],
+  ['--azure-bright (декор)', '#3E7FA6', 'bg-azure-bright'],
+  ['--azure-soft (фон)', '#DDEBF3', 'bg-azure-soft'],
   ['--pebble', '#A99C8C', 'bg-pebble'],
-  ['--buoy', '#EE5A36', 'bg-buoy'],
   ['--sandbank', '#E7D9C0', 'bg-sandbank'],
+  ['--buoy (декор)', '#EE5A36', 'bg-buoy'],
+  ['--buoy-dark (CTA)', '#BE3F22', 'bg-buoy-dark'],
 ] as const
 
 const statuses: CenterStatus[] = ['active', 'needs_check', 'link_broken', 'unconfirmed']
@@ -30,19 +34,19 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function ThemeDemo({ theme }: { theme: 'sealife' | 'sealrescue' }) {
+function SiteDemo({ site }: { site: 'sealife' | 'sealrescue' }) {
   return (
-    <div data-theme={theme} className="flex-1 rounded-card bg-canvas p-5">
+    <div data-site={site} className="flex-1 rounded-card border border-border bg-bg p-5">
       <p className="mb-3 font-mono text-xs uppercase tracking-wide text-muted">
-        data-theme=&quot;{theme}&quot;
+        data-site=&quot;{site}&quot;
       </p>
       <Card className="mb-3">
         <h3 className="text-xl">Карточка</h3>
-        <p className="mt-1 text-muted">Радиус и поверхность зависят от темы.</p>
+        <p className="mt-1 text-muted">Радиус и шрифт заголовка зависят от режима.</p>
       </Card>
       <div className="flex flex-wrap gap-2">
         <Button variant="primary">Primary</Button>
-        <Button variant="accent">Что делать</Button>
+        <Button variant="critical">Что делать</Button>
         <Button variant="ghost">Ghost</Button>
       </div>
     </div>
@@ -65,7 +69,7 @@ export default async function StyleguidePage({
       <Section title="Палитра">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {palette.map(([name, hex, bg]) => (
-            <div key={name} className="overflow-hidden rounded-card border border-line">
+            <div key={name} className="overflow-hidden rounded-card border border-border">
               <div className={`${bg} h-16`} />
               <div className="p-3 font-mono text-xs">
                 <div>{name}</div>
@@ -78,7 +82,7 @@ export default async function StyleguidePage({
 
       <Section title="Тип-шкала">
         <div className="space-y-1">
-          <p className="text-5xl">Тюлень-Инфо 5xl</p>
+          <p className="text-5xl">Тюлень.Инфо 5xl</p>
           <p className="text-4xl">Заголовок 4xl</p>
           <p className="text-3xl">Заголовок 3xl</p>
           <p className="text-2xl">Подзаголовок 2xl</p>
@@ -97,7 +101,7 @@ export default async function StyleguidePage({
           <Button variant="primary" size="sm">
             Primary sm
           </Button>
-          <Button variant="accent" size="lg">
+          <Button variant="critical" size="lg">
             Что делать →
           </Button>
           <Button variant="ghost">Ghost</Button>
@@ -119,10 +123,10 @@ export default async function StyleguidePage({
         </div>
       </Section>
 
-      <Section title="Два режима">
+      <Section title="Два режима (data-site)">
         <div className="flex flex-col gap-4 sm:flex-row">
-          <ThemeDemo theme="sealife" />
-          <ThemeDemo theme="sealrescue" />
+          <SiteDemo site="sealife" />
+          <SiteDemo site="sealrescue" />
         </div>
       </Section>
     </div>

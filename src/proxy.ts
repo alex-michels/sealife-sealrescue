@@ -7,9 +7,10 @@ import { resolveSiteId } from '@/site/config'
  *  1. Мультидомен (M0-T08): хост → сайт → внутренний rewrite на сегмент [site].
  *  2. Локализация (M0-T09): нет локали в пути → redirect на нужную локаль.
  *
- * Авто-выбор языка: иностранец с en-браузером попадает на /en, российский — на /ru.
- * Приоритет: явный выбор (cookie NEXT_LOCALE) > язык браузера (Accept-Language) > ru.
- * Ручное переключение языка запоминается (см. установку cookie в ветке rewrite).
+ * Авто-выбор языка (БЕЗ forced-редиректа, только на путях без локали): русскоязычные → ru,
+ * остальные (вкл. неподдерживаемые языки и запросы без заголовка) → en.
+ * Приоритет: явный выбор (cookie NEXT_LOCALE) > Accept-Language (q-веса) > fallbackLocale (en).
+ * Язык запоминается ТОЛЬКО при явном выборе в LanguageSwitcher (cookie ставит он, не proxy).
  *
  * Payload (admin/api) и служебные пути исключены matcher'ом ниже.
  */
@@ -63,19 +64,10 @@ export function proxy(req: NextRequest) {
   }
 
   // Есть локаль → rewrite на внутренний сегмент [site]. URL пользователя не меняется.
+  // Язык НЕ запоминаем здесь — cookie NEXT_LOCALE ставит LanguageSwitcher при явном выборе.
   const url = req.nextUrl.clone()
   url.pathname = `/${siteId}${pathname}`
   const res = NextResponse.rewrite(url)
-
-  // Запоминаем текущую локаль как предпочтение (в т.ч. ручное переключение):
-  // следующий заход на «/» откроется в ней. Ставим только при изменении — дружелюбно к кэшу.
-  if (req.cookies.get('NEXT_LOCALE')?.value !== pathLocale) {
-    res.cookies.set('NEXT_LOCALE', pathLocale, {
-      path: '/',
-      maxAge: 60 * 60 * 24 * 365,
-      sameSite: 'lax',
-    })
-  }
 
   // Дев/превью-override сайта.
   if (searchParams.get('site')) res.cookies.set('site', siteId, { path: '/' })
