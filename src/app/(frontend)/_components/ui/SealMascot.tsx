@@ -1,27 +1,30 @@
 import { cx } from './cx'
 
 /**
- * Маскот-тюлень — фирменный логотип sealife (DESIGN_BRIEF §5: усы, крап, тонкая ирония,
- * без «милого зверинца»). Чистый SVG + CSS-анимации (никакого client JS):
- * иногда моргает и иногда показывает язык («blep»). Сам SVG не двигается.
+ * Маскот-тюлень — общий иконочный логотип ОБОИХ сайтов (DESIGN_BRIEF §5: усы, крап,
+ * тонкая ирония, без «милого зверинца»). Один компонент, без дублирования SVG. Чистый
+ * SVG, никакого client JS. Декоративный (aria-hidden): смысл несёт текстовый вордмарк рядом.
  *
- * ВАЖНО: только для sealife. sealrescue — серьёзный/calm тон, маскот туда НЕ ставим.
- * Анимации висят на `[data-site='sealife']` (globals.css) и гасятся prefers-reduced-motion.
- * Декоративный (aria-hidden): смысл несёт текстовый вордмарк рядом.
+ * `animated` включает CSS-анимации (иногда моргает / показывает язык «blep»). Применяем
+ * только на hero sealife. Маленький логотип в header и весь sealrescue (calm-тон) —
+ * статичные. Анимации висят на `[data-site='sealife'] .seal-mascot--animated` (globals.css)
+ * и гасятся prefers-reduced-motion. Сам SVG не двигается.
  *
- * Цвета — из дизайн-токенов: шкура = pebble (§ «шкура»), глаза/нос = text(ink),
- * язык = accent(buoy, декор), блик/мордочка = surface.
+ * Цвета: шкура = --seal-coat (очень светлый whitecoat-серый, см. globals.css),
+ * глаза/нос = text(ink), язык = accent(buoy, декор), мордочка = surface.
  */
 export function SealMascot({
   size = 32,
+  animated = false,
   className,
 }: {
   size?: number
+  animated?: boolean
   className?: string
 }) {
   return (
     <svg
-      className={cx('seal-mascot', className)}
+      className={cx('seal-mascot', animated && 'seal-mascot--animated', className)}
       width={size}
       height={size}
       viewBox="0 0 64 64"
@@ -29,15 +32,15 @@ export function SealMascot({
       aria-hidden="true"
       focusable="false"
     >
-      {/* Голова (шкура = pebble) с тёмным контуром (ink). */}
+      {/* Голова (шкура = очень светлый whitecoat-серый); тёмный ink-контур держит контраст с фоном. */}
       <path
         d="M32 7C17.5 7 8 17 8 31c0 14 10.5 26 24 26s24-12 24-26C56 17 46.5 7 32 7Z"
-        fill="var(--color-pebble)"
+        fill="var(--seal-coat)"
         stroke="var(--color-text)"
         strokeWidth="2"
       />
-      {/* Мокрый блик на макушке (очень слабый). */}
-      <ellipse cx="25" cy="16" rx="7" ry="3.6" fill="var(--color-surface)" opacity="0.22" />
+      {/* Мягкий белый блик на макушке — намёк на пушистую whitecoat-шерсть. */}
+      <ellipse cx="25" cy="16" rx="7" ry="3.6" fill="#ffffff" opacity="0.4" />
 
       {/* Мордочка — светлая подушечка под нос/усы/язык. */}
       <ellipse cx="32" cy="41" rx="13" ry="9" fill="var(--color-surface)" />

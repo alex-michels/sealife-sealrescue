@@ -137,13 +137,20 @@
   }
 
   /*
-   * Маскот-тюлень (SealMascot) — только sealife. Анимации висят на [data-site='sealife'],
-   * gating через prefers-reduced-motion ниже. Базовое (resting) состояние и 0%/100% кадры
-   * совпадают: глаза открыты, язык спрятан — поэтому при reduced-motion
-   * (анимация «доигрывается» до 100% мгновенно) тюлень просто сидит спокойно.
+   * Маскот-тюлень (SealMascot) — общий иконочный логотип обоих сайтов. Анимируется
+   * (моргание/«blep») только инстанс с .seal-mascot--animated и только на sealife (hero).
+   * Маленький логотип в header и весь sealrescue — статичные. Базовое (resting) состояние =
+   * 0%/100% кадры: глаза открыты, язык спрятан — поэтому при reduced-motion (анимация
+   * мгновенно «доигрывается» до 100%) тюлень просто сидит спокойно.
    */
   .seal-mascot {
     display: inline-block;
+    /*
+     * Шкура маскота — очень светлый «whitecoat»-серый (НЕ pure white): контраст с фоном
+     * держит тёмный ink-контур, поэтому светлая заливка остаётся читаемой. Локальная
+     * переменная (не @theme): не используется утилитой Tailwind, иначе v4 её tree-shake'нет.
+     */
+    --seal-coat: #e0e6e9;
   }
   .seal-eye {
     transform-box: fill-box;
@@ -154,10 +161,10 @@
     transform-origin: top center;
     transform: scaleY(0); /* язык спрятан, пока нет анимации */
   }
-  [data-site='sealife'] .seal-eye {
+  [data-site='sealife'] .seal-mascot--animated .seal-eye {
     animation: seal-blink 5.6s ease-in-out infinite;
   }
-  [data-site='sealife'] .seal-tongue {
+  [data-site='sealife'] .seal-mascot--animated .seal-tongue {
     animation: seal-blep 8.2s ease-in-out infinite;
   }
 

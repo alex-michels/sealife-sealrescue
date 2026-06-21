@@ -17,8 +17,8 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
     <div className="mx-auto max-w-5xl px-5 py-10">
       <section className="dapple rounded-card px-6 py-12">
         <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-          {/* Маскот рядом с вордмарком — только sealife (§5). */}
-          <SealMascot size={104} className="shrink-0" />
+          {/* Анимированный маскот рядом с вордмарком (моргает / показывает язык) — только sealife (§5). */}
+          <SealMascot size={104} animated className="shrink-0" />
           <div>
             <h1 className="text-5xl">{site.brand[locale]}</h1>
             <p className="mt-4 max-w-2xl text-xl text-muted">{site.tagline[locale]}</p>

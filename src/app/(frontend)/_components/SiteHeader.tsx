@@ -29,12 +29,8 @@ export function SiteHeader({ site, lang }: { site: SiteId; lang: LegalLang }) {
           aria-label={HOME_LABEL[lang]}
           className="inline-flex min-h-11 items-center gap-2 text-lg"
         >
-          {/* Анимированный маскот — только sealife (§5). sealrescue остаётся со спокойным эмодзи. */}
-          {site === 'sealife' ? (
-            <SealMascot size={32} />
-          ) : (
-            <span aria-hidden="true">🦭</span>
-          )}
+          {/* Общий иконочный логотип обоих сайтов; в header он статичный (без анимации). */}
+          <SealMascot size={32} />
           <span className="wordmark">{wordmark}</span>
         </Link>
         {lang !== 'de' && <LanguageSwitcher current={lang as Locale} />}
