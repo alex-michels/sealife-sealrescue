@@ -7,6 +7,7 @@ import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { WhiskerDivider } from '../ui/WhiskerDivider'
 import { SealMascot } from '../ui/SealMascot'
 import { buttonClasses } from '../ui/Button'
+import { sectionsForSite } from '@/site/sections'
 
 export type HomeDoc = { id: number | string; slug: string; title: string; type: string }
 
@@ -27,6 +28,23 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
       </section>
 
       <WhiskerDivider className="my-6" />
+
+      {/* Хаб разделов — главная как точка входа во весь сайт (M0-T19). */}
+      <h2 className="mb-5 text-2xl">{locale === 'en' ? 'Explore' : 'Разделы'}</h2>
+      <EqualCardGrid>
+        {sectionsForSite('sealife').map((s) => (
+          <li key={s.slug}>
+            <Link href={`/${locale}/${s.slug}`} className="block h-full">
+              <Card className="h-full transition-transform hover:-translate-y-0.5">
+                <h3 className="text-xl">{s.label[locale]}</h3>
+                <p className="mt-2 text-muted">{s.intro[locale]}</p>
+              </Card>
+            </Link>
+          </li>
+        ))}
+      </EqualCardGrid>
+
+      <WhiskerDivider className="my-8" />
 
       <h2 className="mb-5 text-2xl">{t(locale, 'latest')}</h2>
       {docs.length === 0 ? (

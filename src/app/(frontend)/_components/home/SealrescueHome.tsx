@@ -1,7 +1,10 @@
+import Link from 'next/link'
 import type { Locale } from '@/i18n/config'
 import { t } from '@/i18n/ui'
 import { Card } from '../ui/Card'
+import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { buttonClasses } from '../ui/Button'
+import { sectionsForSite } from '@/site/sections'
 
 /**
  * Главная sealrescue — emergency decision-interface (DESIGN_BRIEF §5), серьёзный тон.
@@ -25,16 +28,26 @@ export function SealrescueHome({ locale }: { locale: Locale }) {
           ))}
         </ol>
         <p className="mt-4 text-sm text-muted">{t(locale, 'rescueDistance')}</p>
-        <a href="#centers" className={buttonClasses('critical', 'lg', 'mt-8')}>
+        <Link href={`/${locale}/rescue-centers`} className={buttonClasses('critical', 'lg', 'mt-8')}>
           {t(locale, 'rescueCta')}
-        </a>
+        </Link>
       </section>
 
-      <section id="centers" className="scroll-mt-6">
-        <h2 className="mb-4 text-2xl">{t(locale, 'centersTitle')}</h2>
-        <Card>
-          <p className="text-muted">{t(locale, 'centersSoon')}</p>
-        </Card>
+      {/* Хаб разделов спасения — вход во весь sealrescue (M0-T19). */}
+      <section>
+        <h2 className="mb-4 text-2xl">{locale === 'en' ? 'Sections' : 'Разделы'}</h2>
+        <EqualCardGrid>
+          {sectionsForSite('sealrescue').map((s) => (
+            <li key={s.slug}>
+              <Link href={`/${locale}/${s.slug}`} className="block h-full">
+                <Card className="h-full transition-transform hover:-translate-y-0.5">
+                  <h3 className="text-xl">{s.label[locale]}</h3>
+                  <p className="mt-2 text-muted">{s.intro[locale]}</p>
+                </Card>
+              </Link>
+            </li>
+          ))}
+        </EqualCardGrid>
       </section>
 
       {/* Перелинковка sealrescue → sealife. */}

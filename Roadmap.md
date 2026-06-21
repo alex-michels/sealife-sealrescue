@@ -48,7 +48,7 @@
 * [x] **M0-T16** Токены в Tailwind + CSS-переменные: primitive → **semantic-слой** (используем в компонентах только его) → два режима через data-атрибут. *[M]* → DESIGN
 * [x] **M0-T17** Шрифты через `next/font` (self-host, все с кириллицей): sealife Display = Unbounded/Rubik; sealrescue = без декор-display (заголовки тяжёлым Golos Text/Onest); Body = Onest/Golos Text; Mono = JetBrains Mono. НЕ Baloo 2. *[S]* → DESIGN
 * [x] **M0-T18** Базовые примитивы: типошкала, кнопки, карточка, «усатый» разделитель, статус-точка, штамп проверки. *[M]* → DESIGN
-* [ ] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell EN/DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher; route guards (`/de` content → 404); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
+* [x] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell EN/DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher; route guards (`/de` content → 404); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
 
 ### EU compliance (базис) — см. сквозной трек EU
 

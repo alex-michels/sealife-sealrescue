@@ -3,6 +3,7 @@ import type { Locale } from '@/i18n/config'
 import { sites, type SiteId } from '@/site/config'
 import type { LegalLang } from '@/site/legal'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { SectionNav } from './SectionNav'
 import { SealMascot } from './ui/SealMascot'
 
 /**
@@ -35,6 +36,8 @@ export function SiteHeader({ site, lang }: { site: SiteId; lang: LegalLang }) {
         </Link>
         {lang !== 'de' && <LanguageSwitcher current={lang as Locale} />}
       </div>
+      {/* Навигация по разделам — только RU/EN (на /de-legal контент-разделов нет). */}
+      {lang !== 'de' && <SectionNav site={site} locale={lang as Locale} />}
     </header>
   )
 }
