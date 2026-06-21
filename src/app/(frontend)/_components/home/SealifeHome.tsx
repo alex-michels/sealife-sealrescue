@@ -5,6 +5,7 @@ import { t } from '@/i18n/ui'
 import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { WhiskerDivider } from '../ui/WhiskerDivider'
+import { SealMascot } from '../ui/SealMascot'
 import { buttonClasses } from '../ui/Button'
 
 export type HomeDoc = { id: number | string; slug: string; title: string; type: string }
@@ -14,9 +15,15 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
   const site = sites.sealife
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
-      <section className="dapple rounded-card py-12">
-        <h1 className="text-5xl">{site.brand[locale]}</h1>
-        <p className="mt-4 max-w-2xl text-xl text-muted">{site.tagline[locale]}</p>
+      <section className="dapple rounded-card px-6 py-12">
+        <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+          {/* Маскот рядом с вордмарком — только sealife (§5). */}
+          <SealMascot size={104} className="shrink-0" />
+          <div>
+            <h1 className="text-5xl">{site.brand[locale]}</h1>
+            <p className="mt-4 max-w-2xl text-xl text-muted">{site.tagline[locale]}</p>
+          </div>
+        </div>
       </section>
 
       <WhiskerDivider className="my-6" />

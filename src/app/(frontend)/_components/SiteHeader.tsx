@@ -3,6 +3,7 @@ import type { Locale } from '@/i18n/config'
 import { sites, type SiteId } from '@/site/config'
 import type { LegalLang } from '@/site/legal'
 import { LanguageSwitcher } from './LanguageSwitcher'
+import { SealMascot } from './ui/SealMascot'
 
 /**
  * Header на КАЖДОЙ публичной странице (DESIGN_BRIEF §4a): кликабельный вордмарк —
@@ -28,7 +29,12 @@ export function SiteHeader({ site, lang }: { site: SiteId; lang: LegalLang }) {
           aria-label={HOME_LABEL[lang]}
           className="inline-flex min-h-11 items-center gap-2 text-lg"
         >
-          <span aria-hidden="true">🦭</span>
+          {/* Анимированный маскот — только sealife (§5). sealrescue остаётся со спокойным эмодзи. */}
+          {site === 'sealife' ? (
+            <SealMascot size={32} />
+          ) : (
+            <span aria-hidden="true">🦭</span>
+          )}
           <span className="wordmark">{wordmark}</span>
         </Link>
         {lang !== 'de' && <LanguageSwitcher current={lang as Locale} />}

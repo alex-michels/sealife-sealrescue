@@ -137,6 +137,31 @@
   }
 
   /*
+   * Маскот-тюлень (SealMascot) — только sealife. Анимации висят на [data-site='sealife'],
+   * gating через prefers-reduced-motion ниже. Базовое (resting) состояние и 0%/100% кадры
+   * совпадают: глаза открыты, язык спрятан — поэтому при reduced-motion
+   * (анимация «доигрывается» до 100% мгновенно) тюлень просто сидит спокойно.
+   */
+  .seal-mascot {
+    display: inline-block;
+  }
+  .seal-eye {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .seal-tongue {
+    transform-box: fill-box;
+    transform-origin: top center;
+    transform: scaleY(0); /* язык спрятан, пока нет анимации */
+  }
+  [data-site='sealife'] .seal-eye {
+    animation: seal-blink 5.6s ease-in-out infinite;
+  }
+  [data-site='sealife'] .seal-tongue {
+    animation: seal-blep 8.2s ease-in-out infinite;
+  }
+
+  /*
    * Равномерная responsive-сетка карточек (§4b): равная ширина в строке,
    * последняя строка заполняет ширину (flex-wrap, не masonry, не зажато слева).
    */
@@ -193,6 +218,35 @@
     color: var(--color-link);
     text-decoration: underline;
     text-underline-offset: 2px;
+  }
+}
+
+/* Маскот-тюлень: моргание и «blep» языком. Покой = 0%/100% (см. globals §components). */
+@keyframes seal-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  93% {
+    transform: scaleY(0.1);
+  }
+  96% {
+    transform: scaleY(1);
+  }
+}
+@keyframes seal-blep {
+  0%,
+  72%,
+  100% {
+    transform: scaleY(0);
+  }
+  80%,
+  90% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0);
   }
 }
 
