@@ -2,17 +2,17 @@
 
 Соло-разработчик + AI. Human-in-the-loop. Старт: RU/EN. EU compliance — обязателен.
 
-\---
+---
 
-## 0\. Что изменилось в этой версии
+## 0. Что изменилось в этой версии
 
 * **Языки:** на старте только RU (база) + EN. Немецкий убран, НО архитектура остаётся мультиязычной — DE добавляется одним конфигом локали позже, без переделки.
 * **EU compliance — отдельный обязательный блок** (раздел 10), а не приписка к безопасности.
 * **Интегрированы лучшие идеи** из ответов ChatGPT и Gemini: конкретная модель данных, оркестрация агентов (LangGraph/CrewAI + Tavily/Perplexity), OWASP LLM Top-10, комментарии через виджеты TG/VK, privacy-friendly аналитика, glossary/translation memory, print-on-demand.
 
-\---
+---
 
-## 1\. Два сайта и синергия
+## 1. Два сайта и синергия
 
 |Домен|Роль|Содержание|
 |-|-|-|
@@ -26,9 +26,9 @@
 
 Единая база данных (одна headless CMS), разный UX. Воронка: sealife ловит и удерживает вниманием → sealrescue конвертирует в реальную помощь и донаты.
 
-\---
+---
 
-## 2\. Стек (соло + AI)
+## 2. Стек (соло + AI)
 
 * **Frontend/backend:** Next.js + **Payload CMS v3** (встраивается в Next, один деплой). Альтернативы: Directus/Strapi. Payload даёт админку-дашборд из коробки, локализацию, контроль доступа, черновики/публикацию.
 * **БД:** Postgres (Neon/Supabase).
@@ -41,41 +41,41 @@
 * **Мониторинг:** Sentry + uptime (Uptime Kuma / BetterStack).
 * **AI:** через **API** (не через UI-подписки Plus/Pro). Подписки Claude/ChatGPT/Gemini — для ручной разработки; агентам нужен отдельный API-бюджет. Для дешёвых ежедневных задач — Gemini Flash / Claude Haiku.
 
-\---
+---
 
-## 3\. Модель данных (ядро)
+## 3. Модель данных (ядро)
 
 ```
 ContentItem
 - id, type (article/news/meme/quiz/page)
 - status (draft/review/published/archived)
-- source\_language (ru)
-- canonical\_slug
-- created\_at, updated\_at, published\_at
+- source_language (ru)
+- canonical_slug
+- created_at, updated_at, published_at
 
 Translation
-- content\_id, locale (ru/en\[/de])
+- content_id, locale (ru/en[/de])
 - title, body
 - status (current/stale/review)
-- content\_hash         # хэш исходника — детектор устаревания перевода
+- content_hash         # хэш исходника — детектор устаревания перевода
 
 RescueCenter
 - name, country, region
 - website, email, phone, address, lat/lng
-- status (active / unconfirmed / link\_broken / needs\_check)
-- last\_checked\_at, verification\_score
-- verified\_by\_agent\_at, verified\_by\_human\_at   # показываем на странице
+- status (active / unconfirmed / link_broken / needs_check)
+- last_checked_at, verification_score
+- verified_by_agent_at, verified_by_human_at   # показываем на странице
 
 Source
 - url, type (official/news/social/manual)
-- trust\_level, last\_fetched\_at
+- trust_level, last_fetched_at
 
 Claim
-- entity\_type, entity\_id
-- claim\_text, source\_id, confidence, status
+- entity_type, entity_id
+- claim_text, source_id, confidence, status
 
 AgentRun
-- agent\_name, started\_at, finished\_at
+- agent_name, started_at, finished_at
 - status, logs, cost
 
 AgentProposal                # сердце human-in-the-loop
@@ -84,14 +84,14 @@ AgentProposal                # сердце human-in-the-loop
 - status (pending/approved/rejected)
 
 UserSubmission
-- type, content, status, user\_id|null
+- type, content, status, user_id|null
 ```
 
 Ключевой принцип: **агент НИКОГДА не пишет в прод напрямую.** Всё идёт через `AgentProposal` → ревью → публикация.
 
-\---
+---
 
-## 4\. Пайплайн и 6 агентов
+## 4. Пайплайн и 6 агентов
 
 Общий конвейер:
 
@@ -106,7 +106,7 @@ Crawler → Extractor → Fact-Checker → Proposal → Human Review → Publish
 Превращает одобренные находки в CMS-черновики, добавляет внутренние ссылки, предлагает заголовки и короткие версии для VK/Telegram. Автопубликация допустима ТОЛЬКО для низкорисковых меток: «ссылка недоступна», «ожидает проверки», «обновлена дата проверки».
 
 **Агент 3 — Translator (integrity)**
-RU → EN. Использует translation memory + glossary. Проверяет, что ссылки/имена центров/телефоны/адреса НЕ переведены. Помечает устаревшие переводы (через `content\_hash`).
+RU → EN. Использует translation memory + glossary. Проверяет, что ссылки/имена центров/телефоны/адреса НЕ переведены. Помечает устаревшие переводы (через `content_hash`).
 
 **Агент 4 — SysAdmin**
 Uptime, битые ссылки, sitemap/robots/SSL, скорость (Lighthouse/PageSpeed), мониторинг очередей агентов. Алерт в личный Telegram при поломке.
@@ -117,17 +117,17 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 **Агент 6 — Security and Compliance**
 два раза в месяц проверяет актуальные законы, акты и нормы, требования безопасности и следует ли сайт им, нужно ли выполнять, что можно убрать, что нужно добавить или поменять.
 
-\---
+---
 
-## 5\. Оркестрация и инструменты
+## 5. Оркестрация и инструменты
 
 * **Оркестрация:** LangGraph (граф состояний, точный контроль) или CrewAI (проще ролевые агенты). Для human-in-the-loop LangGraph удобнее — встроены точки прерывания на approval.
 * **Поиск/факт-чек:** Tavily или Perplexity API (заточены под агентный веб-поиск).
 * **Парсинг:** Playwright в sandbox + extractor (LLM структурирует HTML в поля `RescueCenter`).
 
-\---
+---
 
-## 6\. Дашборд (операционный центр)
+## 6. Дашборд (операционный центр)
 
 Не «админка ради админки». Экраны:
 
@@ -141,9 +141,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 
 Любой человек с доступом editor может зайти и обновить контент/перевод вручную в крайнем случае.
 
-\---
+---
 
-## 7\. Мультиязычность RU/EN
+## 7. Мультиязычность RU/EN
 
 * Отдельные индексируемые версии `/ru/`, `/en/` (НЕ клиентский автоперевод на лету — это дорого, медленно и плохо для SEO).
 * Перевод генерируется заранее как черновик → ревью → публикация (статика).
@@ -161,9 +161,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 
 * Архитектурно locale — это конфиг. DE добавляется позже без переделки.
 
-\---
+---
 
-## 8\. Игры, квизы, вовлечение
+## 8. Игры, квизы, вовлечение
 
 Старт с простого (соло-friendly):
 
@@ -176,9 +176,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 * Позже: браузерная аркада на **Phaser.js** (тюлень уворачивается от пластика, ловит рыбу), idle «собери безопасное лежбище».
 * Пасхалки → бейджи.
 
-\---
+---
 
-## 9\. Социальное (минимальное)
+## 9. Социальное (минимальное)
 
 Не строить соцсеть. Опора на существующую аудиторию:
 
@@ -191,9 +191,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 
 Самая ценная соц-функция — участие в контенте, не комментарии.
 
-\---
+---
 
-## 10\. EU compliance (обязательно)
+## 10. EU compliance (обязательно)
 
 Применяется, если обрабатываются данные пользователей из EU — независимо от того, где хостинг.
 
@@ -223,9 +223,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 
 > Это инженерный чек-лист, а не юридическая консультация. Перед запуском EN/EU-версии стоит сверить детали с актуальными источниками или юристом.
 
-\---
+---
 
-## 11\. Безопасность (web + AI)
+## 11. Безопасность (web + AI)
 
 **AI-agent security (OWASP LLM Top-10)** — релевантно, т.к. агенты читают внешний интернет:
 
@@ -241,9 +241,9 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 * Ежедневные бэкапы Postgres.
 * UGC — премодерация всегда.
 
-\---
+---
 
-## 12\. Монетизация и донаты
+## 12. Монетизация и донаты
 
 Аудитория 8к VK + 1.2к TG — не масштаб большой рекламы. Идём через донаты, микро-продукты, спонсорство.
 
@@ -262,33 +262,33 @@ title/meta/alt, hreflang, canonical, schema.org, sitemap по языкам, вн
 
 > Доступность платёжных рельсов для RU-аудитории меняется часто — проверьте актуальность на момент запуска.
 
-\---
+---
 
-## 13\. Перенос на другие ниши
+## 13. Перенос на другие ниши
 
 Строим не «сайт про тюленей», а **движок нишевого AI-медиа + справочника**.
 
 ```
 Niche
-- topic, language\_base
-- entities, sources, content\_types
+- topic, language_base
+- entities, sources, content_types
 - glossary, games, monetization
 ```
 
-Тюлени: `entities = species, rescue\_centers, news, facts, myths`.
+Тюлени: `entities = species, rescue_centers, news, facts, myths`.
 Другие ниши (меняются только схема, источники, glossary, промпты):
 
 * приюты кошек/собак; птицы (виды/заповедники/реабилитация); редкие растения (уход/сохранение); локальный туризм (статус музеев/достопримечательностей).
 
 Агенты (source monitor, fact-checker, content updater, translator, SEO, tech) остаются те же. Отладив пайплайн один раз — клонируете проект за выходные.
 
-\---
+---
 
-## 14\. Roadmap (под приоритеты: сайт → агенты → игры → монетизация)
+## 14. Roadmap (под приоритеты: сайт → агенты → игры → монетизация)
 
 **MVP 1 (4–6 недель) — запустить сайт с контентом**
 
-* sealife.info, структура RU/EN (задел на DE), \~20 evergreen-страниц, 10 квизов/карточек, мемная лента, базовая админка Payload, перевод AI с ручной проверкой, share-картинки TG/VK, cookie-баннер + Plausible/Umami, Cloudflare.
+* sealife.info, структура RU/EN (задел на DE), ~20 evergreen-страниц, 10 квизов/карточек, мемная лента, базовая админка Payload, перевод AI с ручной проверкой, share-картинки TG/VK, cookie-баннер + Plausible/Umami, Cloudflare.
 
 **MVP 2 (4–6 недель) — справочник + первый агент**
 
@@ -304,11 +304,10 @@ Niche
 
 **Рекомендуемый фокус:** не запускать 5 агентов сразу. Сначала ОДИН сильный конвейер: `ежедневный crawler → найденные изменения → dashboard → approve → publish → translate`. Это уже отличает вас от обычного блога. Остальных агентов добавлять по мере стабилизации.
 
-\---
+---
 
-## 15\. Открытые вопросы к следующему шагу
+## 15. Открытые вопросы к следующему шагу
 
 1. Хостинг персональных данных в EU — выбираем провайдера сразу под это?
 2. Логин TG/VK — точно откладываем за MVP, или нужен раньше для лидербордов?
 3. С какого артефакта начинаем сборку: контент-схема Payload или промпт+схема вывода Агента-1?
-
