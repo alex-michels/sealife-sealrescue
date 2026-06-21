@@ -6,6 +6,7 @@ import { Button } from '@/app/(frontend)/_components/ui/Button'
 import { Card } from '@/app/(frontend)/_components/ui/Card'
 import { WhiskerDivider } from '@/app/(frontend)/_components/ui/WhiskerDivider'
 import { StatusDot, type CenterStatus } from '@/app/(frontend)/_components/ui/StatusDot'
+import { VerificationStamp } from '@/app/(frontend)/_components/ui/VerificationStamp'
 
 // Внутренняя страница-референс дизайн-системы — не индексируем.
 export const metadata: Metadata = { title: 'Styleguide', robots: { index: false, follow: false } }
@@ -120,6 +121,19 @@ export default async function StyleguidePage({
           {statuses.map((s) => (
             <StatusDot key={s} status={s} locale={locale} showLabel />
           ))}
+        </div>
+      </Section>
+
+      <Section title="Штамп проверки (signature sealrescue)">
+        <div className="flex flex-wrap gap-4">
+          <VerificationStamp
+            locale={locale}
+            status="active"
+            agentCheckedAt="2026-06-12"
+            humanReviewedAt="2026-06-14"
+          />
+          <VerificationStamp locale={locale} status="needs_check" agentCheckedAt="2026-06-12" />
+          <VerificationStamp locale={locale} status="unconfirmed" />
         </div>
       </Section>
 

@@ -39,22 +39,22 @@
 
 ### Роутинг и i18n
 
-* [ ] **M0-T08** Мультидомен в одном Next: sealife и sealrescue из общей CMS. *[M]*
-* [ ] **M0-T09** Локализованный роутинг `/ru/…`, `/en/…` (дефолт `ru`), БЕЗ forced-редиректа; текстовый свитчер; legal-страницы могут иметь DE-версию без `/de`-контента. *[M]* → DESIGN
-* [ ] **M0-T10** `hreflang` + `x-default` + canonical + sitemap по локалям. *[S]* → SEO
+* [x] **M0-T08** Мультидомен в одном Next: sealife и sealrescue из общей CMS. *[M]*
+* [x] **M0-T09** Локализованный роутинг `/ru/…`, `/en/…` (дефолт `ru`), БЕЗ forced-редиректа; текстовый свитчер; legal-страницы могут иметь DE-версию без `/de`-контента. *[M]* → DESIGN
+* [x] **M0-T10** `hreflang` + `x-default` + canonical + sitemap по локалям. *[S]* → SEO
 
 ### Дизайн-фундамент (см. DESIGN_BRIEF.md)
 
-* [ ] **M0-T16** Токены в Tailwind + CSS-переменные: primitive → **semantic-слой** (используем в компонентах только его) → два режима через data-атрибут. *[M]* → DESIGN
-* [ ] **M0-T17** Шрифты через `next/font` (self-host, все с кириллицей): sealife Display = Unbounded/Rubik; sealrescue = без декор-display (заголовки тяжёлым Golos Text/Onest); Body = Onest/Golos Text; Mono = JetBrains Mono. НЕ Baloo 2. *[S]* → DESIGN
-* [ ] **M0-T18** Базовые примитивы: типошкала, кнопки, карточка, «усатый» разделитель, статус-точка, штамп проверки. *[M]* → DESIGN
+* [x] **M0-T16** Токены в Tailwind + CSS-переменные: primitive → **semantic-слой** (используем в компонентах только его) → два режима через data-атрибут. *[M]* → DESIGN
+* [x] **M0-T17** Шрифты через `next/font` (self-host, все с кириллицей): sealife Display = Unbounded/Rubik; sealrescue = без декор-display (заголовки тяжёлым Golos Text/Onest); Body = Onest/Golos Text; Mono = JetBrains Mono. НЕ Baloo 2. *[S]* → DESIGN
+* [x] **M0-T18** Базовые примитивы: типошкала, кнопки, карточка, «усатый» разделитель, статус-точка, штамп проверки. *[M]* → DESIGN
 * [ ] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell EN/DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher; route guards (`/de` content → 404); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
 
 ### EU compliance (базис) — см. сквозной трек EU
 
-* [ ] **M0-T11** Cookie-consent баннер (opt-in, reject как accept, настройки из footer). См. **EU-08**. *[M]* → EU
-* [ ] **M0-T12** Аналитика: **no-cookie режим**, без localStorage/fingerprinting, IP-анонимизация, без cross-site, задокументировано в Privacy; любой non-essential трекинг — только после opt-in. (Plausible/Umami; self-host сам по себе НЕ делает законным без consent.) *[S]* → EU
-* [ ] **M0-T13** **Legal-страницы (DE + EN shell, контент остаётся RU/EN):** Impressum/Anbieterkennzeichnung · Privacy Policy · Cookie Policy + Cookie-Settings · Terms · AI-Transparency note · контакт для запросов субъекта данных. См. **EU-07**. *[M]* → EU
+* [x] **M0-T11** Cookie-consent баннер (opt-in, reject как accept, настройки из footer). См. **EU-08**. *[M]* → EU
+* [x] **M0-T12** Аналитика: **no-cookie режим**, без localStorage/fingerprinting, IP-анонимизация, без cross-site, задокументировано в Privacy; любой non-essential трекинг — только после opt-in. (Plausible/Umami; self-host сам по себе НЕ делает законным без consent.) *[S]* → EU
+* [x] **M0-T13** **Legal-страницы (DE + EN shell, контент остаётся RU/EN):** Impressum/Anbieterkennzeichnung · Privacy Policy · Cookie Policy + Cookie-Settings · Terms · AI-Transparency note · контакт для запросов субъекта данных. См. **EU-07**. *[M]* → EU
 * [ ] **M0-T14** AVV/DPA-реестр под-процессоров: хостинг, БД, email, аналитика, AI-провайдеры, платежи, CDN/хранилище. См. **EU-09**. *[S]* → EU
 * [ ] **M0-T15** MFA на админку Payload. *[S]* → SEC
 
