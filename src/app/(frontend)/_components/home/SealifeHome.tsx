@@ -2,7 +2,6 @@ import Link from 'next/link'
 import type { Locale } from '@/i18n/config'
 import { sites } from '@/site/config'
 import { t } from '@/i18n/ui'
-import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { WhiskerDivider } from '../ui/WhiskerDivider'
@@ -15,11 +14,6 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
   const site = sites.sealife
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
-      <header className="flex items-center justify-between gap-4">
-        <span className="font-mono text-sm text-muted">🦭 {site.domain}</span>
-        <LanguageSwitcher current={locale} />
-      </header>
-
       <section className="dapple rounded-card py-12">
         <h1 className="text-5xl">{site.brand[locale]}</h1>
         <p className="mt-4 max-w-2xl text-xl text-muted">{site.tagline[locale]}</p>

@@ -29,13 +29,13 @@ export default async function CookiesPage({
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
-      <h1 className="text-4xl text-primary">{t(locale, 'cookiesTitle')}</h1>
+      <h1 className="text-4xl">{t(locale, 'cookiesTitle')}</h1>
       <div className="article-body mt-6">
         <p>{t(locale, 'cookiesIntro')}</p>
         <p>{t(locale, 'cookiesPlausible')}</p>
         <p>{t(locale, 'cookiesWithdraw')}</p>
       </div>
-      <CookieControls locale={locale} />
+      <CookieControls lang={locale} />
     </div>
   )
 }

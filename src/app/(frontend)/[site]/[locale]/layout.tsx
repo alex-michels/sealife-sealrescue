@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { locales, isLocale, type Locale } from '@/i18n/config'
 import { siteIds, isSite, sites } from '@/site/config'
 import { fontDisplay, fontBody, fontMono } from '@/app/(frontend)/fonts'
+import { SiteHeader } from '@/app/(frontend)/_components/SiteHeader'
 import { SiteFooter } from '@/app/(frontend)/_components/SiteFooter'
 import { Analytics } from '@/app/(frontend)/_components/consent/Analytics'
 import { ConsentBanner } from '@/app/(frontend)/_components/consent/ConsentBanner'
@@ -43,8 +44,9 @@ export default async function SiteLocaleLayout({
   return (
     <html lang={locale} data-site={sites[site].id} className={fontVars}>
       <body>
+        <SiteHeader site={sites[site].id} lang={locale} />
         <main>{children}</main>
-        <SiteFooter locale={locale} />
+        <SiteFooter lang={locale} />
         {PLAUSIBLE_SRC && (
           <>
             {/* Plausible грузится только после согласия (M0-T11/T12). */}

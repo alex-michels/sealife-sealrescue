@@ -125,6 +125,17 @@
 }
 
 @layer components {
+  /* Вордмарк в header (ссылка на главную). Шрифт — по режиму сайта (§3). */
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-heading);
+  }
+  [data-site='sealrescue'] .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 800;
+  }
+
   /*
    * Равномерная responsive-сетка карточек (§4b): равная ширина в строке,
    * последняя строка заполняет ширину (flex-wrap, не masonry, не зажато слева).

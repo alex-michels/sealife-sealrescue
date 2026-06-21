@@ -1,7 +1,5 @@
 import type { Locale } from '@/i18n/config'
-import { sites } from '@/site/config'
 import { t } from '@/i18n/ui'
-import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Card } from '../ui/Card'
 import { buttonClasses } from '../ui/Button'
 
@@ -13,14 +11,8 @@ import { buttonClasses } from '../ui/Button'
 const STEP_KEYS = ['rescueStep1', 'rescueStep2', 'rescueStep3', 'rescueStep4'] as const
 
 export function SealrescueHome({ locale }: { locale: Locale }) {
-  const site = sites.sealrescue
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
-      <header className="flex items-center justify-between gap-4">
-        <span className="font-mono text-sm text-muted">{site.domain}</span>
-        <LanguageSwitcher current={locale} />
-      </header>
-
       {/* Герой = сценарий действий. Один акцентный CTA (--critical/buoy-dark). */}
       <section className="py-12">
         <h1 className="text-4xl text-primary">{t(locale, 'rescueHeadline')}</h1>
