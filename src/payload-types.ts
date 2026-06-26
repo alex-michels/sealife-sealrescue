@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     'rescue-centers': RescueCenter;
     content: Content;
+    species: Species;
     quizzes: Quiz;
     sources: Source;
     glossary: Glossary;
@@ -88,6 +89,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     'rescue-centers': RescueCentersSelect<false> | RescueCentersSelect<true>;
     content: ContentSelect<false> | ContentSelect<true>;
+    species: SpeciesSelect<false> | SpeciesSelect<true>;
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     glossary: GlossarySelect<false> | GlossarySelect<true>;
@@ -281,6 +283,10 @@ export interface Content {
   } | null;
   coverImage?: (number | null) | Media;
   /**
+   * Темы для фильтра ленты/галереи (M1-T02). slug общий для локалей; подпись локализуется в коде (content/topics.ts), НЕ в content-локализации.
+   */
+  topics?: ('biology' | 'behavior' | 'conservation' | 'rescue' | 'humor' | 'science')[] | null;
+  /**
    * Перелинковка sealife <-> sealrescue.
    */
   crossLink?: {
@@ -331,6 +337,69 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * Виды ластоногих (Тюленепедия, sealife.info).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "species".
+ */
+export interface Species {
+  id: number;
+  name: string;
+  /**
+   * Canonical slug — общий для локалей (/ru/species/slug, /en/species/slug).
+   */
+  slug: string;
+  /**
+   * Научное (латинское) имя. НЕ переводится (правило глоссария).
+   */
+  latin: string;
+  /**
+   * Охранный статус IUCN. Подпись локализуется в UI.
+   */
+  conservationStatus?: ('LC' | 'NT' | 'VU' | 'EN' | 'CR' | 'DD') | null;
+  /**
+   * Ареал.
+   */
+  region?: string | null;
+  /**
+   * Размер, напр. «≈ 1.3 м».
+   */
+  size?: string | null;
+  excerpt?: string | null;
+  body?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Короткие факты. Используются на карточке вида и в «Факте дня».
+   */
+  facts?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  coverImage?: (number | null) | Media;
+  /**
+   * EU AI Act: маркировать AI-сгенерированный/переведённый контент.
+   */
+  aiGenerated?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -557,6 +626,10 @@ export interface PayloadLockedDocument {
         value: number | Content;
       } | null)
     | ({
+        relationTo: 'species';
+        value: number | Species;
+      } | null)
+    | ({
         relationTo: 'quizzes';
         value: number | Quiz;
       } | null)
@@ -700,6 +773,7 @@ export interface ContentSelect<T extends boolean = true> {
   excerpt?: T;
   body?: T;
   coverImage?: T;
+  topics?: T;
   crossLink?:
     | T
     | {
@@ -721,6 +795,31 @@ export interface ContentSelect<T extends boolean = true> {
         translatedAt?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "species_select".
+ */
+export interface SpeciesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  latin?: T;
+  conservationStatus?: T;
+  region?: T;
+  size?: T;
+  excerpt?: T;
+  body?: T;
+  facts?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  coverImage?: T;
+  aiGenerated?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

@@ -68,6 +68,21 @@ export async function GET(request: Request): Promise<Response> {
         // slug канонический и общий для локалей — одной выборки хватает на ru+en.
         pages.push({ path: `/${doc.slug}`, lastmod: new Date(doc.updatedAt).toISOString().slice(0, 10) })
       }
+
+      // Тюленепедия (M1-T03): виды живут на /species/[slug].
+      const species = await payload.find({
+        collection: 'species',
+        where: { _status: { equals: 'published' } },
+        sort: '-updatedAt',
+        depth: 0,
+        pagination: false,
+      })
+      for (const doc of species.docs) {
+        pages.push({
+          path: `/species/${doc.slug}`,
+          lastmod: new Date(doc.updatedAt).toISOString().slice(0, 10),
+        })
+      }
     } catch {
       // Карта сайта не должна падать из-за БД — отдаём хотя бы главную.
     }

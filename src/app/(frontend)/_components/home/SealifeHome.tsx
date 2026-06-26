@@ -6,7 +6,7 @@ import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { WhiskerDivider } from '../ui/WhiskerDivider'
 import { SealMascot } from '../ui/SealMascot'
-import { buttonClasses } from '../ui/Button'
+import { CrossLink } from '../content/CrossLink'
 import { sectionsForSite } from '@/site/sections'
 
 export type HomeDoc = { id: number | string; slug: string; title: string; type: string }
@@ -67,13 +67,8 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
         </EqualCardGrid>
       )}
 
-      {/* Перелинковка sealife → sealrescue. Единственный emergency CTA (--critical). */}
-      <div className="mt-12 flex flex-col items-start gap-4 rounded-card border border-border bg-surface-warm p-6 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-lg">{t(locale, 'crossRescue')}</p>
-        <a href="https://sealrescue.info" className={buttonClasses('critical', 'lg', 'shrink-0')}>
-          {t(locale, 'crossRescueCta')}
-        </a>
-      </div>
+      {/* Перелинковка sealife → sealrescue (M1-T04). Тревожный регистр (--critical). */}
+      <CrossLink locale={locale} variant="emergency" />
     </div>
   )
 }

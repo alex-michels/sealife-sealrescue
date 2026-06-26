@@ -1,12 +1,19 @@
-import { sampleNews } from '@/mock/sample'
 import {
   requireSection,
   sectionMetadata,
-  SectionListView,
-  parseState,
   type RouteParams,
   type SearchParams,
 } from '@/app/(frontend)/_components/mock/mockSection'
+import { PageShell } from '@/app/(frontend)/_components/content/PageShell'
+import { TopicFilter } from '@/app/(frontend)/_components/content/TopicFilter'
+import { ContentList } from '@/app/(frontend)/_components/content/ContentList'
+import {
+  findContentByType,
+  availableTopics,
+  filterByTopic,
+  parseTopic,
+} from '@/app/(frontend)/_components/content/getContent'
+import { formatDate } from '@/i18n/date'
 
 const SLUG = 'news'
 
@@ -21,24 +28,26 @@ export default async function NewsPage({
   params: RouteParams
   searchParams: SearchParams
 }) {
-  const { site, locale, section } = await requireSection(params, SLUG)
-  const state = parseState((await searchParams).state)
-  const items = sampleNews.map((n, i) => ({
-    href: `/${locale}/${SLUG}/${n.slug}`,
-    title: n.title[locale],
-    excerpt: n.excerpt[locale],
-    meta: n.date,
-    seed: i + 2,
+  const { locale, section } = await requireSection(params, SLUG)
+  const topic = parseTopic((await searchParams).topic)
+  const docs = await findContentByType('news', locale)
+  const items = filterByTopic(docs, topic).map((d) => ({
+    href: `/${locale}/${d.slug}`,
+    title: d.title,
+    excerpt: d.excerpt ?? undefined,
+    meta: formatDate(d.updatedAt, locale),
+    coverImage: d.coverImage,
+    seed: typeof d.id === 'number' ? d.id : 0,
   }))
   return (
-    <SectionListView
-      site={site}
-      locale={locale}
-      slug={SLUG}
-      title={section.title[locale]}
-      intro={section.intro[locale]}
-      items={items}
-      state={state}
-    />
+    <PageShell locale={locale} title={section.title[locale]} intro={section.intro[locale]}>
+      <TopicFilter
+        locale={locale}
+        basePath={`/${locale}/${SLUG}`}
+        available={availableTopics(docs)}
+        active={topic}
+      />
+      <ContentList locale={locale} items={items} />
+    </PageShell>
   )
 }

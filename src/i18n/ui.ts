@@ -16,6 +16,15 @@ type UIKey =
   | 'language'
   | 'crossRescue'
   | 'crossRescueCta'
+  | 'crossRescueCurious'
+  | 'crossRescueCuriousCta'
+  | 'backHome'
+  | 'filterAll'
+  | 'filterByTopic'
+  | 'factOfDay'
+  | 'speciesRange'
+  | 'speciesLength'
+  | 'speciesConservation'
   // sealrescue
   | 'rescueHeadline'
   | 'rescueStep1'
@@ -54,6 +63,15 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     language: 'Язык',
     crossRescue: 'Нашёл тюленя? Это не шутки.',
     crossRescueCta: 'Что делать →',
+    crossRescueCurious: 'А как вообще спасают тюленей?',
+    crossRescueCuriousCta: 'Узнать →',
+    backHome: '← На главную',
+    filterAll: 'Все',
+    filterByTopic: 'Фильтр по теме',
+    factOfDay: 'Факт дня',
+    speciesRange: 'Ареал',
+    speciesLength: 'Размер',
+    speciesConservation: 'Охранный статус',
     rescueHeadline: 'Нашёл тюленя на берегу?',
     rescueStep1: 'Не подходите близко.',
     rescueStep2: 'Уберите собак — на поводок или подальше.',
@@ -93,6 +111,15 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     language: 'Language',
     crossRescue: 'Found a seal? This is no joke.',
     crossRescueCta: 'What to do →',
+    crossRescueCurious: 'How are seals actually rescued?',
+    crossRescueCuriousCta: 'Find out →',
+    backHome: '← Home',
+    filterAll: 'All',
+    filterByTopic: 'Filter by topic',
+    factOfDay: 'Fact of the day',
+    speciesRange: 'Range',
+    speciesLength: 'Size',
+    speciesConservation: 'Conservation status',
     rescueHeadline: 'Found a seal on the beach?',
     rescueStep1: 'Keep your distance.',
     rescueStep2: 'Keep dogs away — on a leash or far off.',
