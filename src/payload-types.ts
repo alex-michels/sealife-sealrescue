@@ -450,11 +450,15 @@ export interface Glossary {
   translation?: string | null;
   category: 'term' | 'slang' | 'meme';
   /**
-   * Альтернативные формы (напр. тюласты, тюласточки, тюль-ласты).
+   * Альтернативные формы текущей локали (на ru: тюласты, тюль-малыш; на en: seal baby). Переключай локаль в админке — список свой для каждого языка.
    */
   variants?:
     | {
         value: string;
+        /**
+         * Тег варианта. Пусто = берётся тег всей записи (category выше).
+         */
+        category?: ('term' | 'slang' | 'meme') | null;
         id?: string | null;
       }[]
     | null;
@@ -876,6 +880,7 @@ export interface GlossarySelect<T extends boolean = true> {
     | T
     | {
         value?: T;
+        category?: T;
         id?: T;
       };
   note?: T;

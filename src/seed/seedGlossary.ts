@@ -19,12 +19,15 @@ let created = 0
 let updated = 0
 
 for (const term of glossaryTerms) {
-  const base = {
+  // Нелокализованные поля (общие для всех локалей).
+  const shared = {
     source: term.source,
     category: term.category,
     doNotTranslate: term.doNotTranslate ?? false,
-    variants: (term.variants ?? []).map((value) => ({ value })),
   }
+  // Варианты теперь локализованы — свой список на каждую локаль.
+  const ruVariants = (term.variants?.ru ?? []).map((v) => ({ value: v.value, category: v.category }))
+  const enVariants = (term.variants?.en ?? []).map((v) => ({ value: v.value, category: v.category }))
 
   const existing = await payload.find({
     collection: 'glossary',
@@ -35,32 +38,32 @@ for (const term of glossaryTerms) {
   const id = existing.docs[0]?.id
 
   if (id) {
-    // Исходная локаль: общие поля + ru-заметка + ru-эквивалент = сам термин.
+    // Исходная локаль: общие поля + ru-заметка + ru-эквивалент + ru-варианты.
     await payload.update({
       collection: 'glossary',
       id,
       locale: 'ru',
-      data: { ...base, translation: term.source, note: term.note },
+      data: { ...shared, translation: term.source, note: term.note, variants: ruVariants },
     })
-    // Целевая локаль: перевод.
+    // Целевая локаль: перевод + en-варианты.
     await payload.update({
       collection: 'glossary',
       id,
       locale: 'en',
-      data: { translation: term.en },
+      data: { translation: term.en, variants: enVariants },
     })
     updated++
   } else {
     const doc = await payload.create({
       collection: 'glossary',
       locale: 'ru',
-      data: { ...base, translation: term.source, note: term.note },
+      data: { ...shared, translation: term.source, note: term.note, variants: ruVariants },
     })
     await payload.update({
       collection: 'glossary',
       id: doc.id,
       locale: 'en',
-      data: { translation: term.en },
+      data: { translation: term.en, variants: enVariants },
     })
     created++
   }

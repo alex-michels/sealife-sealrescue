@@ -1,6 +1,13 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, isEditor } from '../access/roles'
 
+// Категории/теги глоссария — общий список для записи и для отдельных вариантов.
+const categoryOptions = [
+  { label: 'Термин', value: 'term' }, // тюлень, ластоногие, лежбище
+  { label: 'Сленг (тюль-)', value: 'slang' }, // тюль-нос, тюль-центр
+  { label: 'Мем', value: 'meme' }, // жрун
+]
+
 /**
  * Translation memory + глоссарий (masterplan §7).
  *
@@ -42,18 +49,28 @@ export const Glossary: CollectionConfig = {
       type: 'select',
       required: true,
       defaultValue: 'term',
-      options: [
-        { label: 'Термин', value: 'term' }, // тюлень, ластоногие, лежбище
-        { label: 'Сленг (тюль-)', value: 'slang' }, // тюль-нос, тюль-центр
-        { label: 'Мем', value: 'meme' }, // жрун
-      ],
+      options: categoryOptions,
     },
     {
       name: 'variants',
       type: 'array',
+      localized: true, // варианты зависят от языка: на ru — русские формы, на en — английские.
       labels: { singular: 'Вариант', plural: 'Варианты' },
-      admin: { description: 'Альтернативные формы (напр. тюласты, тюласточки, тюль-ласты).' },
-      fields: [{ name: 'value', type: 'text', required: true }],
+      admin: {
+        description:
+          'Альтернативные формы текущей локали (на ru: тюласты, тюль-малыш; на en: seal baby). Переключай локаль в админке — список свой для каждого языка.',
+      },
+      fields: [
+        { name: 'value', type: 'text', required: true },
+        {
+          name: 'category',
+          type: 'select',
+          options: categoryOptions,
+          admin: {
+            description: 'Тег варианта. Пусто = берётся тег всей записи (category выше).',
+          },
+        },
+      ],
     },
     {
       name: 'note',
