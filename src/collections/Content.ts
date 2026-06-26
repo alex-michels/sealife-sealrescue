@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
 import { forceAgentDrafts, markTranslationsStale } from '../hooks/contentHooks'
+import { topicSelectOptions } from '../content/topics'
 
 export const Content: CollectionConfig = {
   slug: 'content',
@@ -44,6 +45,16 @@ export const Content: CollectionConfig = {
     { name: 'excerpt', type: 'textarea', localized: true },
     { name: 'body', type: 'richText', localized: true },
     { name: 'coverImage', type: 'upload', relationTo: 'media' },
+    {
+      name: 'topics',
+      type: 'select',
+      hasMany: true,
+      options: topicSelectOptions,
+      admin: {
+        description:
+          'Темы для фильтра ленты/галереи (M1-T02). slug общий для локалей; подпись локализуется в коде (content/topics.ts), НЕ в content-локализации.',
+      },
+    },
     {
       name: 'crossLink',
       type: 'group',

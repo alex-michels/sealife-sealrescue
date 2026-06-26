@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url'
 import { Users } from './collections/Users'
 import { RescueCenters } from './collections/RescueCenters'
 import { Content } from './collections/Content'
+import { Species } from './collections/Species'
 import { Quizzes } from './collections/Quizzes'
 import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
@@ -42,6 +43,7 @@ export default buildConfig({
     Users,
     RescueCenters,
     Content,
+    Species,
     Quizzes,
     Sources,
     Glossary,

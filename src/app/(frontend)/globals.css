@@ -1,34 +1,54 @@
 @import 'tailwindcss';
 
 /*
- * Дизайн-токены — DESIGN_BRIEF v1. Одна токен-система, два режима.
- * Палитра общая для sealife/sealrescue; различаются плотность, радиусы и смелость акцента.
- * Тема переключается через [data-theme] на <html> (позже — по домену, M0-T08).
+ * Дизайн-токены — DESIGN_BRIEF «Foggy Coastal Utility» (fog + baltic + azure layering).
+ * primitive → semantic-слой (в компонентах ТОЛЬКО semantic) → два режима через [data-site].
+ * Море добавляем слоями (azure в заголовках/ссылках/поверхностях), без «blue wash».
+ * NB: semantic-цвета задаём прямым hex — Tailwind v4 tree-shake'ит var()-цепочки в @theme.
  */
 @theme {
-  /* — Палитра (сырые токены → утилиты bg-fog / text-ink / …) — */
-  --color-fog: #e9ecec; /* холодная туманная база (НЕ тёплый крем) */
-  --color-ink: #16262b; /* чернильно-сине-зелёный текст */
-  --color-baltic: #1e5b5b; /* балтийский тил — primary */
-  --color-pebble: #a99c8c; /* серо-бежевый, «тюленья шкура» */
-  --color-buoy: #ee5a36; /* сигнальный коралл — ТОЛЬКО критичные CTA */
-  --color-sandbank: #e7d9c0; /* тёплый песок — фон карточек, дозированно */
+  /* — Primitive — */
+  --color-fog: #edf1f3; /* база, морской туман */
+  --color-fog-blue: #e7eef2; /* холодный верх sea-mist градиента */
+  --color-ink: #15303a; /* мягкий тёмный с синевой — body, НЕ #000 */
+  --color-baltic: #1e5b5b; /* teal — бренд-якорь */
+  --color-azure: #2c6a8f; /* доступный azure — ссылки, H2/H3, интерактив */
+  --color-azure-bright: #3e7fa6; /* яркий azure — ТОЛЬКО декор/иконки/крупное */
+  --color-azure-soft: #ddebf3; /* светлый azure — фон карточек/info, НЕ текст */
+  --color-pebble: #a99c8c; /* тёплый серо-бежевый, «шкура» */
+  --color-sandbank: #e7d9c0; /* тёплый песок — rescue-блок */
+  --color-buoy: #ee5a36; /* коралл — декор/акцент, НЕ фон под белый текст */
+  --color-buoy-dark: #be3f22; /* коралл для белого текста: emergency CTA */
 
-  /* — Семантические токены (значения подставляются темой ниже) — */
-  --color-canvas: var(--t-canvas);
-  --color-fg: var(--t-fg);
-  --color-card: var(--t-card);
-  --color-primary: var(--t-primary);
-  --color-accent: var(--t-accent);
-  --color-muted: var(--t-muted);
-  --color-line: var(--t-line);
+  /* — Semantic (используем эти; прямой hex — см. NB выше) — */
+  --color-bg: #edf1f3; /* = fog */
+  --color-text: #15303a; /* = ink */
+  --color-surface: #f4f7f8; /* прохладный near-white, НЕ #fff */
+  --color-surface-info: #ddebf3; /* = azure-soft: empty/info-карточки */
+  --color-surface-warm: #e7d9c0; /* = sandbank: rescue-переход */
+  --color-primary: #1e5b5b; /* = baltic */
+  --color-heading: #1e5b5b; /* H1 / wordmark = baltic */
+  --color-heading-sub: #2c6a8f; /* H2/H3 = azure */
+  --color-link: #2c6a8f; /* ссылки = azure */
+  --color-accent-cool: #3e7fa6; /* = azure-bright, ТОЛЬКО декор */
+  --color-critical: #be3f22; /* = buoy-dark, CTA с белым текстом */
+  --color-accent: #ee5a36; /* = buoy, тёплый декор */
+  --color-border: rgba(21, 48, 58, 0.16);
+  --color-border-cool: rgba(46, 106, 143, 0.28);
+  --color-muted: rgba(21, 48, 58, 0.66);
+
+  /* — Статусы центров (точка + всегда текст; цвет не единственный носитель) — */
+  --color-status-active: #1e7a4b; /* зелёная */
+  --color-status-check: #b8730a; /* янтарная (needs_check) */
+  --color-status-broken: #be3f22; /* красная (link_broken) */
+  --color-status-unverified: #6b6258; /* серая (unconfirmed/unverified) */
 
   /* — Шрифты (CSS-переменные из next/font) — */
   --font-sans: var(--ff-body);
   --font-display: var(--ff-display);
   --font-mono: var(--ff-mono);
 
-  /* — Тип-шкала (модульная, единая для обоих сайтов) — */
+  /* — Тип-шкала (модульная, единая) — */
   --text-xs: 0.78rem;
   --text-sm: 0.9rem;
   --text-base: 1rem;
@@ -39,71 +59,144 @@
   --text-4xl: clamp(2.6rem, 6vw, 3.6rem);
   --text-5xl: clamp(3.2rem, 8vw, 4.6rem);
 
-  /* — Радиусы (значения подставляются темой) — */
-  --radius-card: var(--t-radius-card);
-  --radius-btn: var(--t-radius-btn);
+  /* — Радиусы (значения задаются режимом ниже) — */
+  --radius-card: 28px;
+  --radius-btn: 999px;
 }
 
-/* По умолчанию = sealife (игривый: крупный радиус, тёплые карточки, смелее акцент). */
-:root,
-[data-theme='sealife'] {
-  --t-canvas: var(--color-fog);
-  --t-fg: var(--color-ink);
-  --t-card: var(--color-sandbank);
-  --t-primary: var(--color-baltic);
-  --t-accent: var(--color-buoy);
-  --t-muted: var(--color-pebble);
-  --t-line: color-mix(in srgb, var(--color-ink) 14%, transparent);
-
-  --t-radius-card: 1.5rem; /* tactile, «умиляющийся» */
-  --t-radius-btn: 999px;
+/* Режимы per-site (§2d): радиус + уровень моушена. По умолчанию = sealife. */
+[data-site='sealife'] {
+  --radius-card: 28px;
+  --radius-btn: 999px;
+  --motion-level: playful;
 }
-
-/* sealrescue (серьёзный: умереннее радиус, больше воздуха, фото-forward). */
-[data-theme='sealrescue'] {
-  --t-canvas: var(--color-fog);
-  --t-fg: var(--color-ink);
-  --t-card: #ffffff;
-  --t-primary: var(--color-baltic);
-  --t-accent: var(--color-buoy);
-  --t-muted: var(--color-pebble);
-  --t-line: color-mix(in srgb, var(--color-ink) 12%, transparent);
-
-  --t-radius-card: 0.6rem;
-  --t-radius-btn: 0.5rem;
+[data-site='sealrescue'] {
+  --radius-card: 16px;
+  --radius-btn: 8px;
+  --motion-level: calm;
 }
 
 @layer base {
   html {
-    background-color: var(--color-canvas);
-    color: var(--color-fg);
+    /* Очень слабый sea-mist градиент сверху — воздух у моря, не синий фон (§2d). */
+    background-color: var(--color-bg);
+    background-image: linear-gradient(180deg, var(--color-fog-blue) 0%, var(--color-bg) 42%);
+    background-attachment: fixed;
+    color: var(--color-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
-  h1,
-  h2,
-  h3,
-  h4 {
+  /* H1 / wordmark = baltic (sealife — характерный display). */
+  h1 {
     font-family: var(--font-display);
+    color: var(--color-heading);
     line-height: 1.05;
     font-weight: 600;
     text-wrap: balance;
   }
+  /* H2/H3/H4 = azure (вторичная иерархия). */
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    color: var(--color-heading-sub);
+    line-height: 1.1;
+    font-weight: 600;
+    text-wrap: balance;
+  }
 
-  /* Видимый keyboard-focus — требование WCAG 2.1 AA / EAA. */
+  /* sealrescue: БЕЗ декоративного display — заголовки тяжёлым body-шрифтом (доверие). */
+  [data-site='sealrescue'] :is(h1, h2, h3, h4) {
+    font-family: var(--font-sans);
+    font-weight: 800;
+  }
+
+  /* Видимый keyboard-focus — WCAG 2.2 AA. Тёплый коралл хорошо виден на холодной базе. */
   :focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 
   ::selection {
-    background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+    background: color-mix(in srgb, var(--color-accent-cool) 26%, transparent);
   }
 }
 
 @layer components {
+  /* Вордмарк в header (ссылка на главную). Шрифт — по режиму сайта (§3). */
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 600;
+    color: var(--color-heading);
+  }
+  [data-site='sealrescue'] .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 800;
+  }
+
+  /*
+   * Маскот-тюлень (SealMascot) — общий иконочный логотип обоих сайтов. Анимируется
+   * (моргание/«blep») только инстанс с .seal-mascot--animated и только на sealife (hero).
+   * Маленький логотип в header и весь sealrescue — статичные. Базовое (resting) состояние =
+   * 0%/100% кадры: глаза открыты, язык спрятан — поэтому при reduced-motion (анимация
+   * мгновенно «доигрывается» до 100%) тюлень просто сидит спокойно.
+   */
+  .seal-mascot {
+    display: inline-block;
+    /*
+     * Шкура маскота — очень светлый «whitecoat»-серый (НЕ pure white): контраст с фоном
+     * держит тёмный ink-контур, поэтому светлая заливка остаётся читаемой. Локальная
+     * переменная (не @theme): не используется утилитой Tailwind, иначе v4 её tree-shake'нет.
+     */
+    --seal-coat: #e0e6e9;
+  }
+  .seal-eye {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .seal-tongue {
+    transform-box: fill-box;
+    transform-origin: top center;
+    transform: scaleY(0); /* язык спрятан, пока нет анимации */
+  }
+  [data-site='sealife'] .seal-mascot--animated .seal-eye {
+    animation: seal-blink 5.6s ease-in-out infinite;
+  }
+  [data-site='sealife'] .seal-mascot--animated .seal-tongue {
+    animation: seal-blep 8.2s ease-in-out infinite;
+  }
+
+  /*
+   * Равномерная responsive-сетка карточек (§4b): равная ширина в строке,
+   * последняя строка заполняет ширину (flex-wrap, не masonry, не зажато слева).
+   */
+  .card-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 14px;
+  }
+  .card-grid > * {
+    flex: 1 1 calc((100% - 28px) / 3);
+    min-width: min(100%, 270px);
+  }
+  @media (max-width: 820px) {
+    .card-grid > * {
+      flex-basis: 100%;
+      min-width: 100%;
+    }
+  }
+
+  /* Dapple — крап тюленьей шкуры (§5). CSS-паттерн, не растр. */
+  .dapple {
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(21, 48, 58, 0.055) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 80% 70%, rgba(46, 106, 143, 0.045) 0 1.5px, transparent 2.2px);
+    background-size: 26px 26px;
+  }
+
   /* Лёгкая типографика для richText-контента (без плагина typography). */
   .article-body {
     max-width: 68ch;
@@ -129,13 +222,42 @@
     margin: 0.35rem 0;
   }
   .article-body a {
-    color: var(--color-primary);
+    color: var(--color-link);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 }
 
-/* Уважать prefers-reduced-motion (DESIGN_BRIEF §5). */
+/* Маскот-тюлень: моргание и «blep» языком. Покой = 0%/100% (см. globals §components). */
+@keyframes seal-blink {
+  0%,
+  90%,
+  100% {
+    transform: scaleY(1);
+  }
+  93% {
+    transform: scaleY(0.1);
+  }
+  96% {
+    transform: scaleY(1);
+  }
+}
+@keyframes seal-blep {
+  0%,
+  72%,
+  100% {
+    transform: scaleY(0);
+  }
+  80%,
+  90% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0);
+  }
+}
+
+/* prefers-reduced-motion (§13). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
