@@ -23,6 +23,12 @@ export const glossaryTerms: GlossarySeed[] = [
   { source: 'тюлень', en: 'seal', category: 'term' },
   { source: 'морской котик', en: 'fur seal', category: 'term' },
   { source: 'морской лев', en: 'sea lion', category: 'term' },
+  {
+    source: 'морской слон',
+    en: 'elephant seal',
+    category: 'term',
+    note: 'Род Mirounga (сем. Phocidae): северный и южный морские слоны — крупнейшие ластоногие.',
+  },
   { source: 'ластоногие', en: 'pinnipeds', category: 'term' },
   {
     source: 'лежбище',
