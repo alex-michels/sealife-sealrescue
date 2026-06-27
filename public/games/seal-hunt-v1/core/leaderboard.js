@@ -65,12 +65,18 @@ function startCountdown(container, resetMs, t) {
   container._lbTimer = setInterval(tick, 1000);
 }
 
+// Локализованное имя + суффикс уникальности при коллизии («… 2»).
+function displayName(parts, suffix, l) {
+  const base = renderName(parts, l);
+  return suffix && suffix >= 2 ? `${base} ${suffix}` : base;
+}
+
 function rowHtml(r, you, board) {
   const me = you && board === you.board && r.alias === you.alias;
   return (
     `<li class="lb-row${me ? ' me' : ''}">` +
     `<span class="lb-rk">#${r.rank}</span>` +
-    `<span class="lb-al">${esc(renderName(r.parts, lang()))}</span>` +
+    `<span class="lb-al">${esc(displayName(r.parts, r.suffix, lang()))}</span>` +
     `<span class="lb-sc">${r.score}</span></li>`
   );
 }

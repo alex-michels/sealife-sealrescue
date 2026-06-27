@@ -484,11 +484,23 @@ export interface GameScore {
   id: number;
   game: number | Game;
   /**
-   * Канонический EN-рендер имени (идентичность + подпись в админке).
+   * Недельный односторонний ключ игрока (не сырой seed). Идентичность строки.
+   */
+  playerKey: string;
+  /**
+   * EN base имени (без суффикса) — для уникальности дисплея.
+   */
+  baseAlias: string;
+  /**
+   * 0/1 — без суффикса; ≥2 — добавляется к имени при коллизии («… 2»).
+   */
+  suffix: number;
+  /**
+   * EN display-имя (base + суффикс) — подпись в админке.
    */
   alias: string;
   /**
-   * Locale-независимые части имени {adj?,mod?,noun,pref?,suf?} — имя рисуется на клиенте на языке зрителя.
+   * Locale-независимые части имени — имя рисуется на клиенте на языке зрителя.
    */
   nameParts:
     | {
@@ -963,6 +975,9 @@ export interface GamesSelect<T extends boolean = true> {
  */
 export interface GameScoresSelect<T extends boolean = true> {
   game?: T;
+  playerKey?: T;
+  baseAlias?: T;
+  suffix?: T;
   alias?: T;
   nameParts?: T;
   score?: T;

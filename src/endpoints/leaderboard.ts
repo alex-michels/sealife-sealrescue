@@ -1,5 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { z } from 'zod'
+import { createHash } from 'crypto'
 
 /**
  * Server-authoritative лидерборд (SH-06/07). Публичный клиент НЕ пишет в БД напрямую —
@@ -67,7 +68,7 @@ function mulberry32(a: number): () => number {
 }
 
 /** Детерминированные части имени из (seed, game). Соль по игре → разные имена в разных играх. */
-function makeParts(seed: number, game: string): NameParts {
+export function makeParts(seed: number, game: string): NameParts {
   const rnd = mulberry32(((seed >>> 0) ^ hashStr(game)) >>> 0)
   const patIdx = Math.floor(rnd() * PATTERNS.length)
   const adj = Math.floor(rnd() * ADJ_EN.length)
@@ -84,8 +85,13 @@ function makeParts(seed: number, game: string): NameParts {
   return parts
 }
 
-/** Канонический EN-рендер (ключ дедупа + подпись в админке). */
-function renderEn(p: NameParts): string {
+/** Недельный односторонний ключ игрока. Сырой seed НЕ хранится; хэш ротируется по season. */
+function playerKeyFor(seed: number, game: string, season: string): string {
+  return createHash('sha256').update(`${seed}:${game}:${season}`).digest('hex').slice(0, 24)
+}
+
+/** Канонический EN base-рендер (без суффикса). */
+export function renderEn(p: NameParts): string {
   const out: string[] = []
   if (p.adj != null) out.push(ADJ_EN[p.adj])
   if (p.mod != null) out.push(MOD_EN[p.mod])
@@ -187,6 +193,7 @@ async function page(
     rank: offset + i + 1,
     alias: d.alias as string,
     parts: d.nameParts as NameParts,
+    suffix: (d.suffix as number) ?? 0,
     score: d.score as number,
   }))
   return { top, total: res.totalDocs, page: pageNum, hasMore: res.hasNextPage }
@@ -229,31 +236,49 @@ export const leaderboardSubmit: Endpoint = {
 
     const season = currentSeason()
     const parts = makeParts(seed, slug)
-    const alias = renderEn(parts)
+    const baseAlias = renderEn(parts)
+    const playerKey = playerKeyFor(seed, slug, season)
 
-    // — Дедуп: одна строка на (game, alias, board, season), храним максимум.
-    const existing = await req.payload.find({
+    // — Идентичность игрока за неделю = playerKey. Одна строка на (game, playerKey, board, season).
+    const mineRes = await req.payload.find({
       collection: 'game-scores',
       where: {
         game: { equals: game },
-        alias: { equals: alias },
+        playerKey: { equals: playerKey },
         board: { equals: board },
         season: { equals: season },
       },
       limit: 1,
       depth: 0,
     })
-    const prev = existing.docs[0]
+    const mine = mineRes.docs[0]
     let best = score
-    if (prev) {
-      best = Math.max(prev.score as number, score)
-      if (score > (prev.score as number)) {
-        await req.payload.update({ collection: 'game-scores', id: prev.id, data: { score, durationMs } })
+    let alias: string
+    let suffix: number
+    if (mine) {
+      // тот же игрок: храним максимум, имя/суффикс не трогаем
+      best = Math.max(mine.score as number, score)
+      alias = mine.alias as string
+      suffix = (mine.suffix as number) ?? 0
+      if (score > (mine.score as number)) {
+        await req.payload.update({ collection: 'game-scores', id: mine.id, data: { score, durationMs } })
       }
     } else {
+      // новый игрок за неделю: уникализируем ИМЯ суффиксом при коллизии base с ДРУГИМ игроком
+      const sameBase = await req.payload.count({
+        collection: 'game-scores',
+        where: {
+          game: { equals: game },
+          baseAlias: { equals: baseAlias },
+          board: { equals: board },
+          season: { equals: season },
+        },
+      })
+      suffix = sameBase.totalDocs >= 1 ? sameBase.totalDocs + 1 : 0
+      alias = suffix >= 2 ? `${baseAlias} ${suffix}` : baseAlias
       await req.payload.create({
         collection: 'game-scores',
-        data: { game, alias, nameParts: parts, score, durationMs, board, season },
+        data: { game, playerKey, baseAlias, suffix, alias, nameParts: parts, score, durationMs, board, season },
       })
     }
 
@@ -276,12 +301,13 @@ export const leaderboardSubmit: Endpoint = {
     return Response.json({
       alias,
       parts,
+      suffix,
       board,
       season,
       resetAt: seasonEnd().toISOString(),
       score: best,
       submitted: score,
-      improved: !prev || score > (prev.score as number),
+      improved: !mine || score > (mine.score as number),
       rank,
       total: first.total,
       percentile,
