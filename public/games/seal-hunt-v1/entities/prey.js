@@ -14,20 +14,20 @@ const WIGGLE = {
 };
 const ESCAPE = {
   threatK: 4,       // threat radius ≈ seal.r * threatK (soft, feels right)
-  burstImpulse: 160,  // instantaneous dv (px/s) on trigger (away from seal)
-  maxBoost: 1.6,      // cap: up to 1.6× normal fish max speed during escape
+  burstImpulse: 256,  // instantaneous dv (px/s) on trigger (away from seal) — ×1.6 tempo
+  maxBoost: 1.6,      // cap: up to 1.6× normal fish max speed during escape (ratio, unscaled)
   fleeHold: 0.22,     // seconds we consider the fish "in flee mode"
   restAfter: 1.2,     // minimum cooldown until next flee
-  steer: 260,         // while fleeing, extra away-from-seal steering (px/s^2)
+  steer: 416,         // while fleeing, extra away-from-seal steering (px/s^2) — ×1.6 tempo
   dragHi: 0.985,      // stronger drag during/after burst (decays the boost)
   dragLo: 0.998,      // normal gentle drag baseline (keeps speeds calm)
 };
 
 // Gentle baseline swim when not threatened (keeps fish from “parking”)
 const CRUISE = {
-  targetK: 0.55, // target ≈ 55% of BAL.fishSpeedMin (auto scales with screen)
-  accel: 120,    // how quickly they regain that slow cruise (px/s^2)
-  wander: 18,    // tiny heading meander (px/s^2) so it looks alive
+  targetK: 0.55, // target ≈ 55% of BAL.fishSpeedMin (auto-scales with the speed tempo)
+  accel: 192,    // how quickly they regain that slow cruise (px/s^2) — ×1.6 tempo
+  wander: 29,    // tiny heading meander (px/s^2) so it looks alive — ×1.6 tempo
 };
 
 

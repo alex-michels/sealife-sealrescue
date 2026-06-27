@@ -23,11 +23,13 @@ export const BAL = {
   diag: BASE.diag,
   area: BASE.area,
 
-  fishSpeedMin: 60,
-  fishSpeedMax: 90,
+  // Tempo (SH-02 tuning): seal & prey speeds scaled ×1.6 together → more action,
+  // same difficulty ratios. Seal accel bumped for a snappy ~0.13s to top speed (game feel).
+  fishSpeedMin: 96,
+  fishSpeedMax: 144,
 
-  sealSpeed: 200,
-  sealAccel: 900,
+  sealSpeed: 320,
+  sealAccel: 2400,
 
   fishSizeK: 1,
   maxPreyCap: 22,
@@ -54,10 +56,10 @@ export function recomputeBalance(worldW, worldH) {
   BAL.diag = Math.hypot(worldW, worldH);
   BAL.area = worldW * worldH;
 
-  BAL.fishSpeedMin = 60;
-  BAL.fishSpeedMax = 90;
-  BAL.sealSpeed = 200;
-  BAL.sealAccel = 900;
+  BAL.fishSpeedMin = 96;
+  BAL.fishSpeedMax = 144;
+  BAL.sealSpeed = 320;
+  BAL.sealAccel = 2400;
   BAL.fishSizeK = 1;
 
   BAL.maxPreyCap = Math.max(12, Math.min(28, Math.round(BAL.area * PREY_DENSITY)));
