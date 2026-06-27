@@ -73,6 +73,7 @@ export interface Config {
     species: Species;
     quizzes: Quiz;
     games: Game;
+    'game-scores': GameScore;
     sources: Source;
     glossary: Glossary;
     'agent-proposals': AgentProposal;
@@ -93,6 +94,7 @@ export interface Config {
     species: SpeciesSelect<false> | SpeciesSelect<true>;
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
     games: GamesSelect<false> | GamesSelect<true>;
+    'game-scores': GameScoresSelect<false> | GameScoresSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     glossary: GlossarySelect<false> | GlossarySelect<true>;
     'agent-proposals': AgentProposalsSelect<false> | AgentProposalsSelect<true>;
@@ -473,6 +475,29 @@ export interface Game {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Анонимные результаты мини-игр (лидерборд). PII не хранится.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "game-scores".
+ */
+export interface GameScore {
+  id: number;
+  game: number | Game;
+  /**
+   * Курируемый псевдоним (генерируется сервером, не вводится пользователем).
+   */
+  alias: string;
+  score: number;
+  durationMs: number;
+  board: 'desktop' | 'mobile';
+  /**
+   * ISO-неделя (YYYY-Www) — для еженедельного сброса доски.
+   */
+  season: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Словарь терминов и тюль-сленга: ru → перевод. Для переводчиков и Агента 3.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -680,6 +705,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'games';
         value: number | Game;
+      } | null)
+    | ({
+        relationTo: 'game-scores';
+        value: number | GameScore;
       } | null)
     | ({
         relationTo: 'sources';
@@ -915,6 +944,20 @@ export interface GamesSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "game-scores_select".
+ */
+export interface GameScoresSelect<T extends boolean = true> {
+  game?: T;
+  alias?: T;
+  score?: T;
+  durationMs?: T;
+  board?: T;
+  season?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

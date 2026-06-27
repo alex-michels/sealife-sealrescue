@@ -110,9 +110,9 @@
 * **Фаза 2 — Арт**
   * [x] **SH-04** SVG-редизайн: векторные тюлень и рыбы/добыча через `Path2D`, тинт из **semantic-токенов** (Foggy Coastal Utility, оба режима). Заменить текущие примитивы. *[M]* → DESIGN
 * **Фаза 3 — Лидерборды**
-  * [ ] **SH-05** Коллекция Payload `game-scores`: анонимное имя + score + durationMs + deviceClass (грубо mobile/desktop, без пиксельных размеров — анти-fingerprint) + статус модерации. Явный access: публичная запись НЕ напрямую; `delete` — никогда `agent`. *[M]* → EU
-  * [ ] **SH-06** Server-authoritative submit-API (Next route): Zod-валидация, плаузибилити-капы (catches/сек, длительность ≈60с), rate-limit, **премодерация** анонимного имени (profanity-фильтр + лог модерации, DSA notice-and-action); запись через Payload local API; без PII в логах. *[M]* → SEC/EU
-  * [ ] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
+  * [x] **SH-05** Коллекция Payload `game-scores`: анонимное имя + score + durationMs + deviceClass (грубо mobile/desktop, без пиксельных размеров — анти-fingerprint) + статус модерации. Явный access: публичная запись НЕ напрямую; `delete` — никогда `agent`. *[M]* → EU
+  * [x] **SH-06** Server-authoritative submit-API (Next route): Zod-валидация, плаузибилити-капы (catches/сек, длительность ≈60с), rate-limit, **премодерация** анонимного имени (profanity-фильтр + лог модерации, DSA notice-and-action); запись через Payload local API; без PII в логах. *[M]* → SEC/EU
+  * [x] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
   * [ ] **SH-08** Анти-чит-харднинг и подстройка баланса по анонимизированным распределениям очков (итеративно). *[S]* → SEC
 
 #### 🕹 Phaser — для более «тяжёлых» игр (когда Canvas2D мало)

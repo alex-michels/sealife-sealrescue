@@ -55,7 +55,7 @@ export default async function GameDetail({ params }: { params: SlugParams }) {
         {/* Встраиваемая статическая игра из /public, либо canvas-заглушка (DESIGN_BRIEF §13). */}
         {game.embed ? (
           <iframe
-            src={`${game.embed}?lang=${locale}`}
+            src={`${game.embed}?lang=${locale}&game=${game.slug}`}
             title={game.title}
             className="mt-6 block h-[72vh] min-h-[460px] w-full rounded-card border border-border bg-surface-info"
             loading="lazy"

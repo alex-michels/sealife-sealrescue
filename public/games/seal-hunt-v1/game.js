@@ -5,11 +5,15 @@ import { initScenery, drawBackground } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { PALETTE } from './core/theme.js';
+import { mountAfterPlay } from './core/leaderboard.js';
 
 const { sin, cos, hypot, min, max, PI } = Math;
 
 // Локализация: словарь и язык приходят из i18n.js (классический скрипт, выполнен раньше).
 const t = (key, vars) => window.SealI18n.t(key, vars);
+
+// Какой игре принадлежит результат (slug в Payload). Передаётся страницей-обёрткой (?game=).
+const GAME_SLUG = new URLSearchParams(location.search).get('game') || 'seal-the-hunter';
 
 // Reusable sweep samples (avoid recreating [0,0.5,1] each frame in prey.js)
 export const SWEEP_T = [0, 0.5, 1];
@@ -31,6 +35,7 @@ const UI = {
   btnPause: document.getElementById('btnPause'),
   btnShareEnd: document.getElementById('btnShareEnd'),
   btnSound: document.getElementById('btnSound'),
+  board: document.getElementById('board'),
 };
 
 const GAME_DURATION = 60_000;
@@ -215,6 +220,7 @@ let lastTime=0, timeLeft=GAME_DURATION, spawnTimer=0;
 function startGame(){
   STATE.running=true; STATE.over=false; STATE.paused=false;
   UI.overlay.hidden=true; UI.btnShareEnd.hidden=true;
+  if (UI.board) { UI.board.hidden = true; UI.board.innerHTML = ''; }
   UI.btnPause.textContent=t('btnPause');
   SCORE.now=0; UI.score.textContent='0';
   timeLeft=GAME_DURATION; spawnTimer=0; PREY.length=0;
@@ -243,6 +249,9 @@ function endGame(){
     UI.message.innerHTML=t('timeUp', { score: SCORE.now, best: SCORE.best });
   }
   UI.btnShareEnd.hidden=false; UI.btnAgain.textContent=t('btnAgain');
+
+  // Server-authoritative leaderboard: submit this round and show the board.
+  if (UI.board) mountAfterPlay(UI.board, GAME_SLUG, SCORE.now, t);
 }
 
 function loop(){

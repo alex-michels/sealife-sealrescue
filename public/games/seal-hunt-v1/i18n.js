@@ -53,6 +53,17 @@
       },
       linkCopied: 'Ссылка скопирована!',
       copyShare: 'Скопируйте и поделитесь:',
+      // — лидерборд
+      lbTitle: 'Лидерборд',
+      lbResetNote: 'за неделю',
+      lbDesktop: 'Десктоп',
+      lbMobile: 'Мобайл',
+      lbEmpty: 'Пока пусто — будь первым!',
+      lbOffline: 'Лидерборд недоступен.',
+      lbLoading: 'Загрузка…',
+      lbYouLine: function (v) {
+        return 'Вы: #' + v.rank + ' из ' + v.total + ' · топ ' + v.pct + '%';
+      },
     },
     en: {
       // — static (index.html)
@@ -94,6 +105,17 @@
       },
       linkCopied: 'Link copied!',
       copyShare: 'Copy and share:',
+      // — leaderboard
+      lbTitle: 'Leaderboard',
+      lbResetNote: 'this week',
+      lbDesktop: 'Desktop',
+      lbMobile: 'Mobile',
+      lbEmpty: 'Empty — be the first!',
+      lbOffline: 'Leaderboard unavailable.',
+      lbLoading: 'Loading…',
+      lbYouLine: function (v) {
+        return 'You: #' + v.rank + ' of ' + v.total + ' · top ' + v.pct + '%';
+      },
     },
   };
 
