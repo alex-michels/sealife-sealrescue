@@ -6,26 +6,28 @@ import { z } from 'zod'
  * только через эти endpoints: валидация (Zod), анти-чит (плаузибилити-капы),
  * transient rate-limit (IP в БД НЕ хранится). PII не хранится.
  *
- * Идентичность игрока — opaque `seed` в localStorage. Сервер детерминированно собирает
- * из (seed, game) ИНДЕКСЫ слов (locale-независимо) → курируемое имя «Прил. Существительное»
- * (без чисел, морская тематика). В БД храним индексы (идентичность) + EN-подпись для
- * админки. Имя локализуется на клиенте по индексам. Свободного текста нет (нет UGC).
- * Дедуп: одна строка на (game, adjIdx, nounIdx, board, season), храним МАКСИМУМ счёта.
- * Доска недельная (season), две доски (desktop/mobile), пагинация.
+ * Имя игрока локализуемо и варьируется по шаблонам (Adj/Mod/Pref-/-Suf + Noun), что
+ * расширяет пространство имён до ~40k без чисел. Идентичность собирается из (seed, game)
+ * детерминированным PRNG → набор частей (locale-независимо). В БД храним canonical EN-рендер
+ * (alias, ключ дедупа) + части (nameParts, для локализации на клиенте). Свободного текста нет
+ * (нет UGC). Дедуп: одна строка на (game, alias, board, season), храним МАКСИМУМ счёта.
  *
  *  POST /api/leaderboard   — отправить результат (upsert max), вернуть ранг + первую страницу
  *  GET  /api/leaderboard   — прочитать доску (?game=&board=&page=&limit=)
  */
 
-// ⚠️ KEEP IN SYNC (порядок и длина) с public/games/seal-hunt-v1/core/alias.js (.en значения).
-// Имя рисуется на клиенте по индексам — критична длина списков; EN-слова нужны только для
-// денормализованной подписи в админке.
+// ⚠️ KEEP IN SYNC (порядок/длина списков, PATTERNS, mulberry32, порядок бросков) с
+// public/games/seal-hunt-v1/core/alias.js — иначе имя на старте разойдётся с доской.
 const ADJ_EN = [
   'Salty', 'Brave', 'Sleepy', 'Cosy', 'Misty', 'Sunny', 'Plump', 'Swift',
   'Gentle', 'Jolly', 'Bold', 'Lucky', 'Mellow', 'Nimble', 'Quiet', 'Shiny',
   'Snug', 'Tidal', 'Wavy', 'Zippy', 'Pebbly', 'Breezy', 'Frosty', 'Glossy',
   'Hardy', 'Merry', 'Splashy', 'Whiskered', 'Mighty', 'Deep', 'Ancient', 'Pearly',
   'Amber', 'Spotted', 'Prickly', 'Slippery', 'Foamy', 'Grumpy', 'Royal', 'Curious',
+]
+const MOD_EN = [
+  'Chonky', 'Fluffy', 'Round', 'Smol', 'Beeg', 'Derpy', 'Sandy', 'Pudgy',
+  'Floofy', 'Squishy', 'Blubbery', 'Cuddly',
 ]
 const NOUN_EN = [
   'Seal', 'Walrus', 'Whale', 'Dolphin', 'Narwhal', 'Spermwhale', 'Crab', 'Octopus',
@@ -35,6 +37,16 @@ const NOUN_EN = [
   'Halibut', 'Marlin', 'Sprat', 'Pollock', 'Tuna', 'Crayfish', 'Urchin', 'Mollusk',
   'Scallop', 'Leviathan', 'Serpent', 'Pelican',
 ]
+const PREFIX_EN = ['Seal', 'Pup', 'Selkie', 'Walrus']
+const SUFFIX_EN = ['Bun', 'Loaf', 'Blob', 'Bean', 'Pud']
+
+// Шаблоны имени: какие части участвуют (noun есть всегда).
+const PATTERNS: Array<{ adj?: boolean; mod?: boolean; pref?: boolean; suf?: boolean }> = [
+  {}, { adj: true }, { mod: true }, { adj: true, mod: true },
+  { pref: true }, { adj: true, pref: true }, { suf: true }, { adj: true, suf: true },
+]
+
+type NameParts = { adj?: number; mod?: number; noun: number; pref?: number; suf?: number }
 
 function hashStr(s: string): number {
   let h = 2166136261 >>> 0
@@ -44,11 +56,44 @@ function hashStr(s: string): number {
   }
   return h >>> 0
 }
+function mulberry32(a: number): () => number {
+  return function () {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
 
-/** Locale-независимые индексы имени: f(seed, game). Соль по игре → разные имена в разных играх. */
-function nameIndices(seed: number, game: string): { adjIdx: number; nounIdx: number } {
-  const e = ((seed >>> 0) ^ hashStr(game)) >>> 0
-  return { adjIdx: e % ADJ_EN.length, nounIdx: Math.floor(e / ADJ_EN.length) % NOUN_EN.length }
+/** Детерминированные части имени из (seed, game). Соль по игре → разные имена в разных играх. */
+function makeParts(seed: number, game: string): NameParts {
+  const rnd = mulberry32(((seed >>> 0) ^ hashStr(game)) >>> 0)
+  const patIdx = Math.floor(rnd() * PATTERNS.length)
+  const adj = Math.floor(rnd() * ADJ_EN.length)
+  const mod = Math.floor(rnd() * MOD_EN.length)
+  const noun = Math.floor(rnd() * NOUN_EN.length)
+  const pref = Math.floor(rnd() * PREFIX_EN.length)
+  const suf = Math.floor(rnd() * SUFFIX_EN.length)
+  const pat = PATTERNS[patIdx]
+  const parts: NameParts = { noun }
+  if (pat.adj) parts.adj = adj
+  if (pat.mod) parts.mod = mod
+  if (pat.pref) parts.pref = pref
+  if (pat.suf) parts.suf = suf
+  return parts
+}
+
+/** Канонический EN-рендер (ключ дедупа + подпись в админке). */
+function renderEn(p: NameParts): string {
+  const out: string[] = []
+  if (p.adj != null) out.push(ADJ_EN[p.adj])
+  if (p.mod != null) out.push(MOD_EN[p.mod])
+  let n = NOUN_EN[p.noun]
+  if (p.pref != null) n = `${PREFIX_EN[p.pref]} ${n}`
+  if (p.suf != null) n = `${n} ${SUFFIX_EN[p.suf]}`
+  out.push(n)
+  return out.join(' ')
 }
 
 /** ISO-неделя (YYYY-Www) — сезон доски, сбрасывается еженедельно. */
@@ -118,8 +163,8 @@ async function page(
   const offset = (pageNum - 1) * limit
   const top = res.docs.map((d, i) => ({
     rank: offset + i + 1,
-    adj: d.adjIdx as number,
-    noun: d.nounIdx as number,
+    alias: d.alias as string,
+    parts: d.nameParts as NameParts,
     score: d.score as number,
   }))
   return { top, total: res.totalDocs, page: pageNum, hasMore: res.hasNextPage }
@@ -161,16 +206,15 @@ export const leaderboardSubmit: Endpoint = {
     }
 
     const season = currentSeason()
-    const { adjIdx, nounIdx } = nameIndices(seed, slug)
-    const alias = `${ADJ_EN[adjIdx]} ${NOUN_EN[nounIdx]}`
+    const parts = makeParts(seed, slug)
+    const alias = renderEn(parts)
 
-    // — Дедуп: одна строка на (game, adjIdx, nounIdx, board, season), храним максимум.
+    // — Дедуп: одна строка на (game, alias, board, season), храним максимум.
     const existing = await req.payload.find({
       collection: 'game-scores',
       where: {
         game: { equals: game },
-        adjIdx: { equals: adjIdx },
-        nounIdx: { equals: nounIdx },
+        alias: { equals: alias },
         board: { equals: board },
         season: { equals: season },
       },
@@ -187,7 +231,7 @@ export const leaderboardSubmit: Endpoint = {
     } else {
       await req.payload.create({
         collection: 'game-scores',
-        data: { game, alias, adjIdx, nounIdx, score, durationMs, board, season },
+        data: { game, alias, nameParts: parts, score, durationMs, board, season },
       })
     }
 
@@ -206,8 +250,8 @@ export const leaderboardSubmit: Endpoint = {
     const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
     return Response.json({
-      adj: adjIdx,
-      noun: nounIdx,
+      alias,
+      parts,
       board,
       season,
       score: best,

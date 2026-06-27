@@ -40,11 +40,11 @@ function esc(s) {
 }
 
 function rowHtml(r, you, board) {
-  const me = you && board === you.board && r.adj === you.adj && r.noun === you.noun;
+  const me = you && board === you.board && r.alias === you.alias;
   return (
     `<li class="lb-row${me ? ' me' : ''}">` +
     `<span class="lb-rk">#${r.rank}</span>` +
-    `<span class="lb-al">${esc(renderName(r.adj, r.noun, lang()))}</span>` +
+    `<span class="lb-al">${esc(renderName(r.parts, lang()))}</span>` +
     `<span class="lb-sc">${r.score}</span></li>`
   );
 }
@@ -120,7 +120,7 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     const r = await submitScore(gameSlug, score);
     const st = {
       gameSlug,
-      you: { adj: r.adj, noun: r.noun, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
+      you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
       view: { board: r.board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
     };
     render(container, st, t);

@@ -484,17 +484,21 @@ export interface GameScore {
   id: number;
   game: number | Game;
   /**
-   * EN-подпись для админки (имя рисуется на клиенте по индексам).
+   * Канонический EN-рендер имени (идентичность + подпись в админке).
    */
   alias: string;
   /**
-   * Индекс прилагательного (locale-независимая идентичность). Часть ключа дедупа.
+   * Locale-независимые части имени {adj?,mod?,noun,pref?,suf?} — имя рисуется на клиенте на языке зрителя.
    */
-  adjIdx: number;
-  /**
-   * Индекс существительного (locale-независимая идентичность). Часть ключа дедупа.
-   */
-  nounIdx: number;
+  nameParts:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   score: number;
   durationMs: number;
   board: 'desktop' | 'mobile';
@@ -960,8 +964,7 @@ export interface GamesSelect<T extends boolean = true> {
 export interface GameScoresSelect<T extends boolean = true> {
   game?: T;
   alias?: T;
-  adjIdx?: T;
-  nounIdx?: T;
+  nameParts?: T;
   score?: T;
   durationMs?: T;
   board?: T;

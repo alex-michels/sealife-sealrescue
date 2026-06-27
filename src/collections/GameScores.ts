@@ -33,21 +33,17 @@ export const GameScores: CollectionConfig = {
       name: 'alias',
       type: 'text',
       required: true,
-      admin: { description: 'EN-подпись для админки (имя рисуется на клиенте по индексам).' },
+      index: true, // канонический EN-рендер имени = ключ дедупа (game, alias, board, season)
+      admin: { description: 'Канонический EN-рендер имени (идентичность + подпись в админке).' },
     },
     {
-      name: 'adjIdx',
-      type: 'number',
+      name: 'nameParts',
+      type: 'json',
       required: true,
-      index: true,
-      admin: { description: 'Индекс прилагательного (locale-независимая идентичность). Часть ключа дедупа.' },
-    },
-    {
-      name: 'nounIdx',
-      type: 'number',
-      required: true,
-      index: true,
-      admin: { description: 'Индекс существительного (locale-независимая идентичность). Часть ключа дедупа.' },
+      admin: {
+        description:
+          'Locale-независимые части имени {adj?,mod?,noun,pref?,suf?} — имя рисуется на клиенте на языке зрителя.',
+      },
     },
     { name: 'score', type: 'number', required: true, min: 0 },
     { name: 'durationMs', type: 'number', required: true },
