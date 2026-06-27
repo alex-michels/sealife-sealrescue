@@ -7,7 +7,7 @@
 const CACHE = 'seal-hunt-static-v3';
 const ASSETS = [
   './', './index.html', './style.css',
-  './game.js', './i18n.js', './core/balance.js', './core/input.js', './core/theme.js', './core/leaderboard.js',
+  './game.js', './i18n.js', './core/balance.js', './core/input.js', './core/theme.js', './core/leaderboard.js', './core/alias.js',
   './entities/seal.js', './entities/prey.js', './render/scenery.js',
   './favicon.svg', './manifest.webmanifest'
 ];

@@ -6,6 +6,7 @@ import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { PALETTE } from './core/theme.js';
 import { mountAfterPlay } from './core/leaderboard.js';
+import { getAlias } from './core/alias.js';
 
 const { sin, cos, hypot, min, max, PI } = Math;
 
@@ -14,6 +15,10 @@ const t = (key, vars) => window.SealI18n.t(key, vars);
 
 // Какой игре принадлежит результат (slug в Payload). Передаётся страницей-обёрткой (?game=).
 const GAME_SLUG = new URLSearchParams(location.search).get('game') || 'seal-the-hunter';
+
+// Приветствие с анонимным псевдонимом игрока («Привет, Quiet Shrimp 42!»).
+const HELLO = document.getElementById('hello');
+if (HELLO) HELLO.textContent = t('helloLine', { alias: getAlias(GAME_SLUG) });
 
 // Reusable sweep samples (avoid recreating [0,0.5,1] each frame in prey.js)
 export const SWEEP_T = [0, 0.5, 1];

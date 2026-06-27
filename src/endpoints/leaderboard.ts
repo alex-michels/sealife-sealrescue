@@ -2,31 +2,51 @@ import type { Endpoint, PayloadRequest } from 'payload'
 import { z } from 'zod'
 
 /**
- * Server-authoritative лидерборд (SH-06). Публичный клиент НЕ пишет в БД напрямую —
- * только через эти endpoints, которые валидируют ввод (Zod), режут неправдоподобные
- * результаты (анти-чит) и сами генерируют курируемый псевдоним. PII не хранится:
- * IP используется только для transient rate-limit (в памяти), в БД не попадает.
+ * Server-authoritative лидерборд (SH-06/07). Публичный клиент НЕ пишет в БД напрямую —
+ * только через эти endpoints: валидация (Zod), анти-чит (плаузибилити-капы),
+ * transient rate-limit (IP в БД НЕ хранится). PII не хранится.
  *
- *  POST /api/leaderboard   — отправить результат, вернуть ранг + топ
- *  GET  /api/leaderboard   — прочитать доску (?game=&board=)
+ * Идентичность игрока — opaque `seed` в его localStorage. Сервер детерминированно
+ * собирает из seed (с солью по игре) КУРИРУЕМЫЙ псевдоним «Adjective Noun N» — свободного
+ * текста нет (нет UGC/премодерации). В БД пишем только псевдоним (НЕ seed) → остаётся
+ * анонимным. Дедуп: одна строка на (game, alias, board, season), храним МАКСИМАЛЬНЫЙ
+ * счёт → нет спама БД. Доска недельная (season), две доски (desktop/mobile), пагинация.
+ *
+ *  POST /api/leaderboard   — отправить результат (upsert max), вернуть ранг + первую страницу
+ *  GET  /api/leaderboard   — прочитать доску (?game=&board=&page=&limit=)
  */
 
-// — Курируемые слова: псевдоним = f(seed). Свободного текста нет → нет UGC/премодерации.
+// ⚠️ KEEP IN SYNC с public/games/seal-hunt-v1/core/alias.js (тот же список и алгоритм —
+// иначе имя на старте разойдётся с именем в доске).
 const ADJ = [
   'Brave', 'Sleepy', 'Cosy', 'Plucky', 'Salty', 'Misty', 'Sunny', 'Chubby',
   'Swift', 'Gentle', 'Jolly', 'Bold', 'Lucky', 'Mellow', 'Nimble', 'Quiet',
   'Round', 'Shiny', 'Snug', 'Spry', 'Tidal', 'Wavy', 'Zippy', 'Pebbly',
+  'Breezy', 'Drifty', 'Frosty', 'Glossy', 'Hardy', 'Merry', 'Plump', 'Splashy',
 ]
 const NOUN = [
   'Seal', 'Otter', 'Walrus', 'Puffin', 'Cormorant', 'Kelp', 'Pebble', 'Buoy',
   'Wave', 'Tide', 'Cove', 'Skerry', 'Fjord', 'Selkie', 'Sprat', 'Herring',
   'Anchovy', 'Flipper', 'Whisker', 'Bubble', 'Dune', 'Reef', 'Shrimp', 'Beacon',
+  'Mussel', 'Barnacle', 'Lichen', 'Gull', 'Tern', 'Harbor', 'Current', 'Surf',
 ]
 
-function aliasFromSeed(seed: number): string {
-  const a = ADJ[seed % ADJ.length]
-  const n = NOUN[Math.floor(seed / ADJ.length) % NOUN.length]
-  return `${a} ${n}`
+function hashStr(s: string): number {
+  let h = 2166136261 >>> 0
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 16777619) >>> 0
+  }
+  return h >>> 0
+}
+
+/** Детерминированный курируемый псевдоним: f(seed, game). Соль по игре → разные имена в разных играх. */
+function aliasFromSeed(seed: number, game: string): string {
+  const e = ((seed >>> 0) ^ hashStr(game)) >>> 0
+  const adj = ADJ[e % ADJ.length]
+  const noun = NOUN[Math.floor(e / ADJ.length) % NOUN.length]
+  const num = Math.floor(e / (ADJ.length * NOUN.length)) % 1000
+  return `${adj} ${noun} ${num}`
 }
 
 /** ISO-неделя (YYYY-Www) — сезон доски, сбрасывается еженедельно. */
@@ -42,7 +62,7 @@ function currentSeason(d = new Date()): string {
 
 // — Transient rate-limit (в памяти, без сохранения IP).
 const HITS = new Map<string, number[]>()
-function rateLimited(ip: string, limit = 20, windowMs = 60_000): boolean {
+function rateLimited(ip: string, limit = 30, windowMs = 60_000): boolean {
   const now = Date.now()
   const arr = (HITS.get(ip) ?? []).filter((t) => now - t < windowMs)
   arr.push(now)
@@ -60,10 +80,11 @@ const SubmitBody = z.object({
   score: z.number().int().min(0).max(100_000),
   durationMs: z.number().int().min(0).max(600_000),
   board: Board,
-  seed: z.number().int().min(0).max(1_000_000_000),
+  seed: z.number().int().min(0).max(4_294_967_295),
 })
 
-const TOP_N = 20
+const PAGE_SIZE = 50
+const MAX_LIMIT = 100
 
 async function gameIdBySlug(req: PayloadRequest, slug: string): Promise<number | null> {
   const { docs } = await req.payload.find({
@@ -75,14 +96,26 @@ async function gameIdBySlug(req: PayloadRequest, slug: string): Promise<number |
   return docs[0] ? (docs[0].id as number) : null
 }
 
-async function topFor(req: PayloadRequest, game: number, board: 'desktop' | 'mobile', season: string) {
+async function page(
+  req: PayloadRequest,
+  game: number,
+  board: 'desktop' | 'mobile',
+  season: string,
+  pageNum: number,
+  limit: number,
+) {
   const where = { game: { equals: game }, board: { equals: board }, season: { equals: season } }
-  const [list, count] = await Promise.all([
-    req.payload.find({ collection: 'game-scores', where, sort: '-score', limit: TOP_N, depth: 0 }),
-    req.payload.count({ collection: 'game-scores', where }),
-  ])
-  const top = list.docs.map((d, i) => ({ rank: i + 1, alias: d.alias as string, score: d.score as number }))
-  return { top, total: count.totalDocs }
+  const res = await req.payload.find({
+    collection: 'game-scores',
+    where,
+    sort: ['-score', 'createdAt'],
+    limit,
+    page: pageNum,
+    depth: 0,
+  })
+  const offset = (pageNum - 1) * limit
+  const top = res.docs.map((d, i) => ({ rank: offset + i + 1, alias: d.alias as string, score: d.score as number }))
+  return { top, total: res.totalDocs, page: pageNum, hasMore: res.hasNextPage }
 }
 
 export const leaderboardSubmit: Endpoint = {
@@ -121,23 +154,59 @@ export const leaderboardSubmit: Endpoint = {
     }
 
     const season = currentSeason()
-    const alias = aliasFromSeed(seed)
+    const alias = aliasFromSeed(seed, slug)
 
-    await req.payload.create({
+    // — Дедуп: одна строка на (game, alias, board, season), храним максимум.
+    const existing = await req.payload.find({
       collection: 'game-scores',
-      data: { game, alias, score, durationMs, board, season },
+      where: {
+        game: { equals: game },
+        alias: { equals: alias },
+        board: { equals: board },
+        season: { equals: season },
+      },
+      limit: 1,
+      depth: 0,
     })
+    const prev = existing.docs[0]
+    let best = score
+    if (prev) {
+      best = Math.max(prev.score as number, score)
+      if (score > (prev.score as number)) {
+        await req.payload.update({ collection: 'game-scores', id: prev.id, data: { score, durationMs } })
+      }
+    } else {
+      await req.payload.create({ collection: 'game-scores', data: { game, alias, score, durationMs, board, season } })
+    }
 
-    const where = { game: { equals: game }, board: { equals: board }, season: { equals: season } }
+    // — Ранг по лучшему счёту игрока.
     const better = await req.payload.count({
       collection: 'game-scores',
-      where: { ...where, score: { greater_than: score } },
+      where: {
+        game: { equals: game },
+        board: { equals: board },
+        season: { equals: season },
+        score: { greater_than: best },
+      },
     })
     const rank = better.totalDocs + 1
-    const { top, total } = await topFor(req, game, board, season)
-    const percentile = total > 0 ? Math.max(1, Math.round((rank / total) * 100)) : 100
+    const first = await page(req, game, board, season, 1, PAGE_SIZE)
+    const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
-    return Response.json({ alias, board, season, score, rank, total, percentile, top })
+    return Response.json({
+      alias,
+      board,
+      season,
+      score: best,
+      submitted: score,
+      improved: !prev || score > (prev.score as number),
+      rank,
+      total: first.total,
+      percentile,
+      page: 1,
+      hasMore: first.hasMore,
+      top: first.top,
+    })
   },
 }
 
@@ -149,13 +218,15 @@ export const leaderboardRead: Endpoint = {
     const slug = url.searchParams.get('game') ?? ''
     const boardParsed = Board.safeParse(url.searchParams.get('board') ?? 'desktop')
     const board = boardParsed.success ? boardParsed.data : 'desktop'
+    const pageNum = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1)
+    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(url.searchParams.get('limit') ?? String(PAGE_SIZE), 10) || PAGE_SIZE))
     const season = currentSeason()
 
     const game = slug ? await gameIdBySlug(req, slug) : null
     if (game == null) {
-      return Response.json({ board, season, total: 0, top: [] })
+      return Response.json({ board, season, total: 0, page: pageNum, hasMore: false, top: [] })
     }
-    const { top, total } = await topFor(req, game, board, season)
-    return Response.json({ board, season, total, top })
+    const res = await page(req, game, board, season, pageNum, limit)
+    return Response.json({ board, season, ...res })
   },
 }

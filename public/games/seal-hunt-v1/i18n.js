@@ -61,8 +61,12 @@
       lbEmpty: 'Пока пусто — будь первым!',
       lbOffline: 'Лидерборд недоступен.',
       lbLoading: 'Загрузка…',
+      lbMore: 'Показать ещё',
       lbYouLine: function (v) {
         return 'Вы: #' + v.rank + ' из ' + v.total + ' · топ ' + v.pct + '%';
+      },
+      helloLine: function (v) {
+        return 'Привет, ' + v.alias + '!';
       },
     },
     en: {
@@ -113,8 +117,12 @@
       lbEmpty: 'Empty — be the first!',
       lbOffline: 'Leaderboard unavailable.',
       lbLoading: 'Loading…',
+      lbMore: 'Show more',
       lbYouLine: function (v) {
         return 'You: #' + v.rank + ' of ' + v.total + ' · top ' + v.pct + '%';
+      },
+      helloLine: function (v) {
+        return 'Hello, ' + v.alias + '!';
       },
     },
   };

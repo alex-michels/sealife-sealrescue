@@ -1,23 +1,11 @@
 // core/leaderboard.js — клиент анонимного лидерборда (SH-07).
-// Шлёт результат на server-authoritative endpoint и рисует доску в оверлее.
-// Никаких персональных данных: храним локально только opaque-seed (целое число),
-// из которого сервер собирает курируемый псевдоним. Доска недельная, две доски
-// (desktop/mobile). Источник правды — сервер; localStorage только мирроринг seed.
+// Источник правды — сервер. Локально храним только opaque-seed (см. alias.js).
+// Доска недельная, две доски (desktop/mobile), с пагинацией (скролл + «показать ещё»).
+import { getSeed } from './alias.js';
 
-const SEED_KEY = 'seal_hunt_seed';
 const ROUND_MS = 60000; // раунд всегда 60с
+const MAX_ROWS = 500; // сколько максимум подгружаем при скролле
 
-function getSeed() {
-  try {
-    const v = localStorage.getItem(SEED_KEY);
-    if (v && /^\d+$/.test(v)) return Number(v);
-  } catch {}
-  const s = Math.floor(Math.random() * 1e9);
-  try { localStorage.setItem(SEED_KEY, String(s)); } catch {}
-  return s;
-}
-
-// Грубая доска по типу указателя (touch → mobile). Без пиксельных размеров (анти-fingerprint).
 function detectBoard() {
   try {
     return window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop';
@@ -36,8 +24,8 @@ async function submitScore(gameSlug, score) {
   return res.json();
 }
 
-async function fetchBoard(gameSlug, board) {
-  const res = await fetch(`/api/leaderboard?game=${encodeURIComponent(gameSlug)}&board=${board}`);
+async function fetchPage(gameSlug, board, pageNum) {
+  const res = await fetch(`/api/leaderboard?game=${encodeURIComponent(gameSlug)}&board=${board}&page=${pageNum}`);
   if (!res.ok) throw new Error('read ' + res.status);
   return res.json();
 }
@@ -46,50 +34,78 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-function render(container, state, t, gameSlug) {
-  const { you, view } = state;
+function rowHtml(r, you, board) {
+  const me = you && board === you.board && r.alias === you.alias;
+  return (
+    `<li class="lb-row${me ? ' me' : ''}">` +
+    `<span class="lb-rk">#${r.rank}</span>` +
+    `<span class="lb-al">${esc(r.alias)}</span>` +
+    `<span class="lb-sc">${r.score}</span></li>`
+  );
+}
+
+function render(container, st, t) {
+  const { you, view, gameSlug } = st;
   const tab = (b) =>
     `<button type="button" class="lb-tab${view.board === b ? ' on' : ''}" data-b="${b}">` +
     `${esc(b === 'desktop' ? t('lbDesktop') : t('lbMobile'))}</button>`;
 
-  const rows = view.top.length
-    ? view.top
-        .map((r) => {
-          const me = you && view.board === you.board && r.alias === you.alias && r.score === you.score;
-          return (
-            `<li class="lb-row${me ? ' me' : ''}">` +
-            `<span class="lb-rk">#${r.rank}</span>` +
-            `<span class="lb-al">${esc(r.alias)}</span>` +
-            `<span class="lb-sc">${r.score}</span></li>`
-          );
-        })
-        .join('')
+  const rows = view.rows.length
+    ? view.rows.map((r) => rowHtml(r, you, view.board)).join('')
     : `<li class="lb-empty">${esc(t('lbEmpty'))}</li>`;
 
   const youLine = you
     ? `<div class="lb-you">${esc(t('lbYouLine', { rank: you.rank, total: you.total, pct: you.percentile }))}</div>`
     : '';
 
+  const more =
+    view.hasMore && view.rows.length < MAX_ROWS
+      ? `<button type="button" class="lb-more">${esc(t('lbMore'))}</button>`
+      : '';
+
   container.innerHTML =
     `<div class="lb">` +
     `<div class="lb-head"><span class="lb-title">${esc(t('lbTitle'))}</span>` +
-    `<span class="lb-note">${esc(t('lbResetNote'))}</span></div>` +
+    `<span class="lb-note">${esc(t('lbResetNote'))} · ${view.total}</span></div>` +
     youLine +
     `<div class="lb-tabs">${tab('desktop')}${tab('mobile')}</div>` +
-    `<ol class="lb-list">${rows}</ol></div>`;
+    `<ol class="lb-list">${rows}</ol>` +
+    more +
+    `</div>`;
 
   container.querySelectorAll('.lb-tab').forEach((btn) => {
     btn.addEventListener('click', async () => {
       const b = btn.getAttribute('data-b');
       if (b === view.board) return;
       try {
-        const r = await fetchBoard(gameSlug, b);
-        render(container, { you, view: { board: b, total: r.total, top: r.top } }, t, gameSlug);
+        const r = await fetchPage(gameSlug, b, 1);
+        st.view = { board: b, total: r.total, page: 1, rows: r.top, hasMore: r.hasMore };
+        render(container, st, t);
       } catch {
         /* keep current view on failure */
       }
     });
   });
+
+  const moreBtn = container.querySelector('.lb-more');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', async () => {
+      moreBtn.disabled = true;
+      try {
+        const r = await fetchPage(gameSlug, view.board, view.page + 1);
+        // append rows (preserve scroll position) and update state
+        const list = container.querySelector('.lb-list');
+        if (list) list.insertAdjacentHTML('beforeend', r.top.map((x) => rowHtml(x, you, view.board)).join(''));
+        view.rows = view.rows.concat(r.top);
+        view.page = r.page;
+        view.hasMore = r.hasMore && view.rows.length < MAX_ROWS;
+        if (!view.hasMore) moreBtn.remove();
+        else moreBtn.disabled = false;
+      } catch {
+        moreBtn.disabled = false;
+      }
+    });
+  }
 }
 
 /** Submit the just-finished score, then render the board (with the player highlighted). */
@@ -98,8 +114,12 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
   container.innerHTML = `<div class="lb"><div class="lb-load">${esc(t('lbLoading'))}</div></div>`;
   try {
     const r = await submitScore(gameSlug, score);
-    const you = { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile, score: r.score };
-    render(container, { you, view: { board: r.board, total: r.total, top: r.top } }, t, gameSlug);
+    const st = {
+      gameSlug,
+      you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
+      view: { board: r.board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
+    };
+    render(container, st, t);
   } catch {
     container.innerHTML = `<div class="lb"><div class="lb-off">${esc(t('lbOffline'))}</div></div>`;
   }

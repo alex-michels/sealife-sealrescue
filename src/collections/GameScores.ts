@@ -32,6 +32,7 @@ export const GameScores: CollectionConfig = {
       name: 'alias',
       type: 'text',
       required: true,
+      index: true, // ключ дедупа (game, alias, board, season) — храним максимум счёта
       admin: { description: 'Курируемый псевдоним (генерируется сервером, не вводится пользователем).' },
     },
     { name: 'score', type: 'number', required: true, min: 0 },

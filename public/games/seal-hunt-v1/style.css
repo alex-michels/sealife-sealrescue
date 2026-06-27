@@ -12,6 +12,10 @@ button:active{transform:translateY(1px)}
 #overlay[hidden]{display:none}
 .overlay-buttons{display:flex;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center}
 
+/* — Приветствие игрока на старте */
+.hello{margin:.2rem 0 .1rem;font-weight:700;color:#9fd0e0}
+.hello:empty{display:none}
+
 /* — Лидерборд */
 .board{width:min(360px,86vw);margin-top:1rem;text-align:left}
 .board[hidden]{display:none}
@@ -30,6 +34,8 @@ button:active{transform:translateY(1px)}
 .lb-al{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-sc{font-variant-numeric:tabular-nums;font-weight:600}
 .lb-empty,.lb-off,.lb-load{padding:.5rem .3rem;opacity:.7;font-size:.85rem}
+.lb-more{margin-top:.5rem;width:100%;background:rgba(237,241,243,.08);color:#EDF1F3;font-size:.82rem;padding:.4rem}
+.lb-more:disabled{opacity:.5}
 @media (max-width:480px){#hud .left span{margin-right:.6rem}button{padding:.5rem .7rem;font-size:0.95rem}}
 @media (prefers-contrast:more){button{outline:2px solid #fff}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
