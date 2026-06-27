@@ -16,9 +16,9 @@ const t = (key, vars) => window.SealI18n.t(key, vars);
 // Какой игре принадлежит результат (slug в Payload). Передаётся страницей-обёрткой (?game=).
 const GAME_SLUG = new URLSearchParams(location.search).get('game') || 'seal-the-hunter';
 
-// Приветствие с анонимным псевдонимом игрока («Привет, Quiet Shrimp 42!»).
+// Приветствие с анонимным псевдонимом игрока (локализуется: «Привет, Солёный Тюлень!»).
 const HELLO = document.getElementById('hello');
-if (HELLO) HELLO.textContent = t('helloLine', { alias: getAlias(GAME_SLUG) });
+if (HELLO) HELLO.textContent = t('helloLine', { alias: getAlias(GAME_SLUG, window.SealI18n.lang) });
 
 // Reusable sweep samples (avoid recreating [0,0.5,1] each frame in prey.js)
 export const SWEEP_T = [0, 0.5, 1];

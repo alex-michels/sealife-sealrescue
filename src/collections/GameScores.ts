@@ -4,8 +4,9 @@ import { isEditor } from '../access/roles'
 /**
  * Анонимный лидерборд мини-игр (SH-05). EU-чистая модель данных:
  *  - НЕТ персональных данных: ни email, ни IP, ни аккаунтов.
- *  - `alias` — курируемый псевдоним, сгенерированный сервером из opaque-seed (НЕ UGC,
- *    свободного текста не существует → не нужна премодерация/DSA notice-and-action).
+ *  - Имя игрока локализуемо: храним locale-независимые ИНДЕКСЫ слов (`adjIdx`/`nounIdx`),
+ *    имя рисуется на клиенте на языке зрителя из выровненных RU/EN-списков. `alias` (EN) —
+ *    денормализованная подпись для админки. Свободного текста нет (НЕ UGC).
  *  - `board` — грубо desktop/mobile (без пиксельных размеров → без fingerprint).
  *  - `season` — ISO-неделя: доска сбрасывается еженедельно (просто фильтр по сезону).
  *
@@ -32,8 +33,21 @@ export const GameScores: CollectionConfig = {
       name: 'alias',
       type: 'text',
       required: true,
-      index: true, // ключ дедупа (game, alias, board, season) — храним максимум счёта
-      admin: { description: 'Курируемый псевдоним (генерируется сервером, не вводится пользователем).' },
+      admin: { description: 'EN-подпись для админки (имя рисуется на клиенте по индексам).' },
+    },
+    {
+      name: 'adjIdx',
+      type: 'number',
+      required: true,
+      index: true,
+      admin: { description: 'Индекс прилагательного (locale-независимая идентичность). Часть ключа дедупа.' },
+    },
+    {
+      name: 'nounIdx',
+      type: 'number',
+      required: true,
+      index: true,
+      admin: { description: 'Индекс существительного (locale-независимая идентичность). Часть ключа дедупа.' },
     },
     { name: 'score', type: 'number', required: true, min: 0 },
     { name: 'durationMs', type: 'number', required: true },

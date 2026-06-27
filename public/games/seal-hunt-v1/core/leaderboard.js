@@ -1,10 +1,15 @@
 // core/leaderboard.js — клиент анонимного лидерборда (SH-07).
 // Источник правды — сервер. Локально храним только opaque-seed (см. alias.js).
-// Доска недельная, две доски (desktop/mobile), с пагинацией (скролл + «показать ещё»).
-import { getSeed } from './alias.js';
+// Имена приходят как индексы и рисуются на языке зрителя. Доска недельная, две доски
+// (desktop/mobile), пагинация (скролл + «показать ещё»).
+import { getSeed, renderName } from './alias.js';
 
 const ROUND_MS = 60000; // раунд всегда 60с
 const MAX_ROWS = 500; // сколько максимум подгружаем при скролле
+
+function lang() {
+  return (window.SealI18n && window.SealI18n.lang) || 'ru';
+}
 
 function detectBoard() {
   try {
@@ -35,11 +40,11 @@ function esc(s) {
 }
 
 function rowHtml(r, you, board) {
-  const me = you && board === you.board && r.alias === you.alias;
+  const me = you && board === you.board && r.adj === you.adj && r.noun === you.noun;
   return (
     `<li class="lb-row${me ? ' me' : ''}">` +
     `<span class="lb-rk">#${r.rank}</span>` +
-    `<span class="lb-al">${esc(r.alias)}</span>` +
+    `<span class="lb-al">${esc(renderName(r.adj, r.noun, lang()))}</span>` +
     `<span class="lb-sc">${r.score}</span></li>`
   );
 }
@@ -93,7 +98,6 @@ function render(container, st, t) {
       moreBtn.disabled = true;
       try {
         const r = await fetchPage(gameSlug, view.board, view.page + 1);
-        // append rows (preserve scroll position) and update state
         const list = container.querySelector('.lb-list');
         if (list) list.insertAdjacentHTML('beforeend', r.top.map((x) => rowHtml(x, you, view.board)).join(''));
         view.rows = view.rows.concat(r.top);
@@ -116,7 +120,7 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     const r = await submitScore(gameSlug, score);
     const st = {
       gameSlug,
-      you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
+      you: { adj: r.adj, noun: r.noun, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
       view: { board: r.board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
     };
     render(container, st, t);

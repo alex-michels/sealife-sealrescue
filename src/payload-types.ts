@@ -484,9 +484,17 @@ export interface GameScore {
   id: number;
   game: number | Game;
   /**
-   * Курируемый псевдоним (генерируется сервером, не вводится пользователем).
+   * EN-подпись для админки (имя рисуется на клиенте по индексам).
    */
   alias: string;
+  /**
+   * Индекс прилагательного (locale-независимая идентичность). Часть ключа дедупа.
+   */
+  adjIdx: number;
+  /**
+   * Индекс существительного (locale-независимая идентичность). Часть ключа дедупа.
+   */
+  nounIdx: number;
   score: number;
   durationMs: number;
   board: 'desktop' | 'mobile';
@@ -952,6 +960,8 @@ export interface GamesSelect<T extends boolean = true> {
 export interface GameScoresSelect<T extends boolean = true> {
   game?: T;
   alias?: T;
+  adjIdx?: T;
+  nounIdx?: T;
   score?: T;
   durationMs?: T;
   board?: T;

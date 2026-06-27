@@ -6,29 +6,34 @@ import { z } from 'zod'
  * только через эти endpoints: валидация (Zod), анти-чит (плаузибилити-капы),
  * transient rate-limit (IP в БД НЕ хранится). PII не хранится.
  *
- * Идентичность игрока — opaque `seed` в его localStorage. Сервер детерминированно
- * собирает из seed (с солью по игре) КУРИРУЕМЫЙ псевдоним «Adjective Noun N» — свободного
- * текста нет (нет UGC/премодерации). В БД пишем только псевдоним (НЕ seed) → остаётся
- * анонимным. Дедуп: одна строка на (game, alias, board, season), храним МАКСИМАЛЬНЫЙ
- * счёт → нет спама БД. Доска недельная (season), две доски (desktop/mobile), пагинация.
+ * Идентичность игрока — opaque `seed` в localStorage. Сервер детерминированно собирает
+ * из (seed, game) ИНДЕКСЫ слов (locale-независимо) → курируемое имя «Прил. Существительное»
+ * (без чисел, морская тематика). В БД храним индексы (идентичность) + EN-подпись для
+ * админки. Имя локализуется на клиенте по индексам. Свободного текста нет (нет UGC).
+ * Дедуп: одна строка на (game, adjIdx, nounIdx, board, season), храним МАКСИМУМ счёта.
+ * Доска недельная (season), две доски (desktop/mobile), пагинация.
  *
  *  POST /api/leaderboard   — отправить результат (upsert max), вернуть ранг + первую страницу
  *  GET  /api/leaderboard   — прочитать доску (?game=&board=&page=&limit=)
  */
 
-// ⚠️ KEEP IN SYNC с public/games/seal-hunt-v1/core/alias.js (тот же список и алгоритм —
-// иначе имя на старте разойдётся с именем в доске).
-const ADJ = [
-  'Brave', 'Sleepy', 'Cosy', 'Plucky', 'Salty', 'Misty', 'Sunny', 'Chubby',
-  'Swift', 'Gentle', 'Jolly', 'Bold', 'Lucky', 'Mellow', 'Nimble', 'Quiet',
-  'Round', 'Shiny', 'Snug', 'Spry', 'Tidal', 'Wavy', 'Zippy', 'Pebbly',
-  'Breezy', 'Drifty', 'Frosty', 'Glossy', 'Hardy', 'Merry', 'Plump', 'Splashy',
+// ⚠️ KEEP IN SYNC (порядок и длина) с public/games/seal-hunt-v1/core/alias.js (.en значения).
+// Имя рисуется на клиенте по индексам — критична длина списков; EN-слова нужны только для
+// денормализованной подписи в админке.
+const ADJ_EN = [
+  'Salty', 'Brave', 'Sleepy', 'Cosy', 'Misty', 'Sunny', 'Plump', 'Swift',
+  'Gentle', 'Jolly', 'Bold', 'Lucky', 'Mellow', 'Nimble', 'Quiet', 'Shiny',
+  'Snug', 'Tidal', 'Wavy', 'Zippy', 'Pebbly', 'Breezy', 'Frosty', 'Glossy',
+  'Hardy', 'Merry', 'Splashy', 'Whiskered', 'Mighty', 'Deep', 'Ancient', 'Pearly',
+  'Amber', 'Spotted', 'Prickly', 'Slippery', 'Foamy', 'Grumpy', 'Royal', 'Curious',
 ]
-const NOUN = [
-  'Seal', 'Otter', 'Walrus', 'Puffin', 'Cormorant', 'Kelp', 'Pebble', 'Buoy',
-  'Wave', 'Tide', 'Cove', 'Skerry', 'Fjord', 'Selkie', 'Sprat', 'Herring',
-  'Anchovy', 'Flipper', 'Whisker', 'Bubble', 'Dune', 'Reef', 'Shrimp', 'Beacon',
-  'Mussel', 'Barnacle', 'Lichen', 'Gull', 'Tern', 'Harbor', 'Current', 'Surf',
+const NOUN_EN = [
+  'Seal', 'Walrus', 'Whale', 'Dolphin', 'Narwhal', 'Spermwhale', 'Crab', 'Octopus',
+  'Squid', 'Lobster', 'Anchovy', 'Salmon', 'Burbot', 'Perch', 'Eel', 'Ray',
+  'Seahorse', 'Krill', 'Coral', 'Kraken', 'Triton', 'Merman', 'Catfish', 'Bubble',
+  'Buoy', 'Anchor', 'Reef', 'Beacon', 'Cormorant', 'Puffin', 'Penguin', 'Sturgeon',
+  'Halibut', 'Marlin', 'Sprat', 'Pollock', 'Tuna', 'Crayfish', 'Urchin', 'Mollusk',
+  'Scallop', 'Leviathan', 'Serpent', 'Pelican',
 ]
 
 function hashStr(s: string): number {
@@ -40,13 +45,10 @@ function hashStr(s: string): number {
   return h >>> 0
 }
 
-/** Детерминированный курируемый псевдоним: f(seed, game). Соль по игре → разные имена в разных играх. */
-function aliasFromSeed(seed: number, game: string): string {
+/** Locale-независимые индексы имени: f(seed, game). Соль по игре → разные имена в разных играх. */
+function nameIndices(seed: number, game: string): { adjIdx: number; nounIdx: number } {
   const e = ((seed >>> 0) ^ hashStr(game)) >>> 0
-  const adj = ADJ[e % ADJ.length]
-  const noun = NOUN[Math.floor(e / ADJ.length) % NOUN.length]
-  const num = Math.floor(e / (ADJ.length * NOUN.length)) % 1000
-  return `${adj} ${noun} ${num}`
+  return { adjIdx: e % ADJ_EN.length, nounIdx: Math.floor(e / ADJ_EN.length) % NOUN_EN.length }
 }
 
 /** ISO-неделя (YYYY-Www) — сезон доски, сбрасывается еженедельно. */
@@ -114,7 +116,12 @@ async function page(
     depth: 0,
   })
   const offset = (pageNum - 1) * limit
-  const top = res.docs.map((d, i) => ({ rank: offset + i + 1, alias: d.alias as string, score: d.score as number }))
+  const top = res.docs.map((d, i) => ({
+    rank: offset + i + 1,
+    adj: d.adjIdx as number,
+    noun: d.nounIdx as number,
+    score: d.score as number,
+  }))
   return { top, total: res.totalDocs, page: pageNum, hasMore: res.hasNextPage }
 }
 
@@ -154,14 +161,16 @@ export const leaderboardSubmit: Endpoint = {
     }
 
     const season = currentSeason()
-    const alias = aliasFromSeed(seed, slug)
+    const { adjIdx, nounIdx } = nameIndices(seed, slug)
+    const alias = `${ADJ_EN[adjIdx]} ${NOUN_EN[nounIdx]}`
 
-    // — Дедуп: одна строка на (game, alias, board, season), храним максимум.
+    // — Дедуп: одна строка на (game, adjIdx, nounIdx, board, season), храним максимум.
     const existing = await req.payload.find({
       collection: 'game-scores',
       where: {
         game: { equals: game },
-        alias: { equals: alias },
+        adjIdx: { equals: adjIdx },
+        nounIdx: { equals: nounIdx },
         board: { equals: board },
         season: { equals: season },
       },
@@ -176,7 +185,10 @@ export const leaderboardSubmit: Endpoint = {
         await req.payload.update({ collection: 'game-scores', id: prev.id, data: { score, durationMs } })
       }
     } else {
-      await req.payload.create({ collection: 'game-scores', data: { game, alias, score, durationMs, board, season } })
+      await req.payload.create({
+        collection: 'game-scores',
+        data: { game, alias, adjIdx, nounIdx, score, durationMs, board, season },
+      })
     }
 
     // — Ранг по лучшему счёту игрока.
@@ -194,7 +206,8 @@ export const leaderboardSubmit: Endpoint = {
     const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
     return Response.json({
-      alias,
+      adj: adjIdx,
+      noun: nounIdx,
       board,
       season,
       score: best,
