@@ -11,7 +11,7 @@
 import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '../payload.config'
-import { contentSeed, speciesSeed } from './m1SeedData'
+import { contentSeed, speciesSeed, gamesSeed } from './m1SeedData'
 
 const payload = await getPayload({ config })
 
@@ -137,6 +137,52 @@ for (const sp of speciesSeed) {
   })
 }
 
+let gamesCreated = 0
+let gamesUpdated = 0
+
+for (const g of gamesSeed) {
+  const existing = await payload.find({
+    collection: 'games',
+    where: { slug: { equals: g.slug } },
+    limit: 1,
+    locale: 'ru',
+  })
+  const ruData = {
+    slug: g.slug,
+    title: g.title.ru,
+    excerpt: g.excerpt?.ru,
+    how: g.how?.ru,
+    embed: g.embed,
+    showCover: g.showCover ?? false,
+    coverSeed: g.coverSeed,
+    order: g.order ?? 0,
+    _status: 'published' as const,
+  }
+
+  let id: number
+  if (existing.docs[0]) {
+    id = existing.docs[0].id as number
+    await payload.update({ collection: 'games', id, locale: 'ru', data: ruData })
+    gamesUpdated++
+  } else {
+    const doc = await payload.create({ collection: 'games', locale: 'ru', data: ruData })
+    id = doc.id as number
+    gamesCreated++
+  }
+
+  // Дописываем перевод en (локализованные поля), не трогая ru.
+  await payload.update({
+    collection: 'games',
+    id,
+    locale: 'en',
+    data: {
+      title: g.title.en,
+      excerpt: g.excerpt?.en,
+      how: g.how?.en,
+    },
+  })
+}
+
 console.log(
-  `M1 seed: content +${contentCreated}/~${contentUpdated}, species +${speciesCreated}/~${speciesUpdated}.`,
+  `M1 seed: content +${contentCreated}/~${contentUpdated}, species +${speciesCreated}/~${speciesUpdated}, games +${gamesCreated}/~${gamesUpdated}.`,
 )

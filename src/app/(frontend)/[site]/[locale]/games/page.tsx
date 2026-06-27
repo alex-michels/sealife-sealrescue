@@ -1,12 +1,11 @@
-import { sampleGames } from '@/mock/sample'
 import {
   requireSection,
   sectionMetadata,
-  SectionListView,
-  parseState,
   type RouteParams,
-  type SearchParams,
 } from '@/app/(frontend)/_components/mock/mockSection'
+import { PageShell } from '@/app/(frontend)/_components/content/PageShell'
+import { ContentList } from '@/app/(frontend)/_components/content/ContentList'
+import { findAllGames } from '@/app/(frontend)/_components/content/getGames'
 
 const SLUG = 'games'
 
@@ -14,31 +13,21 @@ export function generateMetadata({ params }: { params: RouteParams }) {
   return sectionMetadata(params, SLUG)
 }
 
-export default async function GamesPage({
-  params,
-  searchParams,
-}: {
-  params: RouteParams
-  searchParams: SearchParams
-}) {
-  const { site, locale, section } = await requireSection(params, SLUG)
-  const state = parseState((await searchParams).state)
-  const items = sampleGames.map((g, i) => ({
+export default async function GamesPage({ params }: { params: RouteParams }) {
+  const { locale, section } = await requireSection(params, SLUG)
+  const games = await findAllGames(locale)
+
+  const items = games.map((g) => ({
     href: `/${locale}/${SLUG}/${g.slug}`,
-    title: g.title[locale],
-    excerpt: g.excerpt[locale],
+    title: g.title,
+    excerpt: g.excerpt ?? undefined,
     meta: locale === 'en' ? 'Game' : 'Игра',
-    seed: i + 4,
+    seed: typeof g.id === 'number' ? g.id + 4 : 4,
   }))
+
   return (
-    <SectionListView
-      site={site}
-      locale={locale}
-      slug={SLUG}
-      title={section.title[locale]}
-      intro={section.intro[locale]}
-      items={items}
-      state={state}
-    />
+    <PageShell locale={locale} title={section.title[locale]} intro={section.intro[locale]}>
+      <ContentList locale={locale} items={items} />
+    </PageShell>
   )
 }

@@ -1,0 +1,15 @@
+{
+  "name": "Тюль-Охота",
+  "short_name": "Тюль-Охота",
+  "start_url": ".",
+  "display": "fullscreen",
+  "background_color": "#021622",
+  "theme_color": "#0a3555",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

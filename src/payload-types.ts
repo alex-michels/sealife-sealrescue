@@ -72,6 +72,7 @@ export interface Config {
     content: Content;
     species: Species;
     quizzes: Quiz;
+    games: Game;
     sources: Source;
     glossary: Glossary;
     'agent-proposals': AgentProposal;
@@ -91,6 +92,7 @@ export interface Config {
     content: ContentSelect<false> | ContentSelect<true>;
     species: SpeciesSelect<false> | SpeciesSelect<true>;
     quizzes: QuizzesSelect<false> | QuizzesSelect<true>;
+    games: GamesSelect<false> | GamesSelect<true>;
     sources: SourcesSelect<false> | SourcesSelect<true>;
     glossary: GlossarySelect<false> | GlossarySelect<true>;
     'agent-proposals': AgentProposalsSelect<false> | AgentProposalsSelect<true>;
@@ -433,6 +435,44 @@ export interface Quiz {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * Мини-игры (sealife.info).
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "games".
+ */
+export interface Game {
+  id: number;
+  title: string;
+  /**
+   * Canonical slug — общий для локалей (/ru/games/slug, /en/games/slug).
+   */
+  slug: string;
+  excerpt?: string | null;
+  /**
+   * «Как играть»: управление и цель — текстом вне canvas (доступность).
+   */
+  how?: string | null;
+  /**
+   * Путь к встроенной статической игре из /public (напр. /games/seal-hunt-v1/index.html). Язык игры подставляется автоматически (?lang=). Пусто — пока без играбельного фрейма.
+   */
+  embed?: string | null;
+  /**
+   * Показывать картинку-заставку над игрой на её странице. Выкл — сразу крупный игровой фрейм.
+   */
+  showCover?: boolean | null;
+  /**
+   * Вариант декоративной заставки (меняет оттенок). Любое целое число.
+   */
+  coverSeed?: number | null;
+  /**
+   * Порядок в списке игр: меньше — выше.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * Словарь терминов и тюль-сленга: ru → перевод. Для переводчиков и Агента 3.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -636,6 +676,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'quizzes';
         value: number | Quiz;
+      } | null)
+    | ({
+        relationTo: 'games';
+        value: number | Game;
       } | null)
     | ({
         relationTo: 'sources';
@@ -851,6 +895,23 @@ export interface QuizzesSelect<T extends boolean = true> {
         id?: T;
       };
   aiGenerated?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "games_select".
+ */
+export interface GamesSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  excerpt?: T;
+  how?: T;
+  embed?: T;
+  showCover?: T;
+  coverSeed?: T;
+  order?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

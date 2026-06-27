@@ -19,6 +19,17 @@ export interface ContentSeed {
   body?: Paras
 }
 
+export interface GameSeed {
+  slug: string
+  title: L
+  excerpt?: L
+  how?: L
+  embed?: string
+  showCover?: boolean
+  coverSeed?: number
+  order?: number
+}
+
 export interface SpeciesSeed {
   slug: string
   name: L
@@ -125,6 +136,21 @@ export const contentSeed: ContentSeed[] = [
       ru: ['Тюлень.Инфо — медиа-хаб о тюленях: факты, новости, мемы и квизы. Серьёзная часть — про спасение — живёт на соседнем сайте.'],
       en: ['SeaLife.Info is a media hub about seals: facts, news, memes and quizzes. The serious part — about rescue — lives on the sister site.'],
     },
+  },
+]
+
+export const gamesSeed: GameSeed[] = [
+  {
+    slug: 'seal-the-hunter',
+    title: { ru: 'Тюль-Охотник', en: 'Seal The Hunter' },
+    excerpt: { ru: 'Лови рыбу тюленем за 60 секунд.', en: 'Hunt fish as a seal in 60 seconds.' },
+    how: {
+      ru: 'Управление: тяни/веди указателем или стрелками — тюлень плывёт за курсором. Цель: поймать как можно больше рыбы за 60 секунд. Кнопки «Старт», «Пауза» и звук — на панели игры.',
+      en: 'Controls: drag/point or use arrow keys — the seal follows the cursor. Goal: catch as many fish as you can in 60 seconds. Start, Pause and sound buttons are in the game toolbar.',
+    },
+    embed: '/games/seal-hunt-v1/index.html',
+    showCover: false,
+    order: 0,
   },
 ]
 

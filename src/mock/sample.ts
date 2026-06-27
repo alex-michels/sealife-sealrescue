@@ -35,13 +35,6 @@ export interface SampleQuiz {
   sample: { q: L; options: L[] }
 }
 
-export interface SampleGame {
-  slug: string
-  title: L
-  excerpt: L
-  how: L
-}
-
 export interface SampleSpecies {
   slug: string
   name: L
@@ -164,24 +157,6 @@ export const sampleQuizzes: SampleQuiz[] = [
   },
 ]
 
-export const sampleGames: SampleGame[] = [
-  {
-    slug: 'sample-game',
-    title: lorem('Тюлень против пластика', 'Seal vs. plastic'),
-    excerpt: lorem('Уворачивайся от мусора, лови рыбу.', 'Dodge the trash, catch the fish.'),
-    how: lorem(
-      'Управление: ← → или свайп. Цель: собрать рыбу и не задеть пластик. Инструкция и результат — текстом вне canvas (доступность).',
-      'Controls: ← → or swipe. Goal: collect fish, avoid plastic. Instructions and score are shown as text outside the canvas (accessibility).',
-    ),
-  },
-  {
-    slug: 'memory-flippers',
-    title: lorem('Память: ласты', 'Memory: flippers'),
-    excerpt: lorem('Найди пары за меньшее число ходов.', 'Match the pairs in fewer moves.'),
-    how: lorem('Клик/тап по карточкам. Найдите все пары.', 'Click/tap cards. Find all pairs.'),
-  },
-]
-
 export const sampleSpecies: SampleSpecies[] = [
   {
     slug: 'sample-species',
@@ -285,6 +260,5 @@ const bySlug = <T extends { slug: string }>(items: T[], slug: string): T | undef
 export const findArticle = (slug: string) => bySlug(sampleArticles, slug)
 export const findNews = (slug: string) => bySlug(sampleNews, slug)
 export const findQuiz = (slug: string) => bySlug(sampleQuizzes, slug)
-export const findGame = (slug: string) => bySlug(sampleGames, slug)
 export const findSpecies = (slug: string) => bySlug(sampleSpecies, slug)
 export const findCenter = (slug: string) => bySlug(sampleCenters, slug)
