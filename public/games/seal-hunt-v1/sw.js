@@ -1,10 +1,11 @@
-// sw.js – add/replace with minimal static cache
-const CACHE = 'seal-hunt-static-v1';
+// sw.js – minimal static cache, scoped to /games/seal-hunt-v1/.
+// Paths are RELATIVE (resolve against the SW scope), so they work under the subpath.
+const CACHE = 'seal-hunt-static-v2';
 const ASSETS = [
-  '/', '/index.html', '/style.css',
-  '/game.js','/i18n.js','/core/balance.js','/core/input.js',
-  '/entities/seal.js','/entities/prey.js','/render/scenery.js',
-  '/favicon.svg','/manifest.webmanifest'
+  './', './index.html', './style.css',
+  './game.js', './i18n.js', './core/balance.js', './core/input.js',
+  './entities/seal.js', './entities/prey.js', './render/scenery.js',
+  './favicon.svg', './manifest.webmanifest'
 ];
 
 self.addEventListener('install', e=>{

@@ -1,5 +1,5 @@
 // entities/prey.js
-import { BAL, BASE } from '../core/balance.js';
+import { BAL } from '../core/balance.js';
 import { SWEEP_T } from '../game.js';
 
 // tiny helper
@@ -213,14 +213,10 @@ export function spawnPrey(world, n=1){
 }
 
 export function updatePrey(dt, seal, world, eatCb){
-  const now = performance.now()/1000;
-  const diagK = BAL.diag / BASE.diag;
-
-  // Small-screen scaling: reduce escape potency on phones a bit
-  // diagK=0.6 → boostK≈0.85 (so ~15% softer), big screens ~1.0
-  const boostK  = (diagK < 1) ? (0.85 + 0.15 * diagK) : 1.0;
-  const steerK  = (diagK < 1) ? (0.90 + 0.10 * diagK) : 1.0;
-  const threatK = ESCAPE.threatK * (0.95 + 0.05 * diagK); // tiny scale with size
+  // Fixed-resolution world (SH-02): balance is device-independent, so no screen scaling.
+  const boostK = 1.0;
+  const steerK = 1.0;
+  const threatK = ESCAPE.threatK;
 
   for(let i=PREY.length-1;i>=0;i--){
     const f = PREY[i];
