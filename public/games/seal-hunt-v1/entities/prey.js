@@ -1,5 +1,5 @@
 // entities/prey.js
-import { BAL, BASE } from '../core/balance.js';
+import { BAL } from '../core/balance.js';
 import { SWEEP_T } from '../game.js';
 
 // tiny helper
@@ -14,20 +14,20 @@ const WIGGLE = {
 };
 const ESCAPE = {
   threatK: 4,       // threat radius ≈ seal.r * threatK (soft, feels right)
-  burstImpulse: 160,  // instantaneous dv (px/s) on trigger (away from seal)
-  maxBoost: 1.6,      // cap: up to 1.6× normal fish max speed during escape
+  burstImpulse: 256,  // instantaneous dv (px/s) on trigger (away from seal) — ×1.6 tempo
+  maxBoost: 1.6,      // cap: up to 1.6× normal fish max speed during escape (ratio, unscaled)
   fleeHold: 0.22,     // seconds we consider the fish "in flee mode"
   restAfter: 1.2,     // minimum cooldown until next flee
-  steer: 260,         // while fleeing, extra away-from-seal steering (px/s^2)
+  steer: 416,         // while fleeing, extra away-from-seal steering (px/s^2) — ×1.6 tempo
   dragHi: 0.985,      // stronger drag during/after burst (decays the boost)
   dragLo: 0.998,      // normal gentle drag baseline (keeps speeds calm)
 };
 
 // Gentle baseline swim when not threatened (keeps fish from “parking”)
 const CRUISE = {
-  targetK: 0.55, // target ≈ 55% of BAL.fishSpeedMin (auto scales with screen)
-  accel: 120,    // how quickly they regain that slow cruise (px/s^2)
-  wander: 18,    // tiny heading meander (px/s^2) so it looks alive
+  targetK: 0.55, // target ≈ 55% of BAL.fishSpeedMin (auto-scales with the speed tempo)
+  accel: 192,    // how quickly they regain that slow cruise (px/s^2) — ×1.6 tempo
+  wander: 29,    // tiny heading meander (px/s^2) so it looks alive — ×1.6 tempo
 };
 
 
@@ -213,14 +213,10 @@ export function spawnPrey(world, n=1){
 }
 
 export function updatePrey(dt, seal, world, eatCb){
-  const now = performance.now()/1000;
-  const diagK = BAL.diag / BASE.diag;
-
-  // Small-screen scaling: reduce escape potency on phones a bit
-  // diagK=0.6 → boostK≈0.85 (so ~15% softer), big screens ~1.0
-  const boostK  = (diagK < 1) ? (0.85 + 0.15 * diagK) : 1.0;
-  const steerK  = (diagK < 1) ? (0.90 + 0.10 * diagK) : 1.0;
-  const threatK = ESCAPE.threatK * (0.95 + 0.05 * diagK); // tiny scale with size
+  // Fixed-resolution world (SH-02): balance is device-independent, so no screen scaling.
+  const boostK = 1.0;
+  const steerK = 1.0;
+  const threatK = ESCAPE.threatK;
 
   for(let i=PREY.length-1;i>=0;i--){
     const f = PREY[i];

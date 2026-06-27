@@ -1,5 +1,5 @@
 // game.js (ESM entrypoint)
-import { BASE, BAL, recomputeBalance } from './core/balance.js';
+import { BASE, BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
 import { initScenery, drawBackground } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
@@ -34,6 +34,8 @@ const UI = {
 
 const GAME_DURATION = 60_000;
 const WORLD = { w:0, h:0 };
+// Viewport mapping: logical world → display (CSS px). Letterboxed on extreme aspects.
+const VIEW = { scale:1, ox:0, oy:0, dispW:0, dispH:0 };
 const STATE = { running:false, over:false, paused:false };
 const SCORE = { now:0, best:0 };
 const POINTER = { x:0, y:0, active:false };
@@ -99,21 +101,40 @@ function makeSpots(seed=1,count=28){ let x=seed;
 const seal = makeSeal(makeSpots);
 
 // ——— Resize + scenery
+function applyWorldTransform(){
+  // Map logical world units → display px (scaled + centered), times DPR for crispness.
+  CTX.setTransform(VIEW.scale * DPR, 0, 0, VIEW.scale * DPR, VIEW.ox * DPR, VIEW.oy * DPR);
+}
+
 function resize(){
   // read the CSS size (style.css already sets 100vw/100vh)
   const cssW = CANVAS.clientWidth || window.innerWidth;
   const cssH = CANVAS.clientHeight || window.innerHeight;
+  VIEW.dispW = cssW;
+  VIEW.dispH = cssH;
 
-  WORLD.w = cssW;
-  WORLD.h = cssH;
+  // Fixed logical world (short axis constant, long axis clamped) — fairness (SH-02).
+  const world = computeWorld(cssW, cssH);
+  WORLD.w = world.w;
+  WORLD.h = world.h;
+
+  // Fit world into display; any leftover is letterboxed (no extend-view advantage).
+  VIEW.scale = Math.min(cssW / WORLD.w, cssH / WORLD.h);
+  VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
+  VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
 
   // set the backing store size for high-DPI rendering
   CANVAS.width  = Math.floor(cssW * DPR);
   CANVAS.height = Math.floor(cssH * DPR);
-  CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+  applyWorldTransform();
 
   recomputeBalance(WORLD.w, WORLD.h);
   initScenery(WORLD, CTX);
+}
+
+// Convert a canvas-relative point (CSS px) into logical world coordinates.
+function toLogical(p){
+  return { x: (p.x - VIEW.ox) / VIEW.scale, y: (p.y - VIEW.oy) / VIEW.scale };
 }
 
 let resizePend = false;
@@ -127,8 +148,8 @@ resize();
 
 // ——— Input
 attachPointer(CANVAS,
-  p=>{ POINTER.x=p.x; POINTER.y=p.y; },
-  p=>{ POINTER.active=true; POINTER.x=p.x; POINTER.y=p.y; },
+  p=>{ const q=toLogical(p); POINTER.x=q.x; POINTER.y=q.y; },
+  p=>{ const q=toLogical(p); POINTER.active=true; POINTER.x=q.x; POINTER.y=q.y; },
   ()=>{ POINTER.active=false; }
 );
 // Keyboard (Arrow keys + WASD), shared handler from input.js
@@ -343,6 +364,14 @@ function update(dt){
 function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
+
+  // Paint the whole backing store deep-water first so letterbox bars aren't blank.
+  CTX.save();
+  CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+  CTX.fillStyle = '#021622';
+  CTX.fillRect(0, 0, VIEW.dispW, VIEW.dispH);
+  CTX.restore();
+
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
