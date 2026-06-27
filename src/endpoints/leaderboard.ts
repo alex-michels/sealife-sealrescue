@@ -107,6 +107,28 @@ function currentSeason(d = new Date()): string {
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
+/** Конец сезона = старт следующей ISO-недели (ближайший понедельник 00:00 UTC). */
+function seasonEnd(d = new Date()): Date {
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
+  const dow = (date.getUTCDay() + 6) % 7 // 0=Пн … 6=Вс
+  date.setUTCDate(date.getUTCDate() + (7 - dow)) // следующий понедельник
+  return date // 00:00 UTC
+}
+
+// — Ленивая еженедельная очистка: удаляем прошлые сезоны (не чаще раза в час на процесс).
+// Анонимные данные не нужны после сброса → минимизация + ограничение роста БД.
+let lastPrune = 0
+async function pruneOldSeasons(req: PayloadRequest, season: string): Promise<void> {
+  const now = Date.now()
+  if (now - lastPrune < 3_600_000) return
+  lastPrune = now
+  try {
+    await req.payload.delete({ collection: 'game-scores', where: { season: { not_equals: season } } })
+  } catch {
+    /* best-effort */
+  }
+}
+
 // — Transient rate-limit (в памяти, без сохранения IP).
 const HITS = new Map<string, number[]>()
 function rateLimited(ip: string, limit = 30, windowMs = 60_000): boolean {
@@ -249,11 +271,14 @@ export const leaderboardSubmit: Endpoint = {
     const first = await page(req, game, board, season, 1, PAGE_SIZE)
     const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
+    void pruneOldSeasons(req, season)
+
     return Response.json({
       alias,
       parts,
       board,
       season,
+      resetAt: seasonEnd().toISOString(),
       score: best,
       submitted: score,
       improved: !prev || score > (prev.score as number),
@@ -279,11 +304,12 @@ export const leaderboardRead: Endpoint = {
     const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(url.searchParams.get('limit') ?? String(PAGE_SIZE), 10) || PAGE_SIZE))
     const season = currentSeason()
 
+    const resetAt = seasonEnd().toISOString()
     const game = slug ? await gameIdBySlug(req, slug) : null
     if (game == null) {
-      return Response.json({ board, season, total: 0, page: pageNum, hasMore: false, top: [] })
+      return Response.json({ board, season, resetAt, total: 0, page: pageNum, hasMore: false, top: [] })
     }
     const res = await page(req, game, board, season, pageNum, limit)
-    return Response.json({ board, season, ...res })
+    return Response.json({ board, season, resetAt, ...res })
   },
 }

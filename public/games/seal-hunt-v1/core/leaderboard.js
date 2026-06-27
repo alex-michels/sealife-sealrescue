@@ -39,6 +39,32 @@ function esc(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
+// Оставшееся время до сброса, две крупнейшие единицы, локализовано.
+function fmtRemaining(ms, l) {
+  if (ms <= 0) return l === 'ru' ? 'обновляется…' : 'refreshing…';
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const ru = l === 'ru';
+  if (d > 0) return ru ? `${d} д ${h} ч` : `${d}d ${h}h`;
+  if (h > 0) return ru ? `${h} ч ${m} мин` : `${h}h ${m}m`;
+  if (m > 0) return ru ? `${m} мин ${sec} с` : `${m}m ${sec}s`;
+  return ru ? `${sec} с` : `${sec}s`;
+}
+
+function startCountdown(container, resetMs, t) {
+  if (container._lbTimer) { clearInterval(container._lbTimer); container._lbTimer = null; }
+  const el = container.querySelector('.lb-reset');
+  if (!el || !resetMs) return;
+  const tick = () => {
+    const target = container.querySelector('.lb-reset');
+    if (!target) { clearInterval(container._lbTimer); container._lbTimer = null; return; }
+    target.textContent = t('lbResetIn', { t: fmtRemaining(resetMs - Date.now(), lang()) });
+  };
+  tick();
+  container._lbTimer = setInterval(tick, 1000);
+}
+
 function rowHtml(r, you, board) {
   const me = you && board === you.board && r.alias === you.alias;
   return (
@@ -71,12 +97,15 @@ function render(container, st, t) {
   container.innerHTML =
     `<div class="lb">` +
     `<div class="lb-head"><span class="lb-title">${esc(t('lbTitle'))}</span>` +
-    `<span class="lb-note">${esc(t('lbResetNote'))} · ${view.total}</span></div>` +
+    `<span class="lb-note">${esc(t('lbPlayers', { n: view.total }))}</span></div>` +
+    `<div class="lb-reset"></div>` +
     youLine +
     `<div class="lb-tabs">${tab('desktop')}${tab('mobile')}</div>` +
     `<ol class="lb-list">${rows}</ol>` +
     more +
     `</div>`;
+
+  startCountdown(container, st.resetMs, t);
 
   container.querySelectorAll('.lb-tab').forEach((btn) => {
     btn.addEventListener('click', async () => {
@@ -120,6 +149,7 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     const r = await submitScore(gameSlug, score);
     const st = {
       gameSlug,
+      resetMs: Date.parse(r.resetAt) || 0,
       you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
       view: { board: r.board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
     };

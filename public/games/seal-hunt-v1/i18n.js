@@ -62,6 +62,12 @@
       lbOffline: 'Лидерборд недоступен.',
       lbLoading: 'Загрузка…',
       lbMore: 'Показать ещё',
+      lbPlayers: function (v) {
+        return 'Игроков: ' + v.n;
+      },
+      lbResetIn: function (v) {
+        return '⏳ Сброс через ' + v.t;
+      },
       lbYouLine: function (v) {
         return 'Вы: #' + v.rank + ' из ' + v.total + ' · топ ' + v.pct + '%';
       },
@@ -118,6 +124,12 @@
       lbOffline: 'Leaderboard unavailable.',
       lbLoading: 'Loading…',
       lbMore: 'Show more',
+      lbPlayers: function (v) {
+        return v.n + ' players';
+      },
+      lbResetIn: function (v) {
+        return '⏳ Resets in ' + v.t;
+      },
       lbYouLine: function (v) {
         return 'You: #' + v.rank + ' of ' + v.total + ' · top ' + v.pct + '%';
       },
