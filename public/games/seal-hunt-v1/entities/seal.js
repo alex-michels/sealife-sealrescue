@@ -1,131 +1,177 @@
 // entities/seal.js
-// Плавный 360° разворот по вектору движения (к касанию/мыши).
-// Крутилка ограничена turnRate (рад/с), чтобы поворот был естественным.
-const { sin, cos, hypot, min, max, PI } = Math;
+// Тюлень (phocid/безухий, по типу Weddell): окрас «серки» — серебристо-серый с
+// контршейдингом (плавный градиент: тёмная спина → светлый живот) и тёмными крапинами.
+// Передние ласты с когтями, крошечный широкий хвостик между задними ластами.
+import { PALETTE } from '../core/theme.js';
+
+const { sin, hypot } = Math;
+const S = PALETTE.seal;
 
 export function makeSeal(makeSpots) {
   return {
-    x:0, y:0, r:30,
-    px:0, py:0,
-    vx:0, vy:0,
+    x: 0, y: 0, r: 30,
+    px: 0, py: 0,
+    vx: 0, vy: 0,
 
-    maxSpeed:200,
-    accel:900,
+    maxSpeed: 320,
+    accel: 2400,
 
-    // --- ориентация
-    angle: 0,          // текущий угол (радианы), 0 — «вправо»
-    turnRate: 5.0,     // макс. скорость поворота, рад/с (подкрутите под вкус)
-    _lastT: 0,         // служебное: отметка времени предыдущего кадра
+    // ориентация
+    angle: 0, // радианы, 0 — «вправо»
+    turnRate: 6.5, // макс. скорость поворота, рад/с (снаппи под новый темп)
+    _lastT: 0,
 
-    // оставим для совместимости (не используется в draw):
-    facing:1,
+    facing: 1, // совместимость
+    spots: makeSpots(7, 22),
 
-    _spots:null,
-    spots: makeSpots(7,34),
-
-    draw(ctx){
+    draw(ctx) {
       const r = this.r;
       const now = performance.now();
       const t = now / 1000;
-      const dt = this._lastT ? Math.min(0.05, (now - this._lastT)/1000) : 0;
+      const dt = this._lastT ? Math.min(0.05, (now - this._lastT) / 1000) : 0;
       this._lastT = now;
 
-      // интенсивность «плавания» для анимации ласт
       const speed = hypot(this.vx, this.vy);
-      const swim  = Math.min(1, speed / (this.maxSpeed * 0.5));
+      const swim = Math.min(1, speed / (this.maxSpeed * 0.35)); // быстрее набирает «мах»
 
-      // ---- рассчитать желаемый угол по вектору скорости
-      // если почти стоим — удерживаем прошлый угол (без дёрганий)
+      // повернуть к вектору скорости (кратчайшим путём)
       if (speed > 1) {
-        const desired = Math.atan2(this.vy, this.vx); // [-PI..PI]
-        // кратчайший поворот к цели
-        const wrap = (a)=> (a + Math.PI*3) % (Math.PI*2) - Math.PI;
+        const desired = Math.atan2(this.vy, this.vx);
+        const wrap = (a) => (a + Math.PI * 3) % (Math.PI * 2) - Math.PI;
         let diff = wrap(desired - this.angle);
         const maxStep = this.turnRate * (dt || 0.016);
         if (Math.abs(diff) > maxStep) diff = Math.sign(diff) * maxStep;
         this.angle = wrap(this.angle + diff);
       }
 
-      // небольшие углы для анимации хвоста/переднего ласта
-      const tailAng = sin(t * 7.0) * 0.22 * swim;
-      const flapAng = (-0.15) + sin(t * 3.0) * 0.20 * swim;
+      // чуть более интенсивная анимация ласт во время плавания
+      const tailAng = sin(t * 7.5) * 0.30 * swim;
+      const flapAng = -0.10 + sin(t * 3.4) * 0.34 * swim;
 
-      // ==== РИСОВАНИЕ ====
+      // силуэт тела (нос справа, хвост слева) — плотная «торпеда»
+      const body = () => {
+        ctx.beginPath();
+        ctx.moveTo(r * 1.5, 0);
+        ctx.bezierCurveTo(r * 1.42, -r * 0.92, r * 0.25, -r * 1.04, -r * 0.7, -r * 0.72);
+        ctx.bezierCurveTo(-r * 1.18, -r * 0.5, -r * 1.46, -r * 0.24, -r * 1.46, 0);
+        ctx.bezierCurveTo(-r * 1.46, r * 0.24, -r * 1.18, r * 0.5, -r * 0.7, r * 0.72);
+        ctx.bezierCurveTo(r * 0.25, r * 1.04, r * 1.42, r * 0.92, r * 1.5, 0);
+        ctx.closePath();
+      };
+const flipperFill = S.back; // ровный серый цвет ласт, близкий к тёмной части туловища
+
       ctx.save();
       ctx.translate(this.x, this.y);
-      ctx.rotate(this.angle);      // <— вместо масштабирования по facing
+      ctx.rotate(this.angle);
 
-      // тень
-      ctx.globalAlpha = 0.25;
-      ctx.fillStyle = '#001018';
-      ctx.beginPath();
-      ctx.ellipse(0, r*0.40, r*1.22, r*0.50, 0, 0, Math.PI*2);
+// задние ласты — за телом, ровный серый цвет
+ctx.save();
+ctx.translate(-r * 1.25, 0);
+ctx.rotate(tailAng);
+ctx.fillStyle = flipperFill;
+ctx.beginPath();
+ctx.moveTo(r * 0.1, 0);
+ctx.quadraticCurveTo(-r * 0.76, -r * 0.64, -r * 0.54, -r * 0.04);
+ctx.quadraticCurveTo(-r * 0.92, r * 0.12, -r * 0.54, r * 0.54);
+ctx.quadraticCurveTo(-r * 0.16, r * 0.7, r * 0.1, 0);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+
+// хвостик между/над задними ластами — чуть длиннее и заметнее
+ctx.save();
+ctx.fillStyle = S.body;
+ctx.beginPath();
+ctx.moveTo(-r * 1.34, -r * 0.16);
+ctx.quadraticCurveTo(-r * 1.74, -r * 0.08, -r * 1.6, r * 0.03);
+ctx.quadraticCurveTo(-r * 1.48, r * 0.1, -r * 1.34, r * 0.04);
+ctx.closePath();
+ctx.fill();
+
+ctx.strokeStyle = S.dark;
+ctx.globalAlpha = 0.35;
+ctx.lineWidth = Math.max(1, r * 0.045);
+ctx.stroke();
+ctx.globalAlpha = 1;
+ctx.restore();
+
+      // тело: плавный контршейдинг (тёмная спина → серебристый живот)
+      const fur = ctx.createLinearGradient(0, -r * 1.05, 0, r * 1.05);
+      fur.addColorStop(0, S.back);
+      fur.addColorStop(0.5, S.body);
+      fur.addColorStop(1, S.belly);
+      body();
+      ctx.fillStyle = fur;
       ctx.fill();
-      ctx.globalAlpha = 1;
 
-      // тело
-      ctx.fillStyle = '#bcd2da';
-      ctx.beginPath();
-      ctx.ellipse(0, 0, r*1.45, r*1.10, 0, 0, Math.PI*2);
-      ctx.fill();
-
-      // задние ласты
+      // крапины + контровой блик в пределах силуэта
       ctx.save();
-      ctx.rotate(tailAng);
-      ctx.fillStyle = '#9bb8c4';
-      ctx.beginPath();
-      ctx.moveTo(-r*1.30, -r*0.3);
-      ctx.quadraticCurveTo(-r*1.95, -r*0.60, -r*1.70, -r*0.05);
-      ctx.quadraticCurveTo(-r*1.85,  r*0.60, -r*1.30,  r*0.2);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#0b1b23';
-      for (let i=0;i<4;i++){
-        const yy = -r*0.22 + i*(r*0.15);
+      body();
+      ctx.clip();
+      ctx.fillStyle = S.spot;
+      for (const sp of this.spots) {
+        if (sp.ry > 0.35) continue; // в основном на спине/боку, не на светлом брюхе
+        ctx.globalAlpha = sp.a * 0.5;
         ctx.beginPath();
-        ctx.ellipse(-r*1.65, yy, r*0.07, r*0.04, 0, 0, Math.PI*2);
+        ctx.ellipse(sp.rx * r * 0.95, sp.ry * r - r * 0.12, r * sp.r * 0.8, r * sp.r * 0.6, 0, 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();
 
-      // передний ласт (анимация)
+      // передний ласт (анимация) + когти на кончике
       ctx.save();
-      ctx.translate(r*0.00, r*0.15);
+      ctx.translate(r * 0.15, r * 0.34);
       ctx.rotate(flapAng);
-      ctx.fillStyle = '#9bb8c4';
+      ctx.fillStyle = flipperFill;
       ctx.beginPath();
-      ctx.ellipse(r*0.00, r*0.15, r*0.60, r*0.30, -0.15, 0, Math.PI*2);
+      ctx.ellipse(-r * 0.15, r * 0.18, r * 0.62, r * 0.27, -0.18, 0, Math.PI * 2);
       ctx.fill();
-
-      // «сгибы» на конце ласта
-      ctx.fillStyle = '#0b1b23';
-      const tipX = r*-0.5, tipY = r*0.05, stepY = r*0.09;
-      for (let i=0;i<4;i++){
-        const yy = tipY + i*stepY;
-        ctx.beginPath();
-        ctx.ellipse(tipX, yy, r*0.075, r*0.045, -0.15, 0, Math.PI*2);
-        ctx.fill();
-      }
+// когти (тёмные, тупые) у «пальцев» ласта — очень короткие
+const tipX = -r * 0.76, tipY = r * 0.29;
+const dx = -0.982, dy = 0.181; // вдоль главной оси ласта, наружу
+const px = -dy, py = dx; // перпендикуляр
+ctx.strokeStyle = S.claw;
+ctx.lineWidth = Math.max(1.1, r * 0.05);
+ctx.lineCap = 'round';
+for (let i = -1; i <= 1; i++) {
+  const ox = tipX + px * i * r * 0.11;
+  const oy = tipY + py * i * r * 0.11;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox + dx * r * 0.08, oy + dy * r * 0.08);
+  ctx.stroke();
+}
       ctx.restore();
 
-      // глаз
-      ctx.fillStyle = '#0b1b23';
+      // глаз + блик
+      ctx.fillStyle = S.dark;
       ctx.beginPath();
-      ctx.arc(r*1.18, -r*0.10, r*0.16, 0, Math.PI*2);
+      ctx.arc(r * 0.92, -r * 0.22, r * 0.17, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = PALETTE.highlight;
+      ctx.beginPath();
+      ctx.arc(r * 0.98, -r * 0.28, r * 0.055, 0, Math.PI * 2);
       ctx.fill();
 
-      // нос + вибриссы
-      ctx.beginPath(); ctx.arc(r*1.22, r*0.02, r*0.05, 0, Math.PI*2); ctx.fill();
-      ctx.strokeStyle = 'rgba(22,37,46,0.85)'; ctx.lineWidth = 1; ctx.lineCap = 'round';
-      for (let i=0;i<3;i++){
-        const yy = r*(0.2 + i*0.085);
+      // нос
+      ctx.fillStyle = S.dark;
+      ctx.beginPath();
+      ctx.ellipse(r * 1.42, r * 0.02, r * 0.09, r * 0.07, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // вибриссы (усы)
+      ctx.strokeStyle = S.whisker;
+      ctx.lineWidth = Math.max(1, r * 0.03);
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 3; i++) {
+        const yy = r * (0.12 + i * 0.1);
         ctx.beginPath();
-        ctx.moveTo(r*1.18, yy);
-        ctx.quadraticCurveTo(r*1.2, yy - r*0.06, r*1.65, yy - r*0.01);
+        ctx.moveTo(r * 1.3, yy);
+        ctx.quadraticCurveTo(r * 1.5, yy - r * 0.05, r * 1.85, yy - r * 0.02 + i * r * 0.04);
         ctx.stroke();
       }
 
       ctx.restore();
-    }
+    },
   };
 }

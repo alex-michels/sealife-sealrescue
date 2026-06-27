@@ -53,6 +53,27 @@
       },
       linkCopied: 'Ссылка скопирована!',
       copyShare: 'Скопируйте и поделитесь:',
+      // — лидерборд
+      lbTitle: 'Лидерборд',
+      lbResetNote: 'за неделю',
+      lbDesktop: 'Десктоп',
+      lbMobile: 'Мобайл',
+      lbEmpty: 'Пока пусто — будь первым!',
+      lbOffline: 'Лидерборд недоступен.',
+      lbLoading: 'Загрузка…',
+      lbMore: 'Показать ещё',
+      lbPlayers: function (v) {
+        return 'Игроков: ' + v.n;
+      },
+      lbResetIn: function (v) {
+        return '⏳ Сброс через ' + v.t;
+      },
+      lbYouLine: function (v) {
+        return 'Вы: #' + v.rank + ' из ' + v.total + ' · топ ' + v.pct + '%';
+      },
+      helloLine: function (v) {
+        return 'Привет, ' + v.alias + '!';
+      },
     },
     en: {
       // — static (index.html)
@@ -94,6 +115,27 @@
       },
       linkCopied: 'Link copied!',
       copyShare: 'Copy and share:',
+      // — leaderboard
+      lbTitle: 'Leaderboard',
+      lbResetNote: 'this week',
+      lbDesktop: 'Desktop',
+      lbMobile: 'Mobile',
+      lbEmpty: 'Empty — be the first!',
+      lbOffline: 'Leaderboard unavailable.',
+      lbLoading: 'Loading…',
+      lbMore: 'Show more',
+      lbPlayers: function (v) {
+        return v.n + ' players';
+      },
+      lbResetIn: function (v) {
+        return '⏳ Resets in ' + v.t;
+      },
+      lbYouLine: function (v) {
+        return 'You: #' + v.rank + ' of ' + v.total + ' · top ' + v.pct + '%';
+      },
+      helloLine: function (v) {
+        return 'Hello, ' + v.alias + '!';
+      },
     },
   };
 

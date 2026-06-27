@@ -11,10 +11,12 @@ import { Content } from './collections/Content'
 import { Species } from './collections/Species'
 import { Quizzes } from './collections/Quizzes'
 import { Games } from './collections/Games'
+import { GameScores } from './collections/GameScores'
 import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
+import { leaderboardSubmit, leaderboardRead } from './endpoints/leaderboard'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
 
 const filename = fileURLToPath(import.meta.url)
@@ -47,6 +49,7 @@ export default buildConfig({
     Species,
     Quizzes,
     Games,
+    GameScores,
     Sources,
     Glossary,
     AgentProposals,
@@ -55,6 +58,7 @@ export default buildConfig({
     Reactions,
     Media,
   ],
+  endpoints: [leaderboardSubmit, leaderboardRead],
   localization: {
     // Локали берутся из единого источника (src/i18n/config.ts).
     // Добавить DE = одна строка там, не здесь.

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Тюль-Охотник</title>
   <meta name="description" data-i18n-content="metaDescription" content="Мобильная игра про тюленя — лови рыбу за 60 секунд!">
-  <meta name="theme-color" content="#0a3555">
+  <meta name="theme-color" content="#1E5B5B">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
@@ -28,11 +28,13 @@
 
   <div id="overlay" hidden>
     <h1 data-i18n="title">Тюль-Охотник</h1>
+    <p id="hello" class="hello"></p>
     <p id="message"></p>
     <div class="overlay-buttons">
       <button id="btnAgain" class="primary" data-i18n="btnAgain">Играть ещё</button>
       <button id="btnShareEnd" data-i18n="btnShareEnd" data-i18n-title="btnShareEndTitle" title="Поделиться результатом" hidden>Поделиться</button>
     </div>
+    <div id="board" class="board" hidden></div>
   </div>
 
   <noscript data-i18n="noscript">Для игры нужен JavaScript.</noscript>
