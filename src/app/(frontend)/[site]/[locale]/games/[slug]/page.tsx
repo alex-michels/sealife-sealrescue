@@ -1,38 +1,79 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { findGame } from '@/mock/sample'
-import {
-  requireDetail,
-  detailMetadata,
-  type SlugParams,
-} from '@/app/(frontend)/_components/mock/mockSection'
-import { SampleDetail } from '@/app/(frontend)/_components/mock/SampleDetail'
+import type { Metadata } from 'next'
 
+import { isLocale } from '@/i18n/config'
+import { isSite, sites } from '@/site/config'
+import { buildAlternates } from '@/i18n/alternates'
+import { getSection } from '@/site/sections'
+import { findGameBySlug } from '@/app/(frontend)/_components/content/getGames'
+import { PlaceholderMedia } from '@/app/(frontend)/_components/mock/PlaceholderMedia'
+
+type SlugParams = Promise<{ site: string; locale: string; slug: string }>
 const SLUG = 'games'
 
-export function generateMetadata({ params }: { params: SlugParams }) {
-  return detailMetadata(params, SLUG, (locale, slug) => findGame(slug)?.title[locale])
+export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {
+  const { site, locale, slug } = await params
+  if (!isSite(site) || !isLocale(locale) || !getSection(site, SLUG)) return {}
+  const game = await findGameBySlug(locale, slug)
+  if (!game) return {}
+  return {
+    title: game.title,
+    description: game.excerpt || undefined,
+    alternates: buildAlternates(`/${SLUG}/${slug}`, locale, sites[site]),
+  }
 }
 
 export default async function GameDetail({ params }: { params: SlugParams }) {
-  const { locale, slug, section } = await requireDetail(params, SLUG)
-  const game = findGame(slug)
+  const { site, locale, slug } = await params
+  if (!isSite(site) || !isLocale(locale) || !getSection(site, SLUG)) notFound()
+
+  const game = await findGameBySlug(locale, slug)
   if (!game) notFound()
+
+  // Играбельный фрейм — главное на странице → даём ему больше места.
+  const wide = Boolean(game.embed)
+
   return (
-    <SampleDetail
-      locale={locale}
-      backHref={`/${locale}/${SLUG}`}
-      backLabel={section.title[locale]}
-      meta={locale === 'en' ? 'Mini-game' : 'Мини-игра'}
-      title={game.title[locale]}
-      seed={4}
-      body={[game.excerpt[locale]]}
-    >
-      {/* Canvas-заглушка + HTML-инструкция вне canvas (доступность, DESIGN_BRIEF §13). */}
-      <div className="mt-8 flex aspect-[16/9] items-center justify-center rounded-card border border-border bg-surface-info text-sm text-muted">
-        canvas (M1)
-      </div>
-      <h2 className="mt-4 text-xl">{locale === 'en' ? 'How to play' : 'Как играть'}</h2>
-      <p className="mt-2 text-muted">{game.how[locale]}</p>
-    </SampleDetail>
+    <div className={`mx-auto ${wide ? 'max-w-5xl' : 'max-w-3xl'} px-5 py-10`}>
+      <Link href={`/${locale}/${SLUG}`} className="font-mono text-xs text-muted hover:text-link">
+        ← {getSection(site, SLUG)!.title[locale]}
+      </Link>
+      <article>
+        <span className="font-mono text-xs uppercase tracking-wide text-muted">
+          {locale === 'en' ? 'Mini-game' : 'Мини-игра'}
+        </span>
+        <h1 className="mt-2 text-4xl">{game.title}</h1>
+
+        {/* Картинка-заставка — опционально, переключается в админке (showCover). */}
+        {game.showCover && (
+          <PlaceholderMedia seed={game.coverSeed ?? 0} className="mt-6 rounded-card" />
+        )}
+
+        {game.excerpt && <p className="mt-6 text-muted">{game.excerpt}</p>}
+
+        {/* Встраиваемая статическая игра из /public, либо canvas-заглушка (DESIGN_BRIEF §13). */}
+        {game.embed ? (
+          <iframe
+            src={`${game.embed}?lang=${locale}`}
+            title={game.title}
+            className="mt-6 block h-[72vh] min-h-[460px] w-full rounded-card border border-border bg-surface-info"
+            loading="lazy"
+            allow="fullscreen; autoplay"
+          />
+        ) : (
+          <div className="mt-6 flex aspect-[16/9] items-center justify-center rounded-card border border-border bg-surface-info text-sm text-muted">
+            canvas (M1)
+          </div>
+        )}
+
+        {game.how && (
+          <>
+            <h2 className="mt-4 text-xl">{locale === 'en' ? 'How to play' : 'Как играть'}</h2>
+            <p className="mt-2 whitespace-pre-line text-muted">{game.how}</p>
+          </>
+        )}
+      </article>
+    </div>
   )
 }

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#0a3555"/>
+      <stop offset="1" stop-color="#021a28"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="16" fill="url(#g)"/>
+  <g transform="translate(64,68)">
+    <!-- chonky body -->
+    <ellipse rx="46" ry="36" fill="#bcd2da"/>
+    <!-- back flipper (small) -->
+    <ellipse cx="-34" cy="16" rx="14" ry="8" fill="#9bb8c4" transform="rotate(15 -34 16)"/>
+    <!-- front flipper (small) -->
+    <ellipse cx="8" cy="22" rx="14" ry="6.5" fill="#9bb8c4" transform="rotate(-18 8 22)"/>
+    <!-- black eye -->
+    <circle cx="40" cy="-10" r="4.5" fill="#0b1b23"/>
+  </g>
+</svg>

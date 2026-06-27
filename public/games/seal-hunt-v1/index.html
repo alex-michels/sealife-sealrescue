@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Тюль-Охотник</title>
+  <meta name="description" data-i18n-content="metaDescription" content="Мобильная игра про тюленя — лови рыбу за 60 секунд!">
+  <meta name="theme-color" content="#0a3555">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="hud" role="toolbar" data-i18n-aria="hudAriaLabel" aria-label="Панель игры">
+    <div class="left">
+      <span data-i18n-title="hudTimeTitle" title="Оставшееся время">⏱️ <span id="time">60</span>s</span>
+      <span data-i18n-title="hudScoreTitle" title="Очки">🐟 <span id="score">0</span></span>
+      <span data-i18n-title="hudBestTitle" title="Рекорд на этом устройстве">🏆 <span id="best">0</span></span>
+    </div>
+    <div class="right">
+      <button id="btnStart" class="primary" data-i18n="btnStart">Старт</button>
+      <button id="btnPause" aria-pressed="false" data-i18n="btnPause">Пауза</button>
+      <button id="btnSound" aria-pressed="false" data-i18n-title="btnSoundTitle" title="Звук">🔊</button>
+    </div>
+  </div>
+
+  <canvas id="game" data-i18n-aria="canvasAriaLabel" aria-label="Игровое поле: тюлень охотится за рыбой"></canvas>
+
+  <div id="overlay" hidden>
+    <h1 data-i18n="title">Тюль-Охотник</h1>
+    <p id="message"></p>
+    <div class="overlay-buttons">
+      <button id="btnAgain" class="primary" data-i18n="btnAgain">Играть ещё</button>
+      <button id="btnShareEnd" data-i18n="btnShareEnd" data-i18n-title="btnShareEndTitle" title="Поделиться результатом" hidden>Поделиться</button>
+    </div>
+  </div>
+
+  <noscript data-i18n="noscript">Для игры нужен JavaScript.</noscript>
+
+  <script src="i18n.js"></script>
+  <script type="module" src="game.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
+</body>
+</html>

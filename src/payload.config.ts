@@ -10,6 +10,7 @@ import { RescueCenters } from './collections/RescueCenters'
 import { Content } from './collections/Content'
 import { Species } from './collections/Species'
 import { Quizzes } from './collections/Quizzes'
+import { Games } from './collections/Games'
 import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
@@ -45,6 +46,7 @@ export default buildConfig({
     Content,
     Species,
     Quizzes,
+    Games,
     Sources,
     Glossary,
     AgentProposals,
