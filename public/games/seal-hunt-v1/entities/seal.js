@@ -1,7 +1,7 @@
 // entities/seal.js
-// Тюлень: плавный 360° разворот по вектору движения, тёплая «шкура» (pebble) и
-// 3-тоновая флэт-заливка (спина/тело/живот) + тонкий крап — современный флэт-арт
-// в духе бренда (DESIGN_BRIEF), без «AI-блоба».
+// Тюлень (phocid/безухий, по типу Weddell): окрас «серки» — серебристо-серый с
+// контршейдингом (плавный градиент: тёмная спина → светлый живот) и тёмными крапинами.
+// Передние ласты с когтями, крошечный широкий хвостик между задними ластами.
 import { PALETTE } from '../core/theme.js';
 
 const { sin, hypot } = Math;
@@ -32,7 +32,7 @@ export function makeSeal(makeSpots) {
       this._lastT = now;
 
       const speed = hypot(this.vx, this.vy);
-      const swim = Math.min(1, speed / (this.maxSpeed * 0.5));
+      const swim = Math.min(1, speed / (this.maxSpeed * 0.35)); // быстрее набирает «мах»
 
       // повернуть к вектору скорости (кратчайшим путём)
       if (speed > 1) {
@@ -44,8 +44,9 @@ export function makeSeal(makeSpots) {
         this.angle = wrap(this.angle + diff);
       }
 
-      const tailAng = sin(t * 7.0) * 0.20 * swim;
-      const flapAng = -0.12 + sin(t * 3.0) * 0.20 * swim;
+      // чуть более интенсивная анимация ласт во время плавания
+      const tailAng = sin(t * 7.5) * 0.30 * swim;
+      const flapAng = -0.10 + sin(t * 3.4) * 0.34 * swim;
 
       // силуэт тела (нос справа, хвост слева) — плотная «торпеда»
       const body = () => {
@@ -57,72 +58,89 @@ export function makeSeal(makeSpots) {
         ctx.bezierCurveTo(r * 0.25, r * 1.04, r * 1.42, r * 0.92, r * 1.5, 0);
         ctx.closePath();
       };
+const flipperFill = S.back; // ровный серый цвет ласт, близкий к тёмной части туловища
 
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
 
-      // мягкая тень под тюленем (в мировой ориентации читается достаточно)
-      ctx.fillStyle = S.shadow;
-      ctx.beginPath();
-      ctx.ellipse(-r * 0.1, r * 0.5, r * 1.25, r * 0.42, 0, 0, Math.PI * 2);
-      ctx.fill();
+// задние ласты — за телом, ровный серый цвет
+ctx.save();
+ctx.translate(-r * 1.25, 0);
+ctx.rotate(tailAng);
+ctx.fillStyle = flipperFill;
+ctx.beginPath();
+ctx.moveTo(r * 0.1, 0);
+ctx.quadraticCurveTo(-r * 0.76, -r * 0.64, -r * 0.54, -r * 0.04);
+ctx.quadraticCurveTo(-r * 0.92, r * 0.12, -r * 0.54, r * 0.54);
+ctx.quadraticCurveTo(-r * 0.16, r * 0.7, r * 0.1, 0);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
 
-      // задние ласты (хвост) — за телом
-      ctx.save();
-      ctx.translate(-r * 1.25, 0);
-      ctx.rotate(tailAng);
-      ctx.fillStyle = S.back;
-      ctx.beginPath();
-      ctx.moveTo(r * 0.1, 0);
-      ctx.quadraticCurveTo(-r * 0.7, -r * 0.62, -r * 0.5, -r * 0.04);
-      ctx.quadraticCurveTo(-r * 0.85, r * 0.1, -r * 0.5, r * 0.5);
-      ctx.quadraticCurveTo(-r * 0.15, r * 0.66, r * 0.1, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+// хвостик между/над задними ластами — чуть длиннее и заметнее
+ctx.save();
+ctx.fillStyle = S.body;
+ctx.beginPath();
+ctx.moveTo(-r * 1.34, -r * 0.16);
+ctx.quadraticCurveTo(-r * 1.74, -r * 0.08, -r * 1.6, r * 0.03);
+ctx.quadraticCurveTo(-r * 1.48, r * 0.1, -r * 1.34, r * 0.04);
+ctx.closePath();
+ctx.fill();
 
-      // тело: база
+ctx.strokeStyle = S.dark;
+ctx.globalAlpha = 0.35;
+ctx.lineWidth = Math.max(1, r * 0.045);
+ctx.stroke();
+ctx.globalAlpha = 1;
+ctx.restore();
+
+      // тело: плавный контршейдинг (тёмная спина → серебристый живот)
+      const fur = ctx.createLinearGradient(0, -r * 1.05, 0, r * 1.05);
+      fur.addColorStop(0, S.back);
+      fur.addColorStop(0.5, S.body);
+      fur.addColorStop(1, S.belly);
       body();
-      ctx.fillStyle = S.body;
+      ctx.fillStyle = fur;
       ctx.fill();
 
-      // 3-тоновая заливка + крап в пределах силуэта
+      // крапины + контровой блик в пределах силуэта
       ctx.save();
       body();
       ctx.clip();
-      ctx.fillStyle = S.back; // спина темнее (верхняя треть)
-      ctx.fillRect(-r * 2, -r * 1.3, r * 4, r * 0.72);
-      ctx.fillStyle = S.belly; // живот (нижняя часть)
-      ctx.fillRect(-r * 2, r * 0.36, r * 4, r * 1.3);
-      ctx.fillStyle = S.spot; // тонкий крап на спине/боку
+      ctx.fillStyle = S.spot;
       for (const sp of this.spots) {
-        if (sp.ry > 0.15) continue; // только верхняя половина
-        ctx.globalAlpha = sp.a * 0.7;
+        if (sp.ry > 0.35) continue; // в основном на спине/боку, не на светлом брюхе
+        ctx.globalAlpha = sp.a * 0.5;
         ctx.beginPath();
-        ctx.ellipse(sp.rx * r * 0.9, sp.ry * r * 1.1, r * sp.r * 0.9, r * sp.r * 0.7, 0, 0, Math.PI * 2);
+        ctx.ellipse(sp.rx * r * 0.95, sp.ry * r - r * 0.12, r * sp.r * 0.8, r * sp.r * 0.6, 0, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.globalAlpha = 1;
-      // мягкий контровой блик по верхней кромке
-      ctx.strokeStyle = S.rim;
-      ctx.lineWidth = r * 0.08;
-      ctx.globalAlpha = 0.5;
-      ctx.beginPath();
-      ctx.moveTo(-r * 0.6, -r * 0.74);
-      ctx.bezierCurveTo(r * 0.3, -r * 1.0, r * 1.1, -r * 0.66, r * 1.4, -r * 0.18);
-      ctx.stroke();
-      ctx.globalAlpha = 1;
       ctx.restore();
 
-      // передний ласт (анимация)
+      // передний ласт (анимация) + когти на кончике
       ctx.save();
       ctx.translate(r * 0.15, r * 0.34);
       ctx.rotate(flapAng);
-      ctx.fillStyle = S.back;
+      ctx.fillStyle = flipperFill;
       ctx.beginPath();
       ctx.ellipse(-r * 0.15, r * 0.18, r * 0.62, r * 0.27, -0.18, 0, Math.PI * 2);
       ctx.fill();
+// когти (тёмные, тупые) у «пальцев» ласта — очень короткие
+const tipX = -r * 0.76, tipY = r * 0.29;
+const dx = -0.982, dy = 0.181; // вдоль главной оси ласта, наружу
+const px = -dy, py = dx; // перпендикуляр
+ctx.strokeStyle = S.claw;
+ctx.lineWidth = Math.max(1.1, r * 0.05);
+ctx.lineCap = 'round';
+for (let i = -1; i <= 1; i++) {
+  const ox = tipX + px * i * r * 0.11;
+  const oy = tipY + py * i * r * 0.11;
+  ctx.beginPath();
+  ctx.moveTo(ox, oy);
+  ctx.lineTo(ox + dx * r * 0.08, oy + dy * r * 0.08);
+  ctx.stroke();
+}
       ctx.restore();
 
       // глаз + блик
