@@ -56,7 +56,7 @@
     },
     en: {
       // — static (index.html)
-      title: 'Seal Hunter',
+      title: 'Seal The Hunter',
       metaDescription: 'A mobile game about a seal — catch fish in 60 seconds!',
       hudAriaLabel: 'Game toolbar',
       canvasAriaLabel: 'Playfield: a seal hunts for fish',
