@@ -4,6 +4,7 @@ import { attachPointer, attachKeyboard } from './core/input.js';
 import { initScenery, drawBackground } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
+import { PALETTE } from './core/theme.js';
 
 const { sin, cos, hypot, min, max, PI } = Math;
 
@@ -368,7 +369,7 @@ function drawFrame(dt){
   // Paint the whole backing store deep-water first so letterbox bars aren't blank.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  CTX.fillStyle = '#021622';
+  CTX.fillStyle = PALETTE.water.floor;
   CTX.fillRect(0, 0, VIEW.dispW, VIEW.dispH);
   CTX.restore();
 
