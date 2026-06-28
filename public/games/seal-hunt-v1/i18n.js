@@ -8,6 +8,10 @@
 (function () {
   'use strict';
 
+  // Контакт оператора для standalone-альфы (sealthehunter.online). Это ОТОБРАЖАЕМЫЙ контакт
+  // (как в Impressum), а не форма сбора email — соответствует COMPLIANCE.
+  var FEEDBACK_EMAIL = 'feedback@sealthehunter.online';
+
   var DICT = {
     ru: {
       // — статика (index.html)
@@ -74,6 +78,18 @@
       helloLine: function (v) {
         return 'Привет, ' + v.alias + '!';
       },
+      // — standalone-альфа (только на sealthehunter.online)
+      alphaNotice: 'Это ограниченный альфа-тест игры. Спасибо, что играете!',
+      feedbackInvite: function () {
+        return (
+          'Нашли баг или есть идея? Пишите: <a href="mailto:' +
+          FEEDBACK_EMAIL +
+          '">' +
+          FEEDBACK_EMAIL +
+          '</a>'
+        );
+      },
+      langSwitchLabel: 'Язык игры',
     },
     en: {
       // — static (index.html)
@@ -136,6 +152,18 @@
       helloLine: function (v) {
         return 'Hello, ' + v.alias + '!';
       },
+      // — standalone alpha (sealthehunter.online only)
+      alphaNotice: 'This is a limited alpha test run of the game. Thanks for playing!',
+      feedbackInvite: function () {
+        return (
+          'Found a bug or have an idea? Email <a href="mailto:' +
+          FEEDBACK_EMAIL +
+          '">' +
+          FEEDBACK_EMAIL +
+          '</a>'
+        );
+      },
+      langSwitchLabel: 'Game language',
     },
     de: {
       // — statisch (index.html)
@@ -202,12 +230,53 @@
       helloLine: function (v) {
         return 'Hallo, ' + v.alias + '!';
       },
+      // — Standalone-Alpha (nur auf sealthehunter.online)
+      alphaNotice: 'Dies ist ein begrenzter Alpha-Test des Spiels. Danke fürs Spielen!',
+      feedbackInvite: function () {
+        return (
+          'Bug gefunden oder eine Idee? Schreib an <a href="mailto:' +
+          FEEDBACK_EMAIL +
+          '">' +
+          FEEDBACK_EMAIL +
+          '</a>'
+        );
+      },
+      langSwitchLabel: 'Spielsprache',
     },
   };
 
-  // Источник — ru; поддерживаем en и de, всё прочее откатывается на ru (инвариант локалей сайта).
-  var param = new URLSearchParams(location.search).get('lang');
-  var LANG = param === 'en' || param === 'de' ? param : 'ru';
+  // STANDALONE = игра открыта самостоятельной страницей (sealthehunter.online), не во фрейме.
+  // Во фрейме (встраивание на sealife.*) язык приходит из ?lang= и переключателя нет.
+  var STANDALONE = (function () {
+    try {
+      return window.self === window.top;
+    } catch (e) {
+      return false;
+    }
+  })();
+  var LANG_KEY = 'seal_hunt_lang';
+
+  function validLang(l) {
+    return l === 'ru' || l === 'en' || l === 'de' ? l : null;
+  }
+  function storedLang() {
+    try {
+      return validLang(localStorage.getItem(LANG_KEY));
+    } catch (e) {
+      return null;
+    }
+  }
+  // Язык браузера → поддерживаемая локаль (та же политика, что в src/proxy.ts pickLocale:
+  // русскоязычные → ru, немецкоязычные → de, остальные → en). Применяем только в standalone.
+  function navLang() {
+    var n = ((navigator.language || navigator.userLanguage || '') + '').slice(0, 2).toLowerCase();
+    return n === 'ru' ? 'ru' : n === 'de' ? 'de' : 'en';
+  }
+
+  // Источник — ru; поддерживаем en и de. Порядок выбора:
+  //   ?lang= → (standalone) сохранённый выбор → (standalone) язык браузера → ru.
+  var param = validLang(new URLSearchParams(location.search).get('lang'));
+  var LANG = param || (STANDALONE ? storedLang() || navLang() : null) || 'ru';
   var STR = DICT[LANG];
 
   function t(key, vars) {
@@ -241,5 +310,36 @@
 
   applyStatic();
 
-  window.SealI18n = { lang: LANG, t: t, dict: DICT };
+  // Сменить язык во время игры (standalone-переключатель). persist=true → запомнить ВЫБОР
+  // (COMPLIANCE: язык в localStorage только после явного выбора пользователя). После смены
+  // зовём onChange — game.js перерисовывает динамику (приветствие, интро, доску, заметки).
+  var onChange = null;
+  function setLang(l, persist) {
+    l = validLang(l) || 'ru';
+    LANG = l;
+    STR = DICT[LANG];
+    applyStatic();
+    window.SealI18n.lang = LANG;
+    if (persist) {
+      try {
+        localStorage.setItem(LANG_KEY, LANG);
+      } catch (e) {}
+    }
+    if (typeof onChange === 'function') {
+      try {
+        onChange(LANG);
+      } catch (e) {}
+    }
+  }
+
+  window.SealI18n = {
+    lang: LANG,
+    t: t,
+    dict: DICT,
+    standalone: STANDALONE,
+    setLang: setLang,
+    onLangChange: function (cb) {
+      onChange = cb;
+    },
+  };
 })();
