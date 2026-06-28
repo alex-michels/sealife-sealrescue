@@ -16,7 +16,7 @@ import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
-import { leaderboardSubmit, leaderboardRead } from './endpoints/leaderboard'
+import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
 
 const filename = fileURLToPath(import.meta.url)
@@ -58,7 +58,7 @@ export default buildConfig({
     Reactions,
     Media,
   ],
-  endpoints: [leaderboardSubmit, leaderboardRead],
+  endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead],
   localization: {
     // Локали берутся из единого источника (src/i18n/config.ts).
     // Добавить DE = одна строка там, не здесь.
