@@ -81,6 +81,7 @@
 * В компонентах — только **semantic-токены** (не raw `--baltic`). Строить компоненты, не «страницы».
 * Шрифты self-host (`next/font`); локализованные страницы — статическая генерация.
 * **Route guards/tests:** запрещённые `/de`-контент-роуты обязаны отдавать **404**; legal DE-роуты работают; контент-роуты существуют только для `/ru` и `/en`.
+* **Хостинг/деплой — см. [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md):** один EU-VPS на оба сайта + игры; БД по окружениям (Neon — dev/test, self-hosted Postgres + бэкапы — prod); публичный alpha игры с allowlist маршрутов. Data-residency (PII только EU/EEA) — инвариант.
 
 **Состояние и хранение (source of truth)**
 
