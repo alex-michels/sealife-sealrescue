@@ -31,7 +31,7 @@
 7. **Никакой ложной уверенности в rescue-данных.** Если confidence низкий, источник устарел или данные не подтверждены — показывать `needs_check`/`unverified`; не выдавать неподтверждённые контакты за verified. Emergency-инструкции: безопасные общие указания важнее точных, но непроверенных.
 8. **Приоритет официальных источников для rescue-фактов.** Контакты/адреса/статус центров: офиц. сайт центра → офиц. соцсети центра → гос./муниципальные → признанные NGO → новости/блоги/соцупоминания. Не перетирать verified contact data из слабого источника без human review.
 
-## Бренд и дизайн (см. `DESIGN_BRIEF.md`)
+## Бренд и дизайн (см. `docs/DESIGN_BRIEF.md`)
 
 * **Направление: Foggy Coastal Utility** (океаны/моря, туман, галька, крап, усы, буй; тонкая ирония, без «милого зверинца»). sealife — playful media; sealrescue — calm public-safety utility.
 * **Дизайн только в публичных фронтендах Next.js.** Админку Payload НЕ перекрашивать.
@@ -39,7 +39,7 @@
 * **Шрифты:** кириллически-надёжные (Unbounded/Rubik, Onest/Golos Text, JetBrains Mono), self-host через `next/font`. **НЕ Baloo 2** (нет кириллицы).
 * **Стандарт доступности — WCAG 2.2 AA.** Локатор — list-first; язык без forced-редиректа; «штамп проверки» — центральный trust-паттерн; dashboard агентов — control room без декора.
 
-## Compliance (оператор в Германии, см. `COMPLIANCE_EU_DE.md`)
+## Compliance (оператор в Германии, см. `docs/COMPLIANCE_EU_DE.md`)
 
 * **Legal-shell DE + EN:** Impressum / Anbieterkennzeichnung, Datenschutzerklärung, Cookie-Settings, Terms. Legal-страницы **линкуются из футера каждой публичной страницы** (не встраиваются в каждую). DE legal-страницы разрешены, DE-контент — нет.
 * **§18 MStV:** для journalistisch-redaktionelle Inhalte указывать в Impressum «Verantwortlich i.S.d. §18 Abs. 2 MStV». Считать новости/статьи/образовательный и редакционный rescue-контент потенциально подпадающими — до юридической проверки.
@@ -55,7 +55,7 @@
 
 * Payload v3 в Next.js (App Router), Postgres (EU/EEA — там персональные данные).
 * **Payload `localization.locales = ['ru','en']`** (см. «Локали и роутинг»). DE — это роуты/страницы, не локаль.
-* `src/collections/` · `src/access/roles.ts` · `src/hooks/` · стилизация Tailwind + CSS-переменные (токены из `DESIGN_BRIEF.md`).
+* `src/collections/` · `src/access/roles.ts` · `src/hooks/` · стилизация Tailwind + CSS-переменные (токены из `docs/DESIGN_BRIEF.md`).
 * Rich text: lexical. Локализация: нативная Payload (`localized: true`).
 * Роли: admin / editor / translator / viewer / **agent** (служебный, по API-ключу).
 
@@ -63,7 +63,8 @@
 
 **Рабочий процесс**
 
-* Работать по задачам Roadmap **по ID** (`M0-T16`); ветка/коммит со ссылкой на ID; после выполнения менять `[ ]`→`[x]` в `Roadmap.md`.
+* Работать по задачам Roadmap **по ID** (`M0-T16`); ветка/коммит со ссылкой на ID; после выполнения менять `[ ]`→`[x]` в `docs/Roadmap.md`.
+* **Документация — часть Definition of Done.** Любая новая фича, изменение бизнес-логики или иное значимое изменение → отразить в соответствующем файле `docs/` **в том же PR**. Доки всегда актуальны и показывают **текущее** состояние проекта. Удаление/снятие задокументированного — так же зеркалить в `docs/` (убрать/обновить запись). Какой файл — см. `docs/README.md` (индекс). Док, рассинхронизированный с кодом, считать багом.
 * Маленькие PR, осмысленные коммиты (conventional commits).
 * После изменения схемы Payload: `npm run generate:types`; миграцию БД ревьюить до применения.
 
@@ -100,8 +101,8 @@
 
 ## Текущее состояние и следующие шаги
 
-* **Сделано:** схема контента (коллекции, RBAC, drafts, очередь `agent-proposals`); `Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md` в корне.
-* **Дальше (детали — в `Roadmap.md`):**
+* **Сделано:** схема контента (коллекции, RBAC, drafts, очередь `agent-proposals`); `docs/Roadmap.md`, `docs/DESIGN_BRIEF.md`, `docs/COMPLIANCE_EU_DE.md` в `docs/`.
+* **Дальше (детали — в `docs/Roadmap.md`):**
 
   1. **M0** — Foundation: хостинг EU, i18n без forced-редиректа, дизайн-токены/шрифты, legal-shell DE+EN, cookie-consent, no-cookie аналитика.
   2. **M1** — sealife с контентом, уникальный дизайн, квизы/мини-игры, реакции.

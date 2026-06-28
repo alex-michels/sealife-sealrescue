@@ -156,8 +156,23 @@ npm run seed:m1
 
 ## Документация
 
-- [`Roadmap.md`](Roadmap.md) — задачи по ID (M0/M1/M2…), статусы
-- [`DESIGN_BRIEF.md`](DESIGN_BRIEF.md) — дизайн-направление, токены, типографика, компоненты
-- [`COMPLIANCE_EU_DE.md`](COMPLIANCE_EU_DE.md) — EU/DE-комплаенс (Impressum, TDDDG, DSA, AI Act)
-- [`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) — правила для AI-агентов и разработки
-- [`sealife-masterplan-v1.md`](sealife-masterplan-v1.md) — общий план продукта
+Все доки — в **[`docs/`](docs/)** ([индекс](docs/README.md)). В корне остаются только конвенционные
+[`CLAUDE.md`](CLAUDE.md) / [`AGENTS.md`](AGENTS.md) (правила для AI-агентов) и этот README.
+
+**Технические (как устроен проект):**
+
+- [`docs/architecture.md`](docs/architecture.md) — общая картина, жизненный цикл запроса, инварианты
+- [`docs/data-model.md`](docs/data-model.md) — коллекции Payload, поля, связи, матрица доступа
+- [`docs/api.md`](docs/api.md) — endpoints (лидерборд), авто-REST/GraphQL, route guards
+- [`docs/localization.md`](docs/localization.md) — локали, мультидомен, роутинг (`proxy.ts`), DE legal-shell
+- [`docs/agents.md`](docs/agents.md) — RBAC, `agent-proposals`, хуки, human-in-the-loop, безопасность
+- [`docs/game-seal-hunter.md`](docs/game-seal-hunter.md) — игра, лидерборд, анти-чит
+- [`docs/local-development.md`](docs/local-development.md) — ENV, скрипты, БД, сиды, тесты
+
+**Стратегические / governance:**
+
+- [`docs/Roadmap.md`](docs/Roadmap.md) — задачи по ID (M0/M1/M2…), статусы
+- [`docs/DESIGN_BRIEF.md`](docs/DESIGN_BRIEF.md) — дизайн-направление, токены, типографика, компоненты
+- [`docs/COMPLIANCE_EU_DE.md`](docs/COMPLIANCE_EU_DE.md) — EU/DE-комплаенс (Impressum, TDDDG, DSA, AI Act)
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) — хостинг (VPS), окружения БД, публичный alpha игры
+- [`docs/sealife-masterplan-v1.md`](docs/sealife-masterplan-v1.md) — общий план продукта

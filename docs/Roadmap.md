@@ -17,7 +17,7 @@
 ## Состояние на сейчас
 
 * [x] Контент-схема Payload (коллекции, RBAC, drafts, очередь `agent-proposals`, хуки).
-* [x] `CLAUDE.md`, `Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md` в корне.
+* [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md` + тех-доки) в `docs/`.
 
 **Следующая к старту:** `M0-T01`.
 
