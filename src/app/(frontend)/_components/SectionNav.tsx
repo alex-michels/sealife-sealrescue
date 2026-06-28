@@ -10,7 +10,7 @@ import { cx } from './ui/cx'
 /**
  * Основная навигация по разделам сайта (M0-T19). Клиентский компонент только ради
  * подсветки активного раздела (usePathname → aria-current). Набор разделов зависит
- * от сайта (sealife ≠ sealrescue). На /de-legal не рендерится (см. SiteHeader).
+ * от сайта (sealife ≠ sealrescue). Рендерится на всех локалях (RU/EN/DE).
  */
 export function SectionNav({ site, locale }: { site: SiteId; locale: Locale }) {
   const pathname = usePathname() || ''
@@ -18,7 +18,10 @@ export function SectionNav({ site, locale }: { site: SiteId; locale: Locale }) {
   if (items.length === 0) return null
 
   return (
-    <nav aria-label={locale === 'en' ? 'Sections' : 'Разделы'} className="border-t border-border">
+    <nav
+      aria-label={{ ru: 'Разделы', en: 'Sections', de: 'Bereiche' }[locale]}
+      className="border-t border-border"
+    >
       <ul className="mx-auto flex max-w-5xl flex-wrap gap-1 px-3 py-1.5 text-sm">
         {items.map((s) => {
           const href = `/${locale}/${s.slug}`

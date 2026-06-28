@@ -16,7 +16,7 @@
 * **DSA** — да, если храним/публикуем UGC; нагрузку снижаем премодерацией и отсутствием публичных аккаунтов.
 * **AI Act** — да: AI для контента/перевода/факт-чека → transparency/provenance readiness.
 
-**Локали (см. CLAUDE.md):** публичный контент — **RU/EN**. **DE — только legal-shell** (отдельные роуты), НЕ контентная локаль. Отсутствие DE-контента НЕ освобождает от German/EU legal pages.
+**Локали (см. CLAUDE.md):** публичный контент — **RU/EN/DE** (три равноправные контент-локали). German/EU legal pages обязательны независимо от набора включённых на сайте языков.
 
 ---
 
@@ -30,10 +30,11 @@
 
 **Размещение:** ссылка **в футере каждой публичной страницы** (не встраивать текст в каждую). **OS-/ODR-Plattform-ссылку НЕ ставить** (платформа закрыта 20.07.2025). Заменить упоминания TMG/TTDSG на DDG/TDDDG.
 
-**Legal-роуты (фиксированный allowlist):**
+**Legal-роуты (slug общий для локалей, заголовок локализован):**
 
+* RU: `/ru/legal-notice` · `/ru/privacy` · `/ru/cookies` · `/ru/terms`
 * EN: `/en/legal-notice` · `/en/privacy` · `/en/cookies` · `/en/terms`
-* DE: `/de/impressum` · `/de/datenschutz` · `/de/cookies` · `/de/terms`
+* DE: `/de/legal-notice` (Impressum) · `/de/privacy` (Datenschutz) · `/de/cookies` · `/de/terms`
 
 ---
 
@@ -137,7 +138,7 @@
 * [ ] **Datenschutzerklärung** (Art. 13), орган = ULD SH; email пользователей нигде не собираем.
 * [ ] **Cookie-consent** opt-in + равноценный Reject + отзыв = согласию + Settings из футера; consent только в consent-cookie/CMP.
 * [ ] **Аналитика** Plausible/Umami no-cookie/no-storage/no-fingerprint, задокументирована.
-* [ ] **Legal-роуты** по allowlist (EN+DE); DE-контент НЕ генерировать; `de` НЕ в Payload content-локализацию.
+* [ ] **Legal-роуты** локализованы на всех локалях (RU/EN/DE); `de` — полноценная Payload content-локаль.
 * [ ] **Доступность** WCAG 2.2 AA (2.1 — действующий пол); `alt` обязателен.
 * [ ] **AI-provenance** метки видны; chatbot-disclosure, если появится.
 * [ ] **UGC/DSA:** notice-and-action + явная пометка «форма не собирает контакты»; премодерация; лог; точка контакта = Impressum.

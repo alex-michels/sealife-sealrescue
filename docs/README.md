@@ -17,7 +17,7 @@
 | [architecture.md](architecture.md) | Общая картина: два сайта на одном Payload-в-Next, жизненный цикл запроса, провенанс, инварианты |
 | [data-model.md](data-model.md) | Все коллекции Payload: назначение, ключевые поля, связи, матрица доступа (RBAC) |
 | [api.md](api.md) | Endpoints (лидерборд), авто-REST/GraphQL Payload, какие маршруты публичны, route guards |
-| [localization.md](localization.md) | Локали `ru`/`en`, мультидомен, роутинг (`proxy.ts`), DE legal-shell, hreflang/sitemap |
+| [localization.md](localization.md) | Локали `ru`/`en`/`de`, мультидомен, роутинг (`proxy.ts`), локализованные legal-роуты, hreflang/sitemap |
 | [agents.md](agents.md) | RBAC-роли, очередь `agent-proposals`, audit `agent-runs`, хуки, human-in-the-loop, безопасность |
 | [game-seal-hunter.md](game-seal-hunter.md) | Игра «Seal The Hunter»: структура, fairness, service worker, лидерборд, анти-чит |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |

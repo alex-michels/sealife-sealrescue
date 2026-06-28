@@ -22,14 +22,14 @@ export default async function QuizDetail({ params }: { params: SlugParams }) {
       locale={locale}
       backHref={`/${locale}/${SLUG}`}
       backLabel={section.title[locale]}
-      meta={locale === 'en' ? `${quiz.questions} questions` : `${quiz.questions} вопросов`}
+      meta={{ ru: `${quiz.questions} вопросов`, en: `${quiz.questions} questions`, de: `${quiz.questions} Fragen` }[locale]}
       title={quiz.title[locale]}
       seed={3}
       body={[quiz.excerpt[locale]]}
     >
       <div className="mt-8 rounded-card border border-border bg-surface p-5">
         <p className="font-mono text-xs uppercase tracking-wide text-muted">
-          {locale === 'en' ? 'Sample question' : 'Пример вопроса'}
+          {{ ru: 'Пример вопроса', en: 'Sample question', de: 'Beispielfrage' }[locale]}
         </p>
         <h2 className="mt-1 text-xl">{quiz.sample.q[locale]}</h2>
         <ul className="mt-3 space-y-2">

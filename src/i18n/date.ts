@@ -1,8 +1,11 @@
 import type { Locale } from './config'
 
-/** Локализованная дата (длинный формат). ru → ru-RU, en → en-GB (день-месяц-год). */
+/** BCP-47 теги по локали (день-месяц-год во всех трёх). */
+const bcp47: Record<Locale, string> = { ru: 'ru-RU', en: 'en-GB', de: 'de-DE' }
+
+/** Локализованная дата (длинный формат). */
 export function formatDate(iso: string, locale: Locale): string {
-  return new Date(iso).toLocaleDateString(locale === 'en' ? 'en-GB' : 'ru-RU', {
+  return new Date(iso).toLocaleDateString(bcp47[locale], {
     year: 'numeric',
     month: 'long',
     day: 'numeric',

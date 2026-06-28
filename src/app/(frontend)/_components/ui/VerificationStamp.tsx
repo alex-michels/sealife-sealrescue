@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { cx } from './cx'
 import { StatusDot, type CenterStatus } from './StatusDot'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Штамп проверки (DESIGN_BRIEF §5/§15) — центральный trust-паттерн sealrescue, НЕ декор.
@@ -10,9 +11,7 @@ import { StatusDot, type CenterStatus } from './StatusDot'
  * Provenance-поля (agentCheckedAt / humanReviewedAt) лягут на схему Content/RescueCenter
  * (EU-11, M1-T08). Здесь — переиспользуемый примитив; реальные данные — в M2 (карточки центров).
  */
-type Lang = 'ru' | 'en'
-
-const copy: Record<Lang, Record<'both' | 'agent' | 'human' | 'none' | 'agentLabel' | 'humanLabel', string>> = {
+const copy: Record<Locale, Record<'both' | 'agent' | 'human' | 'none' | 'agentLabel' | 'humanLabel', string>> = {
   ru: {
     both: 'Проверено агентом и человеком',
     agent: 'Проверено агентом · ожидает человека',
@@ -28,6 +27,14 @@ const copy: Record<Lang, Record<'both' | 'agent' | 'human' | 'none' | 'agentLabe
     none: 'Not verified',
     agentLabel: 'agent',
     humanLabel: 'human',
+  },
+  de: {
+    both: 'Von Agent und Mensch geprüft',
+    agent: 'Vom Agent geprüft · wartet auf Mensch',
+    human: 'Von Mensch geprüft',
+    none: 'Nicht geprüft',
+    agentLabel: 'Agent',
+    humanLabel: 'Mensch',
   },
 }
 
@@ -76,7 +83,7 @@ export function VerificationStamp({
   status?: CenterStatus
   agentCheckedAt?: string | Date | null
   humanReviewedAt?: string | Date | null
-  locale?: Lang
+  locale?: Locale
   className?: string
 }) {
   const c = copy[locale]

@@ -48,16 +48,6 @@ export function proxy(req: NextRequest) {
   const siteOverride = searchParams.get('site') ?? req.cookies.get('site')?.value
   const siteId = resolveSiteId(req.headers.get('host'), siteOverride)
 
-  // Legal-shell DE (M0-T13): `/de/*` — статический сегмент, rewrite на [site]/de/*
-  // (БЕЗ локали-редиректа). Контентных /de/* страниц нет → Next отдаёт 404 (route guard).
-  if (pathname === '/de' || pathname.startsWith('/de/')) {
-    const deUrl = req.nextUrl.clone()
-    deUrl.pathname = `/${siteId}${pathname}`
-    const deRes = NextResponse.rewrite(deUrl)
-    if (searchParams.get('site')) deRes.cookies.set('site', siteId, { path: '/' })
-    return deRes
-  }
-
   const pathLocale = locales.find(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   )

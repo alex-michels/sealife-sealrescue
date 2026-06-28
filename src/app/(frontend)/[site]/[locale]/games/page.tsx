@@ -21,7 +21,7 @@ export default async function GamesPage({ params }: { params: RouteParams }) {
     href: `/${locale}/${SLUG}/${g.slug}`,
     title: g.title,
     excerpt: g.excerpt ?? undefined,
-    meta: locale === 'en' ? 'Game' : 'Игра',
+    meta: { ru: 'Игра', en: 'Game', de: 'Spiel' }[locale],
     seed: typeof g.id === 'number' ? g.id + 4 : 4,
   }))
 

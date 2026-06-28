@@ -1,10 +1,11 @@
 /**
- * Идемпотентный посев демо-контента M1 (Content + Species), RU/EN. Запуск: pnpm seed:m1
+ * Идемпотентный посев демо-контента M1 (Content + Species), RU/EN/DE. Запуск: pnpm seed:m1
  *
  * Top-level await (НЕ floating promise): `payload run` делает await import + сразу
  * process.exit, плавающий промис не успел бы записать в БД (см. seedGlossary).
  *
- * Локализация как в глоссарии: создаём/обновляем исходную локаль ru, затем дописываем en.
+ * Локализация как в глоссарии: создаём/обновляем исходную локаль ru, затем дописываем
+ * en и de (de ?? en — непереведённое поле деградирует на en, а не теряется).
  * Для localized-полей внутри массива (Species.facts) сопоставляем строки по id, иначе
  * обновление en пересоздаёт строки и теряет ru.
  */
@@ -80,6 +81,17 @@ for (const item of contentSeed) {
       body: item.body ? rich(item.body.en) : undefined,
     },
   })
+
+  await payload.update({
+    collection: 'content',
+    id,
+    locale: 'de',
+    data: {
+      title: item.title.de ?? item.title.en,
+      excerpt: item.excerpt?.de ?? item.excerpt?.en,
+      body: item.body ? rich(item.body.de ?? item.body.en) : undefined,
+    },
+  })
 }
 
 let speciesCreated = 0
@@ -120,7 +132,7 @@ for (const sp of speciesSeed) {
     speciesCreated++
   }
 
-  // Дописываем en: сопоставляем факты по id, созданному при записи ru.
+  // Дописываем en/de: сопоставляем факты по id, созданному при записи ru.
   const factIds = (ruDoc.facts ?? []).map((f) => f.id)
   await payload.update({
     collection: 'species',
@@ -133,6 +145,20 @@ for (const sp of speciesSeed) {
       excerpt: sp.excerpt?.en,
       body: sp.body ? rich(sp.body.en) : undefined,
       facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f.en })),
+    },
+  })
+
+  await payload.update({
+    collection: 'species',
+    id: ruDoc.id as number,
+    locale: 'de',
+    data: {
+      name: sp.name.de ?? sp.name.en,
+      region: sp.region?.de ?? sp.region?.en,
+      size: sp.size?.de ?? sp.size?.en,
+      excerpt: sp.excerpt?.de ?? sp.excerpt?.en,
+      body: sp.body ? rich(sp.body.de ?? sp.body.en) : undefined,
+      facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f.de ?? f.en })),
     },
   })
 }
@@ -170,7 +196,7 @@ for (const g of gamesSeed) {
     gamesCreated++
   }
 
-  // Дописываем перевод en (локализованные поля), не трогая ru.
+  // Дописываем переводы en/de (локализованные поля), не трогая ru.
   await payload.update({
     collection: 'games',
     id,
@@ -179,6 +205,17 @@ for (const g of gamesSeed) {
       title: g.title.en,
       excerpt: g.excerpt?.en,
       how: g.how?.en,
+    },
+  })
+
+  await payload.update({
+    collection: 'games',
+    id,
+    locale: 'de',
+    data: {
+      title: g.title.de ?? g.title.en,
+      excerpt: g.excerpt?.de ?? g.excerpt?.en,
+      how: g.how?.de ?? g.how?.en,
     },
   })
 }

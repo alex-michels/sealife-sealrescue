@@ -2,8 +2,8 @@
 
 Два сайта на одном бэкенде **Payload v3 (внутри Next.js)** + Postgres:
 
-- **sealife.info** — медиа-хаб о тюленях: статьи, новости, мемы, квизы, игры. Тон игривый, тюль-сленг. Вордмарк: «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN).
-- **sealrescue.info** — справочник центров реабилитации + «нашёл тюленя — что делать». Тон серьёзный, emergency-first. Вордмарк: «Спасение тюленей» (RU) / «Seal Rescue» (EN).
+- **sealife.info** — медиа-хаб о тюленях: статьи, новости, мемы, квизы, игры. Тон игривый, тюль-сленг. Вордмарк: «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN) / «Robben.Info» (DE).
+- **sealrescue.info** — справочник центров реабилитации + «нашёл тюленя — что делать». Тон серьёзный, emergency-first. Вордмарк: «Спасение тюленей» (RU) / «Seal Rescue» (EN) / «Robbenrettung» (DE).
 
 Оба сайта обслуживает одно Next-приложение (мультидомен), контент — из общей CMS Payload. Перелинковка sealife ↔ sealrescue в обе стороны.
 
@@ -14,7 +14,7 @@
 - **Postgres** (`@payloadcms/db-postgres`) — БД в EU/EEA-регионе (персональные данные)
 - **Tailwind CSS v4** + CSS-переменные (токены `primitive → semantic`, два режима через `data-site`)
 - Self-host шрифты через `next/font`; аналитика — Plausible (cookieless, только после opt-in)
-- Локализация — нативная Payload, локали `ru` (исходная) + `en`. DE — только legal-shell, не контент-локаль.
+- Локализация — нативная Payload, локали `ru` (исходная) + `en` + `de`. Все три — полноценные контент-локали.
 
 ## Быстрый старт
 
@@ -79,7 +79,6 @@ src/
     (frontend)/            # публичные сайты (App Router)
       [site]/[locale]/...  #   разделы: articles, news, memes, species, quizzes, games,
                            #   rescue-centers, what-to-do, report, … + /[slug]
-      [site]/de/...        #   legal-shell DE (impressum/datenschutz/cookies/terms)
       _components/         #   ui, content, home, legal, consent, mock
     (payload)/admin        # админка Payload
     sitemap.xml/           # карта сайта по локалям (hreflang/x-default)
@@ -149,7 +148,7 @@ npm run seed:m1
 Полный список и обоснования — в [`CLAUDE.md`](CLAUDE.md). Ключевое:
 
 - **Human-in-the-loop:** агенты создают только черновики и записи в `agent-proposals`; публикует/удаляет только человек. Зашито в access control + хук `forceAgentDrafts`.
-- **Локали `ru`/`en`**, `ru` — исходная. **DE — только legal-роуты**, не третья контент-локаль; запрещённые `/de`-контент-роуты → 404.
+- **Локали `ru`/`en`/`de`**, `ru` — исходная (`en`/`de` — переводы). Все три равноправны; неизвестные локали/slug → 404.
 - **GDPR-минимизация:** email у публичных пользователей не собираем (нигде); UGC — премодерация; аналитика cookieless и только после opt-in.
 - **AI-прозрачность:** AI-контент маркируется provenance-меткой, видимой пользователю (`aiGenerated`).
 - **Rescue-данные:** не выдавать неподтверждённое за verified; приоритет официальных источников.
@@ -164,7 +163,7 @@ npm run seed:m1
 - [`docs/architecture.md`](docs/architecture.md) — общая картина, жизненный цикл запроса, инварианты
 - [`docs/data-model.md`](docs/data-model.md) — коллекции Payload, поля, связи, матрица доступа
 - [`docs/api.md`](docs/api.md) — endpoints (лидерборд), авто-REST/GraphQL, route guards
-- [`docs/localization.md`](docs/localization.md) — локали, мультидомен, роутинг (`proxy.ts`), DE legal-shell
+- [`docs/localization.md`](docs/localization.md) — локали, мультидомен, роутинг (`proxy.ts`), локализованные legal-роуты
 - [`docs/agents.md`](docs/agents.md) — RBAC, `agent-proposals`, хуки, human-in-the-loop, безопасность
 - [`docs/game-seal-hunter.md`](docs/game-seal-hunter.md) — игра, лидерборд, анти-чит
 - [`docs/local-development.md`](docs/local-development.md) — ENV, скрипты, БД, сиды, тесты

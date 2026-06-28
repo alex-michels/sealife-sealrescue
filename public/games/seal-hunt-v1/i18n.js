@@ -137,11 +137,77 @@
         return 'Hello, ' + v.alias + '!';
       },
     },
+    de: {
+      // — statisch (index.html)
+      title: 'Robbe der Jäger',
+      metaDescription: 'Ein mobiles Spiel über eine Robbe — fang in 60 Sekunden Fische!',
+      hudAriaLabel: 'Spielleiste',
+      canvasAriaLabel: 'Spielfeld: eine Robbe jagt Fische',
+      hudTimeTitle: 'Verbleibende Zeit',
+      hudScoreTitle: 'Punkte',
+      hudBestTitle: 'Bestwert auf diesem Gerät',
+      btnStart: 'Start',
+      btnPause: 'Pause',
+      btnSoundTitle: 'Ton',
+      btnAgain: 'Nochmal spielen',
+      btnShareEnd: 'Teilen',
+      btnShareEndTitle: 'Ergebnis teilen',
+      noscript: 'Zum Spielen wird JavaScript benötigt.',
+      // — dynamisch (game.js)
+      btnPlay: 'Spielen',
+      btnResume: 'Fortsetzen',
+      soundOn: 'Ton: an',
+      soundOff: 'Ton: aus',
+      intro:
+        'Fang in <b>60 Sekunden</b> so viele 🐟 wie möglich.<br>Steuerung: Finger/Maus halten — die Robbe folgt der Berührung.',
+      friendChallenge: function (v) {
+        return (
+          'Ein Freund hat <b>' +
+          v.score +
+          '</b> Punkte erreicht (Bestwert: <b>' +
+          v.best +
+          '</b>). Schaffst du mehr?'
+        );
+      },
+      timeUpNewRecord: function (v) {
+        return 'Zeit abgelaufen! Dein Ergebnis: <b>' + v.score + '</b> 🐟 — <b>Neuer Rekord!</b> 🏆';
+      },
+      timeUp: function (v) {
+        return 'Zeit abgelaufen! Dein Ergebnis: <b>' + v.score + '</b> 🐟 Bestwert: <b>' + v.best + '</b> 🏆';
+      },
+      shareNewRecordTag: ' — neuer Rekord!',
+      shareText: function (v) {
+        return 'Mein Ergebnis: ' + v.score + ' 🐟 Bestwert: ' + v.best + ' 🏆 in 60 Sekunden' + v.tag;
+      },
+      linkCopied: 'Link kopiert!',
+      copyShare: 'Kopieren und teilen:',
+      // — Bestenliste
+      lbTitle: 'Bestenliste',
+      lbResetNote: 'diese Woche',
+      lbDesktop: 'Desktop',
+      lbMobile: 'Mobil',
+      lbEmpty: 'Noch leer — sei der Erste!',
+      lbOffline: 'Bestenliste nicht verfügbar.',
+      lbLoading: 'Lädt…',
+      lbMore: 'Mehr anzeigen',
+      lbPlayers: function (v) {
+        return v.n + ' Spieler';
+      },
+      lbResetIn: function (v) {
+        return '⏳ Reset in ' + v.t;
+      },
+      lbYouLine: function (v) {
+        return 'Du: #' + v.rank + ' von ' + v.total + ' · Top ' + v.pct + '%';
+      },
+      helloLine: function (v) {
+        return 'Hallo, ' + v.alias + '!';
+      },
+    },
   };
 
-  // Источник — ru; всё, что не en, откатывается на ru (инвариант локалей сайта).
+  // Источник — ru; поддерживаем en и de, всё прочее откатывается на ru (инвариант локалей сайта).
   var param = new URLSearchParams(location.search).get('lang');
-  var LANG = param === 'en' ? 'en' : 'ru';
+  var LANG = param === 'en' || param === 'de' ? param : 'ru';
   var STR = DICT[LANG];
 
   function t(key, vars) {

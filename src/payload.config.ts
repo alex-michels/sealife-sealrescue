@@ -18,6 +18,9 @@ import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
+import { en } from '@payloadcms/translations/languages/en'
+import { ru } from '@payloadcms/translations/languages/ru'
+import { de } from '@payloadcms/translations/languages/de'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -60,11 +63,16 @@ export default buildConfig({
   ],
   endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead],
   localization: {
-    // Локали берутся из единого источника (src/i18n/config.ts).
-    // Добавить DE = одна строка там, не здесь.
+    // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en/de.
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),
     defaultLocale,
     fallback: true,
+  },
+  // Язык интерфейса админки (staff) — RU/EN/DE; выбирается в профиле пользователя/по Accept-Language.
+  // Это НЕ контент-локализация (та — в `localization` выше).
+  i18n: {
+    supportedLanguages: { en, ru, de },
+    fallbackLanguage: 'en',
   },
   db: postgresAdapter({
     pool: { connectionString: process.env.DATABASE_URI || '' },

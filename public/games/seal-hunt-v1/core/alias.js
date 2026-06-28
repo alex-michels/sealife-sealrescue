@@ -1,7 +1,7 @@
 // core/alias.js — анонимная локализуемая идентичность игрока (клиент).
 // Имя варьируется по шаблонам (Прил./Мод./Преф-/-Суф + Сущ.), что расширяет пространство
 // имён до ~40k без чисел. Части детерминированно собираются из (seed, game); рисуются на
-// ЯЗЫКЕ ЗРИТЕЛЯ из выровненных RU/EN-списков. RU — мужской род (прил. согласованы).
+// ЯЗЫКЕ ЗРИТЕЛЯ из выровненных RU/EN/DE-списков. RU — мужской род; DE — базовая форма (без склонения).
 // Имя НЕ персональные данные. Сервер собирает те же части тем же алгоритмом.
 //
 // ⚠️ KEEP IN SYNC (порядок/длина списков, PATTERNS, mulberry32, порядок бросков) с
@@ -10,57 +10,126 @@
 const SEED_KEY = 'seal_hunt_seed';
 
 const ADJ = [
-  { en: 'Salty', ru: 'Солёный' }, { en: 'Brave', ru: 'Храбрый' }, { en: 'Sleepy', ru: 'Сонный' },
-  { en: 'Cosy', ru: 'Уютный' }, { en: 'Misty', ru: 'Туманный' }, { en: 'Sunny', ru: 'Солнечный' },
-  { en: 'Plump', ru: 'Пухлый' }, { en: 'Swift', ru: 'Шустрый' }, { en: 'Gentle', ru: 'Ласковый' },
-  { en: 'Jolly', ru: 'Весёлый' }, { en: 'Bold', ru: 'Смелый' }, { en: 'Lucky', ru: 'Везучий' },
-  { en: 'Mellow', ru: 'Спокойный' }, { en: 'Nimble', ru: 'Юркий' }, { en: 'Quiet', ru: 'Тихий' },
-  { en: 'Shiny', ru: 'Блестящий' }, { en: 'Snug', ru: 'Тёплый' }, { en: 'Tidal', ru: 'Приливный' },
-  { en: 'Wavy', ru: 'Волнистый' }, { en: 'Zippy', ru: 'Прыткий' }, { en: 'Pebbly', ru: 'Галечный' },
-  { en: 'Breezy', ru: 'Ветреный' }, { en: 'Frosty', ru: 'Морозный' }, { en: 'Glossy', ru: 'Лоснящийся' },
-  { en: 'Hardy', ru: 'Стойкий' }, { en: 'Merry', ru: 'Радостный' }, { en: 'Splashy', ru: 'Брызгучий' },
-  { en: 'Whiskered', ru: 'Усатый' }, { en: 'Mighty', ru: 'Могучий' }, { en: 'Deep', ru: 'Глубинный' },
-  { en: 'Ancient', ru: 'Древний' }, { en: 'Pearly', ru: 'Жемчужный' }, { en: 'Amber', ru: 'Янтарный' },
-  { en: 'Spotted', ru: 'Пятнистый' }, { en: 'Prickly', ru: 'Колючий' }, { en: 'Slippery', ru: 'Скользкий' },
-  { en: 'Foamy', ru: 'Пенный' }, { en: 'Grumpy', ru: 'Ворчливый' }, { en: 'Royal', ru: 'Царский' },
-  { en: 'Curious', ru: 'Любопытный' },
+  { en: 'Salty', ru: 'Солёный', de: 'Salzig' },
+  { en: 'Brave', ru: 'Храбрый', de: 'Tapfer' },
+  { en: 'Sleepy', ru: 'Сонный', de: 'Schläfrig' },
+  { en: 'Cosy', ru: 'Уютный', de: 'Gemütlich' },
+  { en: 'Misty', ru: 'Туманный', de: 'Neblig' },
+  { en: 'Sunny', ru: 'Солнечный', de: 'Sonnig' },
+  { en: 'Plump', ru: 'Пухлый', de: 'Mollig' },
+  { en: 'Swift', ru: 'Шустрый', de: 'Flink' },
+  { en: 'Gentle', ru: 'Ласковый', de: 'Sanft' },
+  { en: 'Jolly', ru: 'Весёлый', de: 'Fröhlich' },
+  { en: 'Bold', ru: 'Смелый', de: 'Kühn' },
+  { en: 'Lucky', ru: 'Везучий', de: 'Glücklich' },
+  { en: 'Mellow', ru: 'Спокойный', de: 'Gelassen' },
+  { en: 'Nimble', ru: 'Юркий', de: 'Wendig' },
+  { en: 'Quiet', ru: 'Тихий', de: 'Still' },
+  { en: 'Shiny', ru: 'Блестящий', de: 'Strahlend' },
+  { en: 'Snug', ru: 'Тёплый', de: 'Kuschelig' },
+  { en: 'Tidal', ru: 'Приливный', de: 'Tidal' },
+  { en: 'Wavy', ru: 'Волнистый', de: 'Wellig' },
+  { en: 'Zippy', ru: 'Прыткий', de: 'Flitzig' },
+  { en: 'Pebbly', ru: 'Галечный', de: 'Kieselig' },
+  { en: 'Breezy', ru: 'Ветреный', de: 'Luftig' },
+  { en: 'Frosty', ru: 'Морозный', de: 'Frostig' },
+  { en: 'Glossy', ru: 'Лоснящийся', de: 'Glänzend' },
+  { en: 'Hardy', ru: 'Стойкий', de: 'Robust' },
+  { en: 'Merry', ru: 'Радостный', de: 'Vergnügt' },
+  { en: 'Splashy', ru: 'Брызгучий', de: 'Spritzig' },
+  { en: 'Whiskered', ru: 'Усатый', de: 'Schnurrbärtig' },
+  { en: 'Mighty', ru: 'Могучий', de: 'Mächtig' },
+  { en: 'Deep', ru: 'Глубинный', de: 'Tief' },
+  { en: 'Ancient', ru: 'Древний', de: 'Uralt' },
+  { en: 'Pearly', ru: 'Жемчужный', de: 'Perlig' },
+  { en: 'Amber', ru: 'Янтарный', de: 'Bernstein' },
+  { en: 'Spotted', ru: 'Пятнистый', de: 'Gefleckt' },
+  { en: 'Prickly', ru: 'Колючий', de: 'Stachelig' },
+  { en: 'Slippery', ru: 'Скользкий', de: 'Glitschig' },
+  { en: 'Foamy', ru: 'Пенный', de: 'Schaumig' },
+  { en: 'Grumpy', ru: 'Ворчливый', de: 'Grummelig' },
+  { en: 'Royal', ru: 'Царский', de: 'Königlich' },
+  { en: 'Curious', ru: 'Любопытный', de: 'Neugierig' },
 ];
 
 // «Тюленьи»/смешные модификаторы (ru-муж.)
 const MOD = [
-  { en: 'Chonky', ru: 'Толстый' }, { en: 'Fluffy', ru: 'Пушистый' }, { en: 'Round', ru: 'Круглый' },
-  { en: 'Smol', ru: 'Мелкий' }, { en: 'Beeg', ru: 'Большой' }, { en: 'Derpy', ru: 'Глупый' },
-  { en: 'Sandy', ru: 'Песчаный' }, { en: 'Pudgy', ru: 'Пузатый' }, { en: 'Floofy', ru: 'Лохматый' },
-  { en: 'Squishy', ru: 'Мягкий' }, { en: 'Blubbery', ru: 'Жирный' }, { en: 'Cuddly', ru: 'Милый' },
+  { en: 'Chonky', ru: 'Толстый', de: 'Pummelig' },
+  { en: 'Fluffy', ru: 'Пушистый', de: 'Flauschig' },
+  { en: 'Round', ru: 'Круглый', de: 'Rund' },
+  { en: 'Smol', ru: 'Мелкий', de: 'Winzig' },
+  { en: 'Beeg', ru: 'Большой', de: 'Riesig' },
+  { en: 'Derpy', ru: 'Глупый', de: 'Trottelig' },
+  { en: 'Sandy', ru: 'Песчаный', de: 'Sandig' },
+  { en: 'Pudgy', ru: 'Пузатый', de: 'Dicklich' },
+  { en: 'Floofy', ru: 'Лохматый', de: 'Zottelig' },
+  { en: 'Squishy', ru: 'Мягкий', de: 'Weich' },
+  { en: 'Blubbery', ru: 'Жирный', de: 'Speckig' },
+  { en: 'Cuddly', ru: 'Милый', de: 'Knuddelig' },
 ];
 
 // Существительные — морские (ru-муж.)
 const NOUN = [
-  { en: 'Seal', ru: 'Тюлень' }, { en: 'Walrus', ru: 'Морж' }, { en: 'Whale', ru: 'Кит' },
-  { en: 'Dolphin', ru: 'Дельфин' }, { en: 'Narwhal', ru: 'Нарвал' }, { en: 'Spermwhale', ru: 'Кашалот' },
-  { en: 'Crab', ru: 'Краб' }, { en: 'Octopus', ru: 'Осьминог' }, { en: 'Squid', ru: 'Кальмар' },
-  { en: 'Lobster', ru: 'Омар' }, { en: 'Anchovy', ru: 'Анчоус' }, { en: 'Salmon', ru: 'Лосось' },
-  { en: 'Burbot', ru: 'Налим' }, { en: 'Perch', ru: 'Окунь' }, { en: 'Eel', ru: 'Угорь' },
-  { en: 'Ray', ru: 'Скат' }, { en: 'Seahorse', ru: 'Конёк' }, { en: 'Krill', ru: 'Криль' },
-  { en: 'Coral', ru: 'Коралл' }, { en: 'Kraken', ru: 'Кракен' }, { en: 'Triton', ru: 'Тритон' },
-  { en: 'Merman', ru: 'Водяной' }, { en: 'Catfish', ru: 'Сом' }, { en: 'Bubble', ru: 'Пузырь' },
-  { en: 'Buoy', ru: 'Буёк' }, { en: 'Anchor', ru: 'Якорь' }, { en: 'Reef', ru: 'Риф' },
-  { en: 'Beacon', ru: 'Маяк' }, { en: 'Cormorant', ru: 'Баклан' }, { en: 'Puffin', ru: 'Тупик' },
-  { en: 'Penguin', ru: 'Пингвин' }, { en: 'Sturgeon', ru: 'Осётр' }, { en: 'Halibut', ru: 'Палтус' },
-  { en: 'Marlin', ru: 'Марлин' }, { en: 'Sprat', ru: 'Шпрот' }, { en: 'Pollock', ru: 'Минтай' },
-  { en: 'Tuna', ru: 'Тунец' }, { en: 'Crayfish', ru: 'Рак' }, { en: 'Urchin', ru: 'Ёж' },
-  { en: 'Mollusk', ru: 'Моллюск' }, { en: 'Scallop', ru: 'Гребешок' }, { en: 'Leviathan', ru: 'Левиафан' },
-  { en: 'Serpent', ru: 'Змей' }, { en: 'Pelican', ru: 'Пеликан' },
+  { en: 'Seal', ru: 'Тюлень', de: 'Robbe' },
+  { en: 'Walrus', ru: 'Морж', de: 'Walross' },
+  { en: 'Whale', ru: 'Кит', de: 'Wal' },
+  { en: 'Dolphin', ru: 'Дельфин', de: 'Delfin' },
+  { en: 'Narwhal', ru: 'Нарвал', de: 'Narwal' },
+  { en: 'Spermwhale', ru: 'Кашалот', de: 'Pottwal' },
+  { en: 'Crab', ru: 'Краб', de: 'Krabbe' },
+  { en: 'Octopus', ru: 'Осьминог', de: 'Oktopus' },
+  { en: 'Squid', ru: 'Кальмар', de: 'Tintenfisch' },
+  { en: 'Lobster', ru: 'Омар', de: 'Hummer' },
+  { en: 'Anchovy', ru: 'Анчоус', de: 'Sardelle' },
+  { en: 'Salmon', ru: 'Лосось', de: 'Lachs' },
+  { en: 'Burbot', ru: 'Налим', de: 'Quappe' },
+  { en: 'Perch', ru: 'Окунь', de: 'Barsch' },
+  { en: 'Eel', ru: 'Угорь', de: 'Aal' },
+  { en: 'Ray', ru: 'Скат', de: 'Rochen' },
+  { en: 'Seahorse', ru: 'Конёк', de: 'Seepferdchen' },
+  { en: 'Krill', ru: 'Криль', de: 'Krill' },
+  { en: 'Coral', ru: 'Коралл', de: 'Koralle' },
+  { en: 'Kraken', ru: 'Кракен', de: 'Krake' },
+  { en: 'Triton', ru: 'Тритон', de: 'Triton' },
+  { en: 'Merman', ru: 'Водяной', de: 'Wassermann' },
+  { en: 'Catfish', ru: 'Сом', de: 'Wels' },
+  { en: 'Bubble', ru: 'Пузырь', de: 'Blase' },
+  { en: 'Buoy', ru: 'Буёк', de: 'Boje' },
+  { en: 'Anchor', ru: 'Якорь', de: 'Anker' },
+  { en: 'Reef', ru: 'Риф', de: 'Riff' },
+  { en: 'Beacon', ru: 'Маяк', de: 'Leuchtfeuer' },
+  { en: 'Cormorant', ru: 'Баклан', de: 'Kormoran' },
+  { en: 'Puffin', ru: 'Тупик', de: 'Papageitaucher' },
+  { en: 'Penguin', ru: 'Пингвин', de: 'Pinguin' },
+  { en: 'Sturgeon', ru: 'Осётр', de: 'Stör' },
+  { en: 'Halibut', ru: 'Палтус', de: 'Heilbutt' },
+  { en: 'Marlin', ru: 'Марлин', de: 'Marlin' },
+  { en: 'Sprat', ru: 'Шпрот', de: 'Sprotte' },
+  { en: 'Pollock', ru: 'Минтай', de: 'Pollack' },
+  { en: 'Tuna', ru: 'Тунец', de: 'Thunfisch' },
+  { en: 'Crayfish', ru: 'Рак', de: 'Flusskrebs' },
+  { en: 'Urchin', ru: 'Ёж', de: 'Seeigel' },
+  { en: 'Mollusk', ru: 'Моллюск', de: 'Molluske' },
+  { en: 'Scallop', ru: 'Гребешок', de: 'Jakobsmuschel' },
+  { en: 'Leviathan', ru: 'Левиафан', de: 'Leviathan' },
+  { en: 'Serpent', ru: 'Змей', de: 'Schlange' },
+  { en: 'Pelican', ru: 'Пеликан', de: 'Pelikan' },
 ];
 
 // Префикс к существительному (EN — через пробел, RU — через дефис: «Тюль-Якорь»)
 const PREFIX = [
-  { en: 'Seal', ru: 'Тюль' }, { en: 'Pup', ru: 'Нерпа' }, { en: 'Selkie', ru: 'Селки' }, { en: 'Walrus', ru: 'Морж' },
+  { en: 'Seal', ru: 'Тюль', de: 'Robben' },
+  { en: 'Pup', ru: 'Нерпа', de: 'Heuler' },
+  { en: 'Selkie', ru: 'Селки', de: 'Selkie' },
+  { en: 'Walrus', ru: 'Морж', de: 'Walross' },
 ];
-// Суффикс к существительному (EN — через пробел, RU — через дефис: «Якорь-Булочка»)
+// Суффикс к существительному (EN — через пробел, RU/DE — через дефис: «Якорь-Булочка» / «Anker-Brötchen»)
 const SUFFIX = [
-  { en: 'Bun', ru: 'Булочка' }, { en: 'Loaf', ru: 'Батон' }, { en: 'Blob', ru: 'Пельмень' },
-  { en: 'Bean', ru: 'Пирожок' }, { en: 'Pud', ru: 'Пузик' },
+  { en: 'Bun', ru: 'Булочка', de: 'Brötchen' },
+  { en: 'Loaf', ru: 'Батон', de: 'Laib' },
+  { en: 'Blob', ru: 'Пельмень', de: 'Klops' },
+  { en: 'Bean', ru: 'Пирожок', de: 'Böhnchen' },
+  { en: 'Pud', ru: 'Пузик', de: 'Pudding' },
 ];
 
 const PATTERNS = [
@@ -115,7 +184,12 @@ export function makeParts(seed, game) {
   return parts;
 }
 
-const pick = (list, i, lang) => (list[i] || list[0])[lang];
+// Имена-части есть на en/ru; прочие локали (de) рисуются английскими словами (fallback),
+// чтобы не дублировать ~140 слов и не расходиться с серверной копией в leaderboard.ts.
+const pick = (list, i, lang) => {
+  const e = list[i] || list[0];
+  return e[lang] || e.en;
+};
 
 /** Имя по частям на нужном языке. */
 export function renderName(parts, lang) {
@@ -124,13 +198,15 @@ export function renderName(parts, lang) {
   if (parts.adj != null) out.push(pick(ADJ, parts.adj, lang));
   if (parts.mod != null) out.push(pick(MOD, parts.mod, lang));
   let n = pick(NOUN, parts.noun, lang);
+  // RU и DE — компаунд через дефис («Тюль-Якорь» / «Robben-Anker»); EN — через пробел.
+  const hyphen = lang === 'ru' || lang === 'de';
   if (parts.pref != null) {
     const p = pick(PREFIX, parts.pref, lang);
-    n = lang === 'ru' ? `${p}-${n}` : `${p} ${n}`;
+    n = hyphen ? `${p}-${n}` : `${p} ${n}`;
   }
   if (parts.suf != null) {
     const s = pick(SUFFIX, parts.suf, lang);
-    n = lang === 'ru' ? `${n}-${s}` : `${n} ${s}`;
+    n = hyphen ? `${n}-${s}` : `${n} ${s}`;
   }
   out.push(n);
   return out.join(' ');

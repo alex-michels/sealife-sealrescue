@@ -29,10 +29,10 @@ self-host шрифты (`next/font`) · аналитика Plausible (cookieless
 
 1. **Хост → сайт.** `resolveSiteId(host, override)` определяет `sealife` | `sealrescue` по домену
    (локально — `?site=` / cookie). Внутренний `rewrite` на сегмент `/[site]`; URL пользователя не меняется.
-2. **Локаль.** Нет локали в пути → redirect на `ru`/`en` (авто-выбор без forced-редиректа: русскоязычные → `ru`,
-   остальные → `en`; явный выбор в cookie `NEXT_LOCALE` важнее). Есть локаль → rewrite на `/[site]/[locale]/…`.
-3. **DE legal-shell.** `/de/*` — статический сегмент (Impressum/Datenschutz/Cookies/Terms), rewrite без
-   локали-редиректа. Контентных `/de/*` нет → 404 (route guard, инвариант).
+2. **Локаль.** Нет локали в пути → redirect на `ru`/`en`/`de` (авто-выбор без forced-редиректа: русскоязычные → `ru`,
+   немецкоязычные → `de`, остальные → `en`; явный выбор в cookie `NEXT_LOCALE` важнее). Есть локаль → rewrite на `/[site]/[locale]/…`.
+3. **Legal-роуты.** Локализованы под каждую локаль (DE: Impressum/Datenschutz/Cookies/Terms); slug общий
+   (`legal-notice`/`privacy`/`cookies`/`terms`), заголовок и подпись зависят от локали.
 4. **Admin/API исключены** из proxy matcher — Payload обслуживает их сам.
 
 Публичные страницы — **server components по умолчанию**; client-JS только где нужна интерактивность
@@ -67,7 +67,7 @@ src/
 | Исходная локаль `ru`, перевод заранее | `i18n/config.ts` + `markTranslationsStale` + localized-поля |
 | Email с публичных пользователей не собираем | схема коллекций (нет email-полей в UGC; только `contactHandle`) |
 | Лидерборд анонимный (без PII) | `game-scores`: хэш `playerKey`, без IP/email/аккаунтов |
-| DE — только legal, `/de`-контент → 404 | `proxy.ts` + отсутствие контентных `/de`-маршрутов |
+| Неизвестная локаль / несуществующий slug → 404 | `proxy.ts` + `[locale]` route guard |
 | Provenance AI-контента виден пользователю | provenance-поля в `Content`/`Species`/… (расширяется, M1-T08) |
 
 ## Провенанс (модель доверия к контенту)

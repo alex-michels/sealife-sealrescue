@@ -18,12 +18,16 @@ const SLUG = 'species'
 
 // Подписи охранного статуса IUCN (значения хранятся как коды, локализуем в UI).
 const conservationLabels: Record<string, Record<Locale, string>> = {
-  LC: { ru: 'Наименьшие опасения (LC)', en: 'Least concern (LC)' },
-  NT: { ru: 'Близок к уязвимому (NT)', en: 'Near threatened (NT)' },
-  VU: { ru: 'Уязвимый (VU)', en: 'Vulnerable (VU)' },
-  EN: { ru: 'Вымирающий (EN)', en: 'Endangered (EN)' },
-  CR: { ru: 'На грани исчезновения (CR)', en: 'Critically endangered (CR)' },
-  DD: { ru: 'Недостаточно данных (DD)', en: 'Data deficient (DD)' },
+  LC: { ru: 'Наименьшие опасения (LC)', en: 'Least concern (LC)', de: 'Nicht gefährdet (LC)' },
+  NT: { ru: 'Близок к уязвимому (NT)', en: 'Near threatened (NT)', de: 'Potenziell gefährdet (NT)' },
+  VU: { ru: 'Уязвимый (VU)', en: 'Vulnerable (VU)', de: 'Gefährdet (VU)' },
+  EN: { ru: 'Вымирающий (EN)', en: 'Endangered (EN)', de: 'Stark gefährdet (EN)' },
+  CR: {
+    ru: 'На грани исчезновения (CR)',
+    en: 'Critically endangered (CR)',
+    de: 'Vom Aussterben bedroht (CR)',
+  },
+  DD: { ru: 'Недостаточно данных (DD)', en: 'Data deficient (DD)', de: 'Ungenügende Daten (DD)' },
 }
 
 export async function generateMetadata({ params }: { params: SlugParams }): Promise<Metadata> {

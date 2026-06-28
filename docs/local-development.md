@@ -59,7 +59,7 @@ npm run seed:m1         # демо статьи/новости/мемы/виды
 ## Тесты
 - **Integration** — Vitest (`vitest.config.mts`, `test.env`), `tests/int/api.int.spec.ts`.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/` (admin, frontend). Покрывают в т.ч. route
-  guards: запрещённые `/de`-контент-роуты → 404, legal DE работает, контент только `/ru` и `/en`.
+  guards: контент- и legal-роуты работают на `/ru`, `/en`, `/de`; неизвестные локали и slug → 404.
 ```bash
 npm run test:int
 npm run test:e2e

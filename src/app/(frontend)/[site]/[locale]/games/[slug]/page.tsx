@@ -41,7 +41,7 @@ export default async function GameDetail({ params }: { params: SlugParams }) {
       </Link>
       <article>
         <span className="font-mono text-xs uppercase tracking-wide text-muted">
-          {locale === 'en' ? 'Mini-game' : 'Мини-игра'}
+          {{ ru: 'Мини-игра', en: 'Mini-game', de: 'Mini-Spiel' }[locale]}
         </span>
         <h1 className="mt-2 text-4xl">{game.title}</h1>
 
@@ -69,7 +69,9 @@ export default async function GameDetail({ params }: { params: SlugParams }) {
 
         {game.how && (
           <>
-            <h2 className="mt-4 text-xl">{locale === 'en' ? 'How to play' : 'Как играть'}</h2>
+            <h2 className="mt-4 text-xl">
+              {{ ru: 'Как играть', en: 'How to play', de: 'So wird gespielt' }[locale]}
+            </h2>
             <p className="mt-2 whitespace-pre-line text-muted">{game.how}</p>
           </>
         )}
