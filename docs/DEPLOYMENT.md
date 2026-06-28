@@ -14,7 +14,8 @@
 ## 1. Хостинг: один VPS на всё
 
 Один VPS обслуживает **оба сайта** (sealife.info + sealrescue.info), Payload-бэкенд, Postgres
-(prod) и все игры. **Единый source of truth, единый деплой.**
+(prod) и все игры. **Единый source of truth, единый деплой.** (Это целевое состояние; на текущей
+**alpha** наружу отдаётся только игра, а БД — на Neon EU, см. §2.)
 
 * **Локация: EU/EEA (Германия или Финляндия).** Соблюдает data-residency и при этом нормально
   маршрутизируется в RU-зону (Hetzner Helsinki — обычно лучший RU-роут среди EU DC).
@@ -45,25 +46,26 @@
 | Окружение | БД | Где | Зачем |
 |---|---|---|---|
 | **dev / test** | **Neon** (serverless Postgres) | EU-регион (Frankfurt) | ноль ops, ветки БД, free-tier; быстрый старт. Уже настроено в `.env` (`DATABASE_URI`). |
-| **production** | **Self-hosted Postgres** | на том же VPS | $0 marginal, localhost-латентность (нет cold-start на лидерборде), чистый GDPR (нет US-субпроцессора), один бокс. |
+| **alpha игры** (sealthehunter.online) | **Neon — отдельная ветка** | EU-регион (Frankfurt) | данные лидерборда анонимны (без PII) → US-субпроцессор не задействует GDPR; ноль ops; **бэкапы Neon (PITR) бесплатно**. Выделенная ветка, чтобы старт был чистым (без PII). |
+| **production (сайты)** | **Self-hosted Postgres** | на том же VPS | $0 marginal, localhost-латентность (нет cold-start), чистый GDPR (нет US-субпроцессора), один бокс. Обязательно **до** появления PII. |
 
-Переключение — только сменой `DATABASE_URI`. Миграция dev→prod при текущем объёме = один
+Переключение — только сменой `DATABASE_URI`. Миграция Neon→self-hosted при текущем объёме = один
 `pg_dump | pg_restore` (минуты).
 
-> **Почему Neon только для dev/test:** Neon — US-компания; для prod с потенциальным PII это лишний
-> Schrems-II/transfer-разбор. Для разработки и анонимного теста — ок. Prod-данные держим на своём
-> EU-боксе.
+> **Почему Neon ОК для alpha, но не для prod-сайтов:** Neon — US-компания. Лидерборд **анонимен**
+> (`game-scores`: ни email, ни аккаунтов, ни сырого seed, ни IP — см. `src/endpoints/leaderboard.ts`),
+> поэтому персональных данных там нет и Schrems-II/transfer-вопрос не возникает. Как только появится
+> PII (staff-аккаунты с реальными email, пользовательский контент, аккаунты/лидерборды с PII) —
+> переезжаем на self-hosted EU Postgres. Ветку alpha держим **чистой от PII** (только строка `games`
+> + `game-scores`); ветка Neon — copy-on-write от родителя, поэтому либо ветвимся от пустого
+> состояния, либо очищаем не-игровые таблицы на ветке.
 
-### ⚠️ Production Postgres = обязательны бэкапы
-> На фазе **alpha/dev** off-box бэкапы отложены (данные анонимны, без PII) — см. §7. Ниже —
-> целевое состояние, обязательное **до** запуска prod-сайтов / появления PII.
-
-Self-hosted БД без рабочих бэкапов — катастрофа в ожидании. Перед тем как доверить prod-боксу
-что-либо реальное:
-
-* Ночной `pg_dump` → **off-box** (Hetzner Storage Box / Backblaze B2), ротация.
-* **Проверить восстановление** хотя бы один раз (бэкап без проверенного restore не считается).
-* Тюнинг конфигурации под 8 GB (shared_buffers, work_mem и т.п.).
+### Бэкапы
+* **Alpha на Neon:** бэкапы обеспечивает Neon (point-in-time restore на free-tier) — отдельный
+  off-box `pg_dump` не нужен.
+* **Self-hosted prod (когда появится):** ночной `pg_dump` → **off-box** (EU, напр. Backblaze B2
+  Amsterdam) + ротация + **проверенный** restore; тюнинг под 8 GB (shared_buffers, work_mem).
+  Self-hosted БД без рабочих бэкапов — недопустима. См. §7.
 
 ---
 
@@ -99,13 +101,11 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
   * **Пометка «ограниченный альфа-тест»** + контакт `feedback@sealthehunter.online` (RU/EN/DE) — на
     стартовом экране И на финальном экране с лидербордом. Email — **отображаемый** контакт оператора
     (как в Impressum), не форма сбора email (COMPLIANCE: email с публичных пользователей не собираем).
-* **Зависимость данных:** лидерборд резолвит игру по slug `seal-the-hunter` → в prod-БД должна быть
-  строка коллекции `games` с этим slug (см. сидинг в §5). Таблица `game-scores` создаётся push'ем при
-  первом старте (схема пока push-based, см. CLAUDE.md / память проекта).
+* **Зависимость данных:** лидерборд резолвит игру по slug `seal-the-hunter` → в БД alpha (ветка Neon)
+  должна быть строка коллекции `games` с этим slug (см. сидинг в §5). Таблица `game-scores` создаётся
+  push'ем при первом старте (схема пока push-based, см. CLAUDE.md / память проекта).
 * Правки текста/копирайта — в `public/games/seal-hunt-v1/` (`i18n.js`, `index.html`), едут тем же
   пайплайном (после правки ассетов бампать версию кэша в `sw.js`).
-
----
 
 ---
 
@@ -117,20 +117,23 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
    пароли; `ufw allow 22,80,443`; `fail2ban`; `unattended-upgrades`.
    Узкий sudo для деплоя — `/etc/sudoers.d/sealife`:
    `deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart sealife`.
-2. **Пакеты.** Node 20 LTS, Caddy (офиц. репозиторий), PostgreSQL 16.
-3. **Postgres (self-hosted, localhost-only).** Создать БД + роль приложения; лёгкий тюнинг под 8 GB
-   (`shared_buffers`, `work_mem`). PII только EU/EEA — инвариант (бокс EU).
+2. **Пакеты.** Node 20 LTS, Caddy (офиц. репозиторий). PostgreSQL на боксе **не нужен** на alpha —
+   БД на Neon (см. ниже). Self-hosted Postgres ставим позже, перед prod-сайтами (§2, §7).
+3. **БД — Neon (EU, Frankfurt).** Создать **выделенную ветку** под alpha (free-tier). Ветка Neon
+   copy-on-write от родителя → держать её **чистой от PII**: ветвиться от пустого состояния или
+   очистить не-игровые таблицы. Взять connection string ветки для `DATABASE_URI` (шаг 4).
 4. **Каталоги и окружение.**
    * `/opt/sealife/{releases,current}` (владелец `deploy`); `current` — симлинк на активный релиз.
-   * `/etc/sealife/.env` (root:deploy, `640`): `DATABASE_URI` (localhost Postgres),
-     `PAYLOAD_SECRET` (**новый prod-секрет, ≠ dev** — он подписывает play-token лидерборда),
-     `SERVER_URL=https://sealthehunter.online`, `NEXT_PUBLIC_PLAUSIBLE_SRC=` (пусто на alpha).
+   * `/etc/sealife/.env` (root:deploy, `640`): `DATABASE_URI` (**connection string ветки Neon**, с
+     `sslmode=require`), `PAYLOAD_SECRET` (**новый prod-секрет, ≠ dev** — он подписывает play-token
+     лидерборда), `SERVER_URL=https://sealthehunter.online`, `NEXT_PUBLIC_PLAUSIBLE_SRC=` (пусто на alpha).
 5. **systemd.** Скопировать `deploy/sealife.service` → `/etc/systemd/system/`, затем
    `daemon-reload && enable --now sealife` (слушает `127.0.0.1:3000`).
 6. **Caddy.** Положить `deploy/Caddyfile` (можно `import` из `/etc/caddy/Caddyfile`), `systemctl reload
    caddy`. HTTPS выпустится автоматически после того, как DNS укажет на бокс.
-7. **Сид игры.** Один раз создать строку `games` со slug `seal-the-hunter` в prod-БД
+7. **Сид игры.** Один раз создать строку `games` со slug `seal-the-hunter` в ветке Neon
    (`pnpm seed:m1` или точечный сид) — иначе лидерборд вернёт пустую доску (`unknown_game` на submit).
+   Таблицы создаёт push при первом подключении (схема пока push-based).
 8. **DNS (Namecheap).** `A sealthehunter.online → <IP VPS>` (+ `www`). После распространения Caddy
    выпустит сертификаты.
 9. **Email.** Включить форвардинг `feedback@sealthehunter.online` (Namecheap Email Forwarding) —
@@ -143,22 +146,21 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
 | `SSH_HOST` | IP/хост VPS |
 | `SSH_USER` | `deploy` |
 | `SSH_KEY` | приватный ключ (ed25519); публичный — в `~deploy/.ssh/authorized_keys` |
-| `DATABASE_URI` | **dev/Neon** Postgres — только для build-time чтений (главная sealife пре-рендерится статически и читает `content`). **НЕ** prod-БД. |
+| `DATABASE_URI` | **Neon** (EU) — только для build-time чтений (главная sealife пре-рендерится статически и читает `content`). Лучше **отдельная build-ветка**, НЕ живая alpha-ветка (сборка не должна трогать данные лидерборда). |
 | `PAYLOAD_SECRET` | любое непустое build-time значение (реальный prod-секрет — в `/etc/sealife/.env`) |
 
 > **Почему build-time нужна БД:** `src/app/(frontend)/[site]/[locale]/page.tsx` (sealife home)
 > попадает в `generateStaticParams` и вызывает `payload.find` при сборке. На alpha главная наружу не
-> отдаётся (Caddy отдаёт только игру), поэтому собрать против dev-БД безопасно. **Перед запуском
+> отдаётся (Caddy отдаёт только игру), поэтому собрать против Neon-ветки безопасно. **Перед запуском
 > prod-сайтов** пересмотреть стратегию (ISR/`force-dynamic` или выделенная build-БД).
 
-## 7. Бэкапы — отложены на время alpha/dev
+## 7. Бэкапы
 
-Off-box бэкапы Postgres **сознательно отложены** на фазу alpha/разработки: лидерборд анонимен и без
-PII (см. `src/endpoints/leaderboard.ts`), потеря данных = досадно, но не нарушение GDPR.
-
-> ⚠️ **Гейт перед запуском prod-сайтов / появлением любого PII** (CMS-контент, staff-аккаунты): до
-> этого момента включить ночной `pg_dump` → off-box (EU, напр. Backblaze B2 Amsterdam) + ротацию +
-> **проверенный** restore (M0-T06). Self-hosted prod-БД без рабочих бэкапов — недопустима.
+* **Alpha (Neon EU):** бэкапы обеспечивает Neon — point-in-time restore на free-tier. Отдельный
+  off-box `pg_dump` не нужен; данные лидерборда анонимны и без PII (`src/endpoints/leaderboard.ts`).
+* **Self-hosted prod (когда появится):** до запуска prod-сайтов / появления любого PII (CMS-контент,
+  staff-аккаунты) — ночной `pg_dump` → off-box (EU, напр. Backblaze B2 Amsterdam) + ротация +
+  **проверенный** restore (M0-T06). Self-hosted prod-БД без рабочих бэкапов — недопустима.
 
 ## Остаточные ручные шаги
 - [ ] Прогнать §5 (provisioning) на боксе.

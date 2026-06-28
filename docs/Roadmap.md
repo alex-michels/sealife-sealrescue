@@ -37,8 +37,9 @@
   Остальные домены (sealife/sealrescue) + DDoS/кэш — позже.
 * [ ] **M0-T04** Media delivery: Hetzner Object Storage + Bunny CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
 * [ ] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC
-* [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — **отложено**
-  на alpha/dev (лидерборд анонимен, без PII); **гейт перед prod-сайтами / любым PII** (DEPLOYMENT.md §7).
+* [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — на alpha БД =
+  **Neon EU** (бэкапы покрывает PITR Neon; данные анонимны, без PII). Собственный `pg_dump`-бэкап —
+  **гейт перед self-hosted prod / любым PII** (DEPLOYMENT.md §7).
 * [ ] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA
 
 ### Роутинг и i18n

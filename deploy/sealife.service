@@ -8,8 +8,12 @@
 
 [Unit]
 Description=sealife/sealrescue (Next standalone server)
-After=network.target postgresql.service
-Wants=postgresql.service
+# Alpha DB is Neon (remote) → the app needs outbound network at start.
+# When prod moves to a local Postgres, also add:
+#   After=postgresql.service
+#   Wants=postgresql.service
+After=network-online.target
+Wants=network-online.target
 
 [Service]
 Type=simple
