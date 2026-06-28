@@ -27,7 +27,7 @@ export function SiteFooter({ lang }: { lang: Locale }) {
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted">
           <span className="font-mono text-xs">© {new Date().getFullYear()}</span>
-          <LanguageSwitcher current={lang} />
+          <LanguageSwitcher current={lang} placement="up" />
         </div>
       </div>
     </footer>
