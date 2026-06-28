@@ -1,0 +1,35 @@
+# systemd unit for the Next standalone server (sealife/sealrescue + games).
+# Install: copy to /etc/systemd/system/sealife.service, then:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now sealife
+#
+# The CI deploy restarts it via: sudo systemctl restart sealife
+# Grant the deploy user passwordless rights for ONLY that, in /etc/sudoers.d/sealife:
+#   deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart sealife
+
+[Unit]
+Description=sealife/sealrescue (Next standalone server)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+# /opt/sealife/current is a symlink the deploy pipeline repoints to the new release.
+WorkingDirectory=/opt/sealife/current
+EnvironmentFile=/etc/sealife/.env
+Environment=NODE_ENV=production
+Environment=PORT=3000
+# Bind to localhost only — Caddy is the public entrypoint (HTTPS + path allowlist).
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+# Light hardening.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

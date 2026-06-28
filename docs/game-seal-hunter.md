@@ -86,11 +86,28 @@ Server-authoritative. Поток раунда:
 коллекция (см. [data-model.md](data-model.md)). Это позволяет лидерборду работать до появления аккаунтов
 (требование COMPLIANCE: лидерборды до аккаунтов — анонимные/псевдонимные без email).
 
-## Публичный alpha-тест (sealthehunter.online)
-Игра + лидерборд планируются как отдельный публичный тест среди тюлень-сообществ, тем же деплоем из `main`,
-с allowlist маршрутов (наружу — только игра и `/api/leaderboard*`, без `/admin` и прочего API). Стартовый
-экран — с пометкой «Alpha» и контактом `feedback@sealthehunter.online` (RU/EN). Детали и инфраструктура —
-в [DEPLOYMENT.md](DEPLOYMENT.md) §4.
+## Публичный alpha-тест (sealthehunter.online) — standalone-режим
+Игра + лидерборд отдаются отдельным публичным тестом тем же деплоем из `main`, с allowlist маршрутов
+(наружу — только игра и `/api/leaderboard*`, без `/admin` и прочего API). На этом домене Caddy отдаёт
+игру **с корня** (rewrite `/* → /games/seal-hunt-v1/*`). Инфраструктура — [DEPLOYMENT.md](DEPLOYMENT.md) §4–7.
+
+**Standalone vs встраивание (один код, без дублирования).** Игра определяет, что открыта **не во фрейме**
+(`STANDALONE = window.self === window.top`, в `i18n.js`). Во фрейме (встраивание на sealife.*) поведение
+прежнее. В standalone дополнительно:
+
+* **Переключатель языка RU/EN/DE** на стартовом/финальном экране (`#langSwitch`). `window.SealI18n.setLang(l, persist)`
+  меняет язык на лету: `applyStatic()` + колбэк `onLangChange` (его ставит `game.js`) перерисовывает
+  приветствие, интро, заметку и доску (`relocalizeBoard` в `core/leaderboard.js` — без повторного сабмита).
+* **Стартовый язык:** `?lang=` → сохранённый выбор (`localStorage` `seal_hunt_lang`) → язык браузера
+  (ru→ru, de→de, иначе en — как `pickLocale` в `src/proxy.ts`) → `ru`. Запись в `localStorage` —
+  **только после явного клика** по переключателю (COMPLIANCE: язык хранить лишь после явного выбора).
+* **Заметка про альфа-тест** (`#alphaNotice`, ключ `alphaNotice`) + **контакт** `feedback@sealthehunter.online`
+  (`#feedbackInvite`, ключ `feedbackInvite`) — на стартовом И финальном (с лидербордом) экране. Email —
+  отображаемый контакт оператора, не сбор email (COMPLIANCE).
+
+Все эти элементы скрыты во встраиваемой версии (`hidden`, снимается только при `STANDALONE`). Правки —
+в `public/games/seal-hunt-v1/` (`i18n.js`, `index.html`, `game.js`, `style.css`); после правки ассетов
+бампать `CACHE` в `sw.js` (сейчас `seal-hunt-static-v4`; SW также не кэширует `/api/`).
 
 ## Связанные доки
 - [api.md](api.md) — контракт endpoints лидерборда

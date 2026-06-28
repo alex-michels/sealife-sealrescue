@@ -30,11 +30,15 @@
 ### Инфраструктура
 
 * [x] **M0-T01** Postgres в EU/EEA (Neon, Frankfurt). *[S]*
-* [ ] **M0-T02** Деплой Payload+Next (EU-регион), прод + staging. *[M]*
-* [ ] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]*
+* [~] **M0-T02** Деплой Payload+Next (EU-регион), прод + staging. *[M]* — alpha-пайплайн готов:
+  CI собирает Next standalone → VPS (Contabo, EU) → Caddy + systemd, авто-деплой из `main`
+  (`.github/workflows/deploy.yml`, `deploy/`). Остаётся: staging + prod-домены sealife/sealrescue. См. DEPLOYMENT.md.
+* [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — `sealthehunter.online` (alpha): DNS + авто-HTTPS Caddy.
+  Остальные домены (sealife/sealrescue) + DDoS/кэш — позже.
 * [ ] **M0-T04** Media delivery: Hetzner Object Storage + Bunny CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
 * [ ] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC
-* [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC
+* [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — **отложено**
+  на alpha/dev (лидерборд анонимен, без PII); **гейт перед prod-сайтами / любым PII** (DEPLOYMENT.md §7).
 * [ ] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA
 
 ### Роутинг и i18n
@@ -114,6 +118,11 @@
   * [x] **SH-06** Server-authoritative submit-API (Next route): Zod-валидация, плаузибилити-капы (catches/сек, длительность ≈60с), rate-limit, **премодерация** анонимного имени (profanity-фильтр + лог модерации, DSA notice-and-action); запись через Payload local API; без PII в логах. *[M]* → SEC/EU
   * [x] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
   * [x] **SH-08** Анти-чит-харднинг и подстройка баланса по анонимизированным распределениям очков (итеративно). *[S]* → SEC
+* **Фаза 4 — Публичный alpha (sealthehunter.online)**
+  * [x] **SH-09** Standalone-лендинг игры: определение «не во фрейме», переключатель языка RU/EN/DE на
+    стартовом экране (стартовый язык: `?lang=`→сохранённый→браузер; запись в `localStorage` только после
+    явного выбора), пометка альфа-теста + контакт `feedback@sealthehunter.online` на старте и финале;
+    встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md §4–7. *[M]* → EU/DESIGN
 
 #### 🕹 Phaser — для более «тяжёлых» игр (когда Canvas2D мало)
 

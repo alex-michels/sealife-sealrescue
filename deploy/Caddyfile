@@ -1,0 +1,60 @@
+# Caddyfile — reverse proxy for the public alpha at sealthehunter.online.
+#
+# Policy (CLAUDE.md / DEPLOYMENT.md §4): expose ONLY the game + leaderboard. Admin, GraphQL and the
+# rest of Payload's REST surface are NOT reachable from this domain. The bare domain serves the game
+# full-screen by rewriting everything else into the game's static directory (clean URLs at the root).
+#
+# The Next standalone server listens on 127.0.0.1:3000 (systemd unit deploy/sealife.service).
+# Caddy provisions + renews HTTPS automatically once DNS points the domain at this box.
+#
+# handle blocks are first-match + mutually exclusive, so ORDER matters: leaderboard first (allowed),
+# then the blocklist (404), then the catch-all that maps the root to the game.
+
+sealthehunter.online, www.sealthehunter.online {
+	encode zstd gzip
+
+	# 1) Leaderboard API — ALLOWED. Proxied as-is (must NOT be rewritten into the game dir).
+	@leaderboard path /api/leaderboard /api/leaderboard/*
+	handle @leaderboard {
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	# 2) Admin, GraphQL, and every other Payload REST path — BLOCKED.
+	@blocked path /admin /admin/* /api/* /graphql /graphql/*
+	handle @blocked {
+		respond 404
+	}
+
+	# 3a) Bare domain root → the game's index.html explicitly. (Next/the standalone server does NOT
+	#     resolve a directory request like /games/seal-hunt-v1/ to index.html, so map it directly.)
+	handle / {
+		rewrite * /games/seal-hunt-v1/index.html
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	# 3b) Everything else (assets, sw.js, core/*, entities/*) → the game dir. Because index.html is
+	#     served at the URL "/", the browser requests assets like /i18n.js, /game.js, /core/...,
+	#     which this maps into /games/seal-hunt-v1/*. Query string is preserved.
+	handle {
+		rewrite * /games/seal-hunt-v1{path}
+		reverse_proxy 127.0.0.1:3000
+	}
+
+	header {
+		# Sensible defaults; the game ships no third-party resources.
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+# ── Later: the prod sites reuse THIS app + deploy. Add separate blocks (full proxy, no allowlist):
+#
+# sealife.info, www.sealife.info {
+# 	encode zstd gzip
+# 	reverse_proxy 127.0.0.1:3000
+# }
+# sealrescue.info, www.sealrescue.info {
+# 	encode zstd gzip
+# 	reverse_proxy 127.0.0.1:3000
+# }
