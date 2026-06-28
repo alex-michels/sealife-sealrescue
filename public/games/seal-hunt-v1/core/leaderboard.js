@@ -5,6 +5,7 @@
 import { getSeed, renderName } from './alias.js';
 
 const ROUND_MS = 60000; // раунд всегда 60с
+const PAGE_SIZE = 50; // = серверный лимит страницы (для расчёта страницы игрока)
 const MAX_ROWS = 500; // сколько максимум подгружаем при скролле
 
 function lang() {
@@ -95,6 +96,18 @@ function displayName(parts, suffix, l) {
   return suffix && suffix >= 2 ? `${base} ${suffix}` : base;
 }
 
+// Прокрутить список так, чтобы строка игрока («me») оказалась по центру видимой области.
+function scrollToMe(container) {
+  requestAnimationFrame(() => {
+    const list = container.querySelector('.lb-list');
+    const me = container.querySelector('.lb-row.me');
+    if (!list || !me) return;
+    const lr = list.getBoundingClientRect();
+    const mr = me.getBoundingClientRect();
+    list.scrollTop += mr.top - lr.top - (list.clientHeight / 2 - mr.height / 2);
+  });
+}
+
 function rowHtml(r, you, board) {
   const me = you && board === you.board && r.alias === you.alias;
   return (
@@ -177,13 +190,25 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
   container.innerHTML = `<div class="lb"><div class="lb-load">${esc(t('lbLoading'))}</div></div>`;
   try {
     const r = await submitScore(gameSlug, score);
+    // Догружаем страницы до позиции игрока, чтобы открыть доску на его строке.
+    let rows = r.top.slice();
+    let page = r.page;
+    let hasMore = r.hasMore;
+    const targetPage = Math.min(Math.ceil(r.rank / PAGE_SIZE), Math.ceil(MAX_ROWS / PAGE_SIZE));
+    while (page < targetPage && hasMore) {
+      const more = await fetchPage(gameSlug, r.board, page + 1);
+      rows = rows.concat(more.top);
+      page = more.page;
+      hasMore = more.hasMore;
+    }
     const st = {
       gameSlug,
       resetMs: Date.parse(r.resetAt) || 0,
       you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
-      view: { board: r.board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
+      view: { board: r.board, total: r.total, page, rows, hasMore },
     };
     render(container, st, t);
+    scrollToMe(container); // открыть доску на позиции игрока, не на топе
   } catch {
     container.innerHTML = `<div class="lb"><div class="lb-off">${esc(t('lbOffline'))}</div></div>`;
   }
