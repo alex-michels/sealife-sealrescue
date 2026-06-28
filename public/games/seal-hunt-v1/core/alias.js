@@ -1,12 +1,14 @@
 // core/alias.js — анонимная локализуемая идентичность игрока (клиент).
 // Имя варьируется по шаблонам (Прил./Мод./Преф-/-Суф + Сущ.), что расширяет пространство
-// имён до ~40k без чисел. Части детерминированно собираются из (seed, game); рисуются на
-// ЯЗЫКЕ ЗРИТЕЛЯ из выровненных RU/EN/DE-списков. RU — мужской род; DE склоняет прилагательное
-// по роду «головы» имени (поле `g`: m/f/n у NOUN и SUFFIX) — сильное склонение -er/-e/-es.
+// имён без чисел. Части детерминированно собираются из (seed, game); рисуются на ЯЗЫКЕ ЗРИТЕЛЯ
+// из выровненных RU/EN/DE-списков. И DE, и RU склоняют прилагательное по роду СУЩЕСТВИТЕЛЬНОГО
+// (род зависит от языка: Тюлень=m в RU, но Robbe=f в DE → отдельные поля `gru`/`gde`, m/f/n).
+//   DE: род «головы» (у компаунда его задаёт СУФФИКС); окончания -er/-e/-es.
+//   RU: согласование с ВЕДУЩИМ существительным; -ый/-ой/-ий → -ая/-яя (ж.р.), -ое/-ее (ср.р.).
 // Имя НЕ персональные данные. Сервер собирает те же части тем же алгоритмом.
 //
-// ⚠️ KEEP IN SYNC (порядок/длина списков, PATTERNS, mulberry32, порядок бросков) с
-// src/endpoints/leaderboard.ts (там EN-копия).
+// ⚠️ KEEP IN SYNC с src/endpoints/leaderboard.ts (там EN-копия): порядок/ДЛИНА списков, PATTERNS,
+// mulberry32, порядок бросков. Добавляешь NOUN — добавь EN-строку в NOUN_EN там же (та же позиция).
 
 const SEED_KEY = 'seal_hunt_seed';
 
@@ -34,7 +36,7 @@ const ADJ = [
   { en: 'Pebbly', ru: 'Галечный', de: 'Kieselig' },
   { en: 'Breezy', ru: 'Ветреный', de: 'Luftig' },
   { en: 'Frosty', ru: 'Морозный', de: 'Frostig' },
-  { en: 'Glossy', ru: 'Лоснящийся', de: 'Glänzend' },
+  { en: 'Glossy', ru: 'Глянцевый', de: 'Glänzend' },
   { en: 'Hardy', ru: 'Стойкий', de: 'Robust' },
   { en: 'Merry', ru: 'Радостный', de: 'Vergnügt' },
   { en: 'Splashy', ru: 'Брызгучий', de: 'Spritzig' },
@@ -69,52 +71,65 @@ const MOD = [
   { en: 'Cuddly', ru: 'Милый', de: 'Knuddelig' },
 ];
 
-// Существительные — морские (ru-муж.). `g` — род для немецкого склонения (m/f/n).
+// Существительные. `gde`/`gru` — род для нем./рус. склонения (m/f/n). Род зависит от языка!
+// ⚠️ Длина/порядок ДОЛЖНЫ совпадать с NOUN_EN в src/endpoints/leaderboard.ts.
 const NOUN = [
-  { en: 'Seal', ru: 'Тюлень', de: 'Robbe', g: 'f' },
-  { en: 'Walrus', ru: 'Морж', de: 'Walross', g: 'n' },
-  { en: 'Whale', ru: 'Кит', de: 'Wal', g: 'm' },
-  { en: 'Dolphin', ru: 'Дельфин', de: 'Delfin', g: 'm' },
-  { en: 'Narwhal', ru: 'Нарвал', de: 'Narwal', g: 'm' },
-  { en: 'Spermwhale', ru: 'Кашалот', de: 'Pottwal', g: 'm' },
-  { en: 'Crab', ru: 'Краб', de: 'Krabbe', g: 'f' },
-  { en: 'Octopus', ru: 'Осьминог', de: 'Oktopus', g: 'm' },
-  { en: 'Squid', ru: 'Кальмар', de: 'Tintenfisch', g: 'm' },
-  { en: 'Lobster', ru: 'Омар', de: 'Hummer', g: 'm' },
-  { en: 'Anchovy', ru: 'Анчоус', de: 'Sardelle', g: 'f' },
-  { en: 'Salmon', ru: 'Лосось', de: 'Lachs', g: 'm' },
-  { en: 'Burbot', ru: 'Налим', de: 'Quappe', g: 'f' },
-  { en: 'Perch', ru: 'Окунь', de: 'Barsch', g: 'm' },
-  { en: 'Eel', ru: 'Угорь', de: 'Aal', g: 'm' },
-  { en: 'Ray', ru: 'Скат', de: 'Rochen', g: 'm' },
-  { en: 'Seahorse', ru: 'Конёк', de: 'Seepferdchen', g: 'n' },
-  { en: 'Krill', ru: 'Криль', de: 'Krill', g: 'm' },
-  { en: 'Coral', ru: 'Коралл', de: 'Koralle', g: 'f' },
-  { en: 'Kraken', ru: 'Кракен', de: 'Krake', g: 'm' },
-  { en: 'Triton', ru: 'Тритон', de: 'Triton', g: 'm' },
-  { en: 'Merman', ru: 'Водяной', de: 'Wassermann', g: 'm' },
-  { en: 'Catfish', ru: 'Сом', de: 'Wels', g: 'm' },
-  { en: 'Bubble', ru: 'Пузырь', de: 'Blase', g: 'f' },
-  { en: 'Buoy', ru: 'Буёк', de: 'Boje', g: 'f' },
-  { en: 'Anchor', ru: 'Якорь', de: 'Anker', g: 'm' },
-  { en: 'Reef', ru: 'Риф', de: 'Riff', g: 'n' },
-  { en: 'Beacon', ru: 'Маяк', de: 'Leuchtfeuer', g: 'n' },
-  { en: 'Cormorant', ru: 'Баклан', de: 'Kormoran', g: 'm' },
-  { en: 'Puffin', ru: 'Тупик', de: 'Papageitaucher', g: 'm' },
-  { en: 'Penguin', ru: 'Пингвин', de: 'Pinguin', g: 'm' },
-  { en: 'Sturgeon', ru: 'Осётр', de: 'Stör', g: 'm' },
-  { en: 'Halibut', ru: 'Палтус', de: 'Heilbutt', g: 'm' },
-  { en: 'Marlin', ru: 'Марлин', de: 'Marlin', g: 'm' },
-  { en: 'Sprat', ru: 'Шпрот', de: 'Sprotte', g: 'f' },
-  { en: 'Pollock', ru: 'Минтай', de: 'Pollack', g: 'm' },
-  { en: 'Tuna', ru: 'Тунец', de: 'Thunfisch', g: 'm' },
-  { en: 'Crayfish', ru: 'Рак', de: 'Flusskrebs', g: 'm' },
-  { en: 'Urchin', ru: 'Ёж', de: 'Seeigel', g: 'm' },
-  { en: 'Mollusk', ru: 'Моллюск', de: 'Molluske', g: 'f' },
-  { en: 'Scallop', ru: 'Гребешок', de: 'Jakobsmuschel', g: 'f' },
-  { en: 'Leviathan', ru: 'Левиафан', de: 'Leviathan', g: 'm' },
-  { en: 'Serpent', ru: 'Змей', de: 'Schlange', g: 'f' },
-  { en: 'Pelican', ru: 'Пеликан', de: 'Pelikan', g: 'm' },
+  { en: 'Seal', ru: 'Тюлень', de: 'Robbe', gde: 'f', gru: 'm' },
+  { en: 'Walrus', ru: 'Морж', de: 'Walross', gde: 'n', gru: 'm' },
+  { en: 'Whale', ru: 'Кит', de: 'Wal', gde: 'm', gru: 'm' },
+  { en: 'Dolphin', ru: 'Дельфин', de: 'Delfin', gde: 'm', gru: 'm' },
+  { en: 'Narwhal', ru: 'Нарвал', de: 'Narwal', gde: 'm', gru: 'm' },
+  { en: 'Spermwhale', ru: 'Кашалот', de: 'Pottwal', gde: 'm', gru: 'm' },
+  { en: 'Crab', ru: 'Краб', de: 'Krabbe', gde: 'f', gru: 'm' },
+  { en: 'Octopus', ru: 'Осьминог', de: 'Oktopus', gde: 'm', gru: 'm' },
+  { en: 'Squid', ru: 'Кальмар', de: 'Tintenfisch', gde: 'm', gru: 'm' },
+  { en: 'Lobster', ru: 'Омар', de: 'Hummer', gde: 'm', gru: 'm' },
+  { en: 'Anchovy', ru: 'Анчоус', de: 'Sardelle', gde: 'f', gru: 'm' },
+  { en: 'Salmon', ru: 'Лосось', de: 'Lachs', gde: 'm', gru: 'm' },
+  { en: 'Burbot', ru: 'Налим', de: 'Quappe', gde: 'f', gru: 'm' },
+  { en: 'Perch', ru: 'Окунь', de: 'Barsch', gde: 'm', gru: 'm' },
+  { en: 'Eel', ru: 'Угорь', de: 'Aal', gde: 'm', gru: 'm' },
+  { en: 'Ray', ru: 'Скат', de: 'Rochen', gde: 'm', gru: 'm' },
+  { en: 'Seahorse', ru: 'Конёк', de: 'Seepferdchen', gde: 'n', gru: 'm' },
+  { en: 'Krill', ru: 'Криль', de: 'Krill', gde: 'm', gru: 'm' },
+  { en: 'Coral', ru: 'Коралл', de: 'Koralle', gde: 'f', gru: 'm' },
+  { en: 'Kraken', ru: 'Кракен', de: 'Krake', gde: 'm', gru: 'm' },
+  { en: 'Triton', ru: 'Тритон', de: 'Triton', gde: 'm', gru: 'm' },
+  { en: 'Merman', ru: 'Водяной', de: 'Wassermann', gde: 'm', gru: 'm' },
+  { en: 'Catfish', ru: 'Сом', de: 'Wels', gde: 'm', gru: 'm' },
+  { en: 'Bubble', ru: 'Пузырь', de: 'Blase', gde: 'f', gru: 'm' },
+  { en: 'Buoy', ru: 'Буёк', de: 'Boje', gde: 'f', gru: 'm' },
+  { en: 'Anchor', ru: 'Якорь', de: 'Anker', gde: 'm', gru: 'm' },
+  { en: 'Reef', ru: 'Риф', de: 'Riff', gde: 'n', gru: 'm' },
+  { en: 'Beacon', ru: 'Маяк', de: 'Leuchtfeuer', gde: 'n', gru: 'm' },
+  { en: 'Cormorant', ru: 'Баклан', de: 'Kormoran', gde: 'm', gru: 'm' },
+  { en: 'Puffin', ru: 'Тупик', de: 'Papageitaucher', gde: 'm', gru: 'm' },
+  { en: 'Penguin', ru: 'Пингвин', de: 'Pinguin', gde: 'm', gru: 'm' },
+  { en: 'Sturgeon', ru: 'Осётр', de: 'Stör', gde: 'm', gru: 'm' },
+  { en: 'Halibut', ru: 'Палтус', de: 'Heilbutt', gde: 'm', gru: 'm' },
+  { en: 'Marlin', ru: 'Марлин', de: 'Marlin', gde: 'm', gru: 'm' },
+  { en: 'Sprat', ru: 'Шпрот', de: 'Sprotte', gde: 'f', gru: 'm' },
+  { en: 'Pollock', ru: 'Минтай', de: 'Pollack', gde: 'm', gru: 'm' },
+  { en: 'Tuna', ru: 'Тунец', de: 'Thunfisch', gde: 'm', gru: 'm' },
+  { en: 'Crayfish', ru: 'Рак', de: 'Flusskrebs', gde: 'm', gru: 'm' },
+  { en: 'Urchin', ru: 'Ёж', de: 'Seeigel', gde: 'm', gru: 'm' },
+  { en: 'Mollusk', ru: 'Моллюск', de: 'Molluske', gde: 'f', gru: 'm' },
+  { en: 'Scallop', ru: 'Гребешок', de: 'Jakobsmuschel', gde: 'f', gru: 'm' },
+  { en: 'Leviathan', ru: 'Левиафан', de: 'Leviathan', gde: 'm', gru: 'm' },
+  { en: 'Serpent', ru: 'Змей', de: 'Schlange', gde: 'f', gru: 'm' },
+  { en: 'Pelican', ru: 'Пеликан', de: 'Pelikan', gde: 'm', gru: 'm' },
+  // — милые/умилительные (M-DE-NAMES). Род в RU и DE может различаться.
+  { en: 'Sealie', ru: 'Тюля', de: 'Seehündchen', gde: 'n', gru: 'f' },
+  { en: 'Chonker', ru: 'Толстыш', de: 'Dickerchen', gde: 'n', gru: 'm' },
+  { en: 'Toughie', ru: 'Крепыш', de: 'Kraftpaket', gde: 'n', gru: 'm' },
+  { en: 'Nixie', ru: 'Русалочка', de: 'Nixe', gde: 'f', gru: 'f' },
+  { en: 'Gobbler', ru: 'Жрун', de: 'Vielfraß', gde: 'm', gru: 'm' },
+  { en: 'Zucchini', ru: 'Кабачок', de: 'Zucchini', gde: 'f', gru: 'm' },
+  { en: 'Sea Cucumber', ru: 'Морской огурец', de: 'Seegurke', gde: 'f', gru: 'm' },
+  { en: 'Spud', ru: 'Картошка', de: 'Kartoffel', gde: 'f', gru: 'f' },
+  { en: 'Submarine', ru: 'Субмарина', de: 'U-Boot', gde: 'n', gru: 'f' },
+  { en: 'Donut', ru: 'Пончик', de: 'Krapfen', gde: 'm', gru: 'm' },
+  { en: 'Dumplet', ru: 'Колобок', de: 'Teigkugel', gde: 'f', gru: 'm' },
 ];
 
 // Префикс к существительному (EN — через пробел, RU — через дефис: «Тюль-Якорь»)
@@ -125,12 +140,14 @@ const PREFIX = [
   { en: 'Walrus', ru: 'Морж', de: 'Walross' },
 ];
 // Суффикс к существительному (EN — через пробел, RU/DE — через дефис: «Якорь-Булочка» / «Anker-Brötchen»)
+// `gde` — род для немецкого склонения; в RU прилагательное согласуется с ведущим существительным,
+// поэтому род суффикса в RU не нужен.
 const SUFFIX = [
-  { en: 'Bun', ru: 'Булочка', de: 'Brötchen', g: 'n' },
-  { en: 'Loaf', ru: 'Батон', de: 'Laib', g: 'm' },
-  { en: 'Blob', ru: 'Пельмень', de: 'Klops', g: 'm' },
-  { en: 'Bean', ru: 'Пирожок', de: 'Böhnchen', g: 'n' },
-  { en: 'Pud', ru: 'Пузик', de: 'Pudding', g: 'm' },
+  { en: 'Bun', ru: 'Булочка', de: 'Brötchen', gde: 'n' },
+  { en: 'Loaf', ru: 'Батон', de: 'Laib', gde: 'm' },
+  { en: 'Blob', ru: 'Пельмень', de: 'Klops', gde: 'm' },
+  { en: 'Bean', ru: 'Пирожок', de: 'Böhnchen', gde: 'n' },
+  { en: 'Pud', ru: 'Пузик', de: 'Pudding', gde: 'm' },
 ];
 
 const PATTERNS = [
@@ -191,24 +208,40 @@ const pick = (list, i, lang) => {
   return e[lang] || e.en;
 };
 
-// Род «головы» имени: при суффиксе род задаёт последний элемент компаунда (суффикс),
-// иначе — само существительное. Нужен для немецкого склонения прилагательных.
-const ADJ_END = { m: 'er', f: 'e', n: 'es' };
-function headGender(parts) {
-  if (parts.suf != null) return (SUFFIX[parts.suf] || SUFFIX[0]).g;
-  return (NOUN[parts.noun] || NOUN[0]).g;
+// Род «головы» имени для склонения прилагательного. Зависит от языка:
+//  DE — у компаунда род задаёт СУФФИКС (последний элемент), иначе существительное (поле `gde`);
+//  RU — согласование с ВЕДУЩИМ существительным (поле `gru`); префикс/суффикс род не меняют.
+const DE_END = { m: 'er', f: 'e', n: 'es' };
+function headGenderFor(parts, lang) {
+  if (lang === 'de') {
+    const e = parts.suf != null ? SUFFIX[parts.suf] : NOUN[parts.noun];
+    return (e || NOUN[0]).gde;
+  }
+  return (NOUN[parts.noun] || NOUN[0]).gru; // ru
 }
-// Прилагательное на нужном языке; для de — сильное склонение по роду (Runder/Runde/Rundes).
+
+// Русское склонение прилагательного: хранится муж. форма (-ый/-ой/-ий) → ж.р./ср.р.
+// Мягкая основа (-ий не после г/к/х/ж/ш/щ/ч, напр. «Древний») → -яя/-ее; иначе -ая/-ое.
+function declineRu(adj, gender) {
+  if (!gender || gender === 'm') return adj;
+  const stem = adj.slice(0, -2);
+  const soft = adj.slice(-2) === 'ий' && !'гкхжшщч'.includes(stem.slice(-1));
+  if (gender === 'f') return stem + (soft ? 'яя' : 'ая');
+  return stem + (soft ? 'ее' : 'ое'); // ср.р.
+}
+
+// Прилагательное на нужном языке со склонением по роду (de/ru); en — без изменений.
 function adjForm(list, i, lang, gender) {
   const base = pick(list, i, lang);
-  if (lang !== 'de') return base;
-  return base + (ADJ_END[gender] || 'er');
+  if (lang === 'de') return base + (DE_END[gender] || 'er');
+  if (lang === 'ru') return declineRu(base, gender);
+  return base;
 }
 
 /** Имя по частям на нужном языке. */
 export function renderName(parts, lang) {
   if (!parts || parts.noun == null) return '';
-  const gender = headGender(parts);
+  const gender = headGenderFor(parts, lang);
   const out = [];
   if (parts.adj != null) out.push(adjForm(ADJ, parts.adj, lang, gender));
   if (parts.mod != null) out.push(adjForm(MOD, parts.mod, lang, gender));
