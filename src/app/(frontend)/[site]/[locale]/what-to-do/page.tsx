@@ -34,7 +34,7 @@ export default async function WhatToDoPage({ params }: { params: RouteParams }) 
           {t(locale, 'rescueCta')}
         </Link>
         <Link href={`/${locale}/rescue-quest`} className={buttonClasses('ghost', 'lg')}>
-          {locale === 'en' ? 'Try the quest →' : 'Пройти квест →'}
+          {{ ru: 'Пройти квест →', en: 'Try the quest →', de: 'Quest starten →' }[locale]}
         </Link>
       </div>
     </SectionShell>

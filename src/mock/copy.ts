@@ -131,6 +131,48 @@ const en: Dict = {
   questResult: 'Result',
 }
 
-const dict: Record<Locale, Dict> = { ru, en }
+const de: Dict = {
+  mockNotice: 'Demo-Modus: Beispieldaten, keine echten Einträge. Inhalte folgen in M1–M2.',
+  backHome: '← Startseite',
+  readMore: 'Lesen →',
+  start: 'Starten →',
+  empty: {
+    sealife: 'Hier ist es still — wie eine Robbe nach dem Mittagessen.',
+    sealrescue: 'Noch keine Daten. Prüfen Sie eine Nachbarregion oder melden Sie einen Fehler.',
+  },
+  error: {
+    sealife: 'Etwas ist abgesoffen. Neu laden?',
+    sealrescue: 'Daten konnten nicht geladen werden. Seite aktualisieren oder die Zentrenliste öffnen.',
+  },
+  retry: 'Neu laden',
+  loading: 'Lädt…',
+  stateLabel: 'Zustand (Demo):',
+  statePopulated: 'Mit Daten',
+  stateEmpty: 'Leer',
+  stateLoading: 'Laden',
+  stateError: 'Fehler',
+  filters: 'Filter',
+  filterAll: 'Alle',
+  resultsCount: (n) => `Gefunden: ${n}`,
+  mapToggle: 'Auf Karte zeigen',
+  mapPlaceholder: 'Eine Karte erscheint hier (M2). Der Locator ist immer list-first.',
+  call: 'Anrufen',
+  website: 'Website',
+  route: 'Route',
+  reportIssue: 'Fehler melden',
+  distanceUnknown: 'Halten Sie einen sicheren Abstand — der genaue Wert hängt vom Land ab.',
+  formNick: 'TG/VK-Handle (optional)',
+  formNickHint: 'Nur falls Sie kontaktiert werden möchten. Wir fragen keine E-Mail ab.',
+  formMessage: 'Was stimmt nicht, oder welches Zentrum vorschlagen',
+  formSubmit: 'Zur Moderation senden',
+  formNoEmail: 'Wir erfassen keine E-Mail — nirgends, auch nicht für eine Antwort (Datenminimierung).',
+  formContactHint: 'Eine garantierte Antwort nötig? Der Betreiberkontakt steht',
+  formContactLink: 'im Impressum',
+  formDone: 'Danke! Dies ginge in die Vormoderation (Demo: nichts wurde gesendet).',
+  questRestart: 'Neu starten',
+  questResult: 'Ergebnis',
+}
+
+const dict: Record<Locale, Dict> = { ru, en, de }
 
 export const m = (locale: Locale): Dict => dict[locale] ?? ru

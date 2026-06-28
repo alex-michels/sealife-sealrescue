@@ -5,11 +5,11 @@
  * хуков, middleware (edge runtime) и серверных компонентов. Держать его без
  * тяжёлых зависимостей.
  *
- * Добавить DE позже = ОДНА строка ниже ('de') + подпись в localeLabels.
- * Это автоматически обновит: локали Payload, целевые локали перевода (хуки),
- * редирект middleware, статические параметры маршрутов и hreflang.
+ * Список локалей — единственный «рубильник»: добавить/убрать локаль = одна строка ниже
+ * + подпись в localeLabels. Это автоматически обновляет: локали Payload, целевые локали
+ * перевода (хуки), редирект middleware, статические параметры маршрутов и hreflang.
  */
-export const locales = ['ru', 'en'] as const // + 'de' — одной строкой
+export const locales = ['ru', 'en', 'de'] as const
 
 export type Locale = (typeof locales)[number]
 
@@ -17,9 +17,9 @@ export type Locale = (typeof locales)[number]
 export const defaultLocale: Locale = 'ru'
 
 /**
- * Локаль для посетителей, чей язык мы НЕ поддерживаем (напр. немецкий), и для
- * запросов без Accept-Language. НЕ путать с defaultLocale.
- * Политика: русскоязычные → ru, все остальные → en.
+ * Локаль для посетителей, чей язык мы НЕ поддерживаем, и для запросов без
+ * Accept-Language. НЕ путать с defaultLocale.
+ * Политика: русскоязычные → ru, немецкоязычные → de, остальные → en.
  */
 export const fallbackLocale: Locale = 'en'
 
@@ -30,7 +30,7 @@ export const targetLocales: Locale[] = locales.filter((l) => l !== defaultLocale
 export const localeLabels: Record<Locale, string> = {
   ru: 'Русский',
   en: 'English',
-  // de: 'Deutsch',
+  de: 'Deutsch',
 }
 
 export const isLocale = (value: string): value is Locale =>

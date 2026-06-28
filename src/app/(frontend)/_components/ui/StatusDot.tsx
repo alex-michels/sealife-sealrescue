@@ -1,4 +1,5 @@
 import { cx } from './cx'
+import type { Locale } from '@/i18n/config'
 
 /**
  * Статус-точка центра (DESIGN_BRIEF §4). Значения = `rescue-centers.status`.
@@ -7,11 +8,23 @@ import { cx } from './cx'
  */
 export type CenterStatus = 'active' | 'unconfirmed' | 'link_broken' | 'needs_check'
 
-const meta: Record<CenterStatus, { color: string; ru: string; en: string }> = {
-  active: { color: 'var(--color-status-active)', ru: 'Активен', en: 'Active' },
-  needs_check: { color: 'var(--color-status-check)', ru: 'Требует проверки', en: 'Needs check' },
-  link_broken: { color: 'var(--color-status-broken)', ru: 'Ссылка сломана', en: 'Link broken' },
-  unconfirmed: { color: 'var(--color-status-unverified)', ru: 'Не подтверждён', en: 'Unconfirmed' },
+const meta: Record<CenterStatus, { color: string; label: Record<Locale, string> }> = {
+  active: {
+    color: 'var(--color-status-active)',
+    label: { ru: 'Активен', en: 'Active', de: 'Aktiv' },
+  },
+  needs_check: {
+    color: 'var(--color-status-check)',
+    label: { ru: 'Требует проверки', en: 'Needs check', de: 'Prüfung nötig' },
+  },
+  link_broken: {
+    color: 'var(--color-status-broken)',
+    label: { ru: 'Ссылка сломана', en: 'Link broken', de: 'Link defekt' },
+  },
+  unconfirmed: {
+    color: 'var(--color-status-unverified)',
+    label: { ru: 'Не подтверждён', en: 'Unconfirmed', de: 'Unbestätigt' },
+  },
 }
 
 export function StatusDot({
@@ -21,12 +34,12 @@ export function StatusDot({
   className,
 }: {
   status: CenterStatus
-  locale?: 'ru' | 'en'
+  locale?: Locale
   showLabel?: boolean
   className?: string
 }) {
   const m = meta[status]
-  const label = locale === 'en' ? m.en : m.ru
+  const label = m.label[locale]
   return (
     <span className={cx('inline-flex items-center gap-1.5 text-sm', className)}>
       <span

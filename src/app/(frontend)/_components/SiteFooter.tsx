@@ -1,16 +1,16 @@
 import Link from 'next/link'
 import type { Locale } from '@/i18n/config'
-import { legalNav, legalHref, type LegalLang } from '@/site/legal'
+import { legalNav, legalHref } from '@/site/legal'
 import { LanguageSwitcher } from './LanguageSwitcher'
 
 /**
- * Тонкий, но полноценный футер (§4a/§10): legal-ссылки + cookie settings (= ссылка
- * «Cookies») + переключатель языка (только на RU/EN-страницах).
+ * Тонкий, но полноценный футер (§4a/§10): legal-ссылки на языке страницы +
+ * cookie settings (= ссылка «Cookies») + переключатель языка.
  *
- * Legal-ссылки показываем ТОЛЬКО на языке страницы (allowlist `legalNav[lang]`):
- * на EN/RU-странице НЕТ немецких (/de) ссылок; на /de legal-странице — только DE.
+ * Legal-ссылки показываем на языке текущей страницы (`legalNav[lang]`): на DE —
+ * «Impressum»/«Datenschutz», на RU/EN — свои подписи. Свитчер виден на всех локалях.
  */
-export function SiteFooter({ lang }: { lang: LegalLang }) {
+export function SiteFooter({ lang }: { lang: Locale }) {
   return (
     <footer className="mt-16 border-t border-border">
       <div className="mx-auto flex max-w-5xl flex-col gap-4 px-5 py-8">
@@ -27,7 +27,7 @@ export function SiteFooter({ lang }: { lang: LegalLang }) {
         </nav>
         <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-muted">
           <span className="font-mono text-xs">© {new Date().getFullYear()}</span>
-          {lang !== 'de' && <LanguageSwitcher current={lang as Locale} />}
+          <LanguageSwitcher current={lang} placement="up" />
         </div>
       </div>
     </footer>

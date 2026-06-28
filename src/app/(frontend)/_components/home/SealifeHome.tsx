@@ -30,7 +30,7 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
       <WhiskerDivider className="my-6" />
 
       {/* Хаб разделов — главная как точка входа во весь сайт (M0-T19). */}
-      <h2 className="mb-5 text-2xl">{locale === 'en' ? 'Explore' : 'Разделы'}</h2>
+      <h2 className="mb-5 text-2xl">{{ ru: 'Разделы', en: 'Explore', de: 'Entdecken' }[locale]}</h2>
       <EqualCardGrid>
         {sectionsForSite('sealife').map((s) => (
           <li key={s.slug}>

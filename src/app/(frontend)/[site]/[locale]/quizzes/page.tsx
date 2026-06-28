@@ -27,7 +27,7 @@ export default async function QuizzesPage({
     href: `/${locale}/${SLUG}/${q.slug}`,
     title: q.title[locale],
     excerpt: q.excerpt[locale],
-    meta: locale === 'en' ? `${q.questions} questions` : `${q.questions} вопр.`,
+    meta: { ru: `${q.questions} вопр.`, en: `${q.questions} questions`, de: `${q.questions} Fragen` }[locale],
     seed: i + 3,
   }))
   return (

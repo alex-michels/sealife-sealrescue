@@ -134,7 +134,7 @@ body {
 - Максимальная ширина публичного контента: примерно `960–1120px` в зависимости от страницы.
 - Воздух обязателен, но пустота не должна выглядеть как недогруженный сайт.
 - Header и footer должны быть компактными, но полноценными: язык, legal links, cookie settings, cross-site links.
-- **Header есть на КАЖДОЙ публичной странице, включая legal-shell (RU/EN и DE).** В нём — кликабельный вордмарк-ссылка на главную страницу сайта (доступна с клавиатуры и screen reader), чтобы с любой страницы можно было вернуться домой одним кликом. На `/de`-legal-страницах ссылка ведёт на `/` (локаль главной выбирается автоматически).
+- **Header есть на КАЖДОЙ публичной странице, включая legal-страницы (RU/EN/DE).** В нём — кликабельный вордмарк-ссылка на главную страницу сайта (доступна с клавиатуры и screen reader), чтобы с любой страницы можно было вернуться домой одним кликом. Ссылка ведёт на главную текущей локали (`/ru`, `/en` или `/de`).
 - Body-текст остаётся тёмным; цветная иерархия — в заголовках, ссылках, поверхностях и декоре.
 
 ### 4b. Карточки и responsive grid
@@ -327,45 +327,27 @@ sealrescue:
 
 ---
 
-## 10. Язык и legal-shell
+## 10. Язык и локали
 
-Публичные локали: **`/ru`, `/en`**. DE как контентную локаль не делаем.
+Публичные локали: **`/ru`, `/en`, `/de`** — три равноправные контент-локали.
 
 Правила:
-1. Стабильные URL: `/ru/...`, `/en/...`.
-2. На корне `/`: `ru`-браузер → предложить RU, иначе → предложить EN. Без forced-редиректа.
+1. Стабильные URL: `/ru/...`, `/en/...`, `/de/...`.
+2. На корне `/`: `ru`-браузер → предложить RU, `de`-браузер → предложить DE, иначе → предложить EN. Без forced-редиректа.
 3. Выбрал язык вручную → сохранить preference после действия пользователя и больше не спорить.
-4. Свитчер языка всегда виден в header/footer, названия текстом, не флагами.
-5. SEO: `hreflang`, `x-default`, canonical, sitemap по локалям.
+4. Свитчер языка всегда виден в header/footer, **три названия текстом** (Русский / English / Deutsch), не флагами.
+5. SEO: `hreflang` (ru/en/de), `x-default`, canonical, sitemap по локалям.
 
-Legal-shell routes — фиксированный allowlist:
+Legal-роуты — общий slug для всех локалей, заголовок и подпись локализованы:
 
 ```text
-EN:
-  /en/legal-notice
-  /en/privacy
-  /en/cookies
-  /en/terms
-
-DE:
-  /de/impressum
-  /de/datenschutz
-  /de/cookies
-  /de/terms
+/<locale>/legal-notice   (DE: «Impressum»)
+/<locale>/privacy        (DE: «Datenschutz»)
+/<locale>/cookies
+/<locale>/terms
 ```
 
-Запрещено:
-```text
-/de/articles/...
-/de/news/...
-/de/memes/...
-/de/quizzes/...
-/de/rescue-centers/...
-/de/species/...
-любой другой /de content route
-```
-
-Footer каждой публичной страницы должен содержать ссылки на legal pages и cookie settings. DE legal pages разрешены, DE content pages — нет.
+Footer каждой публичной страницы должен содержать ссылки на legal pages и cookie settings — на языке страницы. German/EU legal pages обязательны независимо от набора включённых языков.
 
 ---
 
@@ -377,9 +359,9 @@ Footer каждой публичной страницы должен содер�
 - Только sample texts / fake records / placeholder media.
 - Sample content явно не выдаётся за реальные данные.
 - Все ссылки и разделы кликабельны.
-- Все route guards работают: `/de` content routes → 404; legal DE routes работают.
+- Все route guards работают: контент- и legal-роуты есть на `/ru`, `/en`, `/de`; неизвестные локали/slug → 404.
 - Footer legal links и cookie settings видны на всех публичных страницах.
-- RU/EN переключатель работает на sample pages.
+- RU/EN/DE переключатель работает на sample pages.
 - Используются те же компоненты, что пойдут в production.
 - Никаких provider URLs и внешних картинок в mock; использовать локальные/placeholder ассеты.
 - Mock должен покрывать empty, loading, error, populated states.
@@ -415,8 +397,8 @@ legal-shell:
 /en/privacy
 /en/cookies
 /en/terms
-/de/impressum
-/de/datenschutz
+/de/legal-notice   (заголовок: Impressum)
+/de/privacy        (заголовок: Datenschutz)
 /de/cookies
 /de/terms
 ```
@@ -500,8 +482,7 @@ AI-provenance:
 - Не использовать `--azure-bright` для обычного текста.
 - Не делать blue wash; море добавляется слоями.
 - Не делать forced-редирект по языку; не прятать language switcher; не использовать флаги вместо названий.
-- Не генерировать `/de/...` content pages.
-- Не считать отсутствие DE-контента освобождением от German/EU legal pages.
+- German/EU legal pages обязательны независимо от набора включённых языков.
 - Не хардкодить одну универсальную безопасную дистанцию.
 - Не делать sealrescue милым в ущерб доверию.
 - Не делать карту вместо списка; locator list-first.

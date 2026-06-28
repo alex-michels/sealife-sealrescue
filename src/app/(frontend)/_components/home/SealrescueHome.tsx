@@ -35,7 +35,7 @@ export function SealrescueHome({ locale }: { locale: Locale }) {
 
       {/* Хаб разделов спасения — вход во весь sealrescue (M0-T19). */}
       <section>
-        <h2 className="mb-4 text-2xl">{locale === 'en' ? 'Sections' : 'Разделы'}</h2>
+        <h2 className="mb-4 text-2xl">{{ ru: 'Разделы', en: 'Sections', de: 'Bereiche' }[locale]}</h2>
         <EqualCardGrid>
           {sectionsForSite('sealrescue').map((s) => (
             <li key={s.slug}>

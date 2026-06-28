@@ -2,7 +2,7 @@
 
 Мини-игра про тюленя: лови рыбу за 60 секунд. Vanilla **HTML/CSS/Canvas2D**, без фреймворка и сборки —
 файлы лежат как есть в `public/games/seal-hunt-v1/` и отдаются статикой. Встраивается на странице
-`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en`.
+`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en|de`.
 
 ## Структура файлов
 ```
@@ -10,7 +10,7 @@ public/games/seal-hunt-v1/
   index.html                # разметка: HUD, canvas, overlay, board
   style.css
   game.js                   # игровой цикл, состояние, ввод-вывод
-  i18n.js                   # словарь ru/en; язык из ?lang=, window.SealI18n.{lang,t,dict}
+  i18n.js                   # словарь ru/en/de; язык из ?lang=, window.SealI18n.{lang,t,dict}
   manifest.webmanifest      # PWA-манифест
   sw.js                     # service worker (network-first)
   favicon.svg
@@ -55,6 +55,10 @@ Server-authoritative. Поток раунда:
    Токен одноразовый.
 3. **Чтение/пагинация:** `GET /api/leaderboard?game=&board=&page=` (страница 50, скролл до строки игрока,
    «показать ещё» до 500).
+
+> **Устойчивость:** `startRound` ретраит запрос токена один раз; если сабмит всё же не прошёл (потерянный
+> play-token), `mountAfterPlay` показывает доску в **режиме чтения**, а не «доска недоступна». Имена строк
+> рендерятся на языке зрителя (`ru`/`en`/`de`) из частей — сервер хранит индексы + canonical EN-alias.
 
 Контракт endpoints, коды ошибок — в [api.md](api.md).
 

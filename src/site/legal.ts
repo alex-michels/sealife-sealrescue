@@ -1,6 +1,7 @@
 /**
- * Legal-shell (M0-T13 / EU-07). Публичный контент остаётся RU/EN; DE — отдельный
- * legal-shell (Impressum/Datenschutz/Cookies/Terms), НЕ контентная локаль.
+ * Legal-документы (M0-T13 / EU-07). Локализованы на всех контент-локалях (RU/EN/DE);
+ * slug общий (`legal-notice`/`privacy`/`cookies`/`terms`), на DE заголовки/подписи
+ * немецкие (Impressum/Datenschutz). German/EU legal pages обязательны всегда.
  *
  * ⚠️ ВСЁ НИЖЕ — ПЛЕЙСХОЛДЕРЫ. Заменить `[…]` на реальные данные оператора
  * (имя, ladungsfähige Anschrift, email, USt-IdNr, §18-ответственный) и пройти
@@ -23,9 +24,10 @@ export const legalNav: Record<LegalLang, Array<{ slug: string; label: string }>>
     { slug: 'cookies', label: 'Cookies' },
     { slug: 'terms', label: 'Terms' },
   ],
+  // Slug общий для локалей; на DE подписи немецкие (Impressum/Datenschutz).
   de: [
-    { slug: 'impressum', label: 'Impressum' },
-    { slug: 'datenschutz', label: 'Datenschutz' },
+    { slug: 'legal-notice', label: 'Impressum' },
+    { slug: 'privacy', label: 'Datenschutz' },
     { slug: 'cookies', label: 'Cookies' },
     { slug: 'terms', label: 'Nutzungsbedingungen' },
   ],

@@ -9,10 +9,10 @@ import { AiBadge } from './AiBadge'
 import { CrossLink } from './CrossLink'
 
 const typeLabels: Record<Content['type'], Record<Locale, string>> = {
-  article: { ru: 'Статья', en: 'Article' },
-  news: { ru: 'Новость', en: 'News' },
-  meme: { ru: 'Мем', en: 'Meme' },
-  page: { ru: 'Страница', en: 'Page' },
+  article: { ru: 'Статья', en: 'Article', de: 'Artikel' },
+  news: { ru: 'Новость', en: 'News', de: 'News' },
+  meme: { ru: 'Мем', en: 'Meme', de: 'Meme' },
+  page: { ru: 'Страница', en: 'Page', de: 'Seite' },
 }
 
 /** Темы как ссылки на отфильтрованный каталог соответствующего типа. */

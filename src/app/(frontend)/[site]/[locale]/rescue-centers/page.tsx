@@ -19,11 +19,11 @@ const SLUG = 'rescue-centers'
 
 type FilterKey = 'all' | CenterStatus
 const FILTERS: Array<{ key: FilterKey; label: Record<Locale, string> }> = [
-  { key: 'all', label: { ru: 'Все', en: 'All' } },
-  { key: 'active', label: { ru: 'Активны', en: 'Active' } },
-  { key: 'needs_check', label: { ru: 'Проверить', en: 'Needs check' } },
-  { key: 'link_broken', label: { ru: 'Ссылка', en: 'Link broken' } },
-  { key: 'unconfirmed', label: { ru: 'Не подтв.', en: 'Unconfirmed' } },
+  { key: 'all', label: { ru: 'Все', en: 'All', de: 'Alle' } },
+  { key: 'active', label: { ru: 'Активны', en: 'Active', de: 'Aktiv' } },
+  { key: 'needs_check', label: { ru: 'Проверить', en: 'Needs check', de: 'Prüfen' } },
+  { key: 'link_broken', label: { ru: 'Ссылка', en: 'Link broken', de: 'Link' } },
+  { key: 'unconfirmed', label: { ru: 'Не подтв.', en: 'Unconfirmed', de: 'Unbest.' } },
 ]
 
 export function generateMetadata({ params }: { params: RouteParams }) {

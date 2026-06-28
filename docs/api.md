@@ -73,10 +73,9 @@ Payload генерирует REST и GraphQL из коллекций (catch-all 
 
 Жёсткие гарантии маршрутизации (инвариант + тесты `tests/e2e/`):
 
-- **Контент-локали — только `/ru` и `/en`.** Нет локали в пути → авто-redirect (без forced по языку).
-- **DE — только legal-shell:** `/de/impressum` · `/de/datenschutz` · `/de/cookies` · `/de/terms`.
-- **Запрещённые `/de`-контент-роуты → 404:** `/de/articles`, `/de/news`, `/de/memes`, `/de/quizzes`,
-  `/de/rescue-centers`, `/de/species` и любой другой `/de`-контент.
+- **Контент-локали — `/ru`, `/en`, `/de`** (равноправны). Нет локали в пути → авто-redirect (без forced по языку).
+- **Legal-роуты локализованы:** slug общий, заголовок зависит от локали — `/de/legal-notice` рендерится как «Impressum», `/de/privacy` — как «Datenschutz».
+- **404:** неизвестная локаль (не `ru`/`en`/`de`) или несуществующий slug.
 - **`/admin`** — админка Payload (staff, аутентификация по email).
 
 ## Связанные доки

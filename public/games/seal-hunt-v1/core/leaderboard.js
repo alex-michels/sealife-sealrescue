@@ -25,13 +25,18 @@ function detectBoard() {
 let pending = null;
 export async function startRound(gameSlug) {
   const board = detectBoard();
-  try {
-    const res = await fetch(`/api/leaderboard/start?game=${encodeURIComponent(gameSlug)}&board=${board}`);
-    if (!res.ok) throw new Error('start ' + res.status);
-    const data = await res.json();
-    pending = { token: data.token, board };
-  } catch {
-    pending = null;
+  // Ретрай один раз: одиночный сетевой блип на старте раунда не должен лишать
+  // игрока сабмита (иначе доска покажет «недоступно» за весь раунд).
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch(`/api/leaderboard/start?game=${encodeURIComponent(gameSlug)}&board=${board}`);
+      if (!res.ok) throw new Error('start ' + res.status);
+      const data = await res.json();
+      pending = { token: data.token, board };
+      return;
+    } catch {
+      pending = null;
+    }
   }
 }
 
@@ -210,6 +215,20 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     render(container, st, t);
     scrollToMe(container); // открыть доску на позиции игрока, не на топе
   } catch {
-    container.innerHTML = `<div class="lb"><div class="lb-off">${esc(t('lbOffline'))}</div></div>`;
+    // Сабмит не прошёл (напр. play-token потерялся на старте раунда). Всё равно
+    // показываем доску в режиме чтения — лучше реальные стендинги, чем «недоступно».
+    try {
+      const board = detectBoard();
+      const r = await fetchPage(gameSlug, board, 1);
+      const st = {
+        gameSlug,
+        resetMs: Date.parse(r.resetAt) || 0,
+        you: null,
+        view: { board: r.board || board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
+      };
+      render(container, st, t);
+    } catch {
+      container.innerHTML = `<div class="lb"><div class="lb-off">${esc(t('lbOffline'))}</div></div>`;
+    }
   }
 }

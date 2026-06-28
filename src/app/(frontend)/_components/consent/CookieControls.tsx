@@ -7,7 +7,7 @@ import { CONSENT_EVENT, getConsent, setConsent, type ConsentValue } from './cons
 
 /**
  * Управление согласием на странице cookies (M0-T11): просмотр и отзыв в любой момент
- * (GDPR — отзыв так же прост, как дача согласия). Работает на RU/EN/DE (legal-shell).
+ * (GDPR — отзыв так же прост, как дача согласия). Работает на всех локалях (RU/EN/DE).
  */
 const LABELS: Record<LegalLang, Record<'status' | 'granted' | 'denied' | 'none' | 'enable' | 'disable', string>> = {
   ru: {

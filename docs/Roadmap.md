@@ -9,8 +9,8 @@
 
 > ⚠️ Жёсткие гарантии (агент не публикует/не удаляет, минимизация данных) — в КОДЕ.
 > **Бренд:** sealife — игривый/умиляющийся с тюль-сленгом; sealrescue — серьёзный. «Тюлента» = сообщества VK/TG, НЕ имя сайта.
-> **Вордмарки:** sealife = «Тюлень.Инфо»/«SeaLife.Info»; sealrescue = «Спасение тюленей»/«Seal Rescue».
-> **Локали:** публичный контент — RU/EN. DE — только legal-shell (Impressum/Datenschutz/Cookies/Terms), НЕ контентная локаль. `/de/…` контент не генерировать.
+> **Вордмарки:** sealife = «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN) / «Robben.Info» (DE); sealrescue = «Спасение тюленей» (RU) / «Seal Rescue» (EN) / «Robbenrettung» (DE).
+> **Локали:** публичный контент — RU/EN/DE (три равноправные контент-локали). Legal-роуты локализованы (DE: Impressum/Datenschutz/Cookies/Terms). German/EU legal pages обязательны независимо от набора языков.
 
 ---
 
@@ -25,7 +25,7 @@
 
 ## M0 — Foundation / Setup (1–2 недели)
 
-**DoD:** оба домена по HTTPS, RU/EN роутинг + DE legal-shell, cookie-consent + аналитика без cookies, секреты не в гите, бэкап БД, дизайн-токены подключены.
+**DoD:** оба домена по HTTPS, RU/EN/DE роутинг (legal-роуты локализованы), cookie-consent + аналитика без cookies, секреты не в гите, бэкап БД, дизайн-токены подключены.
 
 ### Инфраструктура
 

@@ -110,10 +110,10 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en') | ('ru' | 'en')[];
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'de') | ('ru' | 'en' | 'de')[];
   globals: {};
   globalsSelect: {};
-  locale: 'ru' | 'en';
+  locale: 'ru' | 'en' | 'de';
   widgets: {
     collections: CollectionsWidget;
   };
