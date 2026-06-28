@@ -1,6 +1,6 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { z } from 'zod'
-import { createHash } from 'crypto'
+import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
 
 /**
  * Server-authoritative лидерборд (SH-06/07). Публичный клиент НЕ пишет в БД напрямую —
@@ -149,6 +149,46 @@ function clientIp(req: PayloadRequest): string {
   return (xff ? xff.split(',')[0]?.trim() : '') || req.headers.get('x-real-ip') || 'local'
 }
 
+// — Play-token (анти-чит, SH-08): подписанный HMAC-токен выдаётся на СТАРТЕ игры; на submit
+// проверяется подпись, привязка к game/board, возраст (нужно реально отыграть ~раунд) и
+// одноразовость. Без БД/PII: секрет подписывает stateless-токен, израсходованные nonce —
+// в памяти. Это поднимает планку: счёт нельзя залить, не «прожив» ~раунд, и токен — на 1 раз.
+const TOKEN_TTL_MS = 1_800_000 // 30 мин — окно валидности токена
+const MIN_PLAY_MS = 50_000 // раунд = 60с → раньше ~50с результата быть не может
+type TokenData = { g: string; b: string; t: number; n: string }
+function tokenSecret(): string {
+  return process.env.PAYLOAD_SECRET || 'seal-dev-secret'
+}
+function signToken(game: string, board: string): string {
+  const body = Buffer.from(JSON.stringify({ g: game, b: board, t: Date.now(), n: randomBytes(9).toString('hex') })).toString('base64url')
+  const sig = createHmac('sha256', tokenSecret()).update(body).digest('base64url')
+  return `${body}.${sig}`
+}
+function verifyToken(token: string): TokenData | null {
+  const dot = token.indexOf('.')
+  if (dot <= 0) return null
+  const body = token.slice(0, dot)
+  const sig = token.slice(dot + 1)
+  const expect = createHmac('sha256', tokenSecret()).update(body).digest('base64url')
+  const a = Buffer.from(sig), b = Buffer.from(expect)
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null
+  try {
+    const d = JSON.parse(Buffer.from(body, 'base64url').toString()) as TokenData
+    if (typeof d.g === 'string' && typeof d.b === 'string' && typeof d.t === 'number' && typeof d.n === 'string') return d
+  } catch {
+    /* ignore */
+  }
+  return null
+}
+const usedNonces = new Map<string, number>()
+function consumeNonce(n: string): boolean {
+  const now = Date.now()
+  if (usedNonces.size > 5000) for (const [k, exp] of usedNonces) if (exp < now) usedNonces.delete(k)
+  if (usedNonces.has(n)) return false
+  usedNonces.set(n, now + TOKEN_TTL_MS)
+  return true
+}
+
 const Board = z.enum(['desktop', 'mobile'])
 const SubmitBody = z.object({
   game: z.string().min(1).max(64),
@@ -156,6 +196,7 @@ const SubmitBody = z.object({
   durationMs: z.number().int().min(0).max(600_000),
   board: Board,
   seed: z.number().int().min(0).max(4_294_967_295),
+  token: z.string().min(10).max(512),
 })
 
 const PAGE_SIZE = 50
@@ -218,15 +259,36 @@ export const leaderboardSubmit: Endpoint = {
     if (!parsed.success) {
       return Response.json({ error: 'invalid_input' }, { status: 400 })
     }
-    const { game: slug, score, durationMs, board, seed } = parsed.data
+    const { game: slug, score, durationMs, board, seed, token } = parsed.data
+
+    // — Play-token: подпись, привязка к game/board, реально отыгранное время, одноразовость.
+    const tok = verifyToken(token)
+    if (!tok || tok.g !== slug || tok.b !== board) {
+      return Response.json({ error: 'invalid_token' }, { status: 401 })
+    }
+    const elapsed = Date.now() - tok.t
+    if (elapsed < MIN_PLAY_MS || elapsed > TOKEN_TTL_MS) {
+      return Response.json({ error: 'token_age' }, { status: 422 })
+    }
+    // Заявленная длительность не может превышать реально прошедшее время (пауза только добавляет).
+    if (durationMs > elapsed + 8_000) {
+      return Response.json({ error: 'duration_mismatch' }, { status: 422 })
+    }
 
     // — Анти-чит: длительность раунда фиксирована (~60с) и счёт правдоподобен.
+    // CATCH_PER_SEC_CAP — потолок «пойманных в секунду». Запас над реальным человеком;
+    // подстраивать по анонимизированному распределению очков, когда появится трафик (SH-08).
     if (durationMs < 50_000 || durationMs > 70_000) {
       return Response.json({ error: 'implausible_duration' }, { status: 422 })
     }
-    const maxScore = Math.ceil((durationMs / 1000) * 4) + 5
+    const CATCH_PER_SEC_CAP = 3
+    const maxScore = Math.ceil((durationMs / 1000) * CATCH_PER_SEC_CAP) + 8
     if (score > maxScore) {
       return Response.json({ error: 'implausible_score' }, { status: 422 })
+    }
+
+    if (!consumeNonce(tok.n)) {
+      return Response.json({ error: 'token_used' }, { status: 409 })
     }
 
     const game = await gameIdBySlug(req, slug)
@@ -337,5 +399,19 @@ export const leaderboardRead: Endpoint = {
     }
     const res = await page(req, game, board, season, pageNum, limit)
     return Response.json({ board, season, resetAt, ...res })
+  },
+}
+
+/** Выдать play-token на старте раунда (анти-чит, SH-08). */
+export const leaderboardStart: Endpoint = {
+  path: '/leaderboard/start',
+  method: 'get',
+  handler: async (req) => {
+    const url = new URL(req.url ?? '')
+    const slug = url.searchParams.get('game') ?? ''
+    const boardParsed = Board.safeParse(url.searchParams.get('board') ?? 'desktop')
+    const board = boardParsed.success ? boardParsed.data : 'desktop'
+    if (!slug) return Response.json({ error: 'bad_request' }, { status: 400 })
+    return Response.json({ token: signToken(slug, board) })
   },
 }

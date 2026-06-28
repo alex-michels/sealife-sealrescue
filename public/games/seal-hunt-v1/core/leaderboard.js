@@ -19,12 +19,36 @@ function detectBoard() {
   }
 }
 
+// Play-token (анти-чит): берём на СТАРТЕ раунда, чтобы серверу было видно реально отыгранное
+// время. Фиксируем board вместе с токеном (submit должен совпасть с ним).
+let pending = null;
+export async function startRound(gameSlug) {
+  const board = detectBoard();
+  try {
+    const res = await fetch(`/api/leaderboard/start?game=${encodeURIComponent(gameSlug)}&board=${board}`);
+    if (!res.ok) throw new Error('start ' + res.status);
+    const data = await res.json();
+    pending = { token: data.token, board };
+  } catch {
+    pending = null;
+  }
+}
+
 async function submitScore(gameSlug, score) {
+  if (!pending) throw new Error('no token'); // без токена сервер всё равно отклонит
   const res = await fetch('/api/leaderboard', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ game: gameSlug, score, durationMs: ROUND_MS, board: detectBoard(), seed: getSeed() }),
+    body: JSON.stringify({
+      game: gameSlug,
+      score,
+      durationMs: ROUND_MS,
+      board: pending.board,
+      seed: getSeed(),
+      token: pending.token,
+    }),
   });
+  pending = null; // токен одноразовый
   if (!res.ok) throw new Error('submit ' + res.status);
   return res.json();
 }

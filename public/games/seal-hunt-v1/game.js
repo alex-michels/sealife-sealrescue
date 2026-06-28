@@ -5,7 +5,7 @@ import { initScenery, drawBackground } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { PALETTE } from './core/theme.js';
-import { mountAfterPlay } from './core/leaderboard.js';
+import { mountAfterPlay, startRound } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
 
 const { sin, cos, hypot, min, max, PI } = Math;
@@ -204,8 +204,10 @@ if(params.has('s')){
   UI.btnShareEnd.hidden=true; UI.btnAgain.textContent=t('btnPlay');
 }
 
-UI.btnStart.addEventListener('click', startGame);
-UI.btnAgain.addEventListener('click', startGame);
+// Старт/Играть: один обработчик (initAudio + startGame), чтобы раунд и play-token не брались дважды.
+const onStartClick = () => { initAudio(); startGame(); };
+UI.btnStart.addEventListener('click', onStartClick);
+UI.btnAgain.addEventListener('click', onStartClick);
 UI.btnPause.addEventListener('click', ()=>{
   if(!STATE.running) return;
   STATE.paused = !STATE.paused;
@@ -215,8 +217,6 @@ UI.btnPause.addEventListener('click', ()=>{
   loop();
 });
 UI.btnShareEnd.addEventListener('click', shareScore);
-UI.btnStart.addEventListener('click', () => { initAudio(); startGame(); });
-UI.btnAgain.addEventListener('click', () => { initAudio(); startGame(); });
 
 
 // ——— Game loop state
@@ -226,6 +226,7 @@ function startGame(){
   STATE.running=true; STATE.over=false; STATE.paused=false;
   UI.overlay.hidden=true; UI.btnShareEnd.hidden=true;
   if (UI.board) { UI.board.hidden = true; UI.board.innerHTML = ''; }
+  startRound(GAME_SLUG); // взять play-token на старте (анти-чит, SH-08)
   UI.btnPause.textContent=t('btnPause');
   SCORE.now=0; UI.score.textContent='0';
   timeLeft=GAME_DURATION; spawnTimer=0; PREY.length=0;
