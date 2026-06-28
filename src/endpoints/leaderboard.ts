@@ -37,6 +37,9 @@ const NOUN_EN = [
   'Buoy', 'Anchor', 'Reef', 'Beacon', 'Cormorant', 'Puffin', 'Penguin', 'Sturgeon',
   'Halibut', 'Marlin', 'Sprat', 'Pollock', 'Tuna', 'Crayfish', 'Urchin', 'Mollusk',
   'Scallop', 'Leviathan', 'Serpent', 'Pelican',
+  // — милые/умилительные (M-DE-NAMES); локализация рода/слов — на клиенте (alias.js), здесь канонический EN.
+  'Sealie', 'Chonker', 'Toughie', 'Nixie', 'Gobbler', 'Zucchini', 'Sea Cucumber', 'Spud',
+  'Submarine', 'Donut', 'Dumplet',
 ]
 const PREFIX_EN = ['Seal', 'Pup', 'Selkie', 'Walrus']
 const SUFFIX_EN = ['Bun', 'Loaf', 'Blob', 'Bean', 'Pud']
