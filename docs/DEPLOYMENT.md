@@ -139,10 +139,11 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
    * Или локально: `fnm use 22 && npm run seed:baseline` (с `DATABASE_URI` на нужную БД).
    `baseline` = только обязательные записи (games) — безопасно для prod; `m1` доливает демо-контент.
    ⚠️ Сиды бегут на **Node 22**: `payload run`/tsx пока не поддерживает Node 24 (сборка/рантайм — 24).
-8. **DNS (Namecheap).** `A sealthehunter.online → <IP VPS>` (+ `www`). После распространения Caddy
-   выпустит сертификаты.
-9. **Email.** Включить форвардинг `feedback@sealthehunter.online` (Namecheap Email Forwarding) —
-   вручную, вне репозитория.
+8. **DNS (Namecheap).** На **BasicDNS** менять nameservers НЕ нужно: A-записи `@` и `www` → `<IP VPS>`,
+   удалить дефолтные parking-записи. Caddy выпускает TLS автоматически после распространения DNS.
+9. **Email.** Приём: Namecheap **Email Forwarding** `feedback@sealthehunter.online` → личный ящик
+   (работает). Отправка «как feedback@» — отдельный mailbox (mailbox.org / Zoho free / Private Email),
+   меняет MX + добавляет SPF/DKIM/DMARC; вводится позже.
 
 ## 6. CI/CD: секреты GitHub Actions (`.github/workflows/deploy.yml`)
 
@@ -167,8 +168,54 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
   staff-аккаунты) — ночной `pg_dump` → off-box (EU, напр. Backblaze B2 Amsterdam) + ротация +
   **проверенный** restore (M0-T06). Self-hosted prod-БД без рабочих бэкапов — недопустима.
 
-## Остаточные ручные шаги
-- [ ] Прогнать §5 (provisioning) на боксе.
-- [ ] Завести 5 секретов GitHub (§6).
-- [ ] Namecheap: A-запись + форвардинг `feedback@`.
-- [ ] (Гейт перед prod-сайтами) Бэкапы Postgres off-box + restore-тест.
+## 8. Статус go-live (alpha) — ✅ **live:** https://sealthehunter.online
+
+Игра + лидерборд работают; приём почты — через forwarding. Фактическая последовательность,
+проверенная на боксе (для воспроизведения на новом сервере):
+
+1. **Локально:** `ssh-keygen -t ed25519 -f ~/.ssh/sealife_deploy -N ""`; приватный ключ → секрет
+   `SSH_KEY`; публичный → в `deploy/cloud-init.yaml`.
+2. **Provision:** Contabo → Reinstall с Ubuntu + `deploy/cloud-init.yaml` (создаёт `deploy` + ключ +
+   passwordless sudo, ufw/fail2ban, python). Никакого ручного SSH для базовой настройки.
+3. **Секреты GitHub (Repository):** `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `DATABASE_URI` (ветка Neon),
+   `PAYLOAD_SECRET`.
+4. **Configure:** Actions → **Configure VPS (Ansible)** — Node 24, Caddy + Caddyfile, systemd-юнит,
+   `/etc/sealife/.env` из секретов (идемпотентно, day-2).
+5. **DNS:** A `@`/`www` на Namecheap BasicDNS.
+6. **Seed:** Actions → **Seed database → `baseline`** (или локально `fnm use 22 && npm run seed:baseline`).
+7. **Deploy:** Actions → **Deploy (main → VPS)** (или push в `main`).
+
+Остаётся (гейты на будущее): отправка почты «как `feedback@`»; **перед prod-сайтами/PII** —
+self-hosted Postgres + off-box бэкапы (§7), Environment-секреты + staging, пересмотр build-vs-DB (§6),
+снятие auto-delete у Neon-ветки alpha (иначе данные исчезнут через 30 дней).
+
+## 9. Troubleshooting / находки (отладка go-live)
+
+Грабли, на которые наступили, и как решено — чтобы не повторять:
+
+* **Менеджер пакетов — npm, не pnpm.** Канонический lockfile — `package-lock.json`; `pnpm-lock.yaml`
+  в `.gitignore`. CI и `npm test` — на npm (`npm ci` / `npm run build`). pnpm в CI падал
+  (`pnpm install --frozen-lockfile` без pnpm-lock).
+* **Сборка зависит от БД.** `next build` пре-рендерит DB-страницы (sealife home в
+  `generateStaticParams` зовёт `payload.find`) → в build нужны секреты `DATABASE_URI` +
+  `PAYLOAD_SECRET`; без секрета билд падает «missing secret key». (§6.)
+* **Свежий DB = schema-only.** Новая ветка Neon приходит со схемой, но без строк → лидерборд отвечает
+  `unknown_game` на submit (резолв игры по slug). Решение: `seed:baseline` (§5.7 / «Seed database»).
+* **tsx не поддерживает Node 24.** `payload run` (сиды) на Node 24 падает (`node:crypto` ENOENT, даже
+  на последнем tsx 4.22.4). Сиды бегут на **Node 22** (workflow «Seed database» пинит 22; локально
+  `fnm use 22`). Сборка и рантайм — на Node 24.
+* **Node 20 action-runtime deprecation.** GitHub выводит из эксплуатации node20-рантайм экшенов → все
+  экшены на node24-мажоры: `checkout@v5`, `setup-node@v5`, `setup-python@v6`, `upload-artifact@v7`,
+  `download-artifact@v8`, `cache@v6`. Это рантайм экшена, НЕ Node проекта.
+* **ansible.cfg: удалённый yaml-callback.** `stdout_callback = yaml` (был в community.general, удалён в
+  CG 12 / ansible-core 2.21) ломал Configure → заменено на `result_format = yaml`.
+* **Dependabot-уязвимости.** Пропатчено через `overrides`: undici 7.24→7.28 (high, рантайм),
+  postcss→8.5.16 (унифицирован), vitest→4.1.9 (critical, dev). Остаток — esbuild (dev/build-only, нет
+  upstream-фикса; deprecated `@esbuild-kit` тянет `drizzle-kit`).
+* **Секреты GitHub: Repository, не Environment** (для alpha). Environment (`production` + branch-rule +
+  approval) — позже, при staging/prod.
+* **DNS: nameservers менять не нужно** — A-записи на Namecheap BasicDNS; Caddy сам выпускает TLS.
+* **systemd-сервис стартует только на первом Deploy** — `sealife.service` enable'нут, но `current/`
+  пуст до первого деплоя; стартует, когда Deploy положит код и сделает `systemctl restart`.
+* **Neon connection string:** pooler-endpoint + `sslmode=require`; предупреждение pg про `verify-full`
+  косметическое (можно позже сменить на `sslmode=verify-full`).
