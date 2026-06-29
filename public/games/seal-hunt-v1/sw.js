@@ -4,7 +4,7 @@
 // players ALWAYS get the latest build when online; fall back to cache only when offline.
 // (Cache-first previously pinned stale art/code until the cache name changed.)
 // skipWaiting + clients.claim make a new SW take control immediately on reload.
-const CACHE = 'seal-hunt-static-v4';
+const CACHE = 'seal-hunt-static-v5';
 const ASSETS = [
   './', './index.html', './style.css',
   './game.js', './i18n.js', './core/balance.js', './core/input.js', './core/theme.js', './core/leaderboard.js', './core/alias.js',

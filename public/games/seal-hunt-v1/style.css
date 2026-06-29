@@ -12,6 +12,11 @@ button:active{transform:translateY(1px)}
 #overlay[hidden]{display:none}
 .overlay-buttons{display:flex;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center}
 
+/* — Заставка на стартовом экране (standalone). Ограничена по высоте, чтобы влезала на
+   низких экранах и во фрейме; без искажения (object-fit). */
+.hero{display:block;width:min(560px,82vw);max-height:38vh;object-fit:contain;margin:0 auto .5rem;border-radius:.9rem;box-shadow:0 6px 24px rgba(0,0,0,.35)}
+.hero[hidden]{display:none}
+
 /* — Приветствие игрока на старте */
 .hello{margin:.2rem 0 .1rem;font-weight:700;color:#9fd0e0}
 .hello:empty{display:none}
