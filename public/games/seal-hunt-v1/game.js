@@ -173,6 +173,12 @@ function resize(){
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
 
+  // Does the arena's top edge map to a real water surface (sky/air above)? Prey spawning
+  // uses this so fish never fall from the sky when a surface is shown (see spawnPrey);
+  // skyAbove = world units of air above the surface, for the flying-fish leap arc.
+  WORLD.hasSurface = VIEW.oy > 1;
+  WORLD.skyAbove = VIEW.scale > 0 ? VIEW.oy / VIEW.scale : 0;
+
   // set the backing store size for high-DPI rendering
   CANVAS.width  = Math.floor(cssW * DPR);
   CANVAS.height = Math.floor(cssH * DPR);

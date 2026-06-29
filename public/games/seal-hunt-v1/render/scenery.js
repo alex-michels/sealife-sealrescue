@@ -265,20 +265,27 @@ function buildSky(ctx, dispW, ay0) {
 //   boulders and swaying eelgrass — the cove floor continuing below the play field.
 function buildSeabed(ctx, dispW, ay1, dispH) {
   const h = dispH - ay1;
-  // Start at the EXACT arena-floor colour so there's no seam line, then let the sand
-  // emerge gradually from the murk → reads as one continuous slope, not a hard edge.
+  // Sand graded from murky (top) to lit to wet/deep (bottom). The hard seam is dissolved by
+  // a DEPTH HAZE (below) — the arena-floor water colour continuing down over the sand and
+  // fading out, so the seabed *emerges from the murk* rather than starting at a line.
   const grad = ctx.createLinearGradient(0, ay1, 0, dispH);
-  grad.addColorStop(0.0, PALETTE.water.floor); // == arena floor → seamless transition
-  grad.addColorStop(0.12, '#27343A');          // murky shadow just under the cove
-  grad.addColorStop(0.4, '#7E7058');           // sand emerging
-  grad.addColorStop(0.66, '#C7B591');          // lit sand
-  grad.addColorStop(0.86, '#AD9B7C');
-  grad.addColorStop(1.0, '#927C5C');           // wet/deeper sand
+  grad.addColorStop(0.0, PALETTE.water.floor);
+  grad.addColorStop(0.2, '#33403C');
+  grad.addColorStop(0.46, '#7E7058'); // sand emerging
+  grad.addColorStop(0.68, '#C7B591'); // lit sand
+  grad.addColorStop(0.87, '#AD9B7C');
+  grad.addColorStop(1.0, '#927C5C');  // wet/deeper sand
+  // Depth fog (atmospheric perspective): the same water tone as the arena floor, opaque at
+  // the seam → transparent below, so the boundary blurs out as one continuous gradient.
+  const hazeH = Math.min(h * 0.62, 150);
+  const haze = ctx.createLinearGradient(0, ay1, 0, ay1 + hazeH);
+  haze.addColorStop(0.0, 'rgba(11,40,50,0.96)'); // == arena floor, nearly opaque at the seam
+  haze.addColorStop(0.5, 'rgba(11,40,50,0.5)');
+  haze.addColorStop(1.0, 'rgba(11,40,50,0)');    // clears → sand revealed below
   const yIn = (lo, hi) => ay1 + h * (lo + Math.random() * (hi - lo));
-  // Soft, low dunes cresting near the seam so the water→sand boundary undulates as gentle
-  // terrain rather than a ruled line. Mid-sand tone, emerging from the shadow band.
+  // Low dunes give the emerging terrain some undulation under the haze.
   const dunes = Array.from({ length: Math.max(2, Math.round(dispW / 340)) }, () => ({
-    x: Math.random() * dispW, y: ay1 + h * (0.16 + Math.random() * 0.16),
+    x: Math.random() * dispW, y: ay1 + h * (0.22 + Math.random() * 0.2),
     rw: 130 + Math.random() * 240, rh: 26 + Math.random() * 34,
     c: Math.random() < 0.5 ? '#5E5440' : '#6C6049',
   }));
@@ -302,7 +309,7 @@ function buildSeabed(ctx, dispW, ay1, dispH) {
     gh: 16 + Math.random() * Math.min(46, h * 0.55), width: 10 + Math.random() * 16,
     c: PALETTE.kelp[2], phase: Math.random() * Math.PI * 2,
   }));
-  return { grad, dunes, ripples, pebbles, rocks, driftwood, grass };
+  return { grad, haze, hazeH, dunes, ripples, pebbles, rocks, driftwood, grass };
 }
 
 // Deep backdrop over the whole canvas (covers any border strip). The opaque arena is
@@ -433,6 +440,10 @@ function drawSeabed(ctx, t, reduced) {
       ctx.quadraticCurveTo(x + sway * 0.3, g.baseY - g.gh * 0.6, x + sway * 0.7, g.baseY - g.gh); ctx.stroke();
     }
   }
+
+  // Depth fog last: veils the upper seabed (incl. its elements) into the cove's water,
+  // dissolving the seam so water → sand reads as one continuous gradient with soft limits.
+  ctx.fillStyle = S.haze; ctx.fillRect(0, ay1, dispW, S.hazeH);
 }
 
 function drawDriftwood(ctx, d) {
