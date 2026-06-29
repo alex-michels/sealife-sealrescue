@@ -17,9 +17,11 @@
 ## Состояние на сейчас
 
 * [x] Контент-схема Payload (коллекции, RBAC, drafts, очередь `agent-proposals`, хуки).
-* [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md` + тех-доки) в `docs/`.
+* [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md`, `INFRA.md` + тех-доки) в `docs/`.
+* [x] **Публичный alpha игры — live:** https://sealthehunter.online (Contabo VPS, Caddy, авто-деплой из `main`, Neon EU). Инфра-as-code: `deploy/` (cloud-init, Caddyfile, systemd), `infra/ansible/`, `.github/workflows/` (deploy/configure/seed). Последовательность go-live + troubleshooting — `DEPLOYMENT.md` §8–9; стратегия — `INFRA.md`.
 
-**Следующая к старту:** `M0-T01`.
+**Следующее:** наполнение контентом (M1); перед запуском prod-сайтов/PII — self-hosted Postgres +
+off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md` §6–9).
 
 ---
 
