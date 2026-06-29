@@ -1,10 +1,9 @@
 // game.js (ESM entrypoint)
 import { BASE, BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderDecor } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
-import { PALETTE } from './core/theme.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
 
@@ -162,12 +161,14 @@ function resize(){
   VIEW.dispW = cssW;
   VIEW.dispH = cssH;
 
-  // Fixed logical world (short axis constant, long axis clamped) — fairness (SH-02).
+  // FIXED fair arena — identical play field for everyone (SH-02). The screen only
+  // scales/centres the rendering; it never changes how much world is playable.
   const world = computeWorld(cssW, cssH);
   WORLD.w = world.w;
   WORLD.h = world.h;
 
-  // Fit world into display; any leftover is letterboxed (no extend-view advantage).
+  // Contain-fit + centre the arena. Any leftover (ox/oy) is the border strip, which the
+  // renderer dresses as the dim edge of the cove (deep water + kelp wall) — not play space.
   VIEW.scale = Math.min(cssW / WORLD.w, cssH / WORLD.h);
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
@@ -179,6 +180,7 @@ function resize(){
 
   recomputeBalance(WORLD.w, WORLD.h);
   initScenery(WORLD, CTX);
+  initBorder(VIEW, WORLD, CTX);
 }
 
 // Convert a canvas-relative point (CSS px) into logical world coordinates.
@@ -439,16 +441,24 @@ function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
 
-  // Paint the whole backing store deep-water first so letterbox bars aren't blank.
+  // Deep "edge of the cove" water over the whole backing store (covers any border strip;
+  // the opaque arena is painted over its own rect next).
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  CTX.fillStyle = PALETTE.water.floor;
-  CTX.fillRect(0, 0, VIEW.dispW, VIEW.dispH);
+  drawDeepBackdrop(CTX, VIEW);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
+
+  // Diegetic border framing (kelp wall + edge vignette) over the leftover strips.
+  if (VIEW.ox > 0.5 || VIEW.oy > 0.5) {
+    CTX.save();
+    CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawBorderDecor(CTX, VIEW, WORLD, t, reduced);
+    CTX.restore();
+  }
 
   if(!STATE.running){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();

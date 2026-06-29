@@ -1,16 +1,22 @@
-// Fairness model (SH-02): the simulation runs in a FIXED logical world, so speed,
-// sizes and scoring are device-independent. The screen only scales the *rendering*.
+// Fairness model (SH-02): the simulation runs in a FIXED logical arena, so EVERY player
+// gets the exact same play field — same size, same fish count, same density, same travel
+// distances — regardless of screen size. The screen only scales/centres the *rendering*.
 //
-// Strategy: keep the SHORT screen axis a constant number of logical units, and let the
-// LONG axis grow with the aspect ratio but CLAMP it (no "extend view" advantage — see
-// game-dev scaling best practices). Difficulty is then expressed as invariants:
-// constant seal/fish speeds, constant fish size, and prey count proportional to area
-// (constant density). Leaderboards split coarse mobile/desktop for the residual
-// portrait-vs-landscape shape difference.
+// Why fixed (not screen-matched): in a 60s "catch as many fish as you can" game the score
+// is set by catch RATE ∝ density × speed. If the world grew with the screen, a wide screen
+// either dilutes density (capped prey → fewer catches, a disadvantage) or, uncapped, shows
+// more field at once (an advantage). A single fixed arena removes both. This matches
+// game-dev practice: fix the gameplay-relevant area and frame the rest.
+//
+// The leftover screen area around the arena is NOT play space — the renderer dresses it as
+// a diegetic border (deep water + kelp wall), so it reads as the edge of the cove rather
+// than black bars (see render/scenery.js `drawBorderDecor`). Orientation follows the
+// display; both orientations use the same area (518 400 u²). Leaderboards still split
+// coarse mobile/desktop for the portrait-vs-landscape shape difference.
 
 export const VIEW_CFG = {
-  logicalShort: 540, // logical units along the shorter screen axis (constant for everyone)
-  maxAspect: 1.9, // cap long/short so wide/tall screens can't reveal a big extra strip
+  logicalShort: 540, // short axis of the fixed arena (logical units)
+  logicalLong: 960, // long axis of the fixed arena → canonical 16:9, area == BASE reference
 };
 
 // Reference world (landscape 960×540) used for density + legacy diag ratios.
@@ -36,16 +42,13 @@ export const BAL = {
 };
 
 /**
- * Logical world dimensions for a given display size (CSS px). Short axis is constant;
- * long axis = short × clamped aspect. Orientation follows the display.
+ * Fixed fair arena (logical units), identical for everyone. Orientation follows the
+ * display; the size is constant. The screen size only affects how this arena is scaled
+ * and centred (see resize() in game.js) — never how much of the world is playable.
  */
 export function computeWorld(dispW, dispH) {
-  const short = VIEW_CFG.logicalShort;
-  const longSide = Math.max(dispW, dispH);
-  const shortSide = Math.min(dispW, dispH) || 1;
-  const aspect = Math.min(VIEW_CFG.maxAspect, Math.max(1, longSide / shortSide));
-  const longLogical = Math.round(short * aspect);
-  return dispW >= dispH ? { w: longLogical, h: short } : { w: short, h: longLogical };
+  const { logicalShort: s, logicalLong: l } = VIEW_CFG;
+  return dispW >= dispH ? { w: l, h: s } : { w: s, h: l };
 }
 
 /**
