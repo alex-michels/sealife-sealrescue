@@ -217,7 +217,7 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [ ] **M3-T08** Донаты RU: Boosty / Telegram Stars / VK Донат / ЮKassa. *[M]*
 * [ ] **M3-T09** Донаты EN/EU: Buy Me a Coffee / Ko-fi / Patreon. *[S]*
 * [ ] **M3-T10** Прозрачные прогресс-бары целей. *[M]*
-* [ ] **M3-T11** 🎮 Лидерборд квизов/игр + бейджи + пасхалки. *[M]*
+* [ ] **M3-T11** 🎮 Лидерборд квизов/игр + бейджи + пасхалки. *[M]* — анонимно (SH-05…07); кросс-девайс идентичность (общая позиция везде) — опционально через эпик **ACC** (ACC-T10).
 
 > Появятся донаты/платные продукты → нужны Terms/AGB + (для цифровых товаров) Widerrufsrecht; платёжные рельсы для RU проверить перед запуском.
 
@@ -233,6 +233,106 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [ ] **M4-T06** Поиск по сайту (Meilisearch/Typesense); позже pgvector/RAG. *[L]*
 * [ ] **M4-T07** Агент-4 (SysAdmin) на полную: uptime, broken links, Lighthouse, очереди, алерты. *[M]* → SEC
 * [ ] **M4-T08** Конфиг ниши (`Niche`) для клонирования на другие темы. *[L]*
+
+---
+
+## ACC — Публичные аккаунты / кросс-скоуп идентичность (опционально, пост-MVP)
+
+> **Статус: не в MVP.** Включается только когда понадобится кросс-девайс идентичность: общая позиция
+> в лидербордах, ачивки, кастомные тюлени/hero-SVG, новые локации/прогресс в играх. Правовой режим и
+> обоснования — `COMPLIANCE_EU_DE.md` §9. **Ключ:** основание аккаунта — **договор** (DSGVO Art. 6(1)(b)),
+> НЕ согласие; согласие нужно только под newsletter. Аккаунт всегда **опционален** — аноним продолжает
+> играть (SH-05…07). Память: [[accounts-contract-vs-consent]].
+
+**Кросс-доменный SSO (почему так):** cookie не шарится между разными корневыми доменами
+(`sealife.info` ↔ `sealthehunter.online`), поэтому «один username везде» = центральный IdP.
+
+```
+                       ┌──────────────────────────────────────────────┐
+                       │      accounts.sealife.info  (central IdP)      │
+                       │   ─ единая таблица `players` (source of truth) │
+                       │   ─ magic-link / passkeys / (опц.) пароль      │
+                       │   ─ выдаёт сессию (cookie) + OIDC-токены        │
+                       └───────────────┬──────────────────┬────────────┘
+        cookie  .sealife.info          │                  │   OIDC (Auth Code + PKCE)
+   (общая для всех поддоменов)         │                  │   redirect-login + токен
+        ┌──────────────┬──────────────┘                  └────────┬───────────────┐
+        ▼              ▼                                           ▼               ▼
+  sealife.info   game.sealife.info                        sealrescue.info   sealthehunter.online
+  (тот же root —  quizzes.sealife.info                    (другой root —    (другой root —
+  cookie работает) (заводить игры сюда →                  OIDC redirect)    OIDC redirect)
+                    cookie бесплатно)
+```
+
+> Правило: что можно — заводим как `*.sealife.info` (cookie бесплатно). Отдельные бренд-/игровые домены
+> — через redirect-SSO. Username уникален глобально через `UNIQUE` на `players`.
+
+### Фаза 0 — сейчас (без аккаунтов)
+
+* [x] **ACC-T00** Анонимные device-bound идентификаторы (лидерборд SH-05/06/07). *(текущее состояние)*
+
+### Фаза 1 — минимальные аккаунты
+
+* [ ] **ACC-T01** Коллекция `players` (Payload `auth`, **отдельная** от admin `users`) — схема ниже (b). *[M]* → SEC/EU
+* [ ] **ACC-T02** Аутентификация = **magic-link only** (без паролей → без reset-флоу и хранения секрета): одноразовый токен (короткий TTL, single-use) + email-верификация. Сессия — httpOnly/Secure/SameSite cookie на `.sealife.info`; rate-limit на login и выдачу ссылки; защита от email-enumeration. *[L]* → SEC/EU
+* [ ] **ACC-T03** Кросс-доменный SSO: cookie для `*.sealife.info`; **OIDC (Auth Code + PKCE)** для sealrescue.info и игровых доменов (`accounts.sealife.info` как IdP). *[L]* → SEC
+* [ ] **ACC-T04** Self-service права субъекта: экспорт (JSON, Art. 15/20), правка username/email (Art. 16), **удаление аккаунта (Art. 17)** с анонимизацией публичного вклада (username → «удалённый тюлень»; строки лидерборда/комментариев не удаляются). *[M]* → EU
+* [ ] **ACC-T05** Миграция анонима: при первом логине с устройства — «забрать очки этого устройства» (merge anon-id **текущего** устройства, с подтверждением; без авто-merge между устройствами). *[M]* → SEC
+* [ ] **ACC-T06** Возрастной гейт: самодекларация **«16+»** (хранить boolean, не дату; Art. 8 DSGVO + §§104–113 BGB; согласуется с EU-05). *[S]* → EU
+* [ ] **ACC-T07** Обновить Datenschutz (RU/EN/DE), Terms (становятся обязательными), реестр Art. 30, DPA email-провайдера (EU: Brevo/Mailjet/Scaleway TEM/self-host Postfix). *[M]* → EU
+
+### Фаза 2 — расширение
+
+* [ ] **ACC-T08** Passkeys (WebAuthn) + опциональный пароль (**Argon2id**, соль; никогда plaintext). *[M]* → SEC
+* [ ] **ACC-T09** Newsletter: отдельный неотмеченный opt-in + **Double-Opt-In** (DE/UWG) + таблица `consents` (тип, версия текста, время, метод; Art. 7(1)); отзыв так же прост, как согласие (Art. 7(3)). *[M]* → EU
+* [ ] **ACC-T10** Привязать к аккаунту фичи **на основании-договора** (без нового согласия): кросс-девайс лидерборд (поверх анонимного SH-07 / M3-T11), ачивки/бейджи, кастомные тюлени/hero-SVG, прогресс по локациям. *[L]* → DESIGN
+
+### (b) Схема коллекции `players` + access control
+
+> **Отдельная** от admin `users` (Payload поддерживает `auth` на нескольких коллекциях): публичные
+> пользователи НЕ получают доступ в админку. Поля минимальны (COMPLIANCE §9.4).
+
+```
+players (auth: true)
+  id             uuid     — внутренний ключ; единственное, по чему джойним
+  email          email    — auth/reset/security (рассмотреть encrypt-at-rest)
+  emailVerified  date
+  passwordHash   text     — NULL при magic-link-only
+  username       text     — публичный, ГЛОБАЛЬНО уникальный (citext / UNIQUE); ЕДИНСТВЕННОЕ публичное поле
+  locale         select   — ru | en | de
+  ageConfirmed   checkbox — «16+» boolean (НЕ дата рождения)
+  lastLoginAt    date
+  createdAt / updatedAt
+  — согласия: ОТДЕЛЬНАЯ коллекция `consents` (player, type, textVersion, grantedAt, method)
+НЕ хранить: имя, адрес, телефон, дату рождения, пол.
+```
+
+**Access (явный, как у всех коллекций):** `read` — себя; публично доступен ТОЛЬКО `username` через
+санитизированный endpoint (никогда email); `create` — публичный (через auth-флоу регистрации);
+`update` — только своя запись; `delete` — только своя запись, **НИКОГДА `agent`**. Поля `email`/`passwordHash`
+скрыты от чужого read. Публичные джойны (лидерборд/комментарии) — только по `id` → `username`.
+**После изменения схемы:** `npm run generate:types`; отразить в `data-model.md` (`players`, `consents`).
+
+### (c) Копирайтинг регистрации + тексты согласий (RU/EN/DE)
+
+> Цель: **один** обязательный контрол (Terms + Datenschutz) + **один** отдельный opt-in (newsletter).
+> Никаких преднастроенных галочек, никакого бандлинга (Art. 7(4)). Финальные формулировки — на
+> юр-сверку (EU-06).
+
+* [ ] **ACC-T11** Тексты экрана регистрации и согласий, локализованные RU/EN/DE:
+  * **Обязательный чек-бокс (Terms + Datenschutz, НЕ предотмечен):**
+    * RU: «Я принимаю [Условия использования] и ознакомился(-ась) с [Политикой конфиденциальности].»
+    * EN: «I accept the [Terms of Use] and have read the [Privacy Policy].»
+    * DE: «Ich akzeptiere die [Nutzungsbedingungen] und habe die [Datenschutzerklärung] gelesen.»
+  * **Опциональный newsletter-opt-in (отдельный, НЕ предотмечен; Double-Opt-In):**
+    * RU: «Присылайте мне новости SeaLife на email. Отписаться можно в любой момент.»
+    * EN: «Send me occasional SeaLife news by email. You can unsubscribe anytime.»
+    * DE: «Schickt mir gelegentlich SeaLife-News per E-Mail. Jederzeit abbestellbar.»
+  * **Age-gate (16+):**
+    * RU: «Мне 16 лет или больше.» · EN: «I am 16 or older.» · DE: «Ich bin 16 Jahre oder älter.»
+  * **Verification email:** короткий single-use link; текст «подтвердите, что адрес ваш»; TTL в минутах.
+    Логировать версию текста согласия (Art. 7(1)).
+  * *[M]* → EU/DESIGN
 
 ---
 
@@ -258,7 +358,7 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [ ] **EU-07** **DDG Impressum / Anbieterkennzeichnung:** `/impressum` доступен с каждой страницы; DE+EN текст; контактный email; ответственное лицо/legal entity + адрес; для новостей — «§18 MStV»-ответственный; без скрытых legal-ссылок; OS-Plattform-ссылку не ставить. *[M]*
 * [ ] **EU-08** **§25 TDDDG consent:** non-essential cookies/storage только после opt-in; «Reject all» так же доступен, как «Accept all»; отзыв так же прост, как согласие; Cookie-Settings из footer; CMP логирует согласия. *[M]*
 * [ ] **EU-09** **AVV/DPA-реестр** (= M0-T14): hosting · БД · email · аналитика · AI-провайдеры · платежи · CDN/хранилище; трансферы в третьи страны + гарантии. *[S]*
-* [ ] **EU-10** **UGC / DSA readiness:** все submissions премодерируются; abuse/report-канал (notice-and-action); лог модерации; нет публичного UGC без ревью; appeals-процесс, если появятся публичные аккаунты/комментарии. *[M]*
+* [ ] **EU-10** **UGC / DSA readiness:** все submissions премодерируются; abuse/report-канал (notice-and-action); лог модерации; нет публичного UGC без ревью; appeals-процесс, если появятся публичные аккаунты/комментарии (см. эпик **ACC**). *[M]*
 * [ ] **EU-11** **AI Act transparency (Art. 50, к 08.2026):** метки AI-assisted / AI-translated / AI-checked / Human reviewed / Source verified; статус проверки человеком; disclosure, если появится чат-бот; маркировка дипфейков. *[M]*
 
 ### DESIGN — Дизайн-система
