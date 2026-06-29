@@ -1,8 +1,7 @@
 # Files deployed to / executed on Linux must keep LF line endings regardless of
 # the contributor's OS, so a Windows checkout doesn't hand them over with CRLF
 # (systemd units and the Caddyfile are sensitive to this).
-deploy/Caddyfile        text eol=lf
-deploy/sealife.service  text eol=lf
+deploy/**               text eol=lf
 .github/workflows/*.yml text eol=lf
 justfile                text eol=lf
 infra/**                text eol=lf

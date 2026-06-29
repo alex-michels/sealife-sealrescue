@@ -4,12 +4,14 @@ name: Configure VPS (Ansible)
 # handled by deploy.yml; THIS runs the Ansible playbook (base/node/caddy/app, later postgres)
 # from a Linux runner so you don't need WSL. See infra/ansible/ + docs/INFRA.md.
 #
-# Required secrets (in addition to the deploy ones):
-#   SSH_HOST, SSH_USER, SSH_KEY  — same as deploy.yml
-#   SUDO_PASSWORD                — the `deploy` user's login password (for privileged tasks)
-#   DATABASE_URI, PAYLOAD_SECRET — written into /etc/sealife/.env on first apply
+# Required secrets (same as deploy.yml, plus the values written into the env file):
+#   SSH_HOST, SSH_USER, SSH_KEY, DATABASE_URI, PAYLOAD_SECRET
+# DATABASE_URI/PAYLOAD_SECRET are written into /etc/sealife/.env on first apply.
 #
-# Prereq: the `deploy` user + its public key must already exist on the box (root setup once).
+# Prereq: the `deploy` user (with passwordless sudo) + its public key already exist on the box —
+# provisioned by deploy/cloud-init.yaml (cntb reinstall) or a one-time manual root bootstrap.
+# (If you instead give `deploy` password-protected sudo, add a SUDO_PASSWORD secret and pass
+#  --extra-vars "ansible_become_password=${{ secrets.SUDO_PASSWORD }}" below.)
 
 on:
   workflow_dispatch:
@@ -49,6 +51,5 @@ jobs:
           ansible-playbook site.yml \
             -i /tmp/ci-inventory.ini \
             --private-key ~/.ssh/sealife_deploy \
-            --extra-vars "ansible_become_password=${{ secrets.SUDO_PASSWORD }}" \
             --extra-vars "database_uri=${{ secrets.DATABASE_URI }}" \
             --extra-vars "payload_secret=${{ secrets.PAYLOAD_SECRET }}"

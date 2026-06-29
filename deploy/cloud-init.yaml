@@ -1,0 +1,40 @@
+#cloud-config
+# Day-0 bootstrap for a fresh Ubuntu box so CI/Ansible can take over (see docs/INFRA.md).
+# It creates the `deploy` user with your SSH key + passwordless sudo, locks down root/password
+# SSH, installs Python (for Ansible), and sets a minimal firewall. Everything else (Node, Caddy,
+# the app) is done afterwards by the "Configure VPS (Ansible)" workflow.
+#
+# Apply by REINSTALLING the instance with this as user-data (a fresh box has nothing to lose):
+#   cntb reinstall instance <instanceId> --imageId <ubuntu-imageId> --userData @deploy/cloud-init.yaml
+# …or paste this file into the Contabo panel's Reinstall → Cloud-Init / user-data field.
+#
+# >>> REPLACE the ssh key below with YOUR deploy PUBLIC key (contents of ~/.ssh/sealife_deploy.pub).
+
+users:
+  - name: deploy
+    groups: [sudo]
+    shell: /bin/bash
+    lock_passwd: true                 # key-only login (no password)
+    sudo: "ALL=(ALL) NOPASSWD:ALL"    # passwordless sudo so CI/Ansible run non-interactively
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAA_REPLACE_WITH_YOUR_DEPLOY_PUBLIC_KEY sealife-ci-deploy
+
+# Lock down SSH: no root login, key-only (no passwords).
+disable_root: true
+ssh_pwauth: false
+
+package_update: true
+package_upgrade: true
+packages:
+  - python3            # required for Ansible
+  - ufw
+  - fail2ban
+  - unattended-upgrades
+
+runcmd:
+  # Minimal firewall so the box isn't wide open before Ansible runs (Ansible re-applies this).
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw --force enable
+  - systemctl enable --now fail2ban

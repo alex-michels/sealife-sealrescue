@@ -20,10 +20,10 @@ plug in — adding Postgres later is a new role + re-run, **never a reinstall**.
 Ansible's control node must be **Linux/macOS/WSL — not native Windows**. Options:
 - **WSL (Ubuntu)** on your machine, or any Linux box.
 - **CI (no WSL needed):** the [`Configure VPS (Ansible)`](../../.github/workflows/configure.yml)
-  workflow runs this playbook from a Linux runner on `workflow_dispatch`. It needs the deploy secrets
-  plus **`SUDO_PASSWORD`** (the `deploy` user's password, for privileged tasks); it also writes
-  `/etc/sealife/.env` from the `DATABASE_URI` / `PAYLOAD_SECRET` secrets on first apply. Trigger it
-  from the Actions tab (or `just deploy`-style via `gh workflow run "Configure VPS (Ansible)"`).
+  workflow runs this playbook from a Linux runner on `workflow_dispatch`. It uses the deploy secrets
+  (`SSH_*`) and writes `/etc/sealife/.env` from `DATABASE_URI` / `PAYLOAD_SECRET` on first apply. No
+  sudo password needed — `deploy` gets passwordless sudo from [`deploy/cloud-init.yaml`](../../deploy/cloud-init.yaml).
+  Trigger it from the Actions tab (or `gh workflow run "Configure VPS (Ansible)"`).
 
 ## One-time setup
 ```bash
