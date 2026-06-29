@@ -126,6 +126,19 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     стартовом экране (стартовый язык: `?lang=`→сохранённый→браузер; запись в `localStorage` только после
     явного выбора), пометка альфа-теста + контакт `feedback@sealthehunter.online` на старте и финале;
     встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md §4–7. *[M]* → EU/DESIGN
+  * [ ] **SH-10** Legal-доступность alpha-домена (sealthehunter.online). Сейчас Caddy-allowlist отдаёт
+    только игру + `/api/leaderboard`, поэтому Impressum/Datenschutz **недостижимы**, а на стартовом
+    экране нет legal-ссылок (только `feedback@`). Сделать:
+    1. **Футер в игре** (стартовый + финальный экран) со ссылками «Impressum · Datenschutz».
+    2. **Расширить allowlist** в `deploy/Caddyfile` на legal-роуты (`/[locale]/legal-notice`, `/privacy`,
+       `/cookies`, `/terms`) — чтобы страницы открывались с alpha-домена.
+    3. **Impressum** — реальные имя + почтовый адрес + email (§5 DDG; `feedback@` недостаточно).
+       Обновить `§5 TMG`→`§5 DDG`, если встречается.
+    4. **Datenschutz** — секция про игру: `localStorage` (`seal_hunt_seed/best/sound/lang`), transient
+       IP-rate-limit лидерборда (**не хранится**, legitimate interest), EU-хостинг (Contabo/Neon),
+       серверные логи + ретеншн, аналитики нет.
+    Cookie-баннер пока **НЕ нужен** (storage strictly-necessary/functional, аналитика выключена) —
+    включить вместе с Plausible. Основание: §5 DDG + GDPR (IP = перс. данные); см. `COMPLIANCE_EU_DE.md`. *[M]* → EU
 
 #### 🕹 Phaser — для более «тяжёлых» игр (когда Canvas2D мало)
 
