@@ -288,7 +288,7 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     f.x += f.vx * dt; f.y += f.vy * dt;
 
-    // soft inward push near edges so prey don't stick to borders
+    // soft inward push near edges so prey ease away from the borders before reaching them
     {
       const m = Math.min(48, Math.max(36, world.w * 0.05));
       let pushX = 0, pushY = 0;
@@ -301,13 +301,22 @@ export function updatePrey(dt, seal, world, eatCb) {
         f.vx += edgeSteer * pushX * dt;
         f.vy += (edgeSteer * 0.9) * pushY * dt;
       }
-      // With a water surface above, fish stay BELOW it (they don't breach) — keeps prey
-      // out of the sky.
-      if (world.hasSurface && f.y < f.r * 0.25) { f.y = f.r * 0.25; if (f.vy < 0) f.vy = 0; }
     }
 
-    // edge cull
-    if (f.x < -60 || f.x > world.w + 60 || f.y > world.h + 60 || f.y < -60) { PREY.splice(i, 1); continue; }
+    // Confine prey to the arena — the ONLY area the seal can reach. Without this, a fleeing
+    // fish can overshoot into the border (visible but uncatchable → frustrating). Soft bounce
+    // off each edge so they turn back rather than stick. Top "wall" is the waterline when a
+    // surface is shown (fish don't breach). Uniform on every screen → no fairness drift.
+    {
+      const topY = world.hasSurface ? f.r * 0.25 : 0;
+      if (f.x < 0) { f.x = 0; if (f.vx < 0) f.vx = -f.vx * 0.6; }
+      else if (f.x > world.w) { f.x = world.w; if (f.vx > 0) f.vx = -f.vx * 0.6; }
+      if (f.y < topY) { f.y = topY; if (f.vy < 0) f.vy = -f.vy * 0.6; }
+      else if (f.y > world.h) { f.y = world.h; if (f.vy > 0) f.vy = -f.vy * 0.6; }
+    }
+
+    // safety cull (NaN / degenerate only — confinement keeps prey inside the arena)
+    if (!(f.x >= -1 && f.x <= world.w + 1 && f.y >= -1 && f.y <= world.h + 1)) { PREY.splice(i, 1); continue; }
 
     // collision sweep (shared samples from game.js)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
