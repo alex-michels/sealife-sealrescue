@@ -132,9 +132,13 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
    `daemon-reload && enable --now sealife` (слушает `127.0.0.1:3000`).
 6. **Caddy.** Положить `deploy/Caddyfile` (можно `import` из `/etc/caddy/Caddyfile`), `systemctl reload
    caddy`. HTTPS выпустится автоматически после того, как DNS укажет на бокс.
-7. **Сид игры.** Один раз создать строку `games` со slug `seal-the-hunter` в ветке Neon
-   (`pnpm seed:m1` или точечный сид) — иначе лидерборд вернёт пустую доску (`unknown_game` на submit).
-   Таблицы создаёт push при первом подключении (схема пока push-based).
+7. **Сид MUST-HAVE данных.** Новый DB/ветка приходит **пустым** (schema-only) → лидерборд отвечает
+   `unknown_game`, пока нет строки `games`. Засеять базовые записи (идемпотентно, find-or-create):
+   * Проще всего — GitHub **Actions → «Seed database» → `baseline`** (`.github/workflows/seed.yml`;
+     бежит против секрета `DATABASE_URI`).
+   * Или локально: `fnm use 22 && npm run seed:baseline` (с `DATABASE_URI` на нужную БД).
+   `baseline` = только обязательные записи (games) — безопасно для prod; `m1` доливает демо-контент.
+   ⚠️ Сиды бегут на **Node 22**: `payload run`/tsx пока не поддерживает Node 24 (сборка/рантайм — 24).
 8. **DNS (Namecheap).** `A sealthehunter.online → <IP VPS>` (+ `www`). После распространения Caddy
    выпустит сертификаты.
 9. **Email.** Включить форвардинг `feedback@sealthehunter.online` (Namecheap Email Forwarding) —
