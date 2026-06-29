@@ -27,14 +27,23 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
+
+      # Persist Next's build cache across runs (silences the "No build cache found" notice).
+      - name: Cache Next.js build
+        uses: actions/cache@v6
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build (Next standalone)
         run: npm run build
@@ -42,6 +51,8 @@ jobs:
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
           NEXT_PUBLIC_PLAUSIBLE_SRC: ''
+          # No-tracking project: keep Next telemetry off in CI too.
+          NEXT_TELEMETRY_DISABLED: '1'
 
       - name: Assemble artifact (standalone + static + public)
         run: |
@@ -52,7 +63,7 @@ jobs:
           cp -r .next/static artifact/.next/static
           cp -r public artifact/public
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: app
           path: artifact
@@ -63,7 +74,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: app
           path: artifact
