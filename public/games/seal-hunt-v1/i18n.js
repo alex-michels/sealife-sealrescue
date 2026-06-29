@@ -35,7 +35,7 @@
       soundOn: 'Звук: вкл',
       soundOff: 'Звук: выкл',
       intro:
-        'Лови как можно больше 🐟 за <b>60 секунд</b>.<br>Управление: удерживай палец/мышь — тюлень плывёт за касанием.',
+        'Лови как можно больше 🐟 за <b>60 секунд</b>.<br>Управление: удерживай палец/мышь — тюлень плывёт за касанием, или клавиатурой (WASD/стрелки).',
       friendChallenge: function (v) {
         return (
           'Ваш друг (подруга) набрал(а) <b>' +
@@ -113,7 +113,7 @@
       soundOn: 'Sound: on',
       soundOff: 'Sound: off',
       intro:
-        'Catch as many 🐟 as you can in <b>60 seconds</b>.<br>Controls: hold finger/mouse — the seal follows your touch.',
+        'Catch as many 🐟 as you can in <b>60 seconds</b>.<br>Controls: hold finger/mouse — the seal follows your touch, or use the keyboard (WASD/arrows).',
       friendChallenge: function (v) {
         return (
           'A friend scored <b>' + v.score + '</b> points (best: <b>' + v.best + '</b>). Can you beat it?'
@@ -187,7 +187,7 @@
       soundOn: 'Ton: an',
       soundOff: 'Ton: aus',
       intro:
-        'Fang in <b>60 Sekunden</b> so viele 🐟 wie möglich.<br>Steuerung: Finger/Maus halten — die Robbe folgt der Berührung.',
+        'Fang in <b>60 Sekunden</b> so viele 🐟 wie möglich.<br>Steuerung: Finger/Maus halten — die Robbe folgt der Berührung, oder per Tastatur (WASD/Pfeiltasten).',
       friendChallenge: function (v) {
         return (
           'Ein Freund hat <b>' +
