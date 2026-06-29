@@ -17,7 +17,7 @@ users:
     lock_passwd: true                 # key-only login (no password)
     sudo: "ALL=(ALL) NOPASSWD:ALL"    # passwordless sudo so CI/Ansible run non-interactively
     ssh_authorized_keys:
-      - ssh-ed25519 AAAA_REPLACE_WITH_YOUR_DEPLOY_PUBLIC_KEY sealife-ci-deploy
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBIAuwMLQWe6O+yo6OfQqNJ4mDJBQa6s8+0nsXQKhuwp sealife-ci-deploy
 
 # Lock down SSH: no root login, key-only (no passwords).
 disable_root: true
