@@ -5,7 +5,7 @@ import { initScenery, drawBackground } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { PALETTE } from './core/theme.js';
-import { mountAfterPlay, startRound } from './core/leaderboard.js';
+import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
 
 const { sin, cos, hypot, min, max, PI } = Math;
@@ -17,8 +17,8 @@ const t = (key, vars) => window.SealI18n.t(key, vars);
 const GAME_SLUG = new URLSearchParams(location.search).get('game') || 'seal-the-hunter';
 
 // Приветствие с анонимным псевдонимом игрока (локализуется: «Привет, Солёный Тюлень!»).
+// Текст заполняет renderOverlayText() — чтобы он перерисовывался при смене языка (standalone).
 const HELLO = document.getElementById('hello');
-if (HELLO) HELLO.textContent = t('helloLine', { alias: getAlias(GAME_SLUG, window.SealI18n.lang) });
 
 // Reusable sweep samples (avoid recreating [0,0.5,1] each frame in prey.js)
 export const SWEEP_T = [0, 0.5, 1];
@@ -41,6 +41,10 @@ const UI = {
   btnShareEnd: document.getElementById('btnShareEnd'),
   btnSound: document.getElementById('btnSound'),
   board: document.getElementById('board'),
+  // — standalone-альфа (sealthehunter.online): переключатель языка, заметка, контакт
+  langSwitch: document.getElementById('langSwitch'),
+  alphaNotice: document.getElementById('alphaNotice'),
+  feedbackInvite: document.getElementById('feedbackInvite'),
 };
 
 const GAME_DURATION = 60_000;
@@ -50,6 +54,40 @@ const VIEW = { scale:1, ox:0, oy:0, dispW:0, dispH:0 };
 const STATE = { running:false, over:false, paused:false };
 const SCORE = { now:0, best:0 };
 const POINTER = { x:0, y:0, active:false };
+
+// ——— Standalone-альфа (sealthehunter.online): язык переключается на стартовом/финальном экране,
+// показываем заметку про альфа-тест и отображаемый контакт для фидбэка. Во фрейме (встраивание на
+// sealife.*) ничего этого нет — поведение прежнее (язык из ?lang=, переключателя нет).
+const STANDALONE = !!(window.SealI18n && window.SealI18n.standalone);
+const FRIEND = (() => {
+  const p = new URLSearchParams(location.search);
+  if (!p.has('s')) return null;
+  const s = Number(p.get('s'));
+  return { score: s, best: Number(p.get('b') || s) };
+})();
+
+// Динамический текст оверлея храним как функции от ТЕКУЩЕГО языка, чтобы перерисовать при смене.
+let overlayMsg = () => t('intro');
+let overlayBtn = () => t('btnPlay');
+
+function renderOverlayText() {
+  if (HELLO) HELLO.textContent = t('helloLine', { alias: getAlias(GAME_SLUG, window.SealI18n.lang) });
+  UI.message.innerHTML = overlayMsg();
+  UI.btnAgain.textContent = overlayBtn();
+  refreshSoundButton();
+  if (STANDALONE) {
+    if (UI.alphaNotice) UI.alphaNotice.innerHTML = t('alphaNotice');
+    if (UI.feedbackInvite) UI.feedbackInvite.innerHTML = t('feedbackInvite');
+  }
+}
+
+function syncLangButtons() {
+  if (!UI.langSwitch) return;
+  const cur = window.SealI18n.lang;
+  UI.langSwitch.querySelectorAll('.lang-btn').forEach((b) => {
+    b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === cur));
+  });
+}
 
 // ——— Audio (gentle pop) — warm up on first user gesture to avoid hitch
 const FX = { enabled: (localStorage.getItem('seal_hunt_sound') ?? '1') === '1' };
@@ -191,18 +229,32 @@ if(UI.btnSound){
 SCORE.best = Number(localStorage.getItem('seal_hunt_best')||0);
 UI.best.textContent = SCORE.best;
 
-const params=new URLSearchParams(location.search);
-if(params.has('s')){
-  const friendScore=Number(params.get('s'));
-  const friendBest =Number(params.get('b')||friendScore);
-  UI.overlay.hidden=false;
-  UI.message.innerHTML=t('friendChallenge', { score: friendScore, best: friendBest });
-  UI.btnShareEnd.hidden=true; UI.btnAgain.textContent=t('btnPlay');
-}else{
-  UI.overlay.hidden=false;
-  UI.message.innerHTML=t('intro');
-  UI.btnShareEnd.hidden=true; UI.btnAgain.textContent=t('btnPlay');
+// ——— Стартовый оверлей. «Вызов от друга» (?s=) меняет только сообщение; кнопка — «Играть».
+if (FRIEND) overlayMsg = () => t('friendChallenge', { score: FRIEND.score, best: FRIEND.best });
+UI.overlay.hidden = false;
+UI.btnShareEnd.hidden = true;
+
+if (STANDALONE) {
+  if (UI.langSwitch) {
+    UI.langSwitch.hidden = false;
+    UI.langSwitch.querySelectorAll('.lang-btn').forEach((b) => {
+      // persist=true: запоминаем язык ТОЛЬКО после явного выбора пользователя (COMPLIANCE).
+      b.addEventListener('click', () => window.SealI18n.setLang(b.getAttribute('data-lang'), true));
+    });
+  }
+  if (UI.alphaNotice) UI.alphaNotice.hidden = false;
+  if (UI.feedbackInvite) UI.feedbackInvite.hidden = false;
 }
+
+renderOverlayText();
+syncLangButtons();
+
+// Смена языка (standalone-переключатель) → перерисовать динамику оверлея и доску, если показана.
+window.SealI18n.onLangChange(() => {
+  renderOverlayText();
+  syncLangButtons();
+  if (STANDALONE && UI.board && !UI.board.hidden) relocalizeBoard(UI.board, t);
+});
 
 // Старт/Играть: один обработчик (initAudio + startGame), чтобы раунд и play-token не брались дважды.
 const onStartClick = () => { initAudio(); startGame(); };
@@ -247,17 +299,23 @@ function startGame(){
 
 function endGame(){
   STATE.running=false; STATE.over=true; UI.overlay.hidden=false;
-  if(SCORE.now > SCORE.best){
-    SCORE.best=SCORE.now; localStorage.setItem('seal_hunt_best', String(SCORE.best));
+  const finalScore = SCORE.now;
+  const isNew = finalScore > SCORE.best;
+  if(isNew){
+    SCORE.best=finalScore; localStorage.setItem('seal_hunt_best', String(SCORE.best));
     UI.best.textContent=SCORE.best;
-    UI.message.innerHTML=t('timeUpNewRecord', { score: SCORE.now });
-  }else{
-    UI.message.innerHTML=t('timeUp', { score: SCORE.now, best: SCORE.best });
   }
-  UI.btnShareEnd.hidden=false; UI.btnAgain.textContent=t('btnAgain');
+  const finalBest = SCORE.best;
+  // Сообщение/кнопка как функции от языка → перерисуются при смене языка (standalone).
+  overlayMsg = isNew
+    ? () => t('timeUpNewRecord', { score: finalScore })
+    : () => t('timeUp', { score: finalScore, best: finalBest });
+  overlayBtn = () => t('btnAgain');
+  UI.btnShareEnd.hidden=false;
+  renderOverlayText();
 
   // Server-authoritative leaderboard: submit this round and show the board.
-  if (UI.board) mountAfterPlay(UI.board, GAME_SLUG, SCORE.now, t);
+  if (UI.board) mountAfterPlay(UI.board, GAME_SLUG, finalScore, t);
 }
 
 function loop(){

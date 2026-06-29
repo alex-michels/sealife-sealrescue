@@ -1,0 +1,108 @@
+name: Deploy (main → VPS)
+
+# Single source of truth = main. Push to main → build a lean Next standalone artifact in CI →
+# rsync it to the VPS → repoint the `current` symlink → restart systemd. See docs/DEPLOYMENT.md.
+#
+# Why build in CI: the box is 8 GB and `next build` runs with --max-old-space-size=8000; building
+# on-box next to Postgres risks OOM. CI builds; the box just runs `node server.js`.
+#
+# Required repo secrets:
+#   SSH_HOST        VPS IP / hostname
+#   SSH_USER        deploy user (non-root, sudo for `systemctl restart sealife`)
+#   SSH_KEY         private key (ed25519) whose public key is in deploy@VPS authorized_keys
+#   DATABASE_URI    DEV/Neon Postgres — used ONLY to satisfy build-time reads (the sealife home
+#                   page is statically prerendered and queries Payload). NOT the prod DB.
+#   PAYLOAD_SECRET  any non-empty build-time value (real prod secret lives in /etc/sealife/.env)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build (Next standalone)
+        run: pnpm build
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+          NEXT_PUBLIC_PLAUSIBLE_SRC: ''
+
+      - name: Assemble artifact (standalone + static + public)
+        run: |
+          set -e
+          rm -rf artifact && mkdir -p artifact
+          cp -r .next/standalone/. artifact/
+          mkdir -p artifact/.next
+          cp -r .next/static artifact/.next/static
+          cp -r public artifact/public
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: artifact
+          retention-days: 3
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: app
+          path: artifact
+
+      - name: Configure SSH
+        run: |
+          set -e
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync release to VPS
+        run: |
+          set -e
+          REL="/opt/sealife/releases/${{ github.sha }}"
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "mkdir -p $REL"
+          rsync -az --delete -e "ssh -i ~/.ssh/id_ed25519" artifact/ \
+            "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$REL/"
+
+      - name: Activate release + restart service
+        run: |
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "set -e; \
+             ln -sfn /opt/sealife/releases/${{ github.sha }} /opt/sealife/current; \
+             sudo systemctl restart sealife; \
+             ls -1dt /opt/sealife/releases/*/ | tail -n +6 | xargs -r rm -rf"
+
+      - name: Health check (game + leaderboard reachable)
+        run: |
+          set -e
+          for i in $(seq 1 10); do
+            if curl -fsS "https://sealthehunter.online/api/leaderboard?game=seal-the-hunter" >/dev/null; then
+              echo "healthy"; exit 0
+            fi
+            echo "waiting for app… ($i)"; sleep 3
+          done
+          echo "health check failed"; exit 1

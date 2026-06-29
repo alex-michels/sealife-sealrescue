@@ -27,14 +27,24 @@
   <canvas id="game" data-i18n-aria="canvasAriaLabel" aria-label="Игровое поле: тюлень охотится за рыбой"></canvas>
 
   <div id="overlay" hidden>
+    <!-- Переключатель языка — только standalone (sealthehunter.online); во фрейме скрыт. -->
+    <div id="langSwitch" class="lang-switch" role="group" data-i18n-aria="langSwitchLabel" hidden>
+      <button type="button" class="lang-btn" data-lang="ru" lang="ru">RU</button>
+      <button type="button" class="lang-btn" data-lang="en" lang="en">EN</button>
+      <button type="button" class="lang-btn" data-lang="de" lang="de">DE</button>
+    </div>
     <h1 data-i18n="title">Тюль-Охотник</h1>
     <p id="hello" class="hello"></p>
     <p id="message"></p>
+    <!-- Заметка про альфа-тест — только standalone. -->
+    <p id="alphaNotice" class="alpha-notice" hidden></p>
     <div class="overlay-buttons">
       <button id="btnAgain" class="primary" data-i18n="btnAgain">Играть ещё</button>
       <button id="btnShareEnd" data-i18n="btnShareEnd" data-i18n-title="btnShareEndTitle" title="Поделиться результатом" hidden>Поделиться</button>
     </div>
     <div id="board" class="board" hidden></div>
+    <!-- Контакт оператора (отображаемый, не сбор email) — только standalone. -->
+    <p id="feedbackInvite" class="feedback-invite" hidden></p>
   </div>
 
   <noscript data-i18n="noscript">Для игры нужен JavaScript.</noscript>

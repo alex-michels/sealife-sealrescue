@@ -321,12 +321,50 @@ export const leaderboardSubmit: Endpoint = {
     let alias: string
     let suffix: number
     if (mine) {
-      // тот же игрок: храним максимум, имя/суффикс не трогаем
+      // тот же игрок: храним максимум счёта.
       best = Math.max(mine.score as number, score)
-      alias = mine.alias as string
-      suffix = (mine.suffix as number) ?? 0
-      if (score > (mine.score as number)) {
-        await req.payload.update({ collection: 'game-scores', id: mine.id, data: { score, durationMs } })
+      // Имя — детерминированная f(seed) от текущих списков. Если списки имён менялись между
+      // сабмитами (деплой), сохранённые части устаревают и строка доски расходится с приветствием.
+      // Сравниваем по полям (jsonb не хранит порядок ключей) и при расхождении освежаем идентичность.
+      const np = (mine.nameParts ?? {}) as NameParts
+      const partsChanged =
+        np.noun !== parts.noun ||
+        np.adj !== parts.adj ||
+        np.mod !== parts.mod ||
+        np.pref !== parts.pref ||
+        np.suf !== parts.suf
+      if (partsChanged) {
+        // Пересчитываем суффикс уникальности под НОВЫЙ base (исключая себя).
+        const sameBase = await req.payload.count({
+          collection: 'game-scores',
+          where: {
+            game: { equals: game },
+            baseAlias: { equals: baseAlias },
+            board: { equals: board },
+            season: { equals: season },
+            id: { not_equals: mine.id },
+          },
+        })
+        suffix = sameBase.totalDocs >= 1 ? sameBase.totalDocs + 1 : 0
+        alias = suffix >= 2 ? `${baseAlias} ${suffix}` : baseAlias
+        await req.payload.update({
+          collection: 'game-scores',
+          id: mine.id,
+          data: {
+            baseAlias,
+            suffix,
+            alias,
+            nameParts: parts,
+            score: best,
+            ...(score > (mine.score as number) ? { durationMs } : {}),
+          },
+        })
+      } else {
+        alias = mine.alias as string
+        suffix = (mine.suffix as number) ?? 0
+        if (score > (mine.score as number)) {
+          await req.payload.update({ collection: 'game-scores', id: mine.id, data: { score, durationMs } })
+        }
       }
     } else {
       // новый игрок за неделю: уникализируем ИМЯ суффиксом при коллизии base с ДРУГИМ игроком

@@ -212,6 +212,7 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
       you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
       view: { board: r.board, total: r.total, page, rows, hasMore },
     };
+    container._lbState = st; // для relocalizeBoard при смене языка (standalone)
     render(container, st, t);
     scrollToMe(container); // открыть доску на позиции игрока, не на топе
   } catch {
@@ -226,9 +227,18 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
         you: null,
         view: { board: r.board || board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
       };
+      container._lbState = st; // для relocalizeBoard при смене языка (standalone)
       render(container, st, t);
     } catch {
       container.innerHTML = `<div class="lb"><div class="lb-off">${esc(t('lbOffline'))}</div></div>`;
     }
   }
+}
+
+/**
+ * Перерисовать уже показанную доску на текущем языке зрителя (после смены языка в standalone),
+ * БЕЗ повторного сабмита. Имена строятся из частей через renderName на актуальном lang().
+ */
+export function relocalizeBoard(container, t) {
+  if (container && container._lbState) render(container, container._lbState, t);
 }
