@@ -97,47 +97,9 @@ function drawSquid(ctx, r, c) {
   ctx.beginPath(); ctx.arc(r * 0.29, -r * 0.07, r * 0.035, 0, Math.PI * 2); ctx.fill();
 }
 
-// Flying fish: slim torpedo + large translucent pectoral "wings" (the gliding adaptation)
-// + deeply forked tail. Faces +x; wings spread wider on the leap (tailKick≈1).
-function drawFlyingFish(ctx, r, c, tailKick) {
-  const rx = r * 1.18, spread = 0.6 + 0.5 * tailKick;
-  // forked tail (lower lobe longer, like a real exocoetid)
-  ctx.fillStyle = c.back;
-  ctx.beginPath();
-  ctx.moveTo(-rx * 0.8, 0);
-  ctx.lineTo(-rx * 1.5, -r * 0.45);
-  ctx.lineTo(-rx * 1.35, 0);
-  ctx.lineTo(-rx * 1.62, r * 0.6);
-  ctx.closePath(); ctx.fill();
-  // wings — two translucent pectoral fins fanning up/back from the shoulder
-  ctx.save();
-  ctx.globalAlpha = 0.5; ctx.fillStyle = c.belly;
-  for (const s of [1, 0.66]) {
-    ctx.beginPath();
-    ctx.moveTo(r * 0.25, -r * 0.05);
-    ctx.quadraticCurveTo(-r * 0.5, -r * (0.7 + spread) * s, -rx * (0.95 + 0.2 * s), -r * (0.35 + 0.4 * s));
-    ctx.quadraticCurveTo(-r * 0.35, -r * 0.2 * s, r * 0.25, -r * 0.05);
-    ctx.closePath(); ctx.fill();
-  }
-  ctx.restore();
-  // slim body
-  ctx.fillStyle = c.body;
-  ctx.beginPath(); ctx.ellipse(0, 0, rx, r * 0.42, 0, 0, Math.PI * 2); ctx.fill();
-  ctx.save();
-  ctx.beginPath(); ctx.ellipse(0, 0, rx, r * 0.42, 0, 0, Math.PI * 2); ctx.clip();
-  ctx.fillStyle = c.belly; ctx.fillRect(-r * 2, r * 0.02, r * 4, r * 2);
-  ctx.restore();
-  // eye + highlight
-  ctx.fillStyle = c.eye;
-  ctx.beginPath(); ctx.arc(rx * 0.6, -r * 0.1, r * 0.1, 0, Math.PI * 2); ctx.fill();
-  ctx.fillStyle = PALETTE.highlight;
-  ctx.beginPath(); ctx.arc(rx * 0.63, -r * 0.13, r * 0.035, 0, Math.PI * 2); ctx.fill();
-}
-
 function drawFish(ctx, r, c, variant, tailKick = 0) {
   if (variant === 'star') return drawStar(ctx, r, c);
   if (variant === 'squid') return drawSquid(ctx, r, c);
-  if (variant === 'flying') return drawFlyingFish(ctx, r, c, tailKick);
 
   const rx = variant === 'slim' ? r * 1.12 : variant === 'eel' ? r * 1.2 : r * 0.95;
 
@@ -199,7 +161,6 @@ function drawFish(ctx, r, c, variant, tailKick = 0) {
 //               migration), never from the air. Top entry only when the top is open water.
 //   'benthic' — seabed dwellers (octopus, starfish, sand-burrowers, demersal cod); enter
 //               from the bottom or sides, never the top.
-//   'flying'  — flying fish (Exocoetidae): the ONLY one that leaps the surface & glides.
 const SPECIES = [
   { name: 'goldie', habitat: 'pelagic', size: 1.0, scheme: F.coral, variant: 'round', wiggle: (f, dt, i) => { f.vx += Math.sin(f.t * 4.8 + i) * 4 * dt; f.vy += Math.cos(f.t * 4.2 + i) * 4 * dt; } },
   { name: 'herring', habitat: 'pelagic', size: 0.9, scheme: F.silver, variant: 'slim', wiggle: (f, dt, i) => { f.vy += Math.sin(f.t * 3.6 + i) * 5 * dt; } },
@@ -212,13 +173,8 @@ const SPECIES = [
   { name: 'codling', habitat: 'benthic', size: 1.0, scheme: F.sand, variant: 'round', wiggle: (f, dt, i) => { f.vx += Math.sin(f.t * 3.4 + i) * 3 * dt; f.vy += Math.cos(f.t * 3.0 + i) * 2 * dt; } },
   { name: 'squid', habitat: 'benthic', size: 1.2, scheme: F.squid, variant: 'squid', wiggle: (f, dt) => { f.vy += Math.sin(f.t * 2.2) * 6 * dt; } },
   { name: 'star', habitat: 'benthic', size: 0.9, scheme: F.sand, variant: 'star', wiggle: (f) => { f.vx *= 0.995; f.vy *= 0.995; } },
-  { name: 'flyingfish', habitat: 'flying', size: 0.85, scheme: F.steel, variant: 'flying', wiggle: (f, dt, i) => { f.vy += Math.sin(f.t * 4.0 + i) * 3 * dt; } },
 ];
 Object.freeze(SPECIES);
-
-const FLYER = SPECIES.find((s) => s.habitat === 'flying');
-const SWIMMERS = SPECIES.filter((s) => s.habitat !== 'flying');
-const FLY_GRAVITY = 1300; // world units/s² pulling a leaping flying fish back down
 
 export const PREY = []; // active list
 
@@ -240,10 +196,7 @@ function pickEdge(habitat, hasSurface) {
 export function spawnPrey(world, n = 1) {
   const hasSurface = !!world.hasSurface;
   for (let i = 0; i < n; i++) {
-    // Flying fish are rare, and only "fly" where there's a surface to leap over.
-    if (hasSurface && FLYER && Math.random() < 0.08) { spawnFlyingLeap(world); continue; }
-
-    const sp = SWIMMERS[(Math.random() * SWIMMERS.length) | 0];
+    const sp = SPECIES[(Math.random() * SPECIES.length) | 0];
     const edge = pickEdge(sp.habitat, hasSurface);
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
@@ -263,25 +216,6 @@ export function spawnPrey(world, n = 1) {
   }
 }
 
-// Flying fish: a fast horizontal dash that leaps from the water, arcs over the surface
-// (visible against the sky) and splashes back. Pure ballistics while airborne (gravity).
-function spawnFlyingLeap(world) {
-  const sp = FLYER;
-  const dir = Math.random() < 0.5 ? 1 : -1;
-  const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
-  const baseR = (12 + Math.random() * 8) * sp.size * BAL.fishSizeK;
-  const x = dir > 0 ? -10 : world.w + 10;
-  const y = world.h * (0.05 + Math.random() * 0.08); // starts just under the surface
-  // initial up-burst so the apex sits ~peak ABOVE the waterline (capped to the sky room)
-  const peak = Math.min((world.skyAbove || 0) * 0.7, world.h * 0.22, 130) + 20;
-  const vy = -Math.sqrt(2 * FLY_GRAVITY * (peak + y));
-  PREY.push({
-    x, y, px: x, py: y, vx: dir * speed * 1.5, vy, r: baseR, t: 0, dir, sp,
-    phase: Math.random() * Math.PI * 2, fleeT: 0, restT: 0, tailKick: 1,
-    flying: true, splashY: y, // leap ends (→ ordinary fish) when it falls back to this depth
-  });
-}
-
 export function updatePrey(dt, seal, world, eatCb) {
   // Fixed-resolution world (SH-02): balance is device-independent, so no screen scaling.
   const boostK = 1.0;
@@ -294,20 +228,7 @@ export function updatePrey(dt, seal, world, eatCb) {
     f.px = f.x; f.py = f.y;
     f.t += dt; f.phase += dt;
 
-    if (f.flying) {
-      // Airborne leap arc — ballistic (gravity), NO in-water mechanics. The leap ENDS the
-      // instant it falls back to its launch depth; from then it's an ordinary fish (no
-      // gravity), so a flying fish NEVER changes in-water balance and never "rains" down.
-      f.vy += FLY_GRAVITY * dt;
-      f.vx *= 0.999;
-      f.dir = Math.sign(f.vx) || f.dir;
-      f.tailKick = 1; // pectoral "wings" stay spread for the glide
-      if (f.vy > 0 && f.y >= f.splashY) {
-        f.flying = false;
-        f.y = f.splashY;
-        f.vy = BAL.fishSpeedMin * 0.3; // gentle splash-down, then swim like any other fish
-      }
-    } else {
+    {
       const dx = f.x - seal.x, dy = f.y - seal.y;
       const d2 = dx * dx + dy * dy;
       const threatR = (seal.r * threatK) + f.r * 1.2;
@@ -367,8 +288,8 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     f.x += f.vx * dt; f.y += f.vy * dt;
 
-    if (!f.flying) {
-      // soft inward push near edges so prey don't stick to borders
+    // soft inward push near edges so prey don't stick to borders
+    {
       const m = Math.min(48, Math.max(36, world.w * 0.05));
       let pushX = 0, pushY = 0;
       if (f.x < m) pushX = (m - f.x) / m;
@@ -380,14 +301,13 @@ export function updatePrey(dt, seal, world, eatCb) {
         f.vx += edgeSteer * pushX * dt;
         f.vy += (edgeSteer * 0.9) * pushY * dt;
       }
-      // With a water surface above, ordinary fish stay BELOW it (they don't breach) —
-      // only the flying fish may cross. Keeps non-flyers out of the sky.
+      // With a water surface above, fish stay BELOW it (they don't breach) — keeps prey
+      // out of the sky.
       if (world.hasSurface && f.y < f.r * 0.25) { f.y = f.r * 0.25; if (f.vy < 0) f.vy = 0; }
     }
 
-    // edge cull (a flying fish may arc well above the surface before splashing back)
-    const cullTop = f.flying ? -((world.skyAbove || 0) + 160) : -60;
-    if (f.x < -60 || f.x > world.w + 60 || f.y > world.h + 60 || f.y < cullTop) { PREY.splice(i, 1); continue; }
+    // edge cull
+    if (f.x < -60 || f.x > world.w + 60 || f.y > world.h + 60 || f.y < -60) { PREY.splice(i, 1); continue; }
 
     // collision sweep (shared samples from game.js)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
@@ -400,7 +320,7 @@ export function updatePrey(dt, seal, world, eatCb) {
     }
     if (hit) { PREY.splice(i, 1); eatCb(); continue; }
 
-    if (!f.flying && f.tailKick > 0) f.tailKick = Math.max(0, f.tailKick - dt * 5);
+    if (f.tailKick > 0) f.tailKick = Math.max(0, f.tailKick - dt * 5);
   }
 }
 
