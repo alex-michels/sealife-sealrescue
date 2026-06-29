@@ -173,13 +173,19 @@ function mulberry32(a) {
   };
 }
 
-/** Стабильный opaque-seed игрока (генерируется один раз, хранится локально). */
+/**
+ * Стабильный opaque-seed игрока (генерируется один раз, хранится локально).
+ * ВСЕГДА uint32 (`>>> 0`): сервер валидирует seed в диапазоне 0..2^32-1, а makeParts
+ * всё равно маскирует `seed >>> 0`. Если этого не делать, «большой» seed (старый билд /
+ * ручная правка localStorage) даёт корректное имя, но сабмит падает `invalid_input` —
+ * счёт молча не засчитывается. Маска не меняет имя (makeParts маскирует так же).
+ */
 export function getSeed() {
   try {
     const v = localStorage.getItem(SEED_KEY);
-    if (v && /^\d+$/.test(v)) return Number(v);
+    if (v && /^\d+$/.test(v)) return Number(v) >>> 0;
   } catch {}
-  const s = Math.floor(Math.random() * 4294967295);
+  const s = (Math.floor(Math.random() * 4294967295)) >>> 0;
   try { localStorage.setItem(SEED_KEY, String(s)); } catch {}
   return s;
 }

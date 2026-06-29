@@ -157,7 +157,11 @@ function clientIp(req: PayloadRequest): string {
 // одноразовость. Без БД/PII: секрет подписывает stateless-токен, израсходованные nonce —
 // в памяти. Это поднимает планку: счёт нельзя залить, не «прожив» ~раунд, и токен — на 1 раз.
 const TOKEN_TTL_MS = 1_800_000 // 30 мин — окно валидности токена
-const MIN_PLAY_MS = 50_000 // раунд = 60с → раньше ~50с результата быть не может
+// Раунд = 60с. Нижняя граница реально отыгранного времени — с запасом под задержку выдачи
+// play-token: токен метит время, когда ОТВЕТИЛ `/start`, а холодный старт роутдендпоинта
+// (особенно dev/Turbopack — наблюдали 6.4с, первый компайл бывает 10–20с) съедает margin и
+// легитимный 60-секундный раунд получает `token_age`. 40с всё ещё требует существенной игры.
+const MIN_PLAY_MS = 40_000
 type TokenData = { g: string; b: string; t: number; n: string }
 function tokenSecret(): string {
   return process.env.PAYLOAD_SECRET || 'seal-dev-secret'
@@ -273,8 +277,9 @@ export const leaderboardSubmit: Endpoint = {
     if (elapsed < MIN_PLAY_MS || elapsed > TOKEN_TTL_MS) {
       return Response.json({ error: 'token_age' }, { status: 422 })
     }
-    // Заявленная длительность не может превышать реально прошедшее время (пауза только добавляет).
-    if (durationMs > elapsed + 8_000) {
+    // Заявленная длительность не может превышать реально прошедшее время + запас на задержку
+    // выдачи токена (см. MIN_PLAY_MS). 20с покрывает холодный старт `/start`, не пропуская читы.
+    if (durationMs > elapsed + 20_000) {
       return Response.json({ error: 'duration_mismatch' }, { status: 422 })
     }
 
