@@ -117,7 +117,8 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
    пароли; `ufw allow 22,80,443`; `fail2ban`; `unattended-upgrades`.
    Узкий sudo для деплоя — `/etc/sudoers.d/sealife`:
    `deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart sealife`.
-2. **Пакеты.** Node 20 LTS, Caddy (офиц. репозиторий). PostgreSQL на боксе **не нужен** на alpha —
+2. **Пакеты.** Node 22 LTS (совпадает с Node сборки в CI; Node 20 — EOL, Node 25 — нечётный/не-LTS,
+   не использовать), Caddy (офиц. репозиторий). PostgreSQL на боксе **не нужен** на alpha —
    БД на Neon (см. ниже). Self-hosted Postgres ставим позже, перед prod-сайтами (§2, §7).
 3. **БД — Neon (EU, Frankfurt).** Создать **выделенную ветку** под alpha (free-tier). Ветка Neon
    copy-on-write от родителя → держать её **чистой от PII**: ветвиться от пустого состояния или
