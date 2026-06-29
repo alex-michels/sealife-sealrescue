@@ -4,3 +4,5 @@
 deploy/Caddyfile        text eol=lf
 deploy/sealife.service  text eol=lf
 .github/workflows/*.yml text eol=lf
+justfile                text eol=lf
+infra/**                text eol=lf
