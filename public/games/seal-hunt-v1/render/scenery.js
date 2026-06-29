@@ -13,6 +13,7 @@ let seaGrad = null, topGrad = null, botGrad = null;
 //   Built per resize from the VIEW rect; animations are time-based and honour reduced-motion.
 let B = null;
 const _mod = (a, n) => ((a % n) + n) % n;
+const BOAT_H = 44; // drawn height of a boat (keel→masthead) at scale 1, for fit-capping
 
 function makeSeaGradient(ctx, world) {
   const g = ctx.createLinearGradient(0, 0, 0, world.h);
@@ -235,8 +236,8 @@ function buildSideWalls(dispW, dispH, ax0, ax1) {
   B.kelp = kelp; B.rocks = rocks;
 }
 
-// — Top: sky/air + drifting clouds, occasional boats on the surface, and birds when
-//   there's real vertical room. Detail scales with the available space (good UX).
+// — Top: sky/air + drifting clouds and occasional boats on the surface. Detail and boat
+//   size scale with the available space (good UX) so nothing looks cramped or clipped.
 function buildSky(ctx, dispW, ay0) {
   const grad = ctx.createLinearGradient(0, 0, 0, Math.max(1, ay0));
   grad.addColorStop(0.0, '#C7DCE6'); // foggy upper sky
@@ -246,33 +247,41 @@ function buildSky(ctx, dispW, ay0) {
     x: Math.random() * dispW, y: 6 + Math.random() * Math.max(8, ay0 * 0.55),
     s: 0.55 + Math.random() * 1.1, v: 4 + Math.random() * 7, a: 0.3 + Math.random() * 0.3,
   }));
-  const boats = Array.from({ length: Math.max(1, Math.round(dispW / 900)) }, () => ({
-    x: Math.random() * dispW, v: 7 + Math.random() * 9, s: 0.8 + Math.random() * 0.6,
-    dir: Math.random() < 0.5 ? 1 : -1, hue: Math.random() < 0.5 ? PALETTE.brand.BUOY : '#C25A3A',
-    bob: Math.random() * Math.PI * 2,
-  }));
-  const birds = [];
-  if (ay0 > 90) {
-    for (let i = 0, n = Math.max(1, Math.round(dispW / 650)); i < n; i++) birds.push({
-      x: Math.random() * dispW, y: 10 + Math.random() * (ay0 * 0.45),
-      v: 26 + Math.random() * 40, s: 0.7 + Math.random() * 0.6,
-      dir: Math.random() < 0.5 ? 1 : -1, ph: Math.random() * Math.PI * 2,
+  // Boats only where there's room to show one; size capped so it always fits the strip.
+  const boats = [];
+  if (ay0 > 56) {
+    const fit = (ay0 * 0.85) / BOAT_H; // largest scale that fits the sky strip
+    for (let i = 0, n = Math.max(1, Math.round(dispW / 850)); i < n; i++) boats.push({
+      x: Math.random() * dispW, v: 7 + Math.random() * 9,
+      s: Math.min(1.2 + Math.random() * 0.8, fit), // bigger than before, but bounded
+      dir: Math.random() < 0.5 ? 1 : -1, hue: Math.random() < 0.5 ? PALETTE.brand.BUOY : '#C25A3A',
+      bob: Math.random() * Math.PI * 2,
     });
   }
-  return { grad, clouds, boats, birds };
+  return { grad, clouds, boats };
 }
 
 // — Bottom: sandy seabed (graded shades), with sand ripples, pebbles, driftwood snags,
 //   boulders and swaying eelgrass — the cove floor continuing below the play field.
 function buildSeabed(ctx, dispW, ay1, dispH) {
   const h = dispH - ay1;
+  // Start at the EXACT arena-floor colour so there's no seam line, then let the sand
+  // emerge gradually from the murk → reads as one continuous slope, not a hard edge.
   const grad = ctx.createLinearGradient(0, ay1, 0, dispH);
-  grad.addColorStop(0.0, 'rgba(46,58,64,1)'); // shadowed where the seabed meets the cove
-  grad.addColorStop(0.16, '#8E7E62');         // sand emerging from shadow
-  grad.addColorStop(0.5, '#C7B591');          // lit sand
-  grad.addColorStop(0.82, '#AD9B7C');
-  grad.addColorStop(1.0, '#927C5C');          // wet/deeper sand
+  grad.addColorStop(0.0, PALETTE.water.floor); // == arena floor → seamless transition
+  grad.addColorStop(0.12, '#27343A');          // murky shadow just under the cove
+  grad.addColorStop(0.4, '#7E7058');           // sand emerging
+  grad.addColorStop(0.66, '#C7B591');          // lit sand
+  grad.addColorStop(0.86, '#AD9B7C');
+  grad.addColorStop(1.0, '#927C5C');           // wet/deeper sand
   const yIn = (lo, hi) => ay1 + h * (lo + Math.random() * (hi - lo));
+  // Soft, low dunes cresting near the seam so the water→sand boundary undulates as gentle
+  // terrain rather than a ruled line. Mid-sand tone, emerging from the shadow band.
+  const dunes = Array.from({ length: Math.max(2, Math.round(dispW / 340)) }, () => ({
+    x: Math.random() * dispW, y: ay1 + h * (0.16 + Math.random() * 0.16),
+    rw: 130 + Math.random() * 240, rh: 26 + Math.random() * 34,
+    c: Math.random() < 0.5 ? '#5E5440' : '#6C6049',
+  }));
   const ripples = Array.from({ length: Math.max(3, Math.round(dispW / 110)) }, () => ({
     x: Math.random() * dispW, y: yIn(0.32, 0.85), w: 40 + Math.random() * 120, a: 0.05 + Math.random() * 0.06,
   }));
@@ -293,7 +302,7 @@ function buildSeabed(ctx, dispW, ay1, dispH) {
     gh: 16 + Math.random() * Math.min(46, h * 0.55), width: 10 + Math.random() * 16,
     c: PALETTE.kelp[2], phase: Math.random() * Math.PI * 2,
   }));
-  return { grad, ripples, pebbles, rocks, driftwood, grass };
+  return { grad, dunes, ripples, pebbles, rocks, driftwood, grass };
 }
 
 // Deep backdrop over the whole canvas (covers any border strip). The opaque arena is
@@ -304,11 +313,19 @@ export function drawDeepBackdrop(ctx, view) {
   ctx.fillRect(0, 0, view.dispW, view.dispH);
 }
 
-// Draw the framing world over the leftover strips, then a soft vignette to seat the arena.
-export function drawBorderDecor(ctx, view, world, t, reducedMotion = false) {
+// Border layers BEHIND the play field/seal (seabed, sky + clouds + boats, side walls).
+// Drawn before the entities so the seal can surface in front of the sky.
+export function drawBorderBack(ctx, view, world, t, reducedMotion = false) {
   if (!B) return;
-  if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion); drawSky(ctx, t, reducedMotion); }
+  if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion); drawSkyBack(ctx, t, reducedMotion); }
   if (B.hasSides) drawSideWalls(ctx, t, reducedMotion);
+}
+
+// Border layers IN FRONT of the play field/seal: the wavy water surface (so the seal
+// reads as half-submerged when it pokes out) and the edge vignette that seats the arena.
+export function drawBorderFront(ctx, view, world, t, reducedMotion = false) {
+  if (!B) return;
+  if (B.hasTopBottom) drawWaterline(ctx, B.ay0, B.dispW, t, reducedMotion);
   drawEdgeVignette(ctx);
 }
 
@@ -331,7 +348,7 @@ function drawSideWalls(ctx, t, reduced) {
   ctx.restore();
 }
 
-function drawSky(ctx, t, reduced) {
+function drawSkyBack(ctx, t, reduced) {
   const { dispW, ay0 } = B, S = B.sky;
   ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
 
@@ -339,17 +356,11 @@ function drawSky(ctx, t, reduced) {
     const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
     drawCloud(ctx, x, c.y, c.s, c.a);
   }
-  for (const b of S.birds) {
-    const x = reduced ? b.x : _mod(b.x + t * b.v * b.dir, dispW + 40);
-    const y = b.y + (reduced ? 0 : Math.sin(t * 1.4 + b.ph) * 3);
-    drawBird(ctx, x, y, b.s);
-  }
   for (const bo of S.boats) {
     const x = reduced ? bo.x : _mod(bo.x + t * bo.v * bo.dir + 100, dispW + 200) - 100;
-    const y = ay0 - 1 + (reduced ? 0 : Math.sin(t * 0.9 + bo.bob) * 2);
-    drawBoat(ctx, x, y, bo.s, bo.dir, bo.hue);
+    const yWater = ay0 + (reduced ? 0 : Math.sin(t * 0.9 + bo.bob) * 2);
+    drawBoat(ctx, x, yWater, bo.s, bo.dir, bo.hue);
   }
-  drawWaterline(ctx, ay0, dispW, t, reduced);
 }
 
 function drawCloud(ctx, x, y, s, a) {
@@ -362,25 +373,19 @@ function drawCloud(ctx, x, y, s, a) {
   ctx.fill(); ctx.restore();
 }
 
-function drawBird(ctx, x, y, s) {
-  ctx.save(); ctx.strokeStyle = 'rgba(21,48,58,0.5)'; ctx.lineWidth = 2 * s; ctx.lineCap = 'round';
-  const w = 8 * s;
-  ctx.beginPath();
-  ctx.moveTo(x - w, y);
-  ctx.quadraticCurveTo(x - w * 0.2, y - w * 0.75, x, y - w * 0.1);
-  ctx.quadraticCurveTo(x + w * 0.2, y - w * 0.75, x + w, y);
-  ctx.stroke(); ctx.restore();
-}
-
-function drawBoat(ctx, x, y, s, dir, hue) {
-  ctx.save(); ctx.translate(x, y); ctx.scale(dir * s, s);
+// Sailboat sitting ON the waterline: origin at the keel (y=0 = surface), hull + mast +
+// sail above it, so the whole boat reads as floating rather than half-buried by the water.
+function drawBoat(ctx, x, yWater, s, dir, hue) {
+  ctx.save(); ctx.translate(x, yWater); ctx.scale(dir * s, s);
   ctx.fillStyle = PALETTE.brand.INK; // hull
-  ctx.beginPath(); ctx.moveTo(-26, 0); ctx.lineTo(26, 0); ctx.lineTo(18, 9); ctx.lineTo(-20, 9); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = hue; ctx.fillRect(-22, -0.5, 44, 2.5); // accent stripe
-  ctx.strokeStyle = PALETTE.brand.INK; ctx.lineWidth = 1.4;
-  ctx.beginPath(); ctx.moveTo(-2, 0); ctx.lineTo(-2, -17); ctx.stroke(); // mast
+  ctx.beginPath();
+  ctx.moveTo(-40, -14); ctx.lineTo(40, -14); ctx.lineTo(30, 0); ctx.lineTo(-30, 0); ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = hue; ctx.fillRect(-36, -15.5, 72, 4); // accent stripe along the gunwale
+  ctx.strokeStyle = PALETTE.brand.INK; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(-3, -44); ctx.stroke(); // mast
   ctx.fillStyle = '#F4F8FA'; // sail
-  ctx.beginPath(); ctx.moveTo(-1, -1); ctx.lineTo(-1, -16); ctx.lineTo(12, -3); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-1, -16); ctx.lineTo(-1, -42); ctx.lineTo(22, -19); ctx.closePath(); ctx.fill();
   ctx.restore();
 }
 
@@ -401,6 +406,11 @@ function drawSeabed(ctx, t, reduced) {
   const { dispW, ay1, dispH } = B, S = B.seabed;
   ctx.fillStyle = S.grad; ctx.fillRect(0, ay1, dispW, dispH - ay1);
 
+  // Soft dunes near the seam → the water/sand boundary undulates instead of a flat line.
+  for (const d of S.dunes) {
+    ctx.fillStyle = d.c;
+    ctx.beginPath(); ctx.ellipse(d.x, d.y, d.rw, d.rh, 0, 0, Math.PI * 2); ctx.fill();
+  }
   for (const r of S.ripples) {
     ctx.strokeStyle = `rgba(74,60,42,${r.a})`; ctx.lineWidth = 3; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(r.x - r.w / 2, r.y); ctx.quadraticCurveTo(r.x, r.y - 5, r.x + r.w / 2, r.y); ctx.stroke();

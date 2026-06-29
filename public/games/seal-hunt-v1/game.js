@@ -1,7 +1,7 @@
 // game.js (ESM entrypoint)
 import { BASE, BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderDecor } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront } from './render/scenery.js';
 import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -425,11 +425,21 @@ function update(dt){
     seal.vx *= 0.985; seal.vy *= 0.985;
   }
 
-  // Integrate + clamp to world
+  // Surface behaviour: when there's water surface above (top border), the seal may peek /
+  // partly emerge above it instead of hitting a wall. A gentle buoyancy pulls it back down
+  // the higher it pokes, so it bobs out and dips back rather than sticking to the ceiling.
+  const surfaced = VIEW.oy > 1;            // arena top maps to the water surface
+  const topLimit = surfaced ? -seal.r * 0.55 : seal.r;
+  // Buoyancy above the waterline: a spring back to the surface plus a small constant pull,
+  // so the seal reliably dips back under when you stop steering up (steering still wins to
+  // hold a peek). Gentle vs the 2400 steering accel, so it never feels like a wall.
+  if (surfaced && seal.y < 0) seal.vy += (-seal.y * 10 + 40) * dt;
+
+  // Integrate + clamp to world (top edge soft: emergence allowed when surfaced)
   seal.x += seal.vx * dt;
   seal.y += seal.vy * dt;
   seal.x = Math.max(seal.r, Math.min(WORLD.w - seal.r, seal.x));
-  seal.y = Math.max(seal.r, Math.min(WORLD.h - seal.r, seal.y));
+  seal.y = Math.max(topLimit, Math.min(WORLD.h - seal.r, seal.y));
 
   // ——— prey update + collision
   updatePrey(dt, seal, WORLD, ()=>{
@@ -441,22 +451,26 @@ function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
 
-  // Deep "edge of the cove" water over the whole backing store (covers any border strip;
-  // the opaque arena is painted over its own rect next).
+  const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+
+  // Deep "edge of the cove" water + the border layers BEHIND the play field (sky/seabed/
+  // side walls), so the seal can surface in front of the sky. Arena is painted over next.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
   drawDeepBackdrop(CTX, VIEW);
+  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
 
-  // Diegetic border framing (kelp wall + edge vignette) over the leftover strips.
-  if (VIEW.ox > 0.5 || VIEW.oy > 0.5) {
+  // Border layers IN FRONT of the play field: the wavy water surface (the seal reads as
+  // half-submerged when it pokes out) + the edge vignette.
+  if (hasBorder) {
     CTX.save();
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-    drawBorderDecor(CTX, VIEW, WORLD, t, reduced);
+    drawBorderFront(CTX, VIEW, WORLD, t, reduced);
     CTX.restore();
   }
 
