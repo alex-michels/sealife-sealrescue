@@ -1,0 +1,89 @@
+# Base hardening + deploy user. Mirrors DEPLOYMENT.md §5 steps 1-3, but idempotent.
+---
+- name: Update apt cache and upgrade packages
+  ansible.builtin.apt:
+    update_cache: true
+    upgrade: dist
+    cache_valid_time: 3600
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - ufw
+      - fail2ban
+      - unattended-upgrades
+      - curl
+      - ca-certificates
+      - gnupg
+      - apt-transport-https
+      - debian-keyring
+      - debian-archive-keyring
+    state: present
+
+- name: Ensure deploy user exists (sudo group)
+  ansible.builtin.user:
+    name: "{{ app_user }}"
+    groups: sudo
+    append: true
+    shell: /bin/bash
+    create_home: true
+
+- name: Install deploy authorized keys
+  ansible.posix.authorized_key:
+    user: "{{ app_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ deploy_authorized_keys }}"
+  when: deploy_authorized_keys | length > 0
+
+- name: Narrow passwordless sudo for the CI restart only
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/sealife
+    content: "{{ app_user }} ALL=(root) NOPASSWD: /usr/bin/systemctl restart sealife\n"
+    mode: "0440"
+    validate: "visudo -cf %s"
+
+- name: Enable unattended-upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Unattended-Upgrade "1";
+
+- name: Ensure fail2ban is enabled and running
+  ansible.builtin.service:
+    name: fail2ban
+    enabled: true
+    state: started
+
+- name: UFW allow SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: UFW allow web ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop: ["80", "443"]
+
+- name: Enable UFW (default deny incoming)
+  community.general.ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+
+# Harden sshd LAST, and only once key-based deploy login is confirmed working,
+# otherwise you can lock yourself out. validate keeps a broken config from being applied.
+- name: Harden sshd (no root login, no passwords)
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.re }}"
+    line: "{{ item.line }}"
+    validate: "sshd -t -f %s"
+  loop:
+    - { re: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+    - { re: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+  notify: restart ssh

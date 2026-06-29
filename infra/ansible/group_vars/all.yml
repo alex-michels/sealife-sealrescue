@@ -1,0 +1,13 @@
+# Non-secret configuration. SECRETS (DATABASE_URI, PAYLOAD_SECRET) are NOT kept here —
+# they live in /etc/sealife/.env on the box (filled once, never overwritten by Ansible),
+# or pass them at run time via --extra-vars / ansible-vault. NEVER commit real secret values.
+---
+node_major: 24
+app_user: deploy
+app_dir: /opt/sealife
+env_file: /etc/sealife/.env
+server_url: https://sealthehunter.online
+
+# Public keys allowed to log in as `deploy` (same keypair as the CI SSH_KEY secret).
+# Paste one or more "ssh-ed25519 AAAA... comment" lines.
+deploy_authorized_keys: []

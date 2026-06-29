@@ -1,0 +1,45 @@
+# App layout, env-file scaffold, and the systemd unit. The service is enabled but not started
+# here — it starts on the first CI deploy (which puts code into /opt/sealife/current).
+---
+- name: App directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ app_user }}"
+    group: "{{ app_user }}"
+    mode: "0755"
+  loop:
+    - "{{ app_dir }}"
+    - "{{ app_dir }}/releases"
+
+- name: Secrets directory
+  ansible.builtin.file:
+    path: "{{ env_file | dirname }}"
+    state: directory
+    owner: root
+    group: "{{ app_user }}"
+    mode: "0750"
+
+# Created ONCE with placeholders, then never overwritten (force: false). Fill the real
+# DATABASE_URI / PAYLOAD_SECRET on the box, or pass them via --extra-vars / ansible-vault.
+- name: Environment file (create once, never clobber real secrets)
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ env_file }}"
+    owner: root
+    group: "{{ app_user }}"
+    mode: "0640"
+    force: false
+
+# Reuses the repo's canonical unit (deploy/sealife.service).
+- name: Install systemd unit
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../deploy/sealife.service"
+    dest: /etc/systemd/system/sealife.service
+    mode: "0644"
+  notify: reload systemd
+
+- name: Enable sealife service (starts on first deploy)
+  ansible.builtin.systemd:
+    name: sealife
+    enabled: true
