@@ -1,0 +1,21 @@
+# Node {{ node_major }} via NodeSource → installs to /usr/bin/node (what sealife.service expects).
+---
+- name: Add NodeSource repository for Node {{ node_major }}
+  ansible.builtin.shell: "curl -fsSL https://deb.nodesource.com/setup_{{ node_major }}.x | bash -"
+  args:
+    creates: /etc/apt/sources.list.d/nodesource.list
+
+- name: Install Node.js
+  ansible.builtin.apt:
+    name: nodejs
+    state: present
+    update_cache: true
+
+- name: Verify node is on the expected path for systemd
+  ansible.builtin.command: /usr/bin/node --version
+  register: node_version
+  changed_when: false
+
+- name: Show installed Node version
+  ansible.builtin.debug:
+    msg: "Node {{ node_version.stdout }} at /usr/bin/node"

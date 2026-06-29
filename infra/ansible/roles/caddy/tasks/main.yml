@@ -1,0 +1,30 @@
+# Install Caddy (official repo) and deploy the committed Caddyfile (single source of truth).
+---
+- name: Caddy GPG keyring
+  ansible.builtin.shell: >
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/gpg.key'
+    | gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+
+- name: Caddy apt repository
+  ansible.builtin.shell: >
+    curl -1sLf 'https://dl.cloudsmith.io/public/caddy/stable/debian.deb.txt'
+    > /etc/apt/sources.list.d/caddy-stable.list
+  args:
+    creates: /etc/apt/sources.list.d/caddy-stable.list
+
+- name: Install Caddy
+  ansible.builtin.apt:
+    name: caddy
+    state: present
+    update_cache: true
+
+# Reuses the repo's canonical Caddyfile (deploy/Caddyfile) — no duplication.
+- name: Deploy Caddyfile
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../deploy/Caddyfile"
+    dest: /etc/caddy/Caddyfile
+    mode: "0644"
+    validate: "caddy validate --adapter caddyfile --config %s"
+  notify: reload caddy

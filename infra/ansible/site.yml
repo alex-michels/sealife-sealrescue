@@ -1,0 +1,10 @@
+# Convergent day-2 configuration of the app server. Idempotent — safe to re-run on a LIVE box.
+# Adding Postgres later = add a `postgres` role here and re-run; no reinstall. See docs/INFRA.md.
+---
+- name: Configure sealife/sealrescue app server
+  hosts: sealife
+  roles:
+    - base   # hardening, firewall, deploy user, sshd
+    - node   # Node 24 (NodeSource), at /usr/bin/node for the systemd unit
+    - caddy  # reverse proxy + the committed Caddyfile
+    - app    # /opt/sealife, /etc/sealife/.env scaffold, systemd unit
