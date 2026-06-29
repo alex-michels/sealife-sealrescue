@@ -45,7 +45,6 @@ const UI = {
   langSwitch: document.getElementById('langSwitch'),
   alphaNotice: document.getElementById('alphaNotice'),
   feedbackInvite: document.getElementById('feedbackInvite'),
-  hero: document.getElementById('heroArt'),
 };
 
 const GAME_DURATION = 60_000;
@@ -245,7 +244,6 @@ if (STANDALONE) {
   }
   if (UI.alphaNotice) UI.alphaNotice.hidden = false;
   if (UI.feedbackInvite) UI.feedbackInvite.hidden = false;
-  if (UI.hero) UI.hero.hidden = false; // заставка на стартовом экране (standalone)
 }
 
 renderOverlayText();
@@ -301,7 +299,6 @@ function startGame(){
 
 function endGame(){
   STATE.running=false; STATE.over=true; UI.overlay.hidden=false;
-  if (UI.hero) UI.hero.hidden = true; // финальный экран — фокус на доске, заставку прячем
   const finalScore = SCORE.now;
   const isNew = finalScore > SCORE.best;
   if(isNew){
