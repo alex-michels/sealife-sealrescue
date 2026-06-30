@@ -20,10 +20,11 @@ const BUOY = '#EE5A36';
 export const PALETTE = {
   brand: { FOG, INK, BALTIC, AZURE, AZURE_BRIGHT, AZURE_SOFT, PEBBLE, SANDBANK, BUOY },
 
-  // — Вода: поверхность (светлее) → дно (почти ink). Якорь — baltic.
+  // — Вода: единый бирюзовый градиент светлее→темнее (поверхность → почти ink). Все стопы
+  //   одного сине-бирюзового тона (B>G); НЕ baltic в середине — его G=B давал зелёную «муть».
   water: {
     surface: '#3C7C97', // подсвеченная поверхность (azure-bright светлее)
-    mid: BALTIC,
+    mid: '#2D667B', // сине-бирюзовый между surface и deep — без зелёного перегиба
     deep: '#123E48',
     floor: '#0B2832', // самый низ + цвет letterbox-полей
   },
