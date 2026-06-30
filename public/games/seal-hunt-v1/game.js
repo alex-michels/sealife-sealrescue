@@ -173,10 +173,6 @@ function resize(){
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
 
-  // Does the arena's top edge map to a real water surface (sky/air above)? Prey spawning
-  // uses this so fish never fall from the sky when a surface is shown (see spawnPrey).
-  WORLD.hasSurface = VIEW.oy > 1;
-
   // set the backing store size for high-DPI rendering
   CANVAS.width  = Math.floor(cssW * DPR);
   CANVAS.height = Math.floor(cssH * DPR);
@@ -466,7 +462,7 @@ function drawFrame(dt){
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
-  drawPrey(CTX);
+  drawPrey(CTX, WORLD);
   seal.draw(CTX);
 
   // Border layers IN FRONT of the play field: the wavy water surface (the seal reads as

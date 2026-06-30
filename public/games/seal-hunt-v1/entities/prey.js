@@ -178,35 +178,30 @@ Object.freeze(SPECIES);
 
 export const PREY = []; // active list
 
-// Pick which edge a creature enters from, by habitat + whether the top is a water surface.
-// Returns 'left' | 'right' | 'top' | 'bottom'. Never 'top' when there is a surface.
-function pickEdge(habitat, hasSurface) {
+// Where a creature enters from, by habitat. The water column is bounded by the surface
+// (top) and seabed (bottom), so prey enter LATERALLY (horizontal migration) or rise from
+// the depths — never from above the surface. Screen-independent. Returns 'left'|'right'|'bottom'.
+function pickEdge(habitat) {
   const r = Math.random();
-  if (habitat === 'benthic') {
-    // seabed dwellers: mostly up from the bottom, sometimes in from the sides; never the sky
-    return r < 0.6 ? 'bottom' : r < 0.8 ? 'left' : 'right';
-  }
-  // pelagic: mostly horizontal (sides), sometimes rising from the depths (bottom). From
-  // above only when the top is open water (no surface) — i.e. more depth off-screen.
-  if (r < 0.66) return Math.random() < 0.5 ? 'left' : 'right';
-  if (r < 0.85) return 'bottom';
-  return hasSurface ? (Math.random() < 0.5 ? 'left' : 'right') : 'top';
+  // seabed dwellers favour the bottom; pelagic favour the sides, sometimes rise from depth
+  if (habitat === 'benthic') return r < 0.55 ? 'bottom' : r < 0.78 ? 'left' : 'right';
+  if (r < 0.82) return Math.random() < 0.5 ? 'left' : 'right';
+  return 'bottom';
 }
 
 export function spawnPrey(world, n = 1) {
-  const hasSurface = !!world.hasSurface;
   for (let i = 0; i < n; i++) {
     const sp = SPECIES[(Math.random() * SPECIES.length) | 0];
-    const edge = pickEdge(sp.habitat, hasSurface);
+    const edge = pickEdge(sp.habitat);
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
     const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift
 
+    // Spawn just off the edge (clipped to the play frame until they swim in).
     let x, y, vx, vy, dir;
     if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
     else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
-    else if (edge === 'top') { x = Math.random() * world.w; y = -20; vx = lat; vy = speed; dir = Math.sign(vx) || 1; }
-    else { x = Math.random() * world.w; y = world.h + 20; vx = lat; vy = -speed; dir = Math.sign(vx) || -1; }
+    else { x = Math.random() * world.w; y = world.h + 20; vx = lat; vy = -speed; dir = Math.sign(vx) || 1; }
 
     PREY.push({
       x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, sp,
@@ -288,35 +283,21 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     f.x += f.vx * dt; f.y += f.vy * dt;
 
-    // soft inward push near edges so prey ease away from the borders before reaching them
+    // Vertical bounds are physical: the water surface (top) and the seabed (bottom). Fish
+    // stay within the water column — they don't breach the surface or burrow the floor — so
+    // soft-bounce off top & bottom. (The seal may still surface; fish don't.) Left/right are
+    // OPEN water: nothing here, so fish swim out laterally and get recycled below.
     {
-      const m = Math.min(48, Math.max(36, world.w * 0.05));
-      let pushX = 0, pushY = 0;
-      if (f.x < m) pushX = (m - f.x) / m;
-      else if (f.x > world.w - m) pushX = -(f.x - (world.w - m)) / m;
-      if (f.y < m) pushY = (m - f.y) / m;
-      else if (f.y > world.h - m) pushY = -(f.y - (world.h - m)) / m;
-      if (pushX || pushY) {
-        const edgeSteer = 180;
-        f.vx += edgeSteer * pushX * dt;
-        f.vy += (edgeSteer * 0.9) * pushY * dt;
-      }
+      const topY = f.r * 0.6, botY = world.h - f.r * 0.4;
+      if (f.y < topY) { f.y = topY; if (f.vy < 0) f.vy *= -0.5; }
+      else if (f.y > botY && f.vy > 0) { f.y = botY; f.vy *= -0.5; }
     }
 
-    // Confine prey to the arena — the ONLY area the seal can reach. Without this, a fleeing
-    // fish can overshoot into the border (visible but uncatchable → frustrating). Soft bounce
-    // off each edge so they turn back rather than stick. Top "wall" is the waterline when a
-    // surface is shown (fish don't breach). Uniform on every screen → no fairness drift.
-    {
-      const topY = world.hasSurface ? f.r * 0.25 : 0;
-      if (f.x < 0) { f.x = 0; if (f.vx < 0) f.vx = -f.vx * 0.6; }
-      else if (f.x > world.w) { f.x = world.w; if (f.vx > 0) f.vx = -f.vx * 0.6; }
-      if (f.y < topY) { f.y = topY; if (f.vy < 0) f.vy = -f.vy * 0.6; }
-      else if (f.y > world.h) { f.y = world.h; if (f.vy > 0) f.vy = -f.vy * 0.6; }
-    }
-
-    // safety cull (NaN / degenerate only — confinement keeps prey inside the arena)
-    if (!(f.x >= -1 && f.x <= world.w + 1 && f.y >= -1 && f.y <= world.h + 1)) { PREY.splice(i, 1); continue; }
+    // Recycle fish that have fully swum out a LATERAL (open-water) edge — like real fish
+    // migrating through. Rendering is clipped to the play frame (see drawPrey), so they
+    // leave cleanly at the arena edge instead of loitering uncatchable in the border;
+    // respawn (targetPop) keeps the count/density balanced. (+ NaN safety.)
+    if (f.x + f.r < 0 || f.x - f.r > world.w || Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
     // collision sweep (shared samples from game.js)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
@@ -333,9 +314,17 @@ export function updatePrey(dt, seal, world, eatCb) {
   }
 }
 
-export function drawPrey(ctx) {
+export function drawPrey(ctx, world) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const t = performance.now() / 1000;
+
+  // Clip prey to the play frame: a fish entering/leaving laterally appears/disappears at the
+  // arena edge (off-screen on 16:9/portrait, behind the cove wall on widescreen) instead of
+  // swimming visibly in the border where the seal can't reach it.
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, world.w, world.h);
+  ctx.clip();
 
   for (const f of PREY) {
     const dir = (f.dir || (f.vx >= 0 ? 1 : -1)) >= 0 ? 1 : -1;
@@ -350,4 +339,6 @@ export function drawPrey(ctx) {
     drawFish(ctx, f.r, f.sp.scheme, f.sp.variant, f.tailKick);
     ctx.restore();
   }
+
+  ctx.restore();
 }
