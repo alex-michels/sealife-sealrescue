@@ -9,10 +9,12 @@ let seaGrad = null, topGrad = null, botGrad = null;
 
 // ——— Optional static backdrop image (e.g. an AI-generated foggy coral scene). Drop files at
 // assets/backdrop-landscape.{avif,webp,jpg} and assets/backdrop-portrait.{...} (see assets/README).
-// When present they replace the procedural sea gradient + seabed flora as the field's base layer;
-// the light shafts, depth tint and bubbles still draw on top for life. Absent → the procedural
-// scene renders unchanged (no behaviour change, no console errors). The image is decoded before
-// first use, so it never paints half-loaded — the gradient shows until it's ready (no pop-in).
+// When present, ONE image is painted across the whole viewport (play field AND the >2:1 border, so
+// the border just reveals more of the same scene); it replaces the procedural sea gradient, while
+// the light shafts, depth tint, bubbles and animated kelp still draw on top for life. A soft inner
+// vignette marks the field edge in place of the kelp-wall border. Absent → the procedural scene
+// renders unchanged (no behaviour change, no console errors). The image is decoded before first use,
+// so it never paints half-loaded — the gradient shows until it's ready (no pop-in).
 const BACKDROP_SOURCES = {
   landscape: ['assets/backdrop-landscape.avif', 'assets/backdrop-landscape.webp', 'assets/backdrop-landscape.jpg'],
   portrait: ['assets/backdrop-portrait.avif', 'assets/backdrop-portrait.webp', 'assets/backdrop-portrait.jpg'],
@@ -48,12 +50,44 @@ function activeBackdrop(world) {
   return b && b.img ? b : null;
 }
 
-// Cover-fit an image into the field, anchored to the BOTTOM (seabed stays on the floor at any
-// aspect; horizontal overflow is cropped evenly — fine for a soft, focal-point-free scene).
-function drawCover(ctx, b, w, h) {
-  const s = Math.max(w / b.w, h / b.h);
+export function isBackdropActive(world) { return !!activeBackdrop(world); }
+
+// Draw the active backdrop across the WHOLE viewport (screen coords), cover-fit + BOTTOM-anchored,
+// so it fills the play field AND the >2:1 border with ONE seamless image — the border just reveals
+// more of the same scene (no separate procedural border, no stretched strips). The seabed stays on
+// the floor at any aspect; overflow is cropped from the top (wide) or sides (tall) — fine for a
+// soft, focal-point-free scene. Returns true if it drew.
+export function drawBackdropFullscreen(ctx, view, world) {
+  const b = activeBackdrop(world);
+  if (!b) return false;
+  const W = view.dispW, H = view.dispH;
+  const s = Math.max(W / b.w, H / b.h);
   const dw = b.w * s, dh = b.h * s;
-  ctx.drawImage(b.img, (w - dw) / 2, h - dh, dw, dh);
+  ctx.drawImage(b.img, (W - dw) / 2, H - dh, dw, dh);
+  return true;
+}
+
+// Boundary cue for when the backdrop runs under the border: a soft inner shadow on the field edges
+// that have leftover. The seal is clamped to the field; this signals where play ends without a hard
+// visible wall (replaces the diegetic kelp-wall border in backdrop mode). Screen coords.
+export function drawFieldBoundary(ctx, view) {
+  const { ox, oy, dispW, dispH } = view;
+  const fx0 = ox, fy0 = oy, fx1 = dispW - ox, fy1 = dispH - oy;
+  const fh = fy1 - fy0, fw = fx1 - fx0;
+  const V = 26, SH = 'rgba(11,40,50,0.55)', CLR = 'rgba(11,40,50,0)';
+  let g;
+  if (ox > 1) { // side borders → shade left/right field edges
+    g = ctx.createLinearGradient(fx0, 0, fx0 + V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(fx0, fy0, V, fh);
+    g = ctx.createLinearGradient(fx1, 0, fx1 - V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(fx1 - V, fy0, V, fh);
+  }
+  if (oy > 1) { // top/bottom borders → shade top/bottom field edges
+    g = ctx.createLinearGradient(0, fy0, 0, fy0 + V); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(fx0, fy0, fw, V);
+    g = ctx.createLinearGradient(0, fy1, 0, fy1 - V); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(fx0, fy1 - V, fw, V);
+  }
 }
 
 function makeSeaGradient(ctx, world) {
@@ -124,11 +158,11 @@ export function initScenery(world, ctx) {
 }
 
 export function drawBackground(ctx, world, t, reducedMotion = false) {
-  // Base layer: the static backdrop image if one is loaded, else the procedural sea gradient.
+  // Base layer: when a backdrop image is active it's already painted across the whole viewport
+  // (field + border) by drawBackdropFullscreen, so here we fill the procedural sea gradient only
+  // when there's no backdrop. The light shafts / tint / bubbles / kelp below draw on top either way.
   const bd = activeBackdrop(world);
-  if (bd) {
-    drawCover(ctx, bd, world.w, world.h);
-  } else {
+  if (!bd) {
     ctx.fillStyle = seaGrad || PALETTE.water.mid;
     ctx.fillRect(0, 0, world.w, world.h);
   }

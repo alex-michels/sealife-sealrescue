@@ -20,15 +20,18 @@ function rng(seed) {
   return () => { a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 }
 
-const CORAL = ['#1F5A4E', '#2E6E5A', '#176B63', '#B3704F', '#C98A5E', '#6E5A8A', '#3E7E72'];
+// Palette-exact: kelp greens from core/theme.js + a sparse warm coral accent.
+const CORAL = ['#19524E', '#236B5F', '#2C7E68', '#19524E', '#236B5F', '#B3704F'];
 
 function scene(w, h, seed) {
   const r = rng(seed);
   const parts = [];
   // gradient water + seabed
+  // Exact match to the in-game water gradient (core/theme.js water.surface→mid→deep→floor),
+  // so the top edge is #3C7C97 and the bottom edge is #0B2832 (= the CSS page background).
   parts.push(`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2C6A7A"/><stop offset="0.34" stop-color="#1E5B5B"/>
-      <stop offset="0.72" stop-color="#123C44"/><stop offset="1" stop-color="#0B2832"/>
+      <stop offset="0" stop-color="#3C7C97"/><stop offset="0.32" stop-color="#1E5B5B"/>
+      <stop offset="0.70" stop-color="#123E48"/><stop offset="1" stop-color="#0B2832"/>
     </linearGradient></defs>`);
   parts.push(`<rect width="${w}" height="${h}" fill="url(#g)"/>`);
   // soft light shafts from the surface

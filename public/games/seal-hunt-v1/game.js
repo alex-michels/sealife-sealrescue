@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen, drawFieldBoundary } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -388,24 +388,32 @@ function drawFrame(dt){
   const t = performance.now()/1000;
 
   const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+  const bd = isBackdropActive(WORLD);
 
-  // Deep "edge of the cove" backdrop + the border layers BEHIND the field (seabed, sky +
-  // boats, side kelp walls). Replaces the flat floor fill; only visible on >2:1 screens.
+  // BEHIND the field. With a backdrop image: ONE image spans the whole viewport (field + border).
+  // Otherwise: the deep "edge of the cove" gradient + diegetic border layers (seabed, sky + boats,
+  // side kelp walls), visible only on >2:1 screens.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  drawDeepBackdrop(CTX, VIEW);
-  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
+  if (bd) {
+    drawBackdropFullscreen(CTX, VIEW, WORLD);
+  } else {
+    drawDeepBackdrop(CTX, VIEW);
+    if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
+  }
   CTX.restore();
 
-  drawBackground(CTX, WORLD, t, reduced);
+  drawBackground(CTX, WORLD, t, reduced); // field overlays (rays/tint/bubbles/kelp); base if no bd
   drawPrey(CTX, WORLD);
   seal.draw(CTX);
 
-  // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
+  // IN FRONT of the field. Backdrop: a soft vignette marks the field edge. Otherwise: the wavy sea
+  // surface (top) + the kelp-wall edge vignette. Only when there's leftover border.
   if (hasBorder) {
     CTX.save();
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-    drawBorderFront(CTX, VIEW, WORLD, t, reduced);
+    if (bd) drawFieldBoundary(CTX, VIEW);
+    else drawBorderFront(CTX, VIEW, WORLD, t, reduced);
     CTX.restore();
   }
 
