@@ -169,7 +169,43 @@ fairness lever left and it's a fairness ↔ fill trade-off:
   head (dev-only; produced §4a). Not loaded by the game.
 - `docs/game-seal-hunter.md` — technical reference (kept in sync).
 
+## 5. Visual/UX cycle — leaderboard fixes + static backdrop (PRs #28–#32, 2026-06-30)
+
+Same session, after the prey decision. Full technical state lives in
+[`game-seal-hunter.md`](game-seal-hunter.md) (backdrop + transition sections); this is the journal.
+
+**Merged to `main` (leaderboard + game-over UX):**
+- **#28** — the "Вы: #N" summary disagreed with the highlighted row on **ties** (server gave
+  *competition* rank, the table is *ordinal*). Fix: derive the summary from the player's actual
+  rendered row → single source of truth. **Not a desync** (reproducible from ties).
+- **#29** — on small/portrait phones the leaderboard pushed the bottom **feedback line** off-screen.
+  Overlay `safe center` + scroll, compact board → the whole card fits.
+- **#30 / #31** — game-over **interstitial**: a stable "time's up, считаем улов…" beat while the
+  score submits + board loads in the background; reveal only when both done (`Promise.all`). No more
+  loading flash. Min duration **3 s** (1.2 s felt too quick).
+
+**OPEN — branch `feat/game-static-backdrop` (PR #32, NOT merged):** optional AI-art underwater
+backdrop. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**) + the general encode pipeline
+`tools/encode-image.mjs` (PNG → AVIF/WebP/JPEG). The design **evolved** over the session:
+- **Model:** field-only cover-fit → "spans the whole viewport" → **final**: one art across field +
+  borders, with the **animated boundary markers drawn over it** (kelp-walls / water-surface + boat /
+  seabed grass), procedural opaque fills skipped. Reads as one scene; animation marks where play ends.
+- **Anchoring saga:** bottom-anchor (seabed grounded) → tried **top-anchor for non-border portrait**
+  (cropped the reef, floated the kelp — *rejected*) → **final**: bottom-anchor everywhere, EXCEPT a
+  **non-border portrait** gets a small bottom **cut** (`PORTRAIT_BOTTOM_CUT` ~11vh) to drop the dark
+  abyss; **bordered (>2:1) portrait + landscape stay flush**. Kelp **grounded at the screen bottom**
+  (`bottomExtra`) + longer; **air/sky above the surface** (water↔air separation); surface line dimmed.
+- **Look:** dark-green kelp in varied **Stufen** + base→tip gradient + **shimmer** (hue locked green,
+  drifts only L/sat — never blue/grey). Full-viewport translucent **depth tint** (`drawWaterGradient`).
+- **Perf:** offscreen **backdrop cache** (pixel-identical, no visual change); **FPS check** (`?fps=1`,
+  `window.__fps`) — ~100–170 fps in preview, huge headroom; the depth-tint/backdrop cost is
+  movement-independent. **No mechanics/control changes** — diff vs `main` doesn't touch
+  `core/{sim,input,balance}.js` or `entities/{seal,prey}.js`.
+- **Status:** placeholder art replaced with real art; iterating on look. **Before merge:** confirm
+  `?fps=1` on a real (low-end/high-DPR) phone; merging auto-deploys to the alpha.
+
 ## Next steps / open items
+0. **Backdrop (PR #32) — OPEN.** See §5. Final visual polish + real-device FPS check, then merge.
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.
 2. ✅ **Alpha — DONE.** sealthehunter.online auto-deployed from `main` (PR #26) and is live.

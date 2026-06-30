@@ -19,8 +19,8 @@
 | [api.md](api.md) | Endpoints (лидерборд), авто-REST/GraphQL Payload, какие маршруты публичны, route guards |
 | [localization.md](localization.md) | Локали `ru`/`en`/`de`, мультидомен, роутинг (`proxy.ts`), локализованные legal-роуты, hreflang/sitemap |
 | [agents.md](agents.md) | RBAC-роли, очередь `agent-proposals`, audit `agent-runs`, хуки, human-in-the-loop, безопасность |
-| [game-seal-hunter.md](game-seal-hunter.md) | Игра «Seal The Hunter»: структура, fairness, service worker, лидерборд, анти-чит |
-| [game-seal-hunter-worklog.md](game-seal-hunter-worklog.md) | Журнал работ: full-screen + 2:1 clamp (PR #25), fairness-харнесс, эксперименты с prey-механиками и открытое решение |
+| [game-seal-hunter.md](game-seal-hunter.md) | Игра «Seal The Hunter»: структура, fairness, service worker, лидерборд, анти-чит, **статический бэкдроп + анимированная сцена**, финальный interstitial |
+| [game-seal-hunter-worklog.md](game-seal-hunter-worklog.md) | Журнал работ: full-screen + 2:1 clamp (PR #25), fairness-харнесс, prey-решение (PR #26), **визуал-цикл: leaderboard-фиксы (#28–31) + статический бэкдроп (#32)** |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |
 
 ## Стратегические / governance доки

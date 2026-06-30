@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen, drawWaterGradient } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -51,6 +51,12 @@ const VIEW = { scale:1, ox:0, oy:0, dispW:0, dispH:0 };
 const STATE = { running:false, over:false, paused:false };
 const SCORE = { now:0, best:0 };
 const POINTER = { x:0, y:0, active:false };
+
+// — Dev FPS check: rolling FPS + frame WORK time (ms in update+draw) exposed as window.__fps /
+// window.__frameMs; on-screen readout only with ?fps=1. workMs is the true render cost — if it's far
+// below 16.7 ms while fps sits ~60, the cap is vsync (display refresh), not a slowdown.
+const SHOW_FPS = new URLSearchParams(location.search).get('fps') === '1';
+const FPS = { frames: 0, acc: 0, value: 0, workAcc: 0, workMs: 0 };
 
 // ——— Standalone-альфа (sealthehunter.online): язык переключается на стартовом/финальном экране,
 // показываем заметку про альфа-тест и отображаемый контакт для фидбэка. Во фрейме (встраивание на
@@ -195,6 +201,9 @@ window.addEventListener('resize', () => {
 }, { passive: true });
 
 resize();
+
+// Start loading the optional static backdrop image (best-effort; procedural scene until ready).
+initBackdrop();
 
 // ——— Input
 attachPointer(CANVAS,
@@ -350,10 +359,20 @@ function revealResult(finalScore, isNew, finalBest){
 
 function loop(){
   if(!STATE.running){ drawFrame(0); return; }
-  const now=performance.now(); let dt=(now-lastTime)/1000; lastTime=now;
+  const now=performance.now(); const rawDt=(now-lastTime)/1000; lastTime=now;
   if(STATE.paused){ drawFrame(0); return; }
-  dt=Math.min(dt,0.033);
+  const dt=Math.min(rawDt,0.033);
+  const w0 = performance.now();
   update(dt); drawFrame(dt);
+  FPS.workAcc += performance.now() - w0; // real work this frame (ms), independent of vsync
+  // FPS over the real frame delta (before the sim dt clamp); refresh ~2×/s.
+  FPS.frames++; FPS.acc += rawDt;
+  if (FPS.acc >= 0.5) {
+    FPS.value = Math.round(FPS.frames / FPS.acc);
+    FPS.workMs = FPS.workAcc / FPS.frames;
+    window.__fps = FPS.value; window.__frameMs = Math.round(FPS.workMs * 10) / 10;
+    FPS.frames = 0; FPS.acc = 0; FPS.workAcc = 0;
+  }
   if(STATE.running) requestAnimationFrame(loop);
 }
 
@@ -385,16 +404,23 @@ function drawFrame(dt){
   const t = performance.now()/1000;
 
   const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+  const bd = isBackdropActive(WORLD);
 
-  // Deep "edge of the cove" backdrop + the border layers BEHIND the field (seabed, sky +
-  // boats, side kelp walls). Replaces the flat floor fill; only visible on >2:1 screens.
+  // BEHIND the field. With a backdrop image: ONE image spans the whole viewport (field + border),
+  // then the border draws only its ANIMATED markers over it (kelp-walls / boat / seabed grass).
+  // Without: the deep gradient + full diegetic border (seabed, sky + boats, kelp walls), >2:1 only.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  drawDeepBackdrop(CTX, VIEW);
-  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
+  if (bd) drawBackdropFullscreen(CTX, VIEW, WORLD, DPR);
+  else drawDeepBackdrop(CTX, VIEW);
+  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced, bd);
+  if (bd) drawWaterGradient(CTX, VIEW); // game's depth tint over the whole viewport (field + border)
   CTX.restore();
 
-  drawBackground(CTX, WORLD, t, reduced);
+  // In backdrop mode, root the seabed flora at the screen bottom (extend it below the field through
+  // the bottom border) so kelp grows from the real seabed on >1:2 screens, not the floating field edge.
+  const bottomExtra = (bd && VIEW.oy > 0.5) ? VIEW.oy / VIEW.scale : 0;
+  drawBackground(CTX, WORLD, t, reduced, bottomExtra);
   drawPrey(CTX, WORLD);
   seal.draw(CTX);
 
@@ -408,6 +434,19 @@ function drawFrame(dt){
 
   if(!STATE.running){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();
+  }
+
+  if (SHOW_FPS) { // dev readout, bottom-left (clear of the HUD)
+    CTX.save();
+    CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+    CTX.font = '600 13px ui-monospace, monospace';
+    const y = VIEW.dispH - 10;
+    const txt = (FPS.value || '–') + ' fps · ' + (FPS.workMs ? FPS.workMs.toFixed(1) : '–') + ' ms';
+    CTX.fillStyle = 'rgba(2,22,34,0.6)'; CTX.fillRect(8, y - 15, 140, 20);
+    // colour by the REAL work time (vsync-independent): green if comfortably under the 16.7ms budget
+    CTX.fillStyle = FPS.workMs && FPS.workMs < 11 ? '#7CFC9A' : FPS.workMs < 16 ? '#FFD479' : '#FF7A6B';
+    CTX.fillText(txt, 13, y);
+    CTX.restore();
   }
 }
 
