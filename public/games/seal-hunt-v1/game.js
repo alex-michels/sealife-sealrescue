@@ -52,6 +52,10 @@ const STATE = { running:false, over:false, paused:false };
 const SCORE = { now:0, best:0 };
 const POINTER = { x:0, y:0, active:false };
 
+// — Dev FPS check: rolling FPS exposed as window.__fps; on-screen readout only with ?fps=1.
+const SHOW_FPS = new URLSearchParams(location.search).get('fps') === '1';
+const FPS = { frames: 0, acc: 0, value: 0 };
+
 // ——— Standalone-альфа (sealthehunter.online): язык переключается на стартовом/финальном экране,
 // показываем заметку про альфа-тест и отображаемый контакт для фидбэка. Во фрейме (встраивание на
 // sealife.*) ничего этого нет — поведение прежнее (язык из ?lang=, переключателя нет).
@@ -353,9 +357,12 @@ function revealResult(finalScore, isNew, finalBest){
 
 function loop(){
   if(!STATE.running){ drawFrame(0); return; }
-  const now=performance.now(); let dt=(now-lastTime)/1000; lastTime=now;
+  const now=performance.now(); const rawDt=(now-lastTime)/1000; lastTime=now;
   if(STATE.paused){ drawFrame(0); return; }
-  dt=Math.min(dt,0.033);
+  // FPS over the real frame delta (before the sim dt clamp); refresh ~2×/s.
+  FPS.frames++; FPS.acc += rawDt;
+  if (FPS.acc >= 0.5) { FPS.value = Math.round(FPS.frames / FPS.acc); window.__fps = FPS.value; FPS.frames = 0; FPS.acc = 0; }
+  const dt=Math.min(rawDt,0.033);
   update(dt); drawFrame(dt);
   if(STATE.running) requestAnimationFrame(loop);
 }
@@ -418,6 +425,17 @@ function drawFrame(dt){
 
   if(!STATE.running){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();
+  }
+
+  if (SHOW_FPS) { // dev readout, bottom-left (clear of the HUD)
+    CTX.save();
+    CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+    CTX.font = '600 13px ui-monospace, monospace';
+    const y = VIEW.dispH - 10;
+    CTX.fillStyle = 'rgba(2,22,34,0.6)'; CTX.fillRect(8, y - 15, 64, 20);
+    CTX.fillStyle = FPS.value >= 55 ? '#7CFC9A' : FPS.value >= 30 ? '#FFD479' : '#FF7A6B';
+    CTX.fillText((FPS.value || '–') + ' fps', 13, y);
+    CTX.restore();
   }
 }
 
