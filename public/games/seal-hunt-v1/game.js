@@ -299,10 +299,11 @@ function startGame(){
   loop();
 }
 
-// A short, fixed-minimum "time's up" interstitial plays before the result screen, so the score +
-// board never flash in — they appear once they're actually ready. UX best practice: a transition/
-// loading state shown for a MINIMUM duration shouldn't be yanked the instant data arrives.
-const MIN_TRANSITION_MS = 1200;
+// A fixed-minimum "time's up" interstitial plays before the result screen, so the score + board
+// never flash in — they appear once they're actually ready. UX best practice: a transition/loading
+// state shown for a MINIMUM duration shouldn't be yanked the instant data arrives. 3s gives the
+// "let's see your catch" beat room to land (1.2s felt too quick).
+const MIN_TRANSITION_MS = 3000;
 
 function endGame(){
   STATE.running=false; STATE.over=true;
