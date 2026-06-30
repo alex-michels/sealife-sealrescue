@@ -133,9 +133,11 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     ctx.fillRect(0, 0, world.w, world.h);
   }
 
-  // Light shafts (additive, subtle)
+  // Light shafts (additive, subtle). A soft blur diffuses the hard polygon edges so they read as
+  // hazy god-rays rather than crisp beams — kept dim (PALETTE.rays) so they don't fight the art.
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
+  if (typeof ctx.filter === 'string') ctx.filter = `blur(${Math.round(Math.min(world.w, world.h) * 0.022)}px)`;
   for (const ray of rays) {
     const sway = reducedMotion ? 0 : Math.sin(t * 0.3 + ray.phase) * world.w * 0.02;
     const tx = ray.x + sway;
