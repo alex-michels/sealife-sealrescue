@@ -52,19 +52,37 @@ export function isBackdropActive(world) { return !!activeBackdrop(world); }
 
 // Paint the active backdrop across the WHOLE viewport (field + >2:1 border), so the static art
 // reads as one continuous scene; the animated boundary markers (kelp-walls / water surface + boat /
-// seabed grass) draw on top to show where play ends. Cover-fit. ANCHOR: BOTTOM by default (seabed on
-// the floor, grounding the kelp; open-water top cropped) — EXCEPT a portrait screen with NO border
-// (≤2:1, the field fills it, no air/surface strip up top) is TOP-anchored to show the lit surface
-// water. (>2:1 portrait keeps bottom-anchor: there the seabed must ground the kelp under the border.)
+// seabed grass) draw on top to show where play ends. Cover-fit, BOTTOM-anchored (seabed on the floor,
+// grounding the kelp). EXCEPTION: a NON-border portrait (≤2:1, the field fills the screen) is lifted
+// a touch — PORTRAIT_BOTTOM_CUT of the VIEWPORT height — to crop the deepest dark abyss band, so the
+// reef stays visible near the floor but the view isn't "so deep". Bordered (>2:1) portrait keeps a
+// flush bottom anchor (the bottom border + seabed handle it), as does landscape. Cut is clamped to
+// the overflow so the top edge always stays covered.
+const PORTRAIT_BOTTOM_CUT = 0.08; // ~8% of viewport height (≈ 70–90px); tune to taste
 export function drawBackdropFullscreen(ctx, view, world) {
   const b = activeBackdrop(world);
   if (!b) return false;
   const W = view.dispW, H = view.dispH;
   const s = Math.max(W / b.w, H / b.h);
   const dw = b.w * s, dh = b.h * s;
-  const topAnchor = world.h > world.w && view.oy <= 1; // portrait, no top/bottom border
-  ctx.drawImage(b.img, (W - dw) / 2, topAnchor ? 0 : H - dh, dw, dh);
+  const portraitNoBorder = world.h > world.w && view.oy <= 1; // ≤2:1 portrait → no top/bottom border
+  const cut = portraitNoBorder ? Math.min(H * PORTRAIT_BOTTOM_CUT, dh - H) : 0;
+  ctx.drawImage(b.img, (W - dw) / 2, (H - dh) + cut, dw, dh);
   return true;
+}
+
+// The game's own water gradient as a translucent wash over the WHOLE viewport (field + border),
+// so the backdrop art reads with consistent surface-light + depth across every screen/aspect — one
+// cohesive palette on top, characters still pop above it. Subtle on purpose (don't bury the art).
+export function drawWaterGradient(ctx, view) {
+  const { dispW, dispH } = view;
+  const g = ctx.createLinearGradient(0, 0, 0, dispH);
+  g.addColorStop(0.0, 'rgba(237,241,243,0.06)'); // soft surface light up top
+  g.addColorStop(0.18, 'rgba(237,241,243,0)');
+  g.addColorStop(0.62, 'rgba(11,40,50,0)');
+  g.addColorStop(1.0, 'rgba(11,40,50,0.34)'); // depth darkening toward the floor
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, dispW, dispH);
 }
 
 function makeSeaGradient(ctx, world) {
@@ -168,15 +186,17 @@ export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra
   }
   ctx.restore();
 
-  // Surface glow
-  const topH = Math.min(180, world.h * 0.24);
-  ctx.fillStyle = topGrad || 'rgba(0,0,0,0)';
-  ctx.fillRect(0, 0, world.w, topH);
+  // Surface glow + depth vignette — field-only. In backdrop mode these are replaced by the
+  // screen-wide drawWaterGradient (applied to field + border) so the tint is consistent everywhere.
+  if (!bd) {
+    const topH = Math.min(180, world.h * 0.24);
+    ctx.fillStyle = topGrad || 'rgba(0,0,0,0)';
+    ctx.fillRect(0, 0, world.w, topH);
 
-  // Depth vignette
-  const botY = world.h * 0.66;
-  ctx.fillStyle = botGrad || 'rgba(0,0,0,0)';
-  ctx.fillRect(0, botY, world.w, world.h - botY);
+    const botY = world.h * 0.66;
+    ctx.fillStyle = botGrad || 'rgba(0,0,0,0)';
+    ctx.fillRect(0, botY, world.w, world.h - botY);
+  }
 
   // Bubbles
   ctx.globalAlpha = 0.5;
