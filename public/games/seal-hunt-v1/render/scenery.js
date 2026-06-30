@@ -415,14 +415,15 @@ function drawSideWalls(ctx, t, reduced, bd = false) {
 
 function drawSkyBack(ctx, t, reduced, bd = false) {
   const { dispW, ay0 } = B, S = B.sky;
-  if (!bd) { // sky fill + clouds only without a backdrop; in backdrop mode the top stays water (art)
-    ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
-    for (const c of S.clouds) {
-      const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
-      drawCloud(ctx, x, c.y, c.s, c.a);
-    }
+  // Sky/AIR above the surface — drawn in BOTH modes (the bd flag no longer skips it) so there's a
+  // clear water↔air separation at the waterline: the backdrop art is water, so the air must cover
+  // the top border, otherwise the boat sails on the same teal as below the surface.
+  ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
+  for (const c of S.clouds) {
+    const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
+    drawCloud(ctx, x, c.y, c.s, c.a);
   }
-  for (const bo of S.boats) { // small boat(s) on the surface — always (a top-edge boundary marker)
+  for (const bo of S.boats) { // small boat(s) on the surface — the top-edge boundary marker
     const x = reduced ? bo.x : _mod(bo.x + t * bo.v * bo.dir + 100, dispW + 200) - 100;
     const yWater = ay0 + (reduced ? 0 : Math.sin(t * 0.9 + bo.bob) * 2);
     drawBoat(ctx, x, yWater, bo.s, bo.dir, bo.hue);
