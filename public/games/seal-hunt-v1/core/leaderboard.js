@@ -212,6 +212,22 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
       you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
       view: { board: r.board, total: r.total, page, rows, hasMore },
     };
+
+    // Keep the "Вы: #N из M" line consistent with the table. The server's `rank` is
+    // COMPETITION-ranked (count of strictly-higher scores + 1 → ties share a rank), while the
+    // table rows are ORDINAL (sequential, ties broken by createdAt). So whenever someone with the
+    // SAME score sat above the player, the summary said #4 while their highlighted row said #5.
+    // Make the rendered board the single source of truth: read the player's rank straight off
+    // their own row. (total is guarded so it never reads below the rows actually shown.)
+    const meRow = rows.find((x) => x.alias === r.alias);
+    const total = Math.max(r.total, rows.length);
+    if (meRow) {
+      st.you.rank = meRow.rank;
+      st.you.total = total;
+      st.you.percentile = Math.max(1, Math.round((meRow.rank / total) * 100));
+      st.view.total = total;
+    }
+
     container._lbState = st; // для relocalizeBoard при смене языка (standalone)
     render(container, st, t);
     scrollToMe(container); // открыть доску на позиции игрока, не на топе
