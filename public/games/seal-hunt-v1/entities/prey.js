@@ -211,15 +211,8 @@ export function spawnPrey(world, n = 1) {
     let x, y, vx, vy, dir;
     if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
     else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
-    else if (edge === 'bottom') {
-      x = Math.random() * world.w; y = world.h + 12;
-      const ang = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.5); // ±45° around "up"
-      vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
-    } else { // top — mirror of bottom: descend in
-      x = Math.random() * world.w; y = -12;
-      const ang = Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.5); // ±45° around "down"
-      vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
-    }
+    else if (edge === 'bottom') { x = Math.random() * world.w; y = world.h + 20; vx = lat; vy = -speed; dir = Math.sign(vx) || 1; }
+    else { x = Math.random() * world.w; y = -20; vx = lat; vy = speed; dir = Math.sign(vx) || 1; } // top
 
     PREY.push({
       x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, sp,
@@ -301,13 +294,26 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     f.x += f.vx * dt; f.y += f.vy * dt;
 
-    // SYMMETRIC flow-through: ALL FOUR edges are open water — fish swim out through any edge
-    // and get recycled. The asymmetric variant (top/bottom WALLS + lateral-only exit) made
-    // short/wide fields far easier to hunt (~22% catch-rate spread); treating every edge the
-    // same is rotation-invariant, so no orientation/aspect gets an advantage. Rendering is
-    // clipped to the play frame (drawPrey) so fish leave cleanly at the edge; respawn keeps
-    // density. Margin (40) > the spawn offset (20) so a just-spawned fish isn't culled on
-    // frame 1 (that bug killed most small side-spawned fish — see PR #24 history).
+    // HYBRID: keep PR#24's even 4-edge shuffle-bag spawn, but the ORIGINAL "fish stay" physics
+    // — a soft inward push near EVERY edge, SYMMETRIC (same fixed margin & strength on x and y;
+    // a fixed band from each edge is rotation-invariant). Prey linger in the field instead of
+    // leaking out, which is what keeps the catch rate aspect-insensitive (the flow-through's
+    // leakage was what amplified the aspect effect and broke fairness).
+    {
+      const m = 42, edgeSteer = 180;
+      let pushX = 0, pushY = 0;
+      if (f.x < m) pushX = (m - f.x) / m;
+      else if (f.x > world.w - m) pushX = -(f.x - (world.w - m)) / m;
+      if (f.y < m) pushY = (m - f.y) / m;
+      else if (f.y > world.h - m) pushY = -(f.y - (world.h - m)) / m;
+      f.vx += edgeSteer * pushX * dt;
+      f.vy += edgeSteer * pushY * dt;
+    }
+
+    // Safety cull only (the push keeps prey in; a hard flee burst can still take one out, then
+    // respawn tops up). Symmetric margin (40) > spawn offset (20) so a fresh fish isn't culled
+    // on frame 1. Rendering is clipped to the field (drawPrey), so any straggler never shows in
+    // the border.
     if (f.x < -40 || f.x > world.w + 40 || f.y < -40 || f.y > world.h + 40 ||
         Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
