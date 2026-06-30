@@ -52,9 +52,11 @@ const STATE = { running:false, over:false, paused:false };
 const SCORE = { now:0, best:0 };
 const POINTER = { x:0, y:0, active:false };
 
-// — Dev FPS check: rolling FPS exposed as window.__fps; on-screen readout only with ?fps=1.
+// — Dev FPS check: rolling FPS + frame WORK time (ms in update+draw) exposed as window.__fps /
+// window.__frameMs; on-screen readout only with ?fps=1. workMs is the true render cost — if it's far
+// below 16.7 ms while fps sits ~60, the cap is vsync (display refresh), not a slowdown.
 const SHOW_FPS = new URLSearchParams(location.search).get('fps') === '1';
-const FPS = { frames: 0, acc: 0, value: 0 };
+const FPS = { frames: 0, acc: 0, value: 0, workAcc: 0, workMs: 0 };
 
 // ——— Standalone-альфа (sealthehunter.online): язык переключается на стартовом/финальном экране,
 // показываем заметку про альфа-тест и отображаемый контакт для фидбэка. Во фрейме (встраивание на
@@ -359,11 +361,18 @@ function loop(){
   if(!STATE.running){ drawFrame(0); return; }
   const now=performance.now(); const rawDt=(now-lastTime)/1000; lastTime=now;
   if(STATE.paused){ drawFrame(0); return; }
+  const dt=Math.min(rawDt,0.033);
+  const w0 = performance.now();
+  update(dt); drawFrame(dt);
+  FPS.workAcc += performance.now() - w0; // real work this frame (ms), independent of vsync
   // FPS over the real frame delta (before the sim dt clamp); refresh ~2×/s.
   FPS.frames++; FPS.acc += rawDt;
-  if (FPS.acc >= 0.5) { FPS.value = Math.round(FPS.frames / FPS.acc); window.__fps = FPS.value; FPS.frames = 0; FPS.acc = 0; }
-  const dt=Math.min(rawDt,0.033);
-  update(dt); drawFrame(dt);
+  if (FPS.acc >= 0.5) {
+    FPS.value = Math.round(FPS.frames / FPS.acc);
+    FPS.workMs = FPS.workAcc / FPS.frames;
+    window.__fps = FPS.value; window.__frameMs = Math.round(FPS.workMs * 10) / 10;
+    FPS.frames = 0; FPS.acc = 0; FPS.workAcc = 0;
+  }
   if(STATE.running) requestAnimationFrame(loop);
 }
 
@@ -432,9 +441,11 @@ function drawFrame(dt){
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
     CTX.font = '600 13px ui-monospace, monospace';
     const y = VIEW.dispH - 10;
-    CTX.fillStyle = 'rgba(2,22,34,0.6)'; CTX.fillRect(8, y - 15, 64, 20);
-    CTX.fillStyle = FPS.value >= 55 ? '#7CFC9A' : FPS.value >= 30 ? '#FFD479' : '#FF7A6B';
-    CTX.fillText((FPS.value || '–') + ' fps', 13, y);
+    const txt = (FPS.value || '–') + ' fps · ' + (FPS.workMs ? FPS.workMs.toFixed(1) : '–') + ' ms';
+    CTX.fillStyle = 'rgba(2,22,34,0.6)'; CTX.fillRect(8, y - 15, 140, 20);
+    // colour by the REAL work time (vsync-independent): green if comfortably under the 16.7ms budget
+    CTX.fillStyle = FPS.workMs && FPS.workMs < 11 ? '#7CFC9A' : FPS.workMs < 16 ? '#FFD479' : '#FF7A6B';
+    CTX.fillText(txt, 13, y);
     CTX.restore();
   }
 }
