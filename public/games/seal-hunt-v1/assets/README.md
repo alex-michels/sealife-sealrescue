@@ -14,9 +14,9 @@ assets/backdrop-landscape.{avif,webp,jpg}   used when the field is landscape/squ
 assets/backdrop-portrait.{avif,webp,jpg}    used in portrait (falls back to landscape if absent)
 ```
 
-- Drawn **cover-fit across the whole viewport, anchored to the bottom** — keep the seabed/corals
-  along the lower edge and open, foggy water up top, so cropping on different aspect ratios is
-  harmless (overflow is trimmed from the top on wide screens, from the sides on tall ones).
+- Covers the **play field only** (the 2:1-clamped centre), **cover-fit, anchored to the bottom** —
+  keep the seabed/corals along the lower edge and open, foggy water up top, so cropping on different
+  aspect ratios is harmless.
 - **Top edge ≈ `#3C7C97`, bottom edge ≈ `#0B2832`** (the CSS page background) so it blends into the
   game gradient and the dark page; the placeholder generator already does this exactly.
 - **Design it to sit BEHIND the animated kelp**: corals / rocks / fog, *no big foreground kelp*
@@ -25,10 +25,9 @@ assets/backdrop-portrait.{avif,webp,jpg}    used in portrait (falls back to land
   `water.floor`, kelp greens) so the on-top light shafts, bubbles and kelp blend seamlessly.
 - A **foggy / blurred** look is ideal: it compresses tiny and shows no artifacts when scaled.
 - The image is decoded before first use → no half-loaded flash; the gradient shows until ready.
-- On >2:1 screens the **same image fills the border too** (it spans the whole viewport, so the
-  border just reveals more of the scene); a soft inner vignette marks the play-field edge in place
-  of the kelp-wall border. (Without a backdrop, the procedural kelp-wall / seabed / sky border is
-  used as before.)
+- On **>2:1 / >1:2** screens the leftover **border stays procedural and ANIMATED** — swaying
+  kelp-walls on the sides, rippling sea surface + drifting boats on top, sand/rocks seabed at the
+  bottom. The backdrop image is the play field only; the border frames it as before.
 
 The committed files are **placeholders** (see `tools/make-placeholder-backdrop.mjs`). Replace them
 with real art at the same names.
