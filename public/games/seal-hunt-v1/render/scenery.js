@@ -109,7 +109,7 @@ export function initScenery(world, ctx) {
   const kelpCols = Math.max(3, Math.round(world.w / 320));
   tallKelp = Array.from({ length: kelpCols }, (_, i) => ({
     x: (i + 0.5) * world.w / (kelpCols + 1),
-    h: world.h * (0.28 + Math.random() * 0.28),
+    h: world.h * (0.42 + Math.random() * 0.4), // longer kelp (was 0.28–0.56)
     c: PALETTE.kelp[i % PALETTE.kelp.length],
     swayPhase: Math.random() * Math.PI * 2,
   }));
@@ -117,7 +117,7 @@ export function initScenery(world, ctx) {
   const shortCount = Math.max(4, Math.round(world.w / 260));
   shortKelp = Array.from({ length: shortCount }, () => ({
     x: Math.random() * world.w,
-    h: world.h * (0.12 + Math.random() * 0.12),
+    h: world.h * (0.2 + Math.random() * 0.18), // taller (was 0.12–0.24)
     c: PALETTE.kelp[1 + ((Math.random() * 2) | 0)] ?? PALETTE.kelp[1],
     swayPhase: Math.random() * Math.PI * 2,
   }));
@@ -133,7 +133,11 @@ export function initScenery(world, ctx) {
   }));
 }
 
-export function drawBackground(ctx, world, t, reducedMotion = false) {
+export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra = 0) {
+  // `bottomExtra` (world units) extends the seabed flora below the field down to the SCREEN bottom
+  // in backdrop mode, so kelp/grass grow from the real (art) seabed on >1:2 screens instead of the
+  // field edge that floats above it. floorY = where the plants are rooted (tips keep their y).
+  const floorY = world.h + bottomExtra;
   // Base layer: when a backdrop is active it's already painted across the whole viewport (by
   // drawBackdropFullscreen), so here we fill the procedural sea gradient only when there's none.
   // Everything below (light shafts, tint, bubbles, swaying kelp/grass) draws on top either way.
@@ -188,15 +192,16 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
   // Animated seabed flora (swaying kelp / grass) — drawn on top of the backdrop image too, so the
   // plants keep moving over it (the image is the static scene BEHIND them). Design the backdrop to
   // sit behind the kelp — corals / rocks / fog, palette-matched, without big foreground kelp.
-  // Tall kelp
+  // Tall kelp — rooted at floorY (screen bottom in backdrop mode); tips stay at world.h − k.h.
   ctx.lineWidth = 6;
   ctx.lineCap = 'round';
   for (const k of tallKelp) {
     const sway = reducedMotion ? 0 : Math.sin(t + k.swayPhase) * 18;
+    const topY = world.h - k.h, totalH = floorY - topY;
     ctx.strokeStyle = k.c;
     ctx.beginPath();
-    ctx.moveTo(k.x, world.h);
-    ctx.quadraticCurveTo(k.x + sway * 0.3, world.h - k.h * 0.6, k.x + sway, world.h - k.h);
+    ctx.moveTo(k.x, floorY);
+    ctx.quadraticCurveTo(k.x + sway * 0.3, floorY - totalH * 0.6, k.x + sway, topY);
     ctx.stroke();
   }
 
@@ -204,10 +209,11 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
   ctx.lineWidth = 5;
   for (const s of shortKelp) {
     const sway = reducedMotion ? 0 : Math.sin(t * 1.1 + s.swayPhase) * 12;
+    const topY = world.h - s.h, totalH = floorY - topY;
     ctx.strokeStyle = s.c;
     ctx.beginPath();
-    ctx.moveTo(s.x, world.h);
-    ctx.quadraticCurveTo(s.x + sway * 0.35, world.h - s.h * 0.6, s.x + sway * 0.8, world.h - s.h);
+    ctx.moveTo(s.x, floorY);
+    ctx.quadraticCurveTo(s.x + sway * 0.35, floorY - totalH * 0.6, s.x + sway * 0.8, topY);
     ctx.stroke();
   }
 
@@ -215,7 +221,7 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
   ctx.lineWidth = 2;
   for (const g of grassTufts) {
     const amp = reducedMotion ? 0 : 10;
-    const cx = g.x, baseY = world.h;
+    const cx = g.x, baseY = floorY, topY = world.h - g.h, totalH = baseY - topY;
     const step = g.width / (g.blades - 1);
     ctx.strokeStyle = g.c;
     for (let i = 0; i < g.blades; i++) {
@@ -224,7 +230,7 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
       const sway = Math.sin(t * 1.2 + phase) * amp;
       ctx.beginPath();
       ctx.moveTo(x, baseY);
-      ctx.quadraticCurveTo(x + sway * 0.2, baseY - g.h * 0.55, x + sway * 0.6, baseY - g.h);
+      ctx.quadraticCurveTo(x + sway * 0.2, baseY - totalH * 0.55, x + sway * 0.6, topY);
       ctx.stroke();
     }
   }

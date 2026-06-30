@@ -400,7 +400,10 @@ function drawFrame(dt){
   if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced, bd);
   CTX.restore();
 
-  drawBackground(CTX, WORLD, t, reduced);
+  // In backdrop mode, root the seabed flora at the screen bottom (extend it below the field through
+  // the bottom border) so kelp grows from the real seabed on >1:2 screens, not the floating field edge.
+  const bottomExtra = (bd && VIEW.oy > 0.5) ? VIEW.oy / VIEW.scale : 0;
+  drawBackground(CTX, WORLD, t, reduced, bottomExtra);
   drawPrey(CTX, WORLD);
   seal.draw(CTX);
 
