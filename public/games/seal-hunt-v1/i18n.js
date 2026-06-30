@@ -51,6 +51,8 @@
       timeUp: function (v) {
         return 'Время вышло! Ваш счёт: <b>' + v.score + '</b> 🐟 рекорд: <b>' + v.best + '</b> 🏆';
       },
+      // Переходный экран (пока идёт сабмит + загрузка доски) — стабильная длительность, без «мигания».
+      transitionWait: 'Время вышло! 🎣 Считаем, сколько 🐟 ты поймал(а)…',
       shareNewRecordTag: ' — новый рекорд!',
       shareText: function (v) {
         return 'Мой счёт: ' + v.score + ' 🐟 рекорд: ' + v.best + ' 🏆 за 60 секунд' + v.tag;
@@ -125,6 +127,8 @@
       timeUp: function (v) {
         return "Time's up! Your score: <b>" + v.score + '</b> 🐟 best: <b>' + v.best + '</b> 🏆';
       },
+      // Transition screen (while the score submits + the board loads) — stable duration, no flash.
+      transitionWait: "Time's up! 🎣 Counting your catch…",
       shareNewRecordTag: ' — new record!',
       shareText: function (v) {
         return 'My score: ' + v.score + ' 🐟 best: ' + v.best + ' 🏆 in 60 seconds' + v.tag;
@@ -203,6 +207,8 @@
       timeUp: function (v) {
         return 'Zeit abgelaufen! Dein Ergebnis: <b>' + v.score + '</b> 🐟 Bestwert: <b>' + v.best + '</b> 🏆';
       },
+      // Übergangsbildschirm (während Übermittlung + Laden der Bestenliste) — stabile Dauer, kein Flackern.
+      transitionWait: 'Zeit abgelaufen! 🎣 Wir zählen deinen Fang…',
       shareNewRecordTag: ' — neuer Rekord!',
       shareText: function (v) {
         return 'Mein Ergebnis: ' + v.score + ' 🐟 Bestwert: ' + v.best + ' 🏆 in 60 Sekunden' + v.tag;

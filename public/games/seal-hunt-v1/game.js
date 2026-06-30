@@ -278,6 +278,7 @@ let lastTime=0, timeLeft=GAME_DURATION, spawnTimer=0;
 function startGame(){
   STATE.running=true; STATE.over=false; STATE.paused=false;
   UI.overlay.hidden=true; UI.btnShareEnd.hidden=true;
+  UI.overlay.classList.remove('is-waiting'); // clear any leftover transition state
   if (UI.board) { UI.board.hidden = true; UI.board.innerHTML = ''; }
   startRound(GAME_SLUG); // взять play-token на старте (анти-чит, SH-08)
   UI.btnPause.textContent=t('btnPause');
@@ -298,8 +299,13 @@ function startGame(){
   loop();
 }
 
+// A short, fixed-minimum "time's up" interstitial plays before the result screen, so the score +
+// board never flash in — they appear once they're actually ready. UX best practice: a transition/
+// loading state shown for a MINIMUM duration shouldn't be yanked the instant data arrives.
+const MIN_TRANSITION_MS = 1200;
+
 function endGame(){
-  STATE.running=false; STATE.over=true; UI.overlay.hidden=false;
+  STATE.running=false; STATE.over=true;
   const finalScore = SCORE.now;
   const isNew = finalScore > SCORE.best;
   if(isNew){
@@ -307,16 +313,38 @@ function endGame(){
     UI.best.textContent=SCORE.best;
   }
   const finalBest = SCORE.best;
-  // Сообщение/кнопка как функции от языка → перерисуются при смене языка (standalone).
+
+  // — Phase 1: a friendly, stable interstitial ("Привет, <имя>!" via the hello line + "считаем
+  //   улов…"). The score is submitted and the board loaded in the BACKGROUND while the result UI
+  //   (score line, buttons, board, notes) is hidden via `.is-waiting`. We reveal only when BOTH the
+  //   board is ready AND the min time has elapsed — no loading flash, no abrupt cut to results.
+  overlayMsg = () => t('transitionWait');
+  overlayBtn = () => t('btnAgain');
+  UI.overlay.hidden=false;
+  UI.overlay.classList.add('is-waiting');
+  UI.btnShareEnd.hidden=true;
+  renderOverlayText();
+
+  const boardReady = UI.board
+    ? mountAfterPlay(UI.board, GAME_SLUG, finalScore, t).catch(() => {})
+    : Promise.resolve();
+  const minWait = new Promise((res) => setTimeout(res, MIN_TRANSITION_MS));
+
+  Promise.all([boardReady, minWait]).then(() => {
+    if (STATE.over) revealResult(finalScore, isNew, finalBest); // skip if a new round already began
+  });
+}
+
+// — Phase 2: the result screen (score line + leaderboard + buttons), shown once data is ready.
+//   Message/button stay functions of the current language so they re-render on a language switch.
+function revealResult(finalScore, isNew, finalBest){
   overlayMsg = isNew
     ? () => t('timeUpNewRecord', { score: finalScore })
     : () => t('timeUp', { score: finalScore, best: finalBest });
   overlayBtn = () => t('btnAgain');
   UI.btnShareEnd.hidden=false;
+  UI.overlay.classList.remove('is-waiting');
   renderOverlayText();
-
-  // Server-authoritative leaderboard: submit this round and show the board.
-  if (UI.board) mountAfterPlay(UI.board, GAME_SLUG, finalScore, t);
 }
 
 function loop(){

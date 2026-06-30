@@ -41,6 +41,17 @@ button:active{transform:translateY(1px)}
 .feedback-invite a{color:#9fd0e0;text-decoration:underline;text-underline-offset:2px}
 .feedback-invite a:focus-visible{outline:3px solid rgba(255,255,255,.8);outline-offset:2px;border-radius:.2rem}
 
+/* — Переходный экран после раунда (game.js MIN_TRANSITION_MS). Пока идёт сабмит результата и
+   загрузка доски, показываем стабильный interstitial и прячем результат/кнопки/доску/заметки —
+   нет «мигания» загрузки и резкого скачка к итогам. Лёгкая пульсация подсказывает «идёт работа». */
+#overlay.is-waiting .overlay-buttons,
+#overlay.is-waiting .board,
+#overlay.is-waiting .alpha-notice,
+#overlay.is-waiting .feedback-invite { display:none; }
+#overlay.is-waiting #message{ animation:sealWaitPulse 1.15s ease-in-out infinite; }
+@keyframes sealWaitPulse{ 0%,100%{opacity:.6} 50%{opacity:1} }
+@media (prefers-reduced-motion:reduce){ #overlay.is-waiting #message{ animation:none; opacity:.92 } }
+
 /* — Лидерборд */
 .board{width:min(360px,86vw);margin-top:1rem;text-align:left}
 .board[hidden]{display:none}
