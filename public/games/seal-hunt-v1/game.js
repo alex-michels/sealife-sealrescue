@@ -2,10 +2,9 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawBorder, drawBorderVignette } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
-import { PALETTE } from './core/theme.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
 
@@ -180,6 +179,7 @@ function resize(){
 
   recomputeBalance(WORLD.w, WORLD.h);
   initScenery(WORLD, CTX);
+  initBorder(VIEW, WORLD);
 }
 
 // Convert a canvas-relative point (CSS px) into logical world coordinates.
@@ -355,16 +355,24 @@ function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
 
-  // Paint the whole backing store deep-water first so letterbox bars aren't blank.
+  // Dressed border over the whole backing store (deep water + kelp wall) — replaces the flat
+  // floor fill, so the leftover on >2:1 screens reads as the edge of the cove, not black bars.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  CTX.fillStyle = PALETTE.water.floor;
-  CTX.fillRect(0, 0, VIEW.dispW, VIEW.dispH);
+  drawBorder(CTX, VIEW, WORLD, t, reduced);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
+
+  // Soft vignette to seat the lit play field against the border (only when there's a border).
+  if (VIEW.ox > 1 || VIEW.oy > 1) {
+    CTX.save();
+    CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawBorderVignette(CTX, VIEW, WORLD);
+    CTX.restore();
+  }
 
   if(!STATE.running){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();

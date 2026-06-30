@@ -168,3 +168,83 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     ctx.fill();
   }
 }
+
+// ——————————————————————————————————————————————————————————————————————
+// Diegetic border — only appears when the screen is wider/taller than the 2:1 play field
+// (true ultra-wide / very-tall). The leftover strips are NOT play space; dressing them as
+// the dim edge of the cove (deep water + a kelp-forest wall hugging the field) reads as an
+// intentional boundary instead of black bars. Coords are CSS px (caller resets transform).
+
+let borderKelp = []; // side-bar kelp silhouettes, rebuilt per resize
+
+// view = { dispW, dispH, ox, oy, scale }; world = the (clamped) play field in logical units.
+export function initBorder(view, world) {
+  borderKelp = [];
+  const { dispW, dispH, ox, scale } = view;
+  if (ox <= 1) return; // only side bars (ultra-wide) get kelp; top/bottom use water + vignette
+  const aw = world.w * scale, ax0 = ox, ax1 = ox + aw;
+  const wall = (x0, x1, edgeX) => {
+    const w = x1 - x0;
+    if (w < 6) return;
+    const n = Math.max(6, Math.round(w / 9));
+    for (let i = 0; i < n; i++) {
+      const x = x0 + Math.random() * w;
+      const nearEdge = 1 - Math.min(1, Math.abs(x - edgeX) / w); // 1 at field edge → 0 outer
+      borderKelp.push({
+        x, h: dispH * (0.45 + 0.5 * nearEdge + Math.random() * 0.12),
+        c: PALETTE.kelp[(Math.random() * PALETTE.kelp.length) | 0],
+        lw: 5 + nearEdge * 6 + Math.random() * 3, phase: Math.random() * Math.PI * 2,
+      });
+    }
+  };
+  wall(0, ax0, ax0);
+  wall(ax1, dispW, ax1);
+}
+
+// Deep "edge of the cove" water over the whole backing store (replaces the flat floor fill),
+// + the kelp wall in the side bars. The opaque play field is painted over its rect next.
+export function drawBorder(ctx, view, world, t, reducedMotion = false) {
+  const { dispW, dispH, ox } = view;
+  const g = ctx.createLinearGradient(0, 0, 0, dispH);
+  g.addColorStop(0, PALETTE.water.deep);
+  g.addColorStop(1, PALETTE.brand.INK); // darker than the lit field → the field pops
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, dispW, dispH);
+
+  if (ox > 1 && borderKelp.length) {
+    ctx.save();
+    ctx.lineCap = 'round';
+    for (const k of borderKelp) {
+      const sway = reducedMotion ? 0 : Math.sin(t * 0.8 + k.phase) * 10;
+      ctx.lineWidth = k.lw;
+      ctx.strokeStyle = k.c;
+      ctx.beginPath();
+      ctx.moveTo(k.x, dispH);
+      ctx.quadraticCurveTo(k.x + sway * 0.4, dispH - k.h * 0.6, k.x + sway, dispH - k.h);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+
+// Soft inner vignette so the lit play field looks seated, not pasted onto the border.
+export function drawBorderVignette(ctx, view, world) {
+  const { ox, oy, scale } = view;
+  const aw = world.w * scale, ah = world.h * scale;
+  const ax0 = ox, ay0 = oy, ax1 = ox + aw, ay1 = oy + ah;
+  const SH = 'rgba(11,40,50,0.5)', CLR = 'rgba(11,40,50,0)', V = 24;
+  ctx.save();
+  if (ox > 1) {
+    let g = ctx.createLinearGradient(ax0, 0, ax0 + V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(ax0, ay0, V, ah);
+    g = ctx.createLinearGradient(ax1, 0, ax1 - V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(ax1 - V, ay0, V, ah);
+  }
+  if (oy > 1) {
+    let g = ctx.createLinearGradient(0, ay0, 0, ay0 + V); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(ax0, ay0, aw, V);
+    g = ctx.createLinearGradient(0, ay1, 0, ay1 - V); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+    ctx.fillStyle = g; ctx.fillRect(ax0, ay1 - V, aw, V);
+  }
+  ctx.restore();
+}
