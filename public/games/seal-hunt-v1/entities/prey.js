@@ -178,21 +178,27 @@ Object.freeze(SPECIES);
 
 export const PREY = []; // active list
 
-// Where a creature enters from, by habitat. The water column is bounded by the surface
-// (top) and seabed (bottom), so prey enter LATERALLY (horizontal migration) or rise from
-// the depths — never from above the surface. Screen-independent. Returns 'left'|'right'|'bottom'.
-function pickEdge(habitat) {
-  const r = Math.random();
-  // seabed dwellers favour the bottom; pelagic favour the sides, sometimes rise from depth
-  if (habitat === 'benthic') return r < 0.55 ? 'bottom' : r < 0.78 ? 'left' : 'right';
-  if (r < 0.82) return Math.random() < 0.5 ? 'left' : 'right';
-  return 'bottom';
+// Spawn edge: an EVEN but unpredictable rotation of left / right / bottom (never the top —
+// fish don't fall from the sky; the water column is bounded by the surface above). A shuffle
+// "bag" hands out each side exactly once per three spawns, in random order — so no side ever
+// floods and players can't camp one edge to farm prey, yet the order stays random. The bag
+// is screen-independent and habitat-independent (no bias toward any side).
+let edgeBag = [];
+function nextEdge() {
+  if (edgeBag.length === 0) {
+    edgeBag = ['left', 'right', 'bottom'];
+    for (let i = edgeBag.length - 1; i > 0; i--) { // Fisher–Yates shuffle
+      const j = (Math.random() * (i + 1)) | 0;
+      const tmp = edgeBag[i]; edgeBag[i] = edgeBag[j]; edgeBag[j] = tmp;
+    }
+  }
+  return edgeBag.pop();
 }
 
 export function spawnPrey(world, n = 1) {
   for (let i = 0; i < n; i++) {
     const sp = SPECIES[(Math.random() * SPECIES.length) | 0];
-    const edge = pickEdge(sp.habitat);
+    const edge = nextEdge();
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
     const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift
