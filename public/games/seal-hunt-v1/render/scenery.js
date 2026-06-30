@@ -7,6 +7,55 @@ let bubbles = [];
 let tallKelp = [], shortKelp = [], grassTufts = [], rocks = [], rays = [];
 let seaGrad = null, topGrad = null, botGrad = null;
 
+// ——— Optional static backdrop image (e.g. an AI-generated foggy coral scene). Drop files at
+// assets/backdrop-landscape.{avif,webp,jpg} and assets/backdrop-portrait.{...} (see assets/README).
+// When present they replace the procedural sea gradient + seabed flora as the field's base layer;
+// the light shafts, depth tint and bubbles still draw on top for life. Absent → the procedural
+// scene renders unchanged (no behaviour change, no console errors). The image is decoded before
+// first use, so it never paints half-loaded — the gradient shows until it's ready (no pop-in).
+const BACKDROP_SOURCES = {
+  landscape: ['assets/backdrop-landscape.avif', 'assets/backdrop-landscape.webp', 'assets/backdrop-landscape.jpg'],
+  portrait: ['assets/backdrop-portrait.avif', 'assets/backdrop-portrait.webp', 'assets/backdrop-portrait.jpg'],
+};
+const backdrop = { landscape: null, portrait: null }; // { img, w, h } once decoded, else null
+
+// Try sources in order (AVIF → WebP → JPEG); resolve with the first that loads + decodes, else null.
+function loadFirst(srcs) {
+  return new Promise((resolve) => {
+    let i = 0;
+    const img = new Image();
+    const tryNext = () => { if (i >= srcs.length) return resolve(null); img.src = srcs[i++]; };
+    img.onerror = tryNext;
+    img.onload = () => img.decode().then(
+      () => resolve({ img, w: img.naturalWidth, h: img.naturalHeight }),
+      tryNext,
+    );
+    tryNext();
+  });
+}
+
+// Kick off backdrop loading once at startup. Best-effort; never throws.
+export async function initBackdrop() {
+  try {
+    const [l, p] = await Promise.all([loadFirst(BACKDROP_SOURCES.landscape), loadFirst(BACKDROP_SOURCES.portrait)]);
+    backdrop.landscape = l;
+    backdrop.portrait = p || l; // portrait falls back to the landscape image if none provided
+  } catch { /* keep procedural fallback */ }
+}
+
+function activeBackdrop(world) {
+  const b = world.w >= world.h ? backdrop.landscape : (backdrop.portrait || backdrop.landscape);
+  return b && b.img ? b : null;
+}
+
+// Cover-fit an image into the field, anchored to the BOTTOM (seabed stays on the floor at any
+// aspect; horizontal overflow is cropped evenly — fine for a soft, focal-point-free scene).
+function drawCover(ctx, b, w, h) {
+  const s = Math.max(w / b.w, h / b.h);
+  const dw = b.w * s, dh = b.h * s;
+  ctx.drawImage(b.img, (w - dw) / 2, h - dh, dw, dh);
+}
+
 function makeSeaGradient(ctx, world) {
   const g = ctx.createLinearGradient(0, 0, 0, world.h);
   g.addColorStop(0.0, PALETTE.water.surface);
@@ -75,9 +124,14 @@ export function initScenery(world, ctx) {
 }
 
 export function drawBackground(ctx, world, t, reducedMotion = false) {
-  // Sea gradient
-  ctx.fillStyle = seaGrad || PALETTE.water.mid;
-  ctx.fillRect(0, 0, world.w, world.h);
+  // Base layer: the static backdrop image if one is loaded, else the procedural sea gradient.
+  const bd = activeBackdrop(world);
+  if (bd) {
+    drawCover(ctx, bd, world.w, world.h);
+  } else {
+    ctx.fillStyle = seaGrad || PALETTE.water.mid;
+    ctx.fillRect(0, 0, world.w, world.h);
+  }
 
   // Light shafts (additive, subtle)
   ctx.save();
@@ -119,6 +173,9 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
   }
   ctx.globalAlpha = 1;
 
+  // Procedural seabed flora — drawn only when there's NO backdrop image (the image carries its
+  // own corals/kelp/seabed). Wrapped so a backdrop doesn't double up with painted-in kelp.
+  if (!bd) {
   // Tall kelp
   ctx.lineWidth = 6;
   ctx.lineCap = 'round';
@@ -167,6 +224,7 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     ctx.ellipse(r.x, world.h - 8, r.w, r.h, 0, 0, Math.PI * 2);
     ctx.fill();
   }
+  } // end if (!bd) — procedural seabed flora
 }
 
 // ——————————————————————————————————————————————————————————————————————

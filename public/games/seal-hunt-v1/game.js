@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -195,6 +195,9 @@ window.addEventListener('resize', () => {
 }, { passive: true });
 
 resize();
+
+// Start loading the optional static backdrop image (best-effort; procedural scene until ready).
+initBackdrop();
 
 // ——— Input
 attachPointer(CANVAS,
