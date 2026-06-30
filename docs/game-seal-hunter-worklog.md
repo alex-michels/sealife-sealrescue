@@ -49,35 +49,68 @@ The chosen direction: **full-screen, kept fair by measurement.**
 - Works identically standalone and iframed (keys off the canvas/container size).
 
 ## 4. This branch — prey-mechanics fairness experiments (OPEN)
-Question: are PR #24's prey mechanics fair across screens? Measured with the harness, **all
-resolutions, N=80, 2:1 clamp** (spread = (max−min)/mean, lower = fairer):
+Question: are PR #24's prey mechanics fair across screens, and is the hybrid actually fairer than
+`main`? Measured with the harness (spread = (max−min)/mean across 16 profiles, lower = fairer).
 
-| Prey model | Spread | Orientation bias | Notes |
+> ⚠️ **The original numbers below were UNSEEDED at N=80 and are unreliable.** The harness used
+> `Math.random()` directly, so the spread (an order statistic over 16 profiles → it amplifies
+> per-round noise) swung **6.6%↔9.5% run-to-run on the *same* code** and could not actually
+> separate the variants. The harness is now **seeded** (`SEED=` env, common random numbers across
+> profiles) and a dedicated head-to-head tool exists. **Trust the seeded re-baseline, not these.**
+
+| Prey model (unseeded N=80 — superseded) | Spread |
+|---|---|
+| Asymmetric flow-through (PR #24 as-is) | 22.5% (✗ big orientation bias) |
+| Symmetric flow-through (all 4 edges open) | 14.1% |
+| Hybrid + varied ±45° entry headings | ~~8.5%~~ (noise) |
+| Hybrid + straight-in entry (branch HEAD) | ~~6.0%~~ (one lucky sample) |
+| Original random-edge spawn (`main`) | ~~~8%~~ |
+
+### 4a. Seeded re-baseline (2026-06-30) — `tools/compare-variants.mjs`, N=120, 2:1 clamp
+
+All three variants run through the **exact same seeded stream** (common random numbers), two seeds:
+
+| Variant | spread SEED=0 | spread SEED=7 | grand-mean catch | orientation bias |
+|---|---|---|---|---|
+| **main** (random-edge + world-scaled asym push) | **9.6%** | **9.1%** | ~88.8 | ✗ landscape ~85.8 vs portrait ~91–94 |
+| **hybrid** (shuffle-bag + fixed sym push, straight-in) | 7.3% | **7.0%** | ~93.1 | ✓ |
+| **varied** (hybrid + ±45° cone entry) | **7.1%** | 7.6% | ~93.2 | ✓ |
+
+### 4b. Gold-standard confirmation — unseeded N=1000 + clamp comparison (2026-06-30)
+
+`SEED=off` (real RNG, like the live game), N=1000/profile/variant, via `compare-variants.mjs`.
+Numbers agree with the seeded re-baseline → the ranking is real, not a seeding artefact.
+
+| Clamp | main | hybrid | varied |
 |---|---|---|---|
-| Asymmetric flow-through (PR #24 as-is) | **22.5%** | ✗ big | landscape ~100 vs portrait ~84 |
-| Symmetric flow-through (all 4 edges open) | 14.1% | ✓ fixed | aspect-sensitive; harder (fish leak everywhere) |
-| Hybrid + varied ±45° entry headings | 8.5% | ✓ fixed | ≈ original fairness; keeps the diagonal-entry look |
-| **Hybrid + simple straight-in entry** (← current branch HEAD `547a30c`) | **6.0%** | ✓ fixed | **fairest of all; beats `main`**; camp-proof spawn |
-| Original random-edge spawn (on `main`) | ~8% | ✗ | uneven: ~3% desktop / ~7% mobile, orientation bias |
+| **2:1** (current `maxAspect`) | 8.6% (mean 88.9) | **6.4%** (93.4) | 7.3% (93.2) |
+| **16:9** (1.778 — PR #24's fixed arena) | 6.1% (88.1) | 4.6% (92.7) | **4.3%** (92.4) |
 
-**Findings**
-- PR #24's flow-through (top/bottom = surface/seabed WALLS, left/right OPEN, fish exit laterally)
-  is **rotation-ASYMMETRIC** → short/wide fields are much easier → big orientation bias (unfair).
-- Making it **symmetric** (all 4 edges open) removes the orientation bias but the flow-through's
-  *leakage* amplifies the aspect effect (squarish 4:3 vs elongated 2:1) → still ~14%.
-- The **hybrid** — keep PR #24's genuinely-good **shuffle-bag spawn** (even over all 4 edges, no
-  camping) but use the original **"fish stay" physics** (a soft inward **edge-push**, made
-  symmetric: fixed 42-unit band on both axes) — is the **fairest variant (6.0%)**, rotation-
-  symmetric and uniform (~6% on both boards), so it **beats `main`** while keeping the camp-proof
-  spawn.
-- The **varied ±45° entry headings** (a look the user liked earlier) cost ~2.5% (8.5% vs 6.0%), so
-  they're dropped in the current HEAD. Restore if the look is worth it.
+**Settled findings (robust across seeded N=120 & unseeded N=1000):**
+- **`main` is always the least fair** (8.6% / 6.1%) with a real **landscape disadvantage**
+  (16:9 desktops ~86.5 vs portrait ~91–93). **The live alpha runs this** → adopting the hybrid is
+  a measurable improvement.
+- **hybrid ≈ varied** — within ~1 point, they swap rank between clamps → a tie. **Playtest: the
+  user could not feel any difference between straight-in and ±45° even knowing which was which.**
+  → **DECIDED: keep straight-in (hybrid HEAD), drop `varied`** (no fairness or feel benefit, less
+  code). The `?entry=varied` toggle in `prey.js` + `tools/variants/prey-varied.js` are temporary
+  and get removed.
+- **The clamp is the only real fairness lever left** (the prey choice is settled). **16:9 is ~2
+  points fairer than 2:1** for every variant, because every screen wider than 16:9 then plays the
+  *identical* 960×540 field. The residual ~4.6% at 16:9 is the squarish small fields (4:3/16:10
+  tablets ~89.5) being a touch harder than the wide fields (~93) — small and tunable.
 
-**OPEN DECISION (pick one):**
-1. **Adopt the hybrid** (current HEAD, 6.0%, fairest + camp-proof spawn) → browser-verify the look
-   (fish enter/stay, nothing renders in the border) → open a PR.
-2. **Keep the varied-entry hybrid** (8.5%, the diagonal-entry look) instead.
-3. **Keep `main` as-is** — the experiment confirmed the original is already solid.
+**Prey decision: DECIDED → straight-in hybrid** (beats `main`; browser-verified: fills ≤clamp,
+kelp-walls beyond it, prey clipped to the field, no console errors).
+
+**OPEN DECISION → the clamp (fairness ↔ fill trade-off), one line in `core/balance.js`:**
+1. **Keep 2:1** (`maxAspect: 2.0`) — fills almost every screen incl. tall phones; fairness 6.4%.
+   Best immersion (esp. mobile); already live.
+2. **Switch to 16:9** (`maxAspect: 1.7778`) — fairness 4.6%; but more dressed kelp-border on
+   ultrawides *and* tall phones (less edge-to-edge on the primary mobile platform).
+3. **A middle clamp** (~1.85–1.9) — harness can measure it to split fill vs fairness.
+
+(Alpha stays on `main` until a PR is opened.)
 
 ---
 
@@ -90,15 +123,31 @@ resolutions, N=80, 2:1 clamp** (spread = (max−min)/mean, lower = fairer):
 - **Leaderboard** splits mobile/desktop (`pointer: coarse`) — absorbs portrait-vs-landscape, but
   NOT within-board aspect differences (so within-board spread is what matters most).
 
-## The harness — `tools/fairness-sim.mjs`
+## The harness — `tools/fairness-sim.mjs` (now SEEDED)
 - `node tools/fairness-sim.mjs [N]` (default 60 rounds/profile). A deterministic greedy-bot seal
   plays the **real game core** on each screen profile and prints catch rate ± sd. Lower spread =
   fairer. Industry-standard automated-playtest balancing; **reusable as a fairness regression
   guard** — re-run after any prey/seal/balance tweak.
+- **Seeded RNG (2026-06-30).** It overrides the global `Math.random` (the game core's only source
+  of randomness, in prey spawn) with a mulberry32 PRNG, re-seeded per round with a **profile-
+  independent** seed (common random numbers). So the whole run is **reproducible** and the
+  cross-profile spread reflects mechanics, not RNG luck. `SEED=<n>` picks another deterministic
+  stream to confirm a result isn't a one-seed fluke. **Why it mattered:** unseeded, the spread
+  swung 6.6%↔9.5% at N=80 on identical code — useless for ranking variants.
 - `CLAMP=999 node tools/fairness-sim.mjs` → test "no clamp" (full-screen, unbounded). `CLAMP=2.4`
   etc. → test other clamps. Default uses the game's `VIEW_CFG.maxAspect`.
 - It imports `core/sim.js` (stepSeal, spawnTick) + `entities/prey.js` (spawnPrey, updatePrey) +
   `core/balance.js` — so it measures exactly what ships.
+
+## The variant comparison — `tools/compare-variants.mjs`
+- `node tools/compare-variants.mjs [N]` (default 120). Runs **main vs hybrid vs varied** through
+  one shared seeded stream (common random numbers across variants & profiles) and prints a per-
+  profile 3-column table + each variant's spread & grand-mean catch. This is what produced §4a.
+- hybrid = the **shipped** `entities/prey.js`. main & varied are headless variant modules in
+  `tools/variants/` (`prey-main.js` = the `seal-hunt-v1-original` mechanics; `prey-varied.js` =
+  hybrid + ±45° cone entry). It re-implements `spawnTick` locally because `sim.js`'s is hard-bound
+  to the shipped prey module. **Dev-only; not loaded by the game.**
+- `SEED=<n>` / `CLAMP=<n>` as above.
 
 ## Branches & tags
 | Ref | Commit | What |
@@ -114,11 +163,21 @@ resolutions, N=80, 2:1 clamp** (spread = (max−min)/mean, lower = fairer):
 - `entities/prey.js` — prey spawn + behaviour (current = the hybrid).
 - `render/scenery.js` — underwater scene + the diegetic border (kelp walls / seabed / sky+boat).
 - `game.js` — entrypoint: `resize()`, `drawFrame()`, `loop()`, `update()` (thin; drives sim core).
-- `tools/fairness-sim.mjs` — the fairness harness.
+- `tools/fairness-sim.mjs` — the (seeded) single-config fairness harness.
+- `tools/compare-variants.mjs` + `tools/variants/` — the seeded main-vs-hybrid-vs-varied head-to-
+  head (dev-only; produced §4a). Not loaded by the game.
 - `docs/game-seal-hunter.md` — technical reference (kept in sync).
 
 ## Next steps / open items
-1. **Resolve the prey decision** (§4). If adopting the hybrid: browser-verify the look, then PR.
-2. **Confirm the alpha** (sealthehunter.online) reflects `main` (auto-deploy from `main`).
+1. **Resolve the prey decision** (§4) — fairness is now a *tie* between hybrid & varied (both ~7%,
+   both beat `main`'s ~9%), so it's a look call. Then browser-verify (done for hybrid) and PR.
+2. **Confirm the alpha** (sealthehunter.online) reflects `main` (auto-deploy from `main`). NB the
+   alpha currently runs the **least-fair** prey model — adopting either branch variant improves it.
 3. *(Optional)* tighten the residual aspect spread further (tighter clamp, or a calibrated
-   per-aspect difficulty compensation) — the harness can drive it.
+   per-aspect difficulty compensation) — the now-seeded harness can drive it reliably.
+
+> **Local visual testing:** the game is static (`public/games/seal-hunt-v1/`). Serve it over HTTP
+> (ES modules + service worker need it) and it can be checked **standalone** and **iframed at any
+> width** — the 2:1 clamp/border keys off the canvas/iframe CSS size, so an iframe of a given size
+> simulates a screen of that size. (This session used a throwaway static server + an iframe device
+> wall; not committed.)

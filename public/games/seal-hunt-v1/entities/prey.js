@@ -203,11 +203,12 @@ export function spawnPrey(world, n = 1) {
     const edge = nextEdge();
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
-    const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift for side entries
+    const lat = (Math.random() - 0.5) * speed * 0.35; // small tangential drift for the entry
 
-    // Spawn just off the edge (clipped to the play frame until they swim in). Top/bottom enter
-    // at a VARIED heading (±45° cone, never a predictable straight line) with a guaranteed
-    // inward component; left/right enter laterally with a little vertical drift.
+    // Spawn just off the edge (clipped to the play frame until they swim in). STRAIGHT-IN entry:
+    // each fish heads straight in along the edge normal with a little tangential drift (`lat`).
+    // (A ±45° "diagonal-entry" variant was measured equally fair AND felt identical in playtest —
+    // worklog §4a/§4b — so straight-in is kept for simplicity. prey-varied.js keeps the variant.)
     let x, y, vx, vy, dir;
     if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
     else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
