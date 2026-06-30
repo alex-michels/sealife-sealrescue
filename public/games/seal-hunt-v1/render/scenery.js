@@ -59,7 +59,8 @@ export function isBackdropActive(world) { return !!activeBackdrop(world); }
 // flush bottom anchor (the bottom border + seabed handle it), as does landscape. Cut is clamped to
 // the overflow so the top edge always stays covered.
 const PORTRAIT_BOTTOM_CUT = 0.11; // ~11% of viewport height (≈ 90–130px); tune to taste
-export function drawBackdropFullscreen(ctx, view, world) {
+let bdCache = null, bdCacheKey = ''; // offscreen canvas: the cover-fit backdrop, pre-composited once
+export function drawBackdropFullscreen(ctx, view, world, dpr = 1) {
   const b = activeBackdrop(world);
   if (!b) return false;
   const W = view.dispW, H = view.dispH;
@@ -67,7 +68,25 @@ export function drawBackdropFullscreen(ctx, view, world) {
   const dw = b.w * s, dh = b.h * s;
   const portraitNoBorder = world.h > world.w && view.oy <= 1; // ≤2:1 portrait → no top/bottom border
   const cut = portraitNoBorder ? Math.min(H * PORTRAIT_BOTTOM_CUT, dh - H) : 0;
-  ctx.drawImage(b.img, (W - dw) / 2, (H - dh) + cut, dw, dh);
+  const dx = (W - dw) / 2, dy = (H - dh) + cut;
+
+  // Cache the cover-fit result in an offscreen canvas at BACKING-STORE resolution — pixel-identical
+  // to drawing the source each frame (same scale, no quality loss) — and blit it 1:1, so we don't
+  // re-scale the source image every frame. Rebuilt only when the viewport / image / DPR changes.
+  const key = `${W}|${H}|${dpr}|${b.img.currentSrc || b.img.src}`;
+  if (bdCacheKey !== key) {
+    bdCache = bdCache || document.createElement('canvas');
+    bdCache.width = Math.max(1, Math.round(W * dpr));
+    bdCache.height = Math.max(1, Math.round(H * dpr));
+    const octx = bdCache.getContext('2d');
+    octx.clearRect(0, 0, bdCache.width, bdCache.height);
+    octx.drawImage(b.img, dx * dpr, dy * dpr, dw * dpr, dh * dpr);
+    bdCacheKey = key;
+  }
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // blit at backing-store 1:1 (caller's DPR transform restored after)
+  ctx.drawImage(bdCache, 0, 0);
+  ctx.restore();
   return true;
 }
 

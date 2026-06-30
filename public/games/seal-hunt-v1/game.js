@@ -402,7 +402,7 @@ function drawFrame(dt){
   // Without: the deep gradient + full diegetic border (seabed, sky + boats, kelp walls), >2:1 only.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  if (bd) drawBackdropFullscreen(CTX, VIEW, WORLD);
+  if (bd) drawBackdropFullscreen(CTX, VIEW, WORLD, DPR);
   else drawDeepBackdrop(CTX, VIEW);
   if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced, bd);
   if (bd) drawWaterGradient(CTX, VIEW); // game's depth tint over the whole viewport (field + border)
