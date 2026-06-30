@@ -52,17 +52,18 @@ export function isBackdropActive(world) { return !!activeBackdrop(world); }
 
 // Paint the active backdrop across the WHOLE viewport (field + >2:1 border), so the static art
 // reads as one continuous scene; the animated boundary markers (kelp-walls / water surface + boat /
-// seabed grass) draw on top to show where play ends. Cover-fit, BOTTOM-anchored on every aspect so
-// the seabed/corals always sit on the floor (the kelp grows from real seabed); the open-water top is
-// what gets cropped on shorter screens. (Top-anchoring the ultra-tall portrait cropped the seabed
-// off on normal phones — leaving the kelp floating over open water — so the crop goes off the top.)
+// seabed grass) draw on top to show where play ends. Cover-fit. ANCHOR: BOTTOM by default (seabed on
+// the floor, grounding the kelp; open-water top cropped) — EXCEPT a portrait screen with NO border
+// (≤2:1, the field fills it, no air/surface strip up top) is TOP-anchored to show the lit surface
+// water. (>2:1 portrait keeps bottom-anchor: there the seabed must ground the kelp under the border.)
 export function drawBackdropFullscreen(ctx, view, world) {
   const b = activeBackdrop(world);
   if (!b) return false;
   const W = view.dispW, H = view.dispH;
   const s = Math.max(W / b.w, H / b.h);
   const dw = b.w * s, dh = b.h * s;
-  ctx.drawImage(b.img, (W - dw) / 2, H - dh, dw, dh);
+  const topAnchor = world.h > world.w && view.oy <= 1; // portrait, no top/bottom border
+  ctx.drawImage(b.img, (W - dw) / 2, topAnchor ? 0 : H - dh, dw, dh);
   return true;
 }
 
