@@ -1,10 +1,14 @@
 // entities/prey.js
 import { BAL } from '../core/balance.js';
-import { SWEEP_T } from '../game.js';
 import { PALETTE } from '../core/theme.js';
 
 // tiny helper
 const lerp = (a, b, t) => a + (b - a) * t;
+
+// Collision sweep samples — sub-steps along the frame's motion so fast moves don't tunnel.
+// Defined here (the only user) so prey logic has no dependency on the DOM entrypoint and
+// can run headless (shared by the fairness test harness). See tools/fairness-sim.mjs.
+const SWEEP_T = [0, 0.5, 1];
 
 // --- Cute idle motion + C-start–like escape tuning ---
 const WIGGLE = {
@@ -284,7 +288,7 @@ export function updatePrey(dt, seal, world, eatCb) {
     // edge cull
     if (f.x < -60 || f.x > world.w + 60 || f.y < -60 || f.y > world.h + 60) { PREY.splice(i, 1); continue; }
 
-    // collision sweep (shared samples from game.js)
+    // collision sweep (sub-stepped along the frame to avoid tunnelling)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
     let hit = false;
     for (const tt of SWEEP_T) {
