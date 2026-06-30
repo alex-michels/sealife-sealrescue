@@ -9,7 +9,11 @@ button.primary{background:#2C6A8F}
 button:active{transform:translateY(1px)}
 /* Стартовый/финальный экран: затемнённая обложка фоном (cover.jpg) — текст и поля читаемы.
    Градиент-скрим поверх изображения; если cover.jpg нет — остаётся просто тёмный фон. */
-#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem;padding-bottom:max(2rem,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,40,50,.62),rgba(11,40,50,.76)),url("cover.jpg") center top/cover no-repeat;z-index:10}
+/* `justify-content:safe center` keeps the screen centred when it fits but falls back to
+   top-aligned (never clips the top) when the content is taller than the viewport; `overflow-y:auto`
+   then lets the user reach the bottom (feedback line). The plain `center` first keeps old browsers
+   centred if they don't understand `safe`. */
+#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;text-align:center;overflow-y:auto;overscroll-behavior:contain;padding:2rem;padding-bottom:max(2rem,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,40,50,.62),rgba(11,40,50,.76)),url("cover.jpg") center top/cover no-repeat;z-index:10}
 /* Портрет: широкая landscape-обложка режет заголовок по бокам (background-size:cover кадрирует
    ширину). На портретных экранах — отдельная портретная обложка cover_mobile.jpg (без вшитого
    заголовка — его даёт <h1>). Нет файла → url() не сработает, останется тёмный градиент. */
@@ -50,7 +54,7 @@ button:active{transform:translateY(1px)}
 .lb-tabs{display:flex;gap:.4rem;margin:.45rem 0 .3rem}
 .lb-tab{padding:.25rem .65rem;border-radius:.5rem;background:rgba(237,241,243,.06);color:#EDF1F3;font-size:.8rem;font-weight:600}
 .lb-tab.on{background:#2C6A8F}
-.lb-list{list-style:none;margin:.1rem 0 0;padding:0;max-height:32vh;overflow:auto}
+.lb-list{list-style:none;margin:.1rem 0 0;padding:0;max-height:clamp(6.5rem,30vh,18rem);overflow:auto;-webkit-overflow-scrolling:touch}
 .lb-row{display:grid;grid-template-columns:2.4rem 1fr auto;gap:.5rem;padding:.24rem .3rem;border-radius:.45rem;font-size:.9rem}
 .lb-row.me{background:rgba(46,106,143,.4);font-weight:700}
 .lb-rk{opacity:.65;font-variant-numeric:tabular-nums}
@@ -60,6 +64,22 @@ button:active{transform:translateY(1px)}
 .lb-more{margin-top:.5rem;width:100%;background:rgba(237,241,243,.08);color:#EDF1F3;font-size:.82rem;padding:.4rem}
 .lb-more:disabled{opacity:.5}
 @media (max-width:480px){#hud .left span{margin-right:.6rem}button{padding:.5rem .7rem;font-size:0.95rem}}
+/* — Game-over screen must fit small / portrait phones, incl. the bottom feedback line.
+   Compact the heading, notes and board so the whole card fits without scrolling on a normal
+   phone; the overlay still scrolls (above) as a last resort on very short screens. */
+@media (orientation:portrait) and (max-width:560px){
+  #overlay{padding:1.25rem;padding-bottom:max(1.25rem,env(safe-area-inset-bottom))}
+  #overlay h1{font-size:1.7rem;margin-bottom:.15rem}
+  .alpha-notice{font-size:.76rem;margin:.3rem 0 .15rem}
+  .board{margin-top:.55rem}
+  .lb-list{max-height:28vh}
+  .feedback-invite{margin-top:.55rem}
+}
+@media (max-height:700px){
+  #overlay h1{font-size:1.5rem;margin-bottom:.1rem}
+  .lb-list{max-height:22vh}
+  .alpha-notice{margin:.25rem 0 .1rem}
+}
 @media (prefers-contrast:more){button{outline:2px solid #fff}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 
@@ -97,3 +117,7 @@ input, textarea {
   -webkit-user-select: none;
   user-select: none;
 }
+
+/* …but the game-over overlay may exceed a small viewport, so let it scroll vertically by touch
+   (overrides the touch-action:none above — must come after it) to reach the feedback line. */
+#overlay { touch-action: pan-y; -ms-touch-action: pan-y; }
