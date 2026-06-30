@@ -211,7 +211,7 @@ export function spawnPrey(world, n = 1) {
       // From the seabed: rise in at a VARIED heading (up / up-left / up-right / diagonal),
       // not a predictable straight-up — but always with an upward component so it enters.
       x = Math.random() * world.w; y = world.h + 12;
-      const ang = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.72); // ±~65° around "up"
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.5); // ±45° around "up"
       vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
     }
 
@@ -309,7 +309,10 @@ export function updatePrey(dt, seal, world, eatCb) {
     // migrating through. Rendering is clipped to the play frame (see drawPrey), so they
     // leave cleanly at the arena edge instead of loitering uncatchable in the border;
     // respawn (targetPop) keeps the count/density balanced. (+ NaN safety.)
-    if (f.x + f.r < 0 || f.x - f.r > world.w || Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
+    // NB: the margin (40) must exceed the spawn offset (20) — otherwise a just-spawned fish
+    // swimming IN sits past the cull line and gets removed on frame 1 (was killing most of
+    // the small side-spawned fish, which looked like prey "mostly coming from the bottom").
+    if (f.x < -40 || f.x > world.w + 40 || Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
     // collision sweep (shared samples from game.js)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
