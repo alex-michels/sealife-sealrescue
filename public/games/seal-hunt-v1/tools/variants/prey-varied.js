@@ -1,6 +1,6 @@
 // entities/prey.js
-import { BAL } from '../core/balance.js';
-import { PALETTE } from '../core/theme.js';
+import { BAL } from '../../core/balance.js';
+import { PALETTE } from '../../core/theme.js';
 
 // tiny helper
 const lerp = (a, b, t) => a + (b - a) * t;
@@ -203,17 +203,19 @@ export function spawnPrey(world, n = 1) {
     const edge = nextEdge();
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
-    const lat = (Math.random() - 0.5) * speed * 0.35; // small tangential drift for the entry
+    // VARIANT: VARIED ±45° entry. Enter at a random heading within a ±45° cone off the inward
+    // normal (guaranteed inward component cos θ > 0), never a predictable straight line — the
+    // "diagonal-entry look". One RNG draw (ang) replaces the straight-in `lat` draw, so the
+    // per-spawn draw count is identical to the hybrid → common random numbers stay aligned and
+    // the hybrid-vs-varied delta is purely the heading geometry.
+    const ang = (Math.random() - 0.5) * (Math.PI / 2); // θ ∈ [-45°, +45°]
+    const inward = speed * Math.cos(ang), tang = speed * Math.sin(ang);
 
-    // Spawn just off the edge (clipped to the play frame until they swim in). STRAIGHT-IN entry:
-    // each fish heads straight in along the edge normal with a little tangential drift (`lat`).
-    // (A ±45° "diagonal-entry" variant was measured equally fair AND felt identical in playtest —
-    // worklog §4a/§4b — so straight-in is kept for simplicity. prey-varied.js keeps the variant.)
     let x, y, vx, vy, dir;
-    if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
-    else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
-    else if (edge === 'bottom') { x = Math.random() * world.w; y = world.h + 20; vx = lat; vy = -speed; dir = Math.sign(vx) || 1; }
-    else { x = Math.random() * world.w; y = -20; vx = lat; vy = speed; dir = Math.sign(vx) || 1; } // top
+    if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = inward; vy = tang; dir = 1; }
+    else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -inward; vy = tang; dir = -1; }
+    else if (edge === 'bottom') { x = Math.random() * world.w; y = world.h + 20; vx = tang; vy = -inward; dir = Math.sign(vx) || 1; }
+    else { x = Math.random() * world.w; y = -20; vx = tang; vy = inward; dir = Math.sign(vx) || 1; } // top
 
     PREY.push({
       x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, sp,

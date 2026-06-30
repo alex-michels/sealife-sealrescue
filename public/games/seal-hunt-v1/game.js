@@ -366,7 +366,7 @@ function drawFrame(dt){
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
-  drawPrey(CTX);
+  drawPrey(CTX, WORLD);
   seal.draw(CTX);
 
   // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
