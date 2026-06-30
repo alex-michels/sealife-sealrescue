@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawBorder, drawBorderVignette } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -179,7 +179,7 @@ function resize(){
 
   recomputeBalance(WORLD.w, WORLD.h);
   initScenery(WORLD, CTX);
-  initBorder(VIEW, WORLD);
+  initBorder(VIEW, WORLD, CTX);
 }
 
 // Convert a canvas-relative point (CSS px) into logical world coordinates.
@@ -355,22 +355,25 @@ function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
 
-  // Dressed border over the whole backing store (deep water + kelp wall) — replaces the flat
-  // floor fill, so the leftover on >2:1 screens reads as the edge of the cove, not black bars.
+  const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+
+  // Deep "edge of the cove" backdrop + the border layers BEHIND the field (seabed, sky +
+  // boats, side kelp walls). Replaces the flat floor fill; only visible on >2:1 screens.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  drawBorder(CTX, VIEW, WORLD, t, reduced);
+  drawDeepBackdrop(CTX, VIEW);
+  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
 
-  // Soft vignette to seat the lit play field against the border (only when there's a border).
-  if (VIEW.ox > 1 || VIEW.oy > 1) {
+  // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
+  if (hasBorder) {
     CTX.save();
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-    drawBorderVignette(CTX, VIEW, WORLD);
+    drawBorderFront(CTX, VIEW, WORLD, t, reduced);
     CTX.restore();
   }
 
