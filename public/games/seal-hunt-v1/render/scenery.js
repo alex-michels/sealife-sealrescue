@@ -458,10 +458,10 @@ function drawWaterline(ctx, y, w, t, reduced) {
   ctx.beginPath(); ctx.moveTo(0, y + 12);
   for (let x = 0; x <= w; x += 8) ctx.lineTo(x, y + Math.sin(x * k + ph) * amp);
   ctx.lineTo(w, y + 12); ctx.closePath();
-  ctx.fillStyle = 'rgba(60,124,151,0.5)'; ctx.fill();
+  ctx.fillStyle = 'rgba(60,124,151,0.28)'; ctx.fill(); // softer surface band (was 0.5)
   ctx.beginPath();
   for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x * k + ph) * amp; x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); }
-  ctx.strokeStyle = 'rgba(244,248,250,0.5)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+  ctx.strokeStyle = 'rgba(244,248,250,0.22)'; ctx.lineWidth = 1.4; ctx.lineCap = 'round'; ctx.stroke(); // dimmer, thinner (was 0.5 / 2)
   ctx.restore();
 }
 
