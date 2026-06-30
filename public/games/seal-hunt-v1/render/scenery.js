@@ -168,3 +168,273 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     ctx.fill();
   }
 }
+
+// ——————————————————————————————————————————————————————————————————————
+// Diegetic border — only appears when the screen is wider/taller than the 2:1 play field
+// (true ultra-wide / very-tall). The leftover strips are NOT play space; we dress them as the
+// world around the cove so they read as an intentional boundary instead of black bars. With
+// the 2:1 clamp only ONE axis ever has leftover, so a screen shows EITHER side kelp walls
+// (wide) OR seabed + sea surface (tall) — never both. Coords are CSS px (caller resets to DPR).
+
+let B = null; // border scene, rebuilt each resize
+const _mod = (a, n) => ((a % n) + n) % n;
+const BOAT_H = 44; // drawn height of a boat (keel→masthead) at scale 1, for fit-capping
+
+// view = { dispW, dispH, ox, oy, scale }; world = the clamped play field in logical units.
+export function initBorder(view, world, ctx) {
+  const { dispW, dispH, ox, oy, scale } = view;
+  const aw = world.w * scale, ah = world.h * scale;
+  const ax0 = ox, ay0 = oy, ax1 = ox + aw, ay1 = oy + ah;
+
+  const deepGrad = ctx.createLinearGradient(0, 0, 0, dispH);
+  deepGrad.addColorStop(0, PALETTE.water.deep);
+  deepGrad.addColorStop(1, PALETTE.brand.INK); // darker than the lit field → field pops
+
+  B = {
+    ax0, ay0, ax1, ay1, dispW, dispH,
+    hasSides: ox > 1, hasTopBottom: oy > 1,
+    deepGrad, kelp: [], rocks: [], sky: null, seabed: null,
+  };
+
+  if (B.hasSides) buildSideWalls(dispW, dispH, ax0, ax1);
+  if (B.hasTopBottom) { B.sky = buildSky(ctx, dispW, ay0); B.seabed = buildSeabed(ctx, dispW, ay1, dispH); }
+}
+
+// — Sides: rocky kelp walls (rocks at the base, kelp tallest/densest toward the field edge).
+function buildSideWalls(dispW, dispH, ax0, ax1) {
+  const kelp = [], rocks = [];
+  const wall = (x0, x1, edgeX) => {
+    const w = x1 - x0;
+    if (w < 6) return;
+    const nr = Math.max(2, Math.round(w / 55));
+    for (let i = 0; i < nr; i++) {
+      const x = x0 + Math.random() * w;
+      rocks.push({
+        x, y: dispH - (2 + Math.random() * 12),
+        rw: 24 + Math.random() * Math.min(70, w * 0.6), rh: 16 + Math.random() * 26,
+        c: Math.random() < 0.5 ? '#2A4750' : '#21404A',
+      });
+    }
+    const n = Math.max(7, Math.round(w / 7));
+    for (let i = 0; i < n; i++) {
+      const x = x0 + Math.random() * w;
+      const nearEdge = 1 - Math.min(1, Math.abs(x - edgeX) / w);
+      kelp.push({
+        x, h: dispH * (0.5 + 0.46 * nearEdge + Math.random() * 0.14),
+        c: PALETTE.kelp[(Math.random() * PALETTE.kelp.length) | 0],
+        lw: 5 + nearEdge * 6 + Math.random() * 3, phase: Math.random() * Math.PI * 2,
+      });
+    }
+  };
+  wall(0, ax0, ax0); wall(ax1, dispW, ax1);
+  B.kelp = kelp; B.rocks = rocks;
+}
+
+// — Top: sky/air + drifting clouds and occasional boats on the surface (size scales to fit).
+function buildSky(ctx, dispW, ay0) {
+  const grad = ctx.createLinearGradient(0, 0, 0, Math.max(1, ay0));
+  grad.addColorStop(0.0, '#C7DCE6'); grad.addColorStop(0.7, '#DCEAF0'); grad.addColorStop(1.0, '#EAF2F5');
+  const clouds = Array.from({ length: Math.max(2, Math.round((dispW * ay0) / 55000)) }, () => ({
+    x: Math.random() * dispW, y: 6 + Math.random() * Math.max(8, ay0 * 0.55),
+    s: 0.55 + Math.random() * 1.1, v: 4 + Math.random() * 7, a: 0.3 + Math.random() * 0.3,
+  }));
+  const boats = [];
+  if (ay0 > 56) {
+    const fit = (ay0 * 0.85) / BOAT_H;
+    for (let i = 0, n = Math.max(1, Math.round(dispW / 850)); i < n; i++) boats.push({
+      x: Math.random() * dispW, v: 7 + Math.random() * 9,
+      s: Math.min(1.2 + Math.random() * 0.8, fit),
+      dir: Math.random() < 0.5 ? 1 : -1, hue: Math.random() < 0.5 ? PALETTE.brand.BUOY : '#C25A3A',
+      bob: Math.random() * Math.PI * 2,
+    });
+  }
+  return { grad, clouds, boats };
+}
+
+// — Bottom: sandy seabed (graded shades) with ripples, pebbles, driftwood, boulders, eelgrass
+//   and dunes; a depth-fog dissolves the seam so the seabed emerges from the murk, not a line.
+function buildSeabed(ctx, dispW, ay1, dispH) {
+  const h = dispH - ay1;
+  const grad = ctx.createLinearGradient(0, ay1, 0, dispH);
+  grad.addColorStop(0.0, PALETTE.water.floor);
+  grad.addColorStop(0.2, '#33403C');
+  grad.addColorStop(0.46, '#7E7058');
+  grad.addColorStop(0.68, '#C7B591');
+  grad.addColorStop(0.87, '#AD9B7C');
+  grad.addColorStop(1.0, '#927C5C');
+  const hazeH = Math.min(h * 0.62, 150);
+  const haze = ctx.createLinearGradient(0, ay1, 0, ay1 + hazeH);
+  haze.addColorStop(0.0, 'rgba(11,40,50,0.96)');
+  haze.addColorStop(0.5, 'rgba(11,40,50,0.5)');
+  haze.addColorStop(1.0, 'rgba(11,40,50,0)');
+  const yIn = (lo, hi) => ay1 + h * (lo + Math.random() * (hi - lo));
+  const dunes = Array.from({ length: Math.max(2, Math.round(dispW / 340)) }, () => ({
+    x: Math.random() * dispW, y: ay1 + h * (0.22 + Math.random() * 0.2),
+    rw: 130 + Math.random() * 240, rh: 26 + Math.random() * 34,
+    c: Math.random() < 0.5 ? '#5E5440' : '#6C6049',
+  }));
+  const ripples = Array.from({ length: Math.max(3, Math.round(dispW / 110)) }, () => ({
+    x: Math.random() * dispW, y: yIn(0.32, 0.85), w: 40 + Math.random() * 120, a: 0.05 + Math.random() * 0.06,
+  }));
+  const pebbles = Array.from({ length: Math.max(8, Math.round(dispW / 38)) }, () => ({
+    x: Math.random() * dispW, y: yIn(0.28, 0.95), r: 1.4 + Math.random() * 3,
+    c: Math.random() < 0.5 ? '#B6A488' : '#8E8270',
+  }));
+  const rocks = Array.from({ length: Math.max(2, Math.round(dispW / 210)) }, () => ({
+    x: Math.random() * dispW, y: yIn(0.4, 0.9), rw: 16 + Math.random() * 40, rh: 9 + Math.random() * 18,
+    c: Math.random() < 0.5 ? '#8B8472' : '#6E6857',
+  }));
+  const driftwood = Array.from({ length: Math.max(1, Math.round(dispW / 520)) }, () => ({
+    x: 40 + Math.random() * (dispW - 80), y: yIn(0.45, 0.85), len: 60 + Math.random() * 90,
+    ang: -0.5 + Math.random(), thick: 5 + Math.random() * 5, c: Math.random() < 0.5 ? '#5C4A38' : '#6B5A46',
+  }));
+  const grass = Array.from({ length: Math.max(3, Math.round(dispW / 150)) }, () => ({
+    x: Math.random() * dispW, baseY: yIn(0.2, 0.55), blades: 4 + (Math.random() * 4 | 0),
+    gh: 16 + Math.random() * Math.min(46, h * 0.55), width: 10 + Math.random() * 16,
+    c: PALETTE.kelp[2], phase: Math.random() * Math.PI * 2,
+  }));
+  return { grad, haze, hazeH, dunes, ripples, pebbles, rocks, driftwood, grass };
+}
+
+// Deep backdrop over the whole canvas (covers any strip). The opaque play field is painted
+// over its own rect next; sky/seabed paint over their strips.
+export function drawDeepBackdrop(ctx, view) {
+  ctx.fillStyle = (B && B.deepGrad) || PALETTE.water.floor;
+  ctx.fillRect(0, 0, view.dispW, view.dispH);
+}
+
+// Border layers BEHIND the play field (seabed, sky + clouds + boats, side walls).
+export function drawBorderBack(ctx, view, world, t, reducedMotion = false) {
+  if (!B) return;
+  if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion); drawSkyBack(ctx, t, reducedMotion); }
+  if (B.hasSides) drawSideWalls(ctx, t, reducedMotion);
+}
+
+// Border layers IN FRONT of the play field: the wavy water surface + the edge vignette.
+export function drawBorderFront(ctx, view, world, t, reducedMotion = false) {
+  if (!B) return;
+  if (B.hasTopBottom) drawWaterline(ctx, B.ay0, B.dispW, t, reducedMotion);
+  drawEdgeVignette(ctx);
+}
+
+function drawSideWalls(ctx, t, reduced) {
+  const { dispH } = B;
+  for (const r of B.rocks) {
+    ctx.fillStyle = r.c;
+    ctx.beginPath(); ctx.ellipse(r.x, r.y, r.rw, r.rh, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(237,241,243,0.05)';
+    ctx.beginPath(); ctx.ellipse(r.x - r.rw * 0.3, r.y - r.rh * 0.4, r.rw * 0.5, r.rh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.save(); ctx.lineCap = 'round';
+  for (const k of B.kelp) {
+    const sway = reduced ? 0 : Math.sin(t * 0.8 + k.phase) * 10;
+    ctx.lineWidth = k.lw; ctx.strokeStyle = k.c;
+    ctx.beginPath(); ctx.moveTo(k.x, dispH);
+    ctx.quadraticCurveTo(k.x + sway * 0.4, dispH - k.h * 0.6, k.x + sway, dispH - k.h);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSkyBack(ctx, t, reduced) {
+  const { dispW, ay0 } = B, S = B.sky;
+  ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
+  for (const c of S.clouds) {
+    const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
+    drawCloud(ctx, x, c.y, c.s, c.a);
+  }
+  for (const bo of S.boats) {
+    const x = reduced ? bo.x : _mod(bo.x + t * bo.v * bo.dir + 100, dispW + 200) - 100;
+    const yWater = ay0 + (reduced ? 0 : Math.sin(t * 0.9 + bo.bob) * 2);
+    drawBoat(ctx, x, yWater, bo.s, bo.dir, bo.hue);
+  }
+}
+
+function drawCloud(ctx, x, y, s, a) {
+  ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#F4F8FA';
+  const w = 60 * s, h = 18 * s;
+  ctx.beginPath();
+  ctx.ellipse(x, y, w * 0.6, h, 0, 0, Math.PI * 2);
+  ctx.ellipse(x - w * 0.45, y + h * 0.3, w * 0.4, h * 0.7, 0, 0, Math.PI * 2);
+  ctx.ellipse(x + w * 0.5, y + h * 0.25, w * 0.45, h * 0.78, 0, 0, Math.PI * 2);
+  ctx.fill(); ctx.restore();
+}
+
+// Sailboat sitting ON the waterline: keel at y=0 (surface), hull + mast + sail above it.
+function drawBoat(ctx, x, yWater, s, dir, hue) {
+  ctx.save(); ctx.translate(x, yWater); ctx.scale(dir * s, s);
+  ctx.fillStyle = PALETTE.brand.INK;
+  ctx.beginPath(); ctx.moveTo(-40, -14); ctx.lineTo(40, -14); ctx.lineTo(30, 0); ctx.lineTo(-30, 0); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = hue; ctx.fillRect(-36, -15.5, 72, 4);
+  ctx.strokeStyle = PALETTE.brand.INK; ctx.lineWidth = 2.2;
+  ctx.beginPath(); ctx.moveTo(-3, -14); ctx.lineTo(-3, -44); ctx.stroke();
+  ctx.fillStyle = '#F4F8FA';
+  ctx.beginPath(); ctx.moveTo(-1, -16); ctx.lineTo(-1, -42); ctx.lineTo(22, -19); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawWaterline(ctx, y, w, t, reduced) {
+  const amp = reduced ? 1.5 : 3.5, k = 0.025, ph = reduced ? 0 : t * 1.6;
+  ctx.save();
+  ctx.beginPath(); ctx.moveTo(0, y + 12);
+  for (let x = 0; x <= w; x += 8) ctx.lineTo(x, y + Math.sin(x * k + ph) * amp);
+  ctx.lineTo(w, y + 12); ctx.closePath();
+  ctx.fillStyle = 'rgba(60,124,151,0.5)'; ctx.fill();
+  ctx.beginPath();
+  for (let x = 0; x <= w; x += 8) { const yy = y + Math.sin(x * k + ph) * amp; x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy); }
+  ctx.strokeStyle = 'rgba(244,248,250,0.5)'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+  ctx.restore();
+}
+
+function drawSeabed(ctx, t, reduced) {
+  const { dispW, ay1, dispH } = B, S = B.seabed;
+  ctx.fillStyle = S.grad; ctx.fillRect(0, ay1, dispW, dispH - ay1);
+  for (const d of S.dunes) {
+    ctx.fillStyle = d.c;
+    ctx.beginPath(); ctx.ellipse(d.x, d.y, d.rw, d.rh, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  for (const r of S.ripples) {
+    ctx.strokeStyle = `rgba(74,60,42,${r.a})`; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(r.x - r.w / 2, r.y); ctx.quadraticCurveTo(r.x, r.y - 5, r.x + r.w / 2, r.y); ctx.stroke();
+  }
+  for (const p of S.pebbles) { ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill(); }
+  for (const d of S.driftwood) drawDriftwood(ctx, d);
+  for (const r of S.rocks) {
+    ctx.fillStyle = r.c; ctx.beginPath(); ctx.ellipse(r.x, r.y, r.rw, r.rh, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(237,241,243,0.08)';
+    ctx.beginPath(); ctx.ellipse(r.x - r.rw * 0.3, r.y - r.rh * 0.35, r.rw * 0.5, r.rh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.lineWidth = 2; ctx.lineCap = 'round';
+  for (const g of S.grass) {
+    const step = g.width / Math.max(1, g.blades - 1);
+    ctx.strokeStyle = g.c;
+    for (let i = 0; i < g.blades; i++) {
+      const x = g.x - g.width / 2 + i * step;
+      const sway = reduced ? 0 : Math.sin(t * 1.2 + g.phase + i * 0.3) * 6;
+      ctx.beginPath(); ctx.moveTo(x, g.baseY);
+      ctx.quadraticCurveTo(x + sway * 0.3, g.baseY - g.gh * 0.6, x + sway * 0.7, g.baseY - g.gh); ctx.stroke();
+    }
+  }
+  ctx.fillStyle = S.haze; ctx.fillRect(0, ay1, dispW, S.hazeH);
+}
+
+function drawDriftwood(ctx, d) {
+  ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.ang);
+  ctx.strokeStyle = d.c; ctx.lineWidth = d.thick; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-d.len / 2, 0); ctx.quadraticCurveTo(0, -6, d.len / 2, 2); ctx.stroke();
+  ctx.lineWidth = d.thick * 0.6;
+  ctx.beginPath(); ctx.moveTo(d.len * 0.1, -1); ctx.lineTo(d.len * 0.25, -d.len * 0.22); ctx.stroke();
+  ctx.restore();
+}
+
+// Soft inner vignette seating the field — only on the side edges (kelp walls); the surface
+// waterline and seabed shadow handle the top/bottom transition.
+function drawEdgeVignette(ctx) {
+  if (!B.hasSides) return;
+  const { ax0, ay0, ax1, ay1 } = B, ah = ay1 - ay0;
+  const SH = 'rgba(11,40,50,0.5)', CLR = 'rgba(11,40,50,0)', V = 24;
+  let g = ctx.createLinearGradient(ax0, 0, ax0 + V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+  ctx.fillStyle = g; ctx.fillRect(ax0, ay0, V, ah);
+  g = ctx.createLinearGradient(ax1, 0, ax1 - V, 0); g.addColorStop(0, SH); g.addColorStop(1, CLR);
+  ctx.fillStyle = g; ctx.fillRect(ax1 - V, ay0, V, ah);
+}

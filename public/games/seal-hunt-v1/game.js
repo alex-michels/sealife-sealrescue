@@ -1,10 +1,10 @@
 // game.js (ESM entrypoint)
-import { BASE, BAL, recomputeBalance, computeWorld } from './core/balance.js';
+import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
+import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground } from './render/scenery.js';
-import { PREY, spawnPrey, updatePrey, drawPrey } from './entities/prey.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront } from './render/scenery.js';
+import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
-import { PALETTE } from './core/theme.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
 
@@ -19,9 +19,6 @@ const GAME_SLUG = new URLSearchParams(location.search).get('game') || 'seal-the-
 // Приветствие с анонимным псевдонимом игрока (локализуется: «Привет, Солёный Тюлень!»).
 // Текст заполняет renderOverlayText() — чтобы он перерисовывался при смене языка (standalone).
 const HELLO = document.getElementById('hello');
-
-// Reusable sweep samples (avoid recreating [0,0.5,1] each frame in prey.js)
-export const SWEEP_T = [0, 0.5, 1];
 
 // ——— DOM/Canvas
 const CANVAS = document.getElementById('game');
@@ -47,7 +44,7 @@ const UI = {
   feedbackInvite: document.getElementById('feedbackInvite'),
 };
 
-const GAME_DURATION = 60_000;
+const GAME_DURATION = ROUND_MS;
 const WORLD = { w:0, h:0 };
 // Viewport mapping: logical world → display (CSS px). Letterboxed on extreme aspects.
 const VIEW = { scale:1, ox:0, oy:0, dispW:0, dispH:0 };
@@ -162,12 +159,15 @@ function resize(){
   VIEW.dispW = cssW;
   VIEW.dispH = cssH;
 
-  // Fixed logical world (short axis constant, long axis clamped) — fairness (SH-02).
+  // Full-screen logical world: short axis constant, long axis follows the real aspect, so
+  // the world fills the viewport (no letterbox). Fairness is held in the balance invariants
+  // (constant density/speed/size), not by clamping the view — see core/balance.js (SH-02b).
   const world = computeWorld(cssW, cssH);
   WORLD.w = world.w;
   WORLD.h = world.h;
 
-  // Fit world into display; any leftover is letterboxed (no extend-view advantage).
+  // World aspect == screen aspect, so this fit is exact: scale equal on both axes, ox/oy ≈ 0
+  // (only sub-pixel rounding). The seal roams the whole screen.
   VIEW.scale = Math.min(cssW / WORLD.w, cssH / WORLD.h);
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
@@ -179,6 +179,7 @@ function resize(){
 
   recomputeBalance(WORLD.w, WORLD.h);
   initScenery(WORLD, CTX);
+  initBorder(VIEW, WORLD, CTX);
 }
 
 // Convert a canvas-relative point (CSS px) into logical world coordinates.
@@ -333,101 +334,16 @@ function update(dt){
   if(timeLeft<=0){ UI.time.textContent='0'; endGame(); return; }
   UI.time.textContent = Math.ceil(timeLeft/1000);
 
-  // ——— spawn control (unchanged)
-  spawnTimer -= dt;
-  const progress = 1 - Math.max(0,timeLeft)/GAME_DURATION; // 0..1
-  const targetPop = Math.min(BAL.maxPreyCap, Math.round((BAL.maxPreyCap*0.6)+progress*(BAL.maxPreyCap*0.4)));
-  if(PREY.length < targetPop && spawnTimer<=0){
-    const need = targetPop - PREY.length;
-    const batch = Math.min(2, need);
-    spawnPrey(WORLD, batch);
-    const catchup = need>6 ? 0.35 : 0.55;
-    const diagK = BAL.diag/BASE.diag;
-    spawnTimer = (catchup / Math.max(0.85, Math.min(1.3, diagK)));
-  }
+  // ——— spawn control (shared sim core)
+  spawnTimer = spawnTick(spawnTimer, dt, timeLeft, WORLD);
 
-  // ——— seal physics
-  seal.px = seal.x; seal.py = seal.y;
-
+  // ——— seal physics (shared sim core) — unify pointer + keyboard into one control input.
   // Falls back to "no input" if KB isn’t defined yet.
   const ks = (typeof KB !== 'undefined' && KB.state) ? KB.state
            : {left:false,right:false,up:false,down:false};
   const kx = (ks.right ? 1 : 0) - (ks.left ? 1 : 0);
   const ky = (ks.down  ? 1 : 0) - (ks.up   ? 1 : 0);
-
-  // 1) Pointer/touch ARRIVE steering
-  if (POINTER.active) {
-    const dx = POINTER.x - seal.x;
-    const dy = POINTER.y - seal.y;
-    const dist = Math.hypot(dx, dy) || 1;
-
-    const stopR = Math.max(
-      16,
-      seal.r * (0.55 + Math.min(0.1, (1.0 - Math.min(1, BAL.diag / BASE.diag)) * 0.25))
-    );
-    const slowR = Math.max(stopR + 60, Math.min(BAL.diag * 0.13, 180));
-
-    let desiredSpeed;
-    if (dist <= stopR) {
-      desiredSpeed = 0;
-    } else if (dist < slowR) {
-      desiredSpeed = seal.maxSpeed * ((dist - stopR) / (slowR - stopR));
-    } else {
-      desiredSpeed = seal.maxSpeed;
-    }
-
-    const nx = dx / dist, ny = dy / dist;
-    const dvx = nx * desiredSpeed - seal.vx;
-    const dvy = ny * desiredSpeed - seal.vy;
-
-    const maxDeltaV = seal.accel * dt;
-    const dLen = Math.hypot(dvx, dvy);
-    if (dLen > 1e-4) {
-      const k = Math.min(1, maxDeltaV / dLen);
-      seal.vx += dvx * k;
-      seal.vy += dvy * k;
-    }
-
-    if (dist <= stopR) {
-      // Only apply stop damping if keyboard isn’t trying to move us
-      if (!(kx || ky)) {
-        const damp = Math.exp(-dt / 0.016);
-        seal.vx *= damp;
-        seal.vy *= damp;
-        if (Math.hypot(seal.vx, seal.vy) < 8) { seal.vx = 0; seal.vy = 0; }
-      }
-    }
-  }
-
-  // 2) Keyboard thrust (Arrow/WASD)
-  if (kx || ky) {
-    const len = Math.hypot(kx, ky) || 1;
-    const nx = kx / len, ny = ky / len;
-    const KB_THRUST = 0.70;            // keep feel as-is
-    const thrust = seal.accel * KB_THRUST;
-    seal.vx += nx * thrust * dt;
-    seal.vy += ny * thrust * dt;
-  }
-
-  // Clamp overall speed to seal.maxSpeed (applies to pointer and/or keyboard)
-  {
-    const sp = Math.hypot(seal.vx, seal.vy);
-    if (sp > seal.maxSpeed) {
-      const k = seal.maxSpeed / sp;
-      seal.vx *= k; seal.vy *= k;
-    }
-  }
-
-  // 3) Free-drift damping only when *no* inputs are active
-  if (!POINTER.active && !(kx || ky)) {
-    seal.vx *= 0.985; seal.vy *= 0.985;
-  }
-
-  // Integrate + clamp to world
-  seal.x += seal.vx * dt;
-  seal.y += seal.vy * dt;
-  seal.x = Math.max(seal.r, Math.min(WORLD.w - seal.r, seal.x));
-  seal.y = Math.max(seal.r, Math.min(WORLD.h - seal.r, seal.y));
+  stepSeal(seal, { px: POINTER.x, py: POINTER.y, active: POINTER.active, kx, ky }, dt, WORLD);
 
   // ——— prey update + collision
   updatePrey(dt, seal, WORLD, ()=>{
@@ -439,16 +355,27 @@ function drawFrame(dt){
   const reduced = PREFERS_REDUCED.matches;
   const t = performance.now()/1000;
 
-  // Paint the whole backing store deep-water first so letterbox bars aren't blank.
+  const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+
+  // Deep "edge of the cove" backdrop + the border layers BEHIND the field (seabed, sky +
+  // boats, side kelp walls). Replaces the flat floor fill; only visible on >2:1 screens.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  CTX.fillStyle = PALETTE.water.floor;
-  CTX.fillRect(0, 0, VIEW.dispW, VIEW.dispH);
+  drawDeepBackdrop(CTX, VIEW);
+  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);
   drawPrey(CTX);
   seal.draw(CTX);
+
+  // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
+  if (hasBorder) {
+    CTX.save();
+    CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
+    drawBorderFront(CTX, VIEW, WORLD, t, reduced);
+    CTX.restore();
+  }
 
   if(!STATE.running){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();
