@@ -2,9 +2,10 @@
 
 ## Static backdrop (optional)
 
-The game can use a static image as the play-field background instead of the procedural sea
-gradient + seabed flora. The in-game **light shafts, depth tint and bubbles still draw on top**, so
-the scene stays alive. If these files are absent, the procedural scene renders unchanged.
+The game can use a static image as the play-field background instead of the flat procedural sea
+gradient. The in-game **light shafts, depth tint, bubbles AND the animated swaying kelp/grass still
+draw on top**, so the scene stays alive. If these files are absent, the procedural scene renders
+unchanged.
 
 Expected files (the loader tries AVIF → WebP → JPEG, first that loads wins):
 
@@ -15,8 +16,11 @@ assets/backdrop-portrait.{avif,webp,jpg}    used in portrait (falls back to land
 
 - Drawn **cover-fit, anchored to the bottom** — keep the seabed/corals along the lower edge and
   open, foggy water up top, so horizontal cropping on different aspect ratios is harmless.
+- **Design it to sit BEHIND the animated kelp**: corals / rocks / fog, *no big foreground kelp*
+  (the swaying kelp/grass is drawn on top by the game — bake-in kelp would double up).
+- **Match the water palette** in `core/theme.js` (teal surface `water.surface` → ink deep
+  `water.floor`, kelp greens) so the on-top light shafts, bubbles and kelp blend seamlessly.
 - A **foggy / blurred** look is ideal: it compresses tiny and shows no artifacts when scaled.
-- Match the water palette in `core/theme.js` (teal surface → ink deep) so the overlays blend.
 - The image is decoded before first use → no half-loaded flash; the gradient shows until ready.
 - Borders on >2:1 screens stay **procedural** (kelp walls / seabed / sky) — the backdrop is the
   play field only.

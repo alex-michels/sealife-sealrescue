@@ -173,9 +173,9 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
   }
   ctx.globalAlpha = 1;
 
-  // Procedural seabed flora — drawn only when there's NO backdrop image (the image carries its
-  // own corals/kelp/seabed). Wrapped so a backdrop doesn't double up with painted-in kelp.
-  if (!bd) {
+  // Animated seabed flora (swaying kelp / grass) — drawn on top of the backdrop image too, so the
+  // plants keep moving over it (the image is the static scene BEHIND them). Design the backdrop to
+  // sit behind the kelp — corals / rocks / fog, palette-matched, without big foreground kelp.
   // Tall kelp
   ctx.lineWidth = 6;
   ctx.lineCap = 'round';
@@ -224,7 +224,6 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     ctx.ellipse(r.x, world.h - 8, r.w, r.h, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  } // end if (!bd) — procedural seabed flora
 }
 
 // ——————————————————————————————————————————————————————————————————————
