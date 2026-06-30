@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen, drawWaterGradient } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -398,6 +398,7 @@ function drawFrame(dt){
   if (bd) drawBackdropFullscreen(CTX, VIEW, WORLD);
   else drawDeepBackdrop(CTX, VIEW);
   if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced, bd);
+  if (bd) drawWaterGradient(CTX, VIEW); // game's depth tint over the whole viewport (field + border)
   CTX.restore();
 
   // In backdrop mode, root the seabed flora at the screen bottom (extend it below the field through

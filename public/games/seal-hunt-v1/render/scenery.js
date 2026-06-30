@@ -58,7 +58,7 @@ export function isBackdropActive(world) { return !!activeBackdrop(world); }
 // reef stays visible near the floor but the view isn't "so deep". Bordered (>2:1) portrait keeps a
 // flush bottom anchor (the bottom border + seabed handle it), as does landscape. Cut is clamped to
 // the overflow so the top edge always stays covered.
-const PORTRAIT_BOTTOM_CUT = 0.08; // ~8% of viewport height (≈ 70–90px); tune to taste
+const PORTRAIT_BOTTOM_CUT = 0.11; // ~11% of viewport height (≈ 90–130px); tune to taste
 export function drawBackdropFullscreen(ctx, view, world) {
   const b = activeBackdrop(world);
   if (!b) return false;
