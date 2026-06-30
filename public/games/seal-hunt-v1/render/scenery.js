@@ -74,14 +74,18 @@ export function drawBackdropFullscreen(ctx, view, world) {
 // The game's own water gradient as a translucent wash over the WHOLE viewport (field + border),
 // so the backdrop art reads with consistent surface-light + depth across every screen/aspect — one
 // cohesive palette on top, characters still pop above it. Subtle on purpose (don't bury the art).
+let _waterGrad = null, _waterGradH = 0;
 export function drawWaterGradient(ctx, view) {
   const { dispW, dispH } = view;
-  const g = ctx.createLinearGradient(0, 0, 0, dispH);
-  g.addColorStop(0.0, 'rgba(237,241,243,0.06)'); // soft surface light up top
-  g.addColorStop(0.18, 'rgba(237,241,243,0)');
-  g.addColorStop(0.62, 'rgba(11,40,50,0)');
-  g.addColorStop(1.0, 'rgba(11,40,50,0.34)'); // depth darkening toward the floor
-  ctx.fillStyle = g;
+  if (!_waterGrad || _waterGradH !== dispH) { // gradient is static per viewport height → build once
+    const g = ctx.createLinearGradient(0, 0, 0, dispH);
+    g.addColorStop(0.0, 'rgba(237,241,243,0.06)'); // soft surface light up top
+    g.addColorStop(0.18, 'rgba(237,241,243,0)');
+    g.addColorStop(0.62, 'rgba(11,40,50,0)');
+    g.addColorStop(1.0, 'rgba(11,40,50,0.34)'); // depth darkening toward the floor
+    _waterGrad = g; _waterGradH = dispH;
+  }
+  ctx.fillStyle = _waterGrad;
   ctx.fillRect(0, 0, dispW, dispH);
 }
 
@@ -94,26 +98,30 @@ function makeSeaGradient(ctx, world) {
   return g;
 }
 
-// — Animated-kelp colour: an underwater green in varied dark "Stufen" (random base lightness), with
-// a darker-base → lighter-tip gradient per strand. ~1/3 of strands SHIMMER — a slow hue+lightness
-// drift so they look iridescent (переливаются). The spec is built once per strand; kelpStroke()
-// rebuilds the gradient each frame so the shimmer animates.
+// — Animated-kelp colour: an underwater GREEN in varied dark "Stufen" (random base lightness), with
+// a darker-base → lighter-tip gradient per strand. ~1/3 of strands SHIMMER (переливаются). The spec
+// is built once per strand; kelpStroke() rebuilds the gradient each frame so the shimmer animates.
 function makeKelpColor() {
   return {
-    hue: 158 + Math.random() * 32,   // teal → green
-    sat: 34 + Math.random() * 22,    // %
-    lBase: 11 + Math.random() * 15,  // base lightness = the "Stufe" (11–26%; darker than before)
+    hue: 142 + Math.random() * 30,   // green → teal-green (142–172); never toward cyan/blue
+    sat: 44 + Math.random() * 18,    // 44–62% — stays green (not grey) even when it brightens
+    lBase: 12 + Math.random() * 13,  // base lightness = the "Stufe" (12–25%; dark green)
     shimmer: Math.random() < 0.34,
     phase: Math.random() * Math.PI * 2,
   };
 }
-// Gradient stroke for one strand: base (x0,y0) darker → tip (x1,y1) lighter; shimmer drifts hue+L.
+// Gradient stroke for one strand: base (x0,y0) darker → tip (x1,y1) lighter. The shimmer drifts only
+// LIGHTNESS + SATURATION (HUE stays fixed in the green range), so it never washes toward blue or grey
+// as it brightens. Saturation is floored (never greys) and the tip lightness capped (never pale) —
+// the whole strand stays inside a narrow dark-green band.
 function kelpStroke(ctx, col, x0, y0, x1, y1, t, reduced) {
-  let l = col.lBase, hue = col.hue;
-  if (col.shimmer && !reduced) { const s = Math.sin(t * 0.7 + col.phase); l += s * 5; hue += s * 11; }
+  let l = col.lBase, sat = col.sat;
+  if (col.shimmer && !reduced) { const s = Math.sin(t * 0.7 + col.phase); l += s * 4; sat += s * 7; }
+  sat = Math.max(36, Math.min(70, sat));
+  const lRoot = Math.max(7, l), lTip = Math.min(l + 9, 33);
   const g = ctx.createLinearGradient(x0, y0, x1, y1);
-  g.addColorStop(0, `hsl(${hue}, ${col.sat}%, ${Math.max(6, l)}%)`);
-  g.addColorStop(1, `hsl(${hue}, ${col.sat}%, ${l + 10}%)`);
+  g.addColorStop(0, `hsl(${col.hue}, ${sat}%, ${lRoot}%)`);
+  g.addColorStop(1, `hsl(${col.hue}, ${sat}%, ${lTip}%)`);
   return g;
 }
 
