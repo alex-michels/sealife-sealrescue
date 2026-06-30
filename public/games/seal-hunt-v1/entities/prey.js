@@ -181,15 +181,14 @@ Object.freeze(SPECIES);
 
 export const PREY = []; // active list
 
-// Spawn edge: an EVEN but unpredictable rotation of left / right / bottom (never the top —
-// fish don't fall from the sky; the water column is bounded by the surface above). A shuffle
-// "bag" hands out each side exactly once per three spawns, in random order — so no side ever
-// floods and players can't camp one edge to farm prey, yet the order stays random. The bag
-// is screen-independent and habitat-independent (no bias toward any side).
+// Spawn edge: an EVEN but unpredictable rotation of ALL FOUR edges (symmetric variant — top
+// included so entry, like exit, is rotation-invariant; no orientation gets a denser/easier
+// inflow). A shuffle "bag" hands out each edge exactly once per four spawns, random order — so
+// no edge floods and players can't camp one to farm prey, yet the order stays unpredictable.
 let edgeBag = [];
 function nextEdge() {
   if (edgeBag.length === 0) {
-    edgeBag = ['left', 'right', 'bottom'];
+    edgeBag = ['left', 'right', 'top', 'bottom'];
     for (let i = edgeBag.length - 1; i > 0; i--) { // Fisher–Yates shuffle
       const j = (Math.random() * (i + 1)) | 0;
       const tmp = edgeBag[i]; edgeBag[i] = edgeBag[j]; edgeBag[j] = tmp;
@@ -206,15 +205,19 @@ export function spawnPrey(world, n = 1) {
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
     const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift for side entries
 
-    // Spawn just off the edge (clipped to the play frame until they swim in).
+    // Spawn just off the edge (clipped to the play frame until they swim in). Top/bottom enter
+    // at a VARIED heading (±45° cone, never a predictable straight line) with a guaranteed
+    // inward component; left/right enter laterally with a little vertical drift.
     let x, y, vx, vy, dir;
     if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
     else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
-    else {
-      // From the seabed: rise in at a VARIED heading (up / up-left / up-right / diagonal),
-      // not a predictable straight-up — but always with an upward component so it enters.
+    else if (edge === 'bottom') {
       x = Math.random() * world.w; y = world.h + 12;
       const ang = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.5); // ±45° around "up"
+      vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
+    } else { // top — mirror of bottom: descend in
+      x = Math.random() * world.w; y = -12;
+      const ang = Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.5); // ±45° around "down"
       vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
     }
 
@@ -298,24 +301,15 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     f.x += f.vx * dt; f.y += f.vy * dt;
 
-    // Vertical bounds are physical: the water surface (top) and the seabed (bottom). Fish
-    // stay within the water column — they don't breach the surface or burrow the floor — so
-    // soft-bounce off top & bottom. (The seal may still surface; fish don't.) Left/right are
-    // OPEN water: nothing here, so fish swim out laterally and get recycled below.
-    {
-      const topY = f.r * 0.6, botY = world.h - f.r * 0.4;
-      if (f.y < topY) { f.y = topY; if (f.vy < 0) f.vy *= -0.5; }
-      else if (f.y > botY && f.vy > 0) { f.y = botY; f.vy *= -0.5; }
-    }
-
-    // Recycle fish that have fully swum out a LATERAL (open-water) edge — like real fish
-    // migrating through. Rendering is clipped to the play frame (see drawPrey), so they
-    // leave cleanly at the arena edge instead of loitering uncatchable in the border;
-    // respawn (targetPop) keeps the count/density balanced. (+ NaN safety.)
-    // NB: the margin (40) must exceed the spawn offset (20) — otherwise a just-spawned fish
-    // swimming IN sits past the cull line and gets removed on frame 1 (was killing most of
-    // the small side-spawned fish, which looked like prey "mostly coming from the bottom").
-    if (f.x < -40 || f.x > world.w + 40 || Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
+    // SYMMETRIC flow-through: ALL FOUR edges are open water — fish swim out through any edge
+    // and get recycled. The asymmetric variant (top/bottom WALLS + lateral-only exit) made
+    // short/wide fields far easier to hunt (~22% catch-rate spread); treating every edge the
+    // same is rotation-invariant, so no orientation/aspect gets an advantage. Rendering is
+    // clipped to the play frame (drawPrey) so fish leave cleanly at the edge; respawn keeps
+    // density. Margin (40) > the spawn offset (20) so a just-spawned fish isn't culled on
+    // frame 1 (that bug killed most small side-spawned fish — see PR #24 history).
+    if (f.x < -40 || f.x > world.w + 40 || f.y < -40 || f.y > world.h + 40 ||
+        Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
     // collision sweep (shared samples from game.js)
     const eatR = f.r + seal.r * 0.9, eatR2 = eatR * eatR;
