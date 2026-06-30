@@ -15,6 +15,13 @@
 
 export const VIEW_CFG = {
   logicalShort: 540, // logical units along the shorter screen axis (constant for everyone)
+  // Bound the PLAY-FIELD aspect for fairness: the bot harness shows a field longer than ~2:1
+  // is measurably easier to hunt (a long thin field favours the chaser), which would hand
+  // ultra-wide screens a leaderboard edge. 2:1 keeps the catch rate flat (within noise) AND
+  // still fills the screen for every common screen/window (≤2:1). Only TRUE ultra-wide
+  // (21:9/32:9) or very tall (>2:1 portrait) gets a small border, which the renderer dresses
+  // as scenery rather than black. Verified by tools/fairness-sim.mjs.
+  maxAspect: 2.0,
 };
 
 // Reference world (landscape 960×540) used for density + legacy diag ratios.
@@ -44,13 +51,12 @@ export const BAL = {
  * number of logical units; long axis = short × the REAL aspect ratio, so the world fills
  * the whole screen (no clamp → no letterbox). Orientation follows the display.
  */
-export function computeWorld(dispW, dispH, maxAspect = Infinity) {
+export function computeWorld(dispW, dispH, maxAspect = VIEW_CFG.maxAspect) {
   const short = VIEW_CFG.logicalShort;
   const longSide = Math.max(dispW, dispH) || short;
   const shortSide = Math.min(dispW, dispH) || short;
-  // maxAspect defaults to ∞ → fill the screen. The fairness harness passes a finite value
-  // to measure how a modest clamp trades a tiny letterbox (only on extreme aspects) for a
-  // smaller ultra-wide advantage.
+  // Clamp the play-field aspect (default VIEW_CFG.maxAspect) for fairness. The fairness
+  // harness overrides this to measure other clamps.
   const aspect = Math.min(maxAspect, Math.max(1, longSide / shortSide));
   const longLogical = Math.round(short * aspect);
   return dispW >= dispH ? { w: longLogical, h: short } : { w: short, h: longLogical };

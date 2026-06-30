@@ -11,7 +11,7 @@
 // Best practice this follows: automated agent playtesting / Monte-Carlo balance sims
 // (the way studios like EA measure balance objectively).
 
-import { BAL, BASE, computeWorld, recomputeBalance } from '../core/balance.js';
+import { BAL, BASE, VIEW_CFG, computeWorld, recomputeBalance } from '../core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from '../core/sim.js';
 import { PREY, updatePrey } from '../entities/prey.js';
 import { makeSeal } from '../entities/seal.js';
@@ -19,7 +19,8 @@ import { makeSeal } from '../entities/seal.js';
 const DT = 1 / 60;                 // fixed timestep (matches ~60fps; deterministic)
 const TICKS = Math.round(ROUND_MS / 1000 / DT);
 const N = Number(process.argv[2]) || 60;
-const CLAMP = Number(process.env.CLAMP) || Infinity; // CLAMP=2.0 to test a modest aspect clamp
+// Default: the game's configured clamp (VIEW_CFG.maxAspect). CLAMP=999 tests "no clamp".
+const CLAMP = process.env.CLAMP !== undefined ? Number(process.env.CLAMP) : VIEW_CFG.maxAspect;
 
 // Screen profiles (display CSS px) we care about: small → extra-wide → extra-tall.
 const PROFILES = [
@@ -76,7 +77,7 @@ function stats(xs) {
 console.log(`\nSeal The Hunter — fairness harness  (${N} rounds/profile, ${TICKS} ticks each)\n`);
 console.log('profile               world(logical)  prey  catch/round  ±sd   (±se)');
 console.log('─'.repeat(74));
-console.log(CLAMP === Infinity ? '(no clamp — full screen)' : `(aspect clamped at ${CLAMP}:1)`);
+console.log(CLAMP >= 100 ? '(no clamp — full screen)' : `(play-field aspect clamped at ${CLAMP}:1)`);
 const results = [];
 for (const p of PROFILES) {
   const world = computeWorld(p.w, p.h, CLAMP);
