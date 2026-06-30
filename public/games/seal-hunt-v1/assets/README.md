@@ -2,32 +2,33 @@
 
 ## Static backdrop (optional)
 
-The game can use a static image as the play-field background instead of the flat procedural sea
-gradient. The in-game **light shafts, depth tint, bubbles AND the animated swaying kelp/grass still
-draw on top**, so the scene stays alive. If these files are absent, the procedural scene renders
-unchanged.
+One static image is painted **across the WHOLE viewport** (the play field AND the >2:1 / >1:2
+border), so it reads as a single continuous scene. The game's **animated layer draws on top** and
+both adds life *and* marks where play ends: **swaying kelp-walls** at the side edges, a **rippling
+water surface + a small boat** at the top edge, and **seabed grass** at the bottom edge — plus soft
+light shafts, bubbles and the field's swaying kelp. The art supplies the *static* rocks/corals; the
+game supplies all motion. If these files are absent, the fully procedural scene renders unchanged.
 
 Expected files (the loader tries AVIF → WebP → JPEG, first that loads wins):
 
 ```
-assets/backdrop-landscape.{avif,webp,jpg}   used when the field is landscape/square (w ≥ h)
-assets/backdrop-portrait.{avif,webp,jpg}    used in portrait (falls back to landscape if absent)
+assets/backdrop-landscape.{avif,webp,jpg}   landscape/square screens — author ULTRA-WIDE (~21:9)
+assets/backdrop-portrait.{avif,webp,jpg}    portrait screens — author ULTRA-TALL (~9:21)
 ```
 
-- Covers the **play field only** (the 2:1-clamped centre), **cover-fit, anchored to the bottom** —
-  keep the seabed/corals along the lower edge and open, foggy water up top, so cropping on different
-  aspect ratios is harmless.
-- **Top edge ≈ `#3C7C97`, bottom edge ≈ `#0B2832`** (the CSS page background) so it blends into the
-  game gradient and the dark page; the placeholder generator already does this exactly.
-- **Design it to sit BEHIND the animated kelp**: corals / rocks / fog, *no big foreground kelp*
-  (the swaying kelp/grass is drawn on top by the game — bake-in kelp would double up).
-- **Match the water palette** in `core/theme.js` (teal surface `water.surface` → ink deep
-  `water.floor`, kelp greens) so the on-top light shafts, bubbles and kelp blend seamlessly.
+- **Author for the widest / tallest case** (ultra-wide ~21:9, ultra-tall ~9:21). One landscape
+  image serves every landscape screen; one portrait image serves every portrait screen. It's
+  **cover-fit**: landscape is **bottom-anchored** (seabed on the floor; open water cropped from the
+  top on a 16:9 monitor → ~12% off the sides), portrait is **TOP-anchored** (the deep dark bottom is
+  cropped on shorter phones; the lit top stays). Flip the anchor in `drawBackdropFullscreen` to taste.
+- **Put corals/rocks across the full bottom width**, including the far left/right where the kelp-walls
+  sit (ultra-wide) and a **deep, dark rocky bottom** (ultra-tall). No foreground kelp/seaweed and no
+  creatures/boat — the game draws those, animated, on top.
+- **Top edge ≈ `#3C7C97`, bottom edge ≈ `#0B2832`** (= the CSS page background) so it blends into the
+  game gradient and the dark page.
+- **Match the water palette** in `core/theme.js` (teal `water.surface` → `water.floor`, kelp greens).
 - A **foggy / blurred** look is ideal: it compresses tiny and shows no artifacts when scaled.
 - The image is decoded before first use → no half-loaded flash; the gradient shows until ready.
-- On **>2:1 / >1:2** screens the leftover **border stays procedural and ANIMATED** — swaying
-  kelp-walls on the sides, rippling sea surface + drifting boats on top, sand/rocks seabed at the
-  bottom. The backdrop image is the play field only; the border frames it as before.
 
 The committed files are **placeholders** (see `tools/make-placeholder-backdrop.mjs`). Replace them
 with real art at the same names.

@@ -2,7 +2,7 @@
 import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
-import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop } from './render/scenery.js';
+import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen } from './render/scenery.js';
 import { PREY, updatePrey, drawPrey } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
@@ -388,13 +388,16 @@ function drawFrame(dt){
   const t = performance.now()/1000;
 
   const hasBorder = VIEW.ox > 0.5 || VIEW.oy > 0.5;
+  const bd = isBackdropActive(WORLD);
 
-  // Deep "edge of the cove" backdrop + the border layers BEHIND the field (seabed, sky +
-  // boats, side kelp walls). Replaces the flat floor fill; only visible on >2:1 screens.
+  // BEHIND the field. With a backdrop image: ONE image spans the whole viewport (field + border),
+  // then the border draws only its ANIMATED markers over it (kelp-walls / boat / seabed grass).
+  // Without: the deep gradient + full diegetic border (seabed, sky + boats, kelp walls), >2:1 only.
   CTX.save();
   CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
-  drawDeepBackdrop(CTX, VIEW);
-  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced);
+  if (bd) drawBackdropFullscreen(CTX, VIEW, WORLD);
+  else drawDeepBackdrop(CTX, VIEW);
+  if (hasBorder) drawBorderBack(CTX, VIEW, WORLD, t, reduced, bd);
   CTX.restore();
 
   drawBackground(CTX, WORLD, t, reduced);

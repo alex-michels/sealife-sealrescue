@@ -48,12 +48,23 @@ function activeBackdrop(world) {
   return b && b.img ? b : null;
 }
 
-// Cover-fit an image into the field, anchored to the BOTTOM (seabed stays on the floor at any
-// aspect; horizontal overflow is cropped evenly — fine for a soft, focal-point-free scene).
-function drawCover(ctx, b, w, h) {
-  const s = Math.max(w / b.w, h / b.h);
+export function isBackdropActive(world) { return !!activeBackdrop(world); }
+
+// Paint the active backdrop across the WHOLE viewport (field + >2:1 border), so the static art
+// reads as one continuous scene; the animated boundary markers (kelp-walls / water surface + boat /
+// seabed grass) draw on top to show where play ends. Cover-fit; ANCHOR controls which side the crop
+// falls on: landscape art is BOTTOM-anchored (seabed on the floor, open water cropped from the top);
+// portrait/ultra-tall art is TOP-anchored — its very deep dark bottom is cropped on shorter phones
+// while the lit top stays (per design; flip `dy` here to experiment).
+export function drawBackdropFullscreen(ctx, view, world) {
+  const b = activeBackdrop(world);
+  if (!b) return false;
+  const W = view.dispW, H = view.dispH;
+  const s = Math.max(W / b.w, H / b.h);
   const dw = b.w * s, dh = b.h * s;
-  ctx.drawImage(b.img, (w - dw) / 2, h - dh, dw, dh);
+  const portrait = world.h > world.w;
+  ctx.drawImage(b.img, (W - dw) / 2, portrait ? 0 : H - dh, dw, dh);
+  return true;
 }
 
 function makeSeaGradient(ctx, world) {
@@ -124,11 +135,11 @@ export function initScenery(world, ctx) {
 }
 
 export function drawBackground(ctx, world, t, reducedMotion = false) {
-  // Base layer: the static backdrop image if one is loaded, else the procedural sea gradient.
+  // Base layer: when a backdrop is active it's already painted across the whole viewport (by
+  // drawBackdropFullscreen), so here we fill the procedural sea gradient only when there's none.
+  // Everything below (light shafts, tint, bubbles, swaying kelp/grass) draws on top either way.
   const bd = activeBackdrop(world);
-  if (bd) {
-    drawCover(ctx, bd, world.w, world.h);
-  } else {
+  if (!bd) {
     ctx.fillStyle = seaGrad || PALETTE.water.mid;
     ctx.fillRect(0, 0, world.w, world.h);
   }
@@ -219,12 +230,14 @@ export function drawBackground(ctx, world, t, reducedMotion = false) {
     }
   }
 
-  // Seabed rocks
-  ctx.fillStyle = PALETTE.rock;
-  for (const r of rocks) {
-    ctx.beginPath();
-    ctx.ellipse(r.x, world.h - 8, r.w, r.h, 0, 0, Math.PI * 2);
-    ctx.fill();
+  // Seabed rocks (static) — skipped when a backdrop image is active (the art provides the rocks).
+  if (!bd) {
+    ctx.fillStyle = PALETTE.rock;
+    for (const r of rocks) {
+      ctx.beginPath();
+      ctx.ellipse(r.x, world.h - 8, r.w, r.h, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 }
 
@@ -363,10 +376,10 @@ export function drawDeepBackdrop(ctx, view) {
 }
 
 // Border layers BEHIND the play field (seabed, sky + clouds + boats, side walls).
-export function drawBorderBack(ctx, view, world, t, reducedMotion = false) {
+export function drawBorderBack(ctx, view, world, t, reducedMotion = false, bd = false) {
   if (!B) return;
-  if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion); drawSkyBack(ctx, t, reducedMotion); }
-  if (B.hasSides) drawSideWalls(ctx, t, reducedMotion);
+  if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion, bd); drawSkyBack(ctx, t, reducedMotion, bd); }
+  if (B.hasSides) drawSideWalls(ctx, t, reducedMotion, bd);
 }
 
 // Border layers IN FRONT of the play field: the wavy water surface + the edge vignette.
@@ -376,15 +389,15 @@ export function drawBorderFront(ctx, view, world, t, reducedMotion = false) {
   drawEdgeVignette(ctx);
 }
 
-function drawSideWalls(ctx, t, reduced) {
+function drawSideWalls(ctx, t, reduced, bd = false) {
   const { dispH } = B;
-  for (const r of B.rocks) {
+  if (!bd) for (const r of B.rocks) { // static base rocks — the art provides them in backdrop mode
     ctx.fillStyle = r.c;
     ctx.beginPath(); ctx.ellipse(r.x, r.y, r.rw, r.rh, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(237,241,243,0.05)';
     ctx.beginPath(); ctx.ellipse(r.x - r.rw * 0.3, r.y - r.rh * 0.4, r.rw * 0.5, r.rh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.save(); ctx.lineCap = 'round';
+  ctx.save(); ctx.lineCap = 'round'; // animated kelp-wall — always (the boundary marker)
   for (const k of B.kelp) {
     const sway = reduced ? 0 : Math.sin(t * 0.8 + k.phase) * 10;
     ctx.lineWidth = k.lw; ctx.strokeStyle = k.c;
@@ -395,14 +408,16 @@ function drawSideWalls(ctx, t, reduced) {
   ctx.restore();
 }
 
-function drawSkyBack(ctx, t, reduced) {
+function drawSkyBack(ctx, t, reduced, bd = false) {
   const { dispW, ay0 } = B, S = B.sky;
-  ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
-  for (const c of S.clouds) {
-    const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
-    drawCloud(ctx, x, c.y, c.s, c.a);
+  if (!bd) { // sky fill + clouds only without a backdrop; in backdrop mode the top stays water (art)
+    ctx.fillStyle = S.grad; ctx.fillRect(0, 0, dispW, ay0);
+    for (const c of S.clouds) {
+      const x = reduced ? c.x : _mod(c.x + t * c.v + 80, dispW + 160) - 80;
+      drawCloud(ctx, x, c.y, c.s, c.a);
+    }
   }
-  for (const bo of S.boats) {
+  for (const bo of S.boats) { // small boat(s) on the surface — always (a top-edge boundary marker)
     const x = reduced ? bo.x : _mod(bo.x + t * bo.v * bo.dir + 100, dispW + 200) - 100;
     const yWater = ay0 + (reduced ? 0 : Math.sin(t * 0.9 + bo.bob) * 2);
     drawBoat(ctx, x, yWater, bo.s, bo.dir, bo.hue);
@@ -445,8 +460,9 @@ function drawWaterline(ctx, y, w, t, reduced) {
   ctx.restore();
 }
 
-function drawSeabed(ctx, t, reduced) {
+function drawSeabed(ctx, t, reduced, bd = false) {
   const { dispW, ay1, dispH } = B, S = B.seabed;
+  if (!bd) { // opaque sand + static dunes/ripples/pebbles/driftwood/rocks — the art supplies these
   ctx.fillStyle = S.grad; ctx.fillRect(0, ay1, dispW, dispH - ay1);
   for (const d of S.dunes) {
     ctx.fillStyle = d.c;
@@ -463,7 +479,8 @@ function drawSeabed(ctx, t, reduced) {
     ctx.fillStyle = 'rgba(237,241,243,0.08)';
     ctx.beginPath(); ctx.ellipse(r.x - r.rw * 0.3, r.y - r.rh * 0.35, r.rw * 0.5, r.rh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
   }
-  ctx.lineWidth = 2; ctx.lineCap = 'round';
+  } // end if (!bd) — static seabed
+  ctx.lineWidth = 2; ctx.lineCap = 'round'; // animated seabed grass — always (bottom-edge marker)
   for (const g of S.grass) {
     const step = g.width / Math.max(1, g.blades - 1);
     ctx.strokeStyle = g.c;
@@ -474,7 +491,7 @@ function drawSeabed(ctx, t, reduced) {
       ctx.quadraticCurveTo(x + sway * 0.3, g.baseY - g.gh * 0.6, x + sway * 0.7, g.baseY - g.gh); ctx.stroke();
     }
   }
-  ctx.fillStyle = S.haze; ctx.fillRect(0, ay1, dispW, S.hazeH);
+  if (!bd) { ctx.fillStyle = S.haze; ctx.fillRect(0, ay1, dispW, S.hazeH); }
 }
 
 function drawDriftwood(ctx, d) {
