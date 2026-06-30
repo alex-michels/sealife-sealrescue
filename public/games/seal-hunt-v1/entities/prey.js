@@ -201,13 +201,19 @@ export function spawnPrey(world, n = 1) {
     const edge = nextEdge();
     const speed = BAL.fishSpeedMin + Math.random() * (BAL.fishSpeedMax - BAL.fishSpeedMin);
     const baseR = (12 + Math.random() * 10) * sp.size * BAL.fishSizeK;
-    const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift
+    const lat = (Math.random() - 0.5) * speed * 0.35; // lateral drift for side entries
 
     // Spawn just off the edge (clipped to the play frame until they swim in).
     let x, y, vx, vy, dir;
     if (edge === 'left') { x = -20; y = Math.random() * world.h; vx = speed; vy = lat; dir = 1; }
     else if (edge === 'right') { x = world.w + 20; y = Math.random() * world.h; vx = -speed; vy = lat; dir = -1; }
-    else { x = Math.random() * world.w; y = world.h + 20; vx = lat; vy = -speed; dir = Math.sign(vx) || 1; }
+    else {
+      // From the seabed: rise in at a VARIED heading (up / up-left / up-right / diagonal),
+      // not a predictable straight-up — but always with an upward component so it enters.
+      x = Math.random() * world.w; y = world.h + 12;
+      const ang = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI * 0.72); // ±~65° around "up"
+      vx = Math.cos(ang) * speed; vy = Math.sin(ang) * speed; dir = Math.sign(vx) || 1;
+    }
 
     PREY.push({
       x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, sp,
