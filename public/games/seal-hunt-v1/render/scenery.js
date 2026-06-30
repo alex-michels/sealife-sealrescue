@@ -94,6 +94,29 @@ function makeSeaGradient(ctx, world) {
   return g;
 }
 
+// — Animated-kelp colour: an underwater green in varied dark "Stufen" (random base lightness), with
+// a darker-base → lighter-tip gradient per strand. ~1/3 of strands SHIMMER — a slow hue+lightness
+// drift so they look iridescent (переливаются). The spec is built once per strand; kelpStroke()
+// rebuilds the gradient each frame so the shimmer animates.
+function makeKelpColor() {
+  return {
+    hue: 158 + Math.random() * 32,   // teal → green
+    sat: 34 + Math.random() * 22,    // %
+    lBase: 11 + Math.random() * 15,  // base lightness = the "Stufe" (11–26%; darker than before)
+    shimmer: Math.random() < 0.34,
+    phase: Math.random() * Math.PI * 2,
+  };
+}
+// Gradient stroke for one strand: base (x0,y0) darker → tip (x1,y1) lighter; shimmer drifts hue+L.
+function kelpStroke(ctx, col, x0, y0, x1, y1, t, reduced) {
+  let l = col.lBase, hue = col.hue;
+  if (col.shimmer && !reduced) { const s = Math.sin(t * 0.7 + col.phase); l += s * 5; hue += s * 11; }
+  const g = ctx.createLinearGradient(x0, y0, x1, y1);
+  g.addColorStop(0, `hsl(${hue}, ${col.sat}%, ${Math.max(6, l)}%)`);
+  g.addColorStop(1, `hsl(${hue}, ${col.sat}%, ${l + 10}%)`);
+  return g;
+}
+
 export function initScenery(world, ctx) {
   seaGrad = makeSeaGradient(ctx, world);
 
@@ -129,7 +152,7 @@ export function initScenery(world, ctx) {
   tallKelp = Array.from({ length: kelpCols }, (_, i) => ({
     x: (i + 0.5) * world.w / (kelpCols + 1),
     h: world.h * (0.42 + Math.random() * 0.4), // longer kelp (was 0.28–0.56)
-    c: PALETTE.kelp[i % PALETTE.kelp.length],
+    col: makeKelpColor(),
     swayPhase: Math.random() * Math.PI * 2,
   }));
 
@@ -137,7 +160,7 @@ export function initScenery(world, ctx) {
   shortKelp = Array.from({ length: shortCount }, () => ({
     x: Math.random() * world.w,
     h: world.h * (0.2 + Math.random() * 0.18), // taller (was 0.12–0.24)
-    c: PALETTE.kelp[1 + ((Math.random() * 2) | 0)] ?? PALETTE.kelp[1],
+    col: makeKelpColor(),
     swayPhase: Math.random() * Math.PI * 2,
   }));
 
@@ -147,7 +170,7 @@ export function initScenery(world, ctx) {
     blades: 6 + (Math.random() * 5 | 0),
     h: world.h * (0.1 + Math.random() * 0.1),
     width: 10 + Math.random() * 18,
-    c: PALETTE.kelp[2],
+    c: `hsl(${160 + Math.random() * 22}, 40%, ${15 + Math.random() * 7}%)`, // dark, slightly varied
     phase: Math.random() * Math.PI * 2,
   }));
 }
@@ -219,7 +242,7 @@ export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra
   for (const k of tallKelp) {
     const sway = reducedMotion ? 0 : Math.sin(t + k.swayPhase) * 18;
     const topY = world.h - k.h, totalH = floorY - topY;
-    ctx.strokeStyle = k.c;
+    ctx.strokeStyle = kelpStroke(ctx, k.col, k.x, floorY, k.x + sway, topY, t, reducedMotion);
     ctx.beginPath();
     ctx.moveTo(k.x, floorY);
     ctx.quadraticCurveTo(k.x + sway * 0.3, floorY - totalH * 0.6, k.x + sway, topY);
@@ -231,7 +254,7 @@ export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra
   for (const s of shortKelp) {
     const sway = reducedMotion ? 0 : Math.sin(t * 1.1 + s.swayPhase) * 12;
     const topY = world.h - s.h, totalH = floorY - topY;
-    ctx.strokeStyle = s.c;
+    ctx.strokeStyle = kelpStroke(ctx, s.col, s.x, floorY, s.x + sway * 0.8, topY, t, reducedMotion);
     ctx.beginPath();
     ctx.moveTo(s.x, floorY);
     ctx.quadraticCurveTo(s.x + sway * 0.35, floorY - totalH * 0.6, s.x + sway * 0.8, topY);
@@ -319,7 +342,7 @@ function buildSideWalls(dispW, dispH, ax0, ax1) {
       const nearEdge = 1 - Math.min(1, Math.abs(x - edgeX) / w);
       kelp.push({
         x, h: dispH * (0.5 + 0.46 * nearEdge + Math.random() * 0.14),
-        c: PALETTE.kelp[(Math.random() * PALETTE.kelp.length) | 0],
+        col: makeKelpColor(),
         lw: 5 + nearEdge * 6 + Math.random() * 3, phase: Math.random() * Math.PI * 2,
       });
     }
@@ -389,7 +412,7 @@ function buildSeabed(ctx, dispW, ay1, dispH) {
   const grass = Array.from({ length: Math.max(3, Math.round(dispW / 150)) }, () => ({
     x: Math.random() * dispW, baseY: yIn(0.2, 0.55), blades: 4 + (Math.random() * 4 | 0),
     gh: 16 + Math.random() * Math.min(46, h * 0.55), width: 10 + Math.random() * 16,
-    c: PALETTE.kelp[2], phase: Math.random() * Math.PI * 2,
+    c: `hsl(${160 + Math.random() * 22}, 40%, ${15 + Math.random() * 7}%)`, phase: Math.random() * Math.PI * 2,
   }));
   return { grad, haze, hazeH, dunes, ripples, pebbles, rocks, driftwood, grass };
 }
@@ -426,7 +449,8 @@ function drawSideWalls(ctx, t, reduced, bd = false) {
   ctx.save(); ctx.lineCap = 'round'; // animated kelp-wall — always (the boundary marker)
   for (const k of B.kelp) {
     const sway = reduced ? 0 : Math.sin(t * 0.8 + k.phase) * 10;
-    ctx.lineWidth = k.lw; ctx.strokeStyle = k.c;
+    ctx.lineWidth = k.lw;
+    ctx.strokeStyle = kelpStroke(ctx, k.col, k.x, dispH, k.x + sway, dispH - k.h, t, reduced);
     ctx.beginPath(); ctx.moveTo(k.x, dispH);
     ctx.quadraticCurveTo(k.x + sway * 0.4, dispH - k.h * 0.6, k.x + sway, dispH - k.h);
     ctx.stroke();
