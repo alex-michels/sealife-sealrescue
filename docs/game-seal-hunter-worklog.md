@@ -183,6 +183,22 @@ Same session, after the prey decision. Full technical state lives in
 - **#30 / #31** — game-over **interstitial**: a stable "time's up, считаем улов…" beat while the
   score submits + board loads in the background; reveal only when both done (`Promise.all`). No more
   loading flash. Min duration **3 s** (1.2 s felt too quick).
+- **Regression from #30/#31 — auto-scroll to the player's row stopped working** (branch
+  `fix/game-leaderboard-scroll-to-player`). `mountAfterPlay` renders the board + calls `scrollToMe`
+  *while the interstitial hides it* (`#overlay.is-waiting .board { display:none }`). A `display:none`
+  element has no layout → `getBoundingClientRect` returns zeros and `scrollTop` won't stick, so the
+  jump was lost and the board opened at the top. **Fix:** `scrollToMe` (`core/leaderboard.js`) now
+  waits via `rAF` until the list is actually visible (`clientHeight > 0`) before centering the `.me`
+  row, with an 8 s deadline (bails if a new round clears the board first). Self-contained in the
+  board module; no `game.js` change. `sw.js` CACHE v11→v12.
+  - **Regression test (local dev only — deliberately NOT in CI yet)** —
+    `tests/e2e/game-leaderboard-scroll.e2e.spec.ts` (Playwright: real browser, since jsdom has no
+    layout/rAF). It drives the REAL client module through game.js's endGame→interstitial→revealResult
+    sequence and asserts the board jumps to the `.me` row on reveal. Uses a new **generic, reusable
+    leaderboard API mock**, `tests/e2e/helpers/mock-leaderboard.ts` (`installLeaderboardMock` — DB-free
+    start-token/submit/paged-read; configurable rank/total/board/ties for other leaderboard tests).
+    Run manually: `npm run test:e2e -- tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. **No CI
+    workflow** — proper/broader test coverage + pipeline wiring are a follow-up before adding to CI.
 
 **OPEN — branch `feat/game-static-backdrop` (PR #32, NOT merged):** optional AI-art underwater
 backdrop. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**) + the general encode pipeline
