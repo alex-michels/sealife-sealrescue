@@ -32,7 +32,7 @@
 | [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md) | EU/DE-комплаенс: Impressum, GDPR/TDDDG, DSA, AI Act |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Хостинг (Contabo VPS), CI-деплой из `main` (Next standalone → Caddy + systemd), окружения (Neon dev / self-hosted prod), публичный alpha игры. Инфра-конфиги — [`deploy/`](../deploy/) |
 | [INFRA.md](INFRA.md) | IaC-стратегия: day‑0 vs day‑2, слои (Terraform / cloud-init / Ansible / Actions / justfile), Postgres без reinstall, media на object storage, хостинг AI-агентов (OpenClaw), секреты, дорожная карта |
-| [sealife-masterplan-v1.md](sealife-masterplan-v1.md) | Общий продуктовый план |
+| [sealife-masterplan-v1.md](sealife-masterplan-v1.md) | Исходное продуктовое видение (frozen v1) — «почему» продукта; при расхождении с остальными доками верить им |
 
 > Инварианты архитектуры (агент не публикует/не удаляет, минимизация данных, локали, DE-роуты)
 > — нормативно описаны в [`CLAUDE.md`](../CLAUDE.md). Эти доки объясняют, **как** они реализованы в коде.

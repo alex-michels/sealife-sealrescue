@@ -5,8 +5,10 @@ Idempotent, convergent configuration you can **re-run safely on a live box** (th
 [`DEPLOYMENT.md`](../../docs/DEPLOYMENT.md) §5 and is where the future `postgres` / `backups` roles
 plug in — adding Postgres later is a new role + re-run, **never a reinstall**.
 
-> ⚠️ **Scaffold — review and dry-run before trusting it.** It hasn't been run against a live box yet.
-> Always `just configure-check` (`--check --diff`) first.
+> ℹ️ Has been run successfully against the live alpha box (`sealthehunter.online`) as part of go-live —
+> see `docs/DEPLOYMENT.md` §8 step 4. Still review with `just configure-check` (`--check --diff`) before
+> any change that touches roles/vars, since it's idempotent but not exhaustively tested against every
+> possible prior state.
 
 ## Roles
 | Role | Does |

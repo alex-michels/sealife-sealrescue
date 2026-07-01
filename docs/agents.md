@@ -44,9 +44,14 @@ agent ──create──▶ agent-proposals (status: pending)
 ```
 
 Поля предложения: `proposalType`, `targetCollection`/`targetId`, `diff` (`{field:{from,to}}`),
-`evidence` (URL/HTML-снапшот/цитаты), `sources`, `confidence`, `reviewerNotes`. **`status`
-(`pending`→`approved`/`rejected`/`applied`) меняет только `isEditorField`** — агент-созданное
-предложение принудительно остаётся `pending`.
+`evidence` (URL/HTML-снапшот/цитаты), `sources`, `confidence`, `reviewerNotes`, `agentRun` (ссылка на
+прогон-источник в `agent-runs`). **`status` (`pending`→`approved`/`rejected`/`applied`) меняет только
+`isEditorField`** — агент-созданное предложение принудительно остаётся `pending`. Это доп. защита —
+базово агент и так не может редактировать предложение после создания вообще: коллекционный `update` на
+`agent-proposals` — просто `isEditor`, не `canUpdateContent` (агент не входит).
+
+> ⚠️ Переход `approved` → `applied` (собственно «Применить предложение») — контракт описан выше, но
+> **код для него ещё не написан** (ни хук, ни endpoint); см. Roadmap **M2-T13**.
 
 ## Audit и бюджет — `agent-runs`
 Каждый прогон агента логируется: `agentName` (researcher/content_admin/translator/sysadmin/seo),
@@ -62,6 +67,10 @@ SysAdmin, SEO.
 берётся из `originalDoc` (чтобы не потерять `translatedAt`/`sourceHash`). Дашборд и агент-переводчик видят,
 что перевод устарел; агент после перевода записывает актуальный hash. Полную мультилокальную сверку
 удобнее вынести в отдельный сервис/агента.
+
+> ⚠️ Хук подключён **только к `content`**. `species`/`quizzes`/`games` тоже имеют локализованные поля +
+> drafts, но пока используют лишь `forceAgentDrafts` — их переводы НЕ отслеживаются на устаревание
+> автоматически. Расширить на них или явно решить, что не нужно — см. Roadmap **M1-T08**.
 
 ## Провенанс и AI-прозрачность
 AI-контент маркируется честной provenance-шкалой, **видимой пользователю** (`aiAssisted`/`aiTranslated`/

@@ -2,7 +2,7 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-06-30**.
+> Last updated: **2026-07-01.**
 
 ---
 
@@ -183,8 +183,9 @@ Same session, after the prey decision. Full technical state lives in
 - **#30 / #31** — game-over **interstitial**: a stable "time's up, считаем улов…" beat while the
   score submits + board loads in the background; reveal only when both done (`Promise.all`). No more
   loading flash. Min duration **3 s** (1.2 s felt too quick).
-- **Regression from #30/#31 — auto-scroll to the player's row stopped working** (branch
-  `fix/game-leaderboard-scroll-to-player`). `mountAfterPlay` renders the board + calls `scrollToMe`
+- **✅ MERGED — Regression from #30/#31 fixed (PR #34, `89b8b54`, 2026-07-01)** — auto-scroll to the
+  player's row stopped working (branch `fix/game-leaderboard-scroll-to-player`). `mountAfterPlay`
+  renders the board + calls `scrollToMe`
   *while the interstitial hides it* (`#overlay.is-waiting .board { display:none }`). A `display:none`
   element has no layout → `getBoundingClientRect` returns zeros and `scrollTop` won't stick, so the
   jump was lost and the board opened at the top. **Fix:** `scrollToMe` (`core/leaderboard.js`) now
@@ -200,9 +201,10 @@ Same session, after the prey decision. Full technical state lives in
     Run manually: `npm run test:e2e -- tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. **No CI
     workflow** — proper/broader test coverage + pipeline wiring are a follow-up before adding to CI.
 
-**OPEN — branch `feat/game-static-backdrop` (PR #32, NOT merged):** optional AI-art underwater
-backdrop. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**) + the general encode pipeline
-`tools/encode-image.mjs` (PNG → AVIF/WebP/JPEG). The design **evolved** over the session:
+**✅ MERGED — `feat/game-static-backdrop` (PR #32, `81cda3c`, 2026-06-30/07-01):** optional AI-art
+underwater backdrop, live on the alpha. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**)
++ the general encode pipeline `tools/encode-image.mjs` (PNG → AVIF/WebP/JPEG). The design **evolved**
+over the session:
 - **Model:** field-only cover-fit → "spans the whole viewport" → **final**: one art across field +
   borders, with the **animated boundary markers drawn over it** (kelp-walls / water-surface + boat /
   seabed grass), procedural opaque fills skipped. Reads as one scene; animation marks where play ends.
@@ -217,10 +219,10 @@ backdrop. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**) + the g
   `window.__fps`) — ~100–170 fps in preview, huge headroom; the depth-tint/backdrop cost is
   movement-independent. **No mechanics/control changes** — diff vs `main` doesn't touch
   `core/{sim,input,balance}.js` or `entities/{seal,prey}.js`.
-- **Status:** placeholder art replaced with real art; iterating on look. **Before merge:** confirm
-  `?fps=1` on a real (low-end/high-DPR) phone; merging auto-deploys to the alpha.
+- **Status:** ✅ merged & deployed. Placeholder art replaced with real art (`5b35bb5`); FPS check
+  confirmed ~100–170 fps in preview before merge.
 
-## 6. Prey-icon redesign (branch `feat/game-prey-icons-redesign`, 2026-07-01)
+## 6. Prey-icon redesign (✅ MERGED — PR #33, `c337a8d`, 2026-07-01)
 
 Cosmetic-only pass on the prey art — **kept procedural vector** (decided over PNG sprites: vector
 scales at any radius/DPR, recolours freely, no assets, matches the vector seal, and small fast
@@ -262,14 +264,30 @@ Verified with an animated preview of the real renderer (`node --check` clean).
   on the reef — matching the prey's separation edge. No volume/sheen/occlusion; body gradient,
   colours, flippers, tail, claws, whiskers all byte-identical (an earlier volume experiment was
   fully reverted).
-- **Open:** real-device look check alongside the PR #32 backdrop before merge.
+- **Status:** ✅ merged & deployed alongside the PR #32 backdrop.
+
+## 7. Cover art + image consolidation (✅ MERGED — PR #35 + preceding work, `71ae980`/`e0c0ccd`, 2026-07-01)
+
+Landscape (1200×630) + portrait (941×1672, 9:16) cover art re-generated via `encode-image.mjs` →
+AVIF/WebP/JPEG (cover 157→69 KB, mobile 300→111 KB); overlay background now serves the same
+AVIF→WebP→JPEG ladder via CSS `image-set()` as the backdrop (JPEG-only `cover.jpg` kept for OG, since
+some scrapers reject WebP/AVIF). All image assets consolidated under `assets/` (covers joined the
+backdrop); `*-src.png` sources git-ignored. Follow-up fix (PR #35, `e0c0ccd`): rebuilt the landscape
+cover with a smaller/more compact wordmark so the title isn't cropped on wide monitors
+(`background-size: cover` crops width) — same 1200×630 aspect, OG meta unchanged. `sw.js` `CACHE`
+bumped v8→v11→v12→**v13**.
 
 ## Next steps / open items
-0. **Backdrop (PR #32) — OPEN.** See §5. Final visual polish + real-device FPS check, then merge.
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.
 2. ✅ **Alpha — DONE.** sealthehunter.online auto-deployed from `main` (PR #26) and is live.
-3. *(Optional, future)* tighten the residual aspect spread further (tighter clamp — 16:9 is ~2 pts
+3. ✅ **Backdrop (PR #32), prey-icon redesign (PR #33), leaderboard-scroll fix (PR #34), cover
+   rebuild (PR #35) — all DONE**, merged and deployed to the alpha as of 2026-07-01.
+4. **Open — SH-10 (Roadmap):** legal-page accessibility on the alpha domain (footer Impressum/
+   Datenschutz links in-game, Caddyfile allowlist, real Impressum contact info, Datenschutz section
+   about the game's `localStorage`/rate-limiting) — confirmed still not started by the 2026-07-01
+   documentation audit.
+5. *(Optional, future)* tighten the residual aspect spread further (tighter clamp — 16:9 is ~2 pts
    fairer but borders tall phones more; or a calibrated per-aspect difficulty compensation) — the
    now-seeded harness can drive it reliably. Also SH-08: anti-cheat + balance from real scores.
 
