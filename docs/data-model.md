@@ -108,6 +108,13 @@ EU-чистая модель: **нет PII** (ни email, ни IP, ни акка
 валидирующий server-authoritative endpoint (local API, overrideAccess). См. [api.md](api.md) и
 [game-seal-hunter.md](game-seal-hunter.md).
 
+**Задел под мульти-игровой лидерборд (SR-09, ещё НЕ в схеме — целевое состояние):** опциональные,
+game-нейтральные поля `distance` / `livesRemaining` / `fishCollected` / `courseSeed` (number/number/
+number/text, все null/omitted у существующих строк Seal Hunter → обратная совместимость). `courseSeed`
+выводится сервером из play-токена, не от клиента (см. [game-seal-run.md](game-seal-run.md) §2.2/§2.6).
+`score` остаётся required сорт-ключом (для Seal Run — производная формула distance+улов+жизни,
+≤100000; ранжирование `sort: ['-score', createdAt]` не меняется).
+
 ## Агенты — `src/collections/Agents.ts`
 
 ### `agent-proposals` — очередь ревью (сердце human-in-the-loop)
