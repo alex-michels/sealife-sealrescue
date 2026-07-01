@@ -39,13 +39,15 @@ with real art at the same names.
 game dir (`public/games/seal-hunt-v1`):
 
 ```bash
+# Source PNGs live in assets/ as *-src.png (git-ignored — large, local-only); outputs go to assets/.
 # backdrop (soft-blur a sharp source into the foggy look)
-node tools/encode-image.mjs backdrop-src.png --name backdrop-landscape --out assets --width 1600 --blur 2
-node tools/encode-image.mjs backdrop-portrait-src.png --name backdrop-portrait --out assets --width 900 --blur 2
+node tools/encode-image.mjs assets/backdrop-landscape-src.png --name backdrop-landscape --out assets --width 1600 --blur 2
+node tools/encode-image.mjs assets/backdrop-portrait-src.png  --name backdrop-portrait  --out assets --width 900  --blur 2
 
-# covers (same tool — start/end screen background in index.html / og:image)
-node tools/encode-image.mjs cover-src.png        --name cover        --out . --width 1200
-node tools/encode-image.mjs cover-mobile-src.png --name cover_mobile --out . --width 800
+# covers (same tool — start/end screen background in style.css / og:image). cover.jpg stays JPEG for OG;
+# the browser gets AVIF/WebP via image-set(). The portrait cover is browser-only (never OG).
+node tools/encode-image.mjs assets/cover-src.png        --name cover        --out assets --width 1200
+node tools/encode-image.mjs assets/cover-mobile-src.png --name cover_mobile --out assets --width 1080
 ```
 
 Regenerate the placeholders any time with `node tools/make-placeholder-backdrop.mjs`.
