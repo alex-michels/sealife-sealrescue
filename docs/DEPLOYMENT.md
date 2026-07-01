@@ -17,6 +17,11 @@
 (prod) и все игры. **Единый source of truth, единый деплой.** (Это целевое состояние; на текущей
 **alpha** наружу отдаётся только игра, а БД — на Neon EU, см. §2.)
 
+> **Vanity-домен Seal Run (SR-12):** `sealrun.sealife.info` — **301-редирект** на канонический путь
+> `sealife.info/[locale]/games/seal-run`, НЕ отдельный standalone-origin в v1. Один публичный origin →
+> Impressum/Datenschutz достижимы через футер сайта, разрыв SH-10 не повторяется. Настройка — A-record
+> + handle-блок в `deploy/Caddyfile` (~5 строк). См. [game-seal-run.md](game-seal-run.md) §2.5.
+
 * **Локация: EU/EEA (Германия или Финляндия).** Соблюдает data-residency и при этом нормально
   маршрутизируется в RU-зону (Hetzner Helsinki — обычно лучший RU-роут среди EU DC).
   **НЕ** брать non-EU DC (Армения/и т.п.) — нарушает инвариант о размещении персональных данных.

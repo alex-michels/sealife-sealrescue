@@ -58,6 +58,15 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 
 Детали анти-чита, сезонов и имён — в [game-seal-hunter.md](game-seal-hunter.md).
 
+> **Задел под Seal Run (SR-09/SR-10, ещё НЕ реализовано — целевое состояние).** Тот же эндпоинт,
+> per-game расширение: `/start` добавит в подписанный токен `cs` (courseSeed) + сезон (сервер
+> выводит `courseSeed = hash(сезон-выдачи)`, клиент не поставляет как истину). `POST /api/leaderboard`
+> получит опц. поля `distance` / `livesRemaining` / `fishCollected` и **ветвление правдоподобия по
+> слагу игры**: Seal Hunter — фикс-окно 50–70с (без изменений); Seal Run — «правдоподобная
+> длительность ОТ дистанции» (`minPlausibleMs = distance / MAX_SPEED_UNITS_PER_MS`) + серверная
+> пересборка сид-детерминированной трассы и сверка улова с бюджетом рыбы. Порог `MIN_PLAY_MS` тоже
+> per-game (Run допускает ~3с). Подробности — [game-seal-run.md](game-seal-run.md) §2.2.
+
 ## 2. Авто REST + GraphQL Payload
 
 Payload генерирует REST и GraphQL из коллекций (catch-all `app/(payload)/api/[...slug]/route.ts`):
