@@ -28,7 +28,7 @@
 
 | Слой | Инструмент | Где в репо | Что описывает |
 |---|---|---|---|
-| Облачные ресурсы | **Terraform** (провайдеры Contabo + Namecheap) | `infra/terraform/` | VPS, **DNS**, object-storage бакеты, позже agent-VPS |
+| Облачные ресурсы | **Terraform** (провайдеры Contabo + Namecheap) ⚠️ *(planned — `infra/terraform/` пока не создан)* | `infra/terraform/` | VPS, **DNS**, object-storage бакеты, позже agent-VPS |
 | Первый boot | **cloud-init** (минимальный) | `deploy/cloud-init.yaml` | users + SSH-ключи + python → передать управление Ansible |
 | Конфиг (day‑2) | **Ansible** | `infra/ansible/` | хардненинг, Node 24, Caddy, app systemd/env, **позже Postgres**, бэкапы, media |
 | Деплой приложения | **GitHub Actions** (готово) | `.github/workflows/` | build → rsync → симлинк → systemd restart |

@@ -72,14 +72,17 @@
 
 * TypeScript strict, без `any`. Внешний/агентный ввод валидировать (Zod).
 * В каждой новой коллекции — явный access (read/create/update/delete); `delete` НИКОГДА не роли `agent`.
-* ESLint + Prettier + pre-commit hook (lint/typecheck). Секреты не в коде/гите; держать `.env.example` без значений.
+* ESLint + Prettier настроены; **pre-commit hook (lint/typecheck) — целевое состояние, ещё не подключён**
+  (нет husky/lint-staged, CI тоже не гейтит lint/тесты — см. Roadmap M0-T07/QA-06). Запускать `npm run lint`
+  вручную до коммита. Секреты не в коде/гите; держать `.env.example` без значений.
 * `slug` канонический, общий для локалей. У `media` `alt` обязателен.
 
 **Next.js / Payload**
 
 * App Router: server components по умолчанию, client — только где нужна интерактивность; минимум client JS.
 * В компонентах — только **semantic-токены** (не raw `--baltic`). Строить компоненты, не «страницы».
-* Шрифты self-host (`next/font`); локализованные страницы — статическая генерация.
+* Шрифты self-host (`next/font`); статическая генерация/ISR для контентных страниц — целевое
+  состояние, сейчас они рендерятся SSR per-request (см. `docs/localization.md`).
 * **Route guards/tests:** контент- и legal-роуты работают для всех трёх локалей (`/ru`, `/en`, `/de`); неизвестные локали и несуществующие slug → **404**.
 * **Хостинг/деплой — см. [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md):** один EU-VPS на оба сайта + игры; БД по окружениям (Neon — dev/test, self-hosted Postgres + бэкапы — prod); публичный alpha игры с allowlist маршрутов. Data-residency (PII только EU/EEA) — инвариант.
 

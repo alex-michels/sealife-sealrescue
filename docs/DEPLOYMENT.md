@@ -38,6 +38,11 @@
   для публичного alpha (§4). Конфиг — `deploy/Caddyfile`; сервис — `deploy/sealife.service`.
 * Артефакт = `.next/standalone` + скопированные `.next/static` и `public/` (Next их в standalone не
   кладёт; `public/` содержит саму игру). Приложение слушает `127.0.0.1:3000`, наружу — только Caddy.
+  Хранятся последние 5 релизов в `/opt/sealife/releases/` (старые удаляются автоматически при деплое).
+* ⚠️ Корневой `Dockerfile`/`docker-compose.yml` — **НЕ этот путь деплоя**. `Dockerfile` — неадаптированный
+  boilerplate из примера Next.js `with-docker`, нигде не собирается и не используется CI/Ansible;
+  `docker-compose.yml` поднимает только Postgres для локальной разработки. Реальный прод — голый
+  `.next/standalone` под systemd, как описано выше.
 
 ---
 

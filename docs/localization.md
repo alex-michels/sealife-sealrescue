@@ -48,6 +48,9 @@ Next 16 `proxy` (бывш. middleware) делает две вещи на пуб�
   2. `Accept-Language` с учётом q-весов (совпадает с любой из `ru`/`en`/`de`);
   3. `fallbackLocale` (`en`).
   Ответ помечается `Vary: Accept-Language, Cookie` (подсказка кэшам/CDN).
+  > Механизм — **общий** best-match по списку `locales` (нет отдельных ru-/de-веток в коде);
+  > результат «ru-браузер→ru, de-браузер→de, иначе→en» получается сам собой, т.к. только эти три
+  > языка входят в `locales`.
 - **Есть локаль** (`/ru`, `/en` или `/de`) → `rewrite` на `/[site]/[locale]/…`. Язык здесь НЕ запоминается
   (cookie ставится только при явном выборе в свитчере — требование TDDDG: хранить выбор языка только
   после явного действия).
@@ -72,10 +75,11 @@ app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
   species, species/[slug]  # Тюленепедия
   quizzes, quizzes/[slug]  # квизы
   games, games/[slug]      # игры (встраивает /public/games/<slug>, ?lang=<locale>)
-  rescue-centers/[slug]    # центры (sealrescue)
+  rescue-centers/[slug]    # центры (sealrescue) — сейчас на dev-моках, не на Payload (см. M2-T02)
   what-to-do, report       # emergency / нотис
   rescue-news, rescue-quest
   legal-notice, privacy, cookies, terms   # legal (локализованы, вкл. DE: Impressum/Datenschutz)
+  styleguide               # dev-only витрина компонентов, НЕ в sitemap
   [slug]                   # контентная страница по slug
 ```
 
@@ -86,8 +90,14 @@ app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
 
 - Альтернаты и canonical считаются из `src/i18n/` (`alternates`); `ru`/`en`/`de` ссылаются друг на друга,
   `x-default` — по политике.
-- `app/sitemap.xml/route.ts` отдаёт карту по локалям с hreflang/x-default.
-- Локализованные страницы — статическая генерация (перформанс + SEO).
+- `app/sitemap.xml/route.ts` отдаёт карту по локалям с hreflang/x-default, но **пока только для
+  `content`+`species` на sealife**; `rescue-centers` сознательно исключён до M2 (см. [api.md](api.md)).
+  `robots.txt` не реализован.
+- ⚠️ **Статическая генерация — пока не факт, а цель.** Только layout-шелл `[site]/[locale]/layout.tsx`
+  использует `generateStaticParams` (перечисляет site×locale). Все страницы с данными (articles, memes,
+  species, `[slug]`, rescue-centers, quizzes, games, главная) — динамические server components: каждый
+  запрос делает живой `getPayload(...)`-запрос, без `generateStaticParams`/`force-static`/`revalidate`.
+  ISR/статика для контентных страниц — задача на будущее, не текущее поведение.
 
 ## Связанные доки
 - [architecture.md](architecture.md) — жизненный цикл запроса

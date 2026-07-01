@@ -23,6 +23,13 @@
 **Следующее:** наполнение контентом (M1); перед запуском prod-сайтов/PII — self-hosted Postgres +
 off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md` §6–9).
 
+> **Аудит документации 2026-07-01:** полный проход по всей кодовой базе против всех доков в `docs/` +
+> корневых `.md`. Найденные расхождения исправлены прямо в тех-доках (`data-model.md`, `agents.md`,
+> `api.md`, `localization.md`, `architecture.md`, `local-development.md`, `game-seal-hunter*.md`,
+> `DEPLOYMENT.md`, `INFRA.md`); найденные пробелы в коде/тестах/инфре сведены сюда новыми пунктами
+> (**SEC-05/07**, **QA-04…07**, уточнения **M0-T04/T05/T07**, **M1-T08**, **M2-T02**, **SH-06/SH-10**).
+> Полные протоколы аудита — в истории PR этой ветки.
+
 ---
 
 ## M0 — Foundation / Setup (1–2 недели)
@@ -35,14 +42,21 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [~] **M0-T02** Деплой Payload+Next (EU-регион), прод + staging. *[M]* — alpha-пайплайн готов:
   CI собирает Next standalone → VPS (Contabo, EU) → Caddy + systemd, авто-деплой из `main`
   (`.github/workflows/deploy.yml`, `deploy/`). Остаётся: staging + prod-домены sealife/sealrescue. См. DEPLOYMENT.md.
+  — попутно решить судьбу корневого `Dockerfile`: неиспользуемый Vercel-example boilerplate, реальный
+  деплой (standalone + systemd) его не задействует нигде; либо пометить как reference-only, либо убрать
+  (см. пометку в `DEPLOYMENT.md` §1, добавленную аудитом 2026-07-01).
 * [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — `sealthehunter.online` (alpha): DNS + авто-HTTPS Caddy.
   Остальные домены (sealife/sealrescue) + DDoS/кэш — позже.
-* [ ] **M0-T04** Media delivery: Hetzner Object Storage + Bunny CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
-* [ ] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC
+* [ ] **M0-T04** Media delivery: **Contabo Object Storage** (переплан с 2026-06-30, см. `INFRA.md` §4; было Hetzner+Bunny) + CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
+* [~] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC — `.env`/`.env*.local` уже в `.gitignore` (готово); секрет-менеджер (Vault/SOPS/облачный) — не подключён, секреты сейчас в GitHub Repository secrets + `/etc/sealife/.env` на боксе (см. `INFRA.md` §6).
 * [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — на alpha БД =
   **Neon EU** (бэкапы покрывает PITR Neon; данные анонимны, без PII). Собственный `pg_dump`-бэкап —
   **гейт перед self-hosted prod / любым PII** (DEPLOYMENT.md §7).
-* [ ] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA
+* [ ] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA — подтверждено аудитом
+  (2026-07-01): сейчас `npm run lint`/тесты/typecheck нигде не запускаются автоматически — ни в CI
+  (`.github/workflows/deploy.yml` делает только `npm ci && npm run build`), ни pre-commit хуком
+  (несмотря на формулировку в `CLAUDE.md`/`local-development.md` — husky/lint-staged не установлены,
+  `.git/hooks/` пуст). До этой задачи — ноль автоматических гейтов качества перед деплоем.
 
 ### Роутинг и i18n
 
@@ -90,6 +104,9 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [ ] **M1-T06** Перенести лучший контент из VK/TG в CMS (RU). *[L]*
 * [ ] **M1-T07** ~20 evergreen-статей (RU). *[L]*
 * [ ] **M1-T08** Перевод **RU→EN → human review → publish.** Хранить provenance: `aiTranslated`, `humanReviewed`, `reviewedBy`, `reviewedAt`, `sourceContentHash`; показывать user-facing метку. (+ поля в Content/Translation.) См. **EU-11**. *[M]* → EU
+  — по пути учесть: хук `markTranslationsStale` (`src/hooks/contentHooks.ts`) сейчас подключён
+  ТОЛЬКО к `Content`, но не к `Species`/`Quizzes`/`Games` (у них тоже локализованные поля + drafts);
+  расширить на все коллекции с переводимым контентом или явно задокументировать, почему не нужно.
 * [ ] **M1-T09** Glossary/translation memory подключить к процессу перевода. *[S]*
 
 ### 🎮 Игры и вовлечение (эпик)
@@ -118,7 +135,11 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
   * [x] **SH-04** SVG-редизайн: векторные тюлень и рыбы/добыча через `Path2D`, тинт из **semantic-токенов** (Foggy Coastal Utility, оба режима). Заменить текущие примитивы. *[M]* → DESIGN
 * **Фаза 3 — Лидерборды**
   * [x] **SH-05** Коллекция Payload `game-scores`: анонимное имя + score + durationMs + deviceClass (грубо mobile/desktop, без пиксельных размеров — анти-fingerprint) + статус модерации. Явный access: публичная запись НЕ напрямую; `delete` — никогда `agent`. *[M]* → EU
-  * [x] **SH-06** Server-authoritative submit-API (Next route): Zod-валидация, плаузибилити-капы (catches/сек, длительность ≈60с), rate-limit, **премодерация** анонимного имени (profanity-фильтр + лог модерации, DSA notice-and-action); запись через Payload local API; без PII в логах. *[M]* → SEC/EU
+  * [x] **SH-06** Server-authoritative submit-API (Next route): Zod-валидация, плаузибилити-капы (catches/сек, длительность ≈60с), rate-limit; запись через Payload local API; без PII в логах. *[M]* → SEC/EU
+    — ⚠️ **уточнение (аудит 2026-07-01):** отдельного profanity-фильтра/лога модерации в коде нет —
+    премодерация фактически не нужна, т.к. имя игрока НЕ свободный текст, а собирается из закрытого
+    списка слов (`ADJ_EN`/`MOD_EN`/`NOUN_EN`/… в `src/endpoints/leaderboard.ts`), UGC там отсутствует.
+    Формулировка задачи выше упрощена относительно исходной (убран несуществующий пункт).
   * [x] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
   * [x] **SH-08** Анти-чит-харднинг и подстройка баланса по анонимизированным распределениям очков (итеративно). *[S]* → SEC
 * **Фаза 4 — Публичный alpha (sealthehunter.online)**
@@ -139,6 +160,9 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
        серверные логи + ретеншн, аналитики нет.
     Cookie-баннер пока **НЕ нужен** (storage strictly-necessary/functional, аналитика выключена) —
     включить вместе с Plausible. Основание: §5 DDG + GDPR (IP = перс. данные); см. `COMPLIANCE_EU_DE.md`. *[M]* → EU
+    — подтверждено аудитом (2026-07-01): ни один из 4 пунктов не реализован (нет footer/legal-ссылок
+    в `index.html`, `deploy/Caddyfile` legal-роуты не аллоулистит, `src/site/legal.ts` — плейсхолдеры,
+    Datenschutz не описывает `localStorage`/rate-limit игры). Статус `[ ]` верен.
 
 #### 🕹 Phaser — для более «тяжёлых» игр (когда Canvas2D мало)
 
@@ -172,6 +196,10 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 
 * [ ] **M2-T01** «Нашёл тюленя — что делать / чего НЕ делать» (RU/EN), дистанция не хардкодится. *[M]*
 * [ ] **M2-T02** Каталог центров: **list-first** + карта (toggle), фильтр-чипы с числом результатов, «штамп проверки», `socialLinks`, `tel:`, маршрут. *[L]* → DESIGN
+  — коллекция `rescue-centers` в Payload уже существует с нужными полями (`location`, `socialLinks`,
+  `operatingLanguages`, `verificationScore`, `verifiedByAgentAt/HumanAt`); фронтенд
+  (`rescue-centers/page.tsx` и `[slug]/page.tsx`) сейчас на 100% на моках (`@/mock/sample`), не читает
+  из Payload — эта задача включает и перевод фронтенда с mock на реальные данные.
 * [ ] **M2-T03** Наполнить 20–50 центров (RU/EN). *[L]*
 * [ ] **M2-T04** Форма «Сообщить об ошибке / предложить центр» → `user-submissions` (премодерация, без email). См. **EU-10**. *[M]* → EU
 * [ ] **M2-T05** Блок перелинковки sealrescue → sealife. *[S]*
@@ -344,8 +372,18 @@ players (auth: true)
 * [ ] **SEC-02** Sandbox для парсинга внешних страниц. *[M]*
 * [ ] **SEC-03** Анти-prompt-injection: внешний контент = данные, не инструкции. *[M]*
 * [ ] **SEC-04** Audit log действий агентов. *[S]*
-* [ ] **SEC-05** Rate-limiting форм и API. *[S]*
-* [ ] **SEC-06** Проверка: только admin/editor имеют `delete`; `agent` не публикует. *[S]*
+* [ ] **SEC-05** Rate-limiting форм и API. *[S]* — `user-submissions.create` сейчас публичный
+  (`() => true`) БЕЗ rate-limit/CAPTCHA, в отличие от лидерборда (HMAC+Zod+rate-limit); реальный
+  вектор спама модерационной очереди до **M2-T14** (Turnstile). Приоритизировать перед M2-T04 идёт в прод.
+* [ ] **SEC-06** Проверка: только admin/editor имеют `delete`; `agent` не публикует. *[S]* —
+  подтверждено аудитом (2026-07-01) по всем 13 коллекциям: `delete` нигде не включает `agent`,
+  `forceAgentDrafts` форсит `_status: draft`. Инвариант держится.
+* [ ] **SEC-07** Явный access (create/update/delete) для коллекции `media`. *[S]* — inline-коллекция
+  `Media` в `src/payload.config.ts` задаёт только `read: () => true`; без явных `create`/`update`/
+  `delete` Payload по умолчанию разрешает запись любому залогиненному — нарушение собственного правила
+  CLAUDE.md «в каждой коллекции — явный access». Заодно удалить мёртвый неиспользуемый файл
+  `src/collections/Media.ts` (дублирует конфиг с расхождением: `alt` там НЕ localized, в реально
+  используемой inline-версии — localized) — код никогда не импортирует этот файл.
 
 ### EU — Compliance (GDPR / TDDDG / DDG / BFSG / DSA / AI Act) — см. `COMPLIANCE_EU_DE.md`
 
@@ -372,6 +410,18 @@ players (auth: true)
 * [ ] **QA-01** Тесты access control (agent не может publish/delete). *[M]*
 * [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]*
 * [ ] **QA-03** Lighthouse в CI. *[S]*
+* [ ] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
+  локаль/slug → 404). *[S]* — сейчас такого теста НЕТ, хотя `local-development.md`/`api.md`/`CLAUDE.md`
+  описывают это покрытие как существующее (аудит 2026-07-01). Либо добавить тест, либо смягчить
+  формулировку в доках до факта.
+* [ ] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — это неизменённый
+  Payload-boilerplate («Welcome to your new project», `/Payload Blank Template/`), упадёт при реальном
+  запуске против текущего sealife/sealrescue-контента; сейчас просто никогда не выполняется в CI.
+* [ ] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* — сейчас `npm run test`/`test:int`/
+  `test:e2e` не вызываются ни в одном workflow (`.github/workflows/*.yml`) — см. также **M0-T07**.
+* [ ] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —
+  сейчас dev-only (снят из CI коммитом `1e113b3`, см. `game-seal-hunter-worklog.md` §5); нужна более
+  широкая обвязка/стабильность прежде чем включать обратно.
 
 ---
 

@@ -18,7 +18,8 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 
 ### `GET /api/leaderboard/start?game=<slug>&board=<desktop|mobile>`
 Выдаёт **play-token** на старте раунда (анти-чит). Токен — подписанный HMAC, привязан к game/board,
-с временной меткой.
+с временной меткой. ⚠️ Этот endpoint сам по себе БЕЗ rate-limit (только `POST /api/leaderboard` его
+проверяет) — риск смягчён тем, что токен нужно ещё «прожить» ≥ `MIN_PLAY_MS` и израсходовать один раз.
 → `{ token: string }`
 
 ### `POST /api/leaderboard`
@@ -42,7 +43,7 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 | `rate_limited` | 429 | > 30 запросов / 60 c с IP (IP в БД не хранится) |
 | `bad_json` / `invalid_input` | 400 | не JSON / не прошёл Zod |
 | `invalid_token` | 401 | подпись неверна или game/board не совпали |
-| `token_age` | 422 | сыграно < 50 c или токену > 30 мин |
+| `token_age` | 422 | сыграно < 40 c (`MIN_PLAY_MS`, запас под cold-start dev/Turbopack) или токену > 30 мин |
 | `duration_mismatch` | 422 | заявленная длительность > реально прошедшего (+8 c) |
 | `implausible_duration` | 422 | `durationMs` вне 50000..70000 (раунд ~60 c) |
 | `implausible_score` | 422 | score > потолка (≈3 поимки/с + 8) |
@@ -69,14 +70,25 @@ Payload генерирует REST и GraphQL из коллекций (catch-all 
 Эти маршруты исключены из `proxy.ts` matcher — Payload обслуживает их сам. Чтение публикуемого контента
 публично (`read: () => true` или `readPublishedOrStaff`), запись/админ-операции — по RBAC.
 
-## 3. Route guards (фронтенд)
+## 3. sitemap.xml (кастомный Next route, не Payload endpoint)
 
-Жёсткие гарантии маршрутизации (инвариант + тесты `tests/e2e/`):
+`GET /sitemap.xml` (`src/app/sitemap.xml/route.ts`) — не Payload-endpoint и не авто-REST; отдельный Next
+route handler, который сам делает неаутентифицированные `payload.find()` по `content`/`species`
+(только `published`, только для `site.id === 'sealife'`) и строит multi-locale URL с hreflang по хосту
+запроса (`resolveSiteId`). ⚠️ `rescue-centers` пока сознательно исключён (см. комментарий в файле:
+«появится в M2») — sitemap НЕ покрывает sealrescue. `robots.txt`-роута в проекте пока нет вообще.
+
+## 4. Route guards (фронтенд)
+
+Жёсткие гарантии маршрутизации (инвариант, зашит в `proxy.ts` + `[locale]/layout.tsx`):
 
 - **Контент-локали — `/ru`, `/en`, `/de`** (равноправны). Нет локали в пути → авто-redirect (без forced по языку).
 - **Legal-роуты локализованы:** slug общий, заголовок зависит от локали — `/de/legal-notice` рендерится как «Impressum», `/de/privacy` — как «Datenschutz».
 - **404:** неизвестная локаль (не `ru`/`en`/`de`) или несуществующий slug.
 - **`/admin`** — админка Payload (staff, аутентификация по email).
+
+> ⚠️ **Автотеста на эти route guards пока нет** (проверено вручную/по коду) — `tests/e2e/` покрывает
+> admin-логин и игру, но не мультилокальные 404. Добавить — Roadmap **QA-04**.
 
 ## Связанные доки
 - [localization.md](localization.md) — как proxy.ts строит маршруты

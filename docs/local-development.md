@@ -3,8 +3,17 @@
 Краткий быстрый старт — в корневом [`README.md`](../README.md). Здесь — детали для разработки.
 
 ## Требования
-- **Node** `^18.20.2 || >=20.9.0` (прод-таргет cPanel/VPS — Node 22).
-- **pnpm** `^9 || ^10` (в `package.json` `engines`; npm тоже работает — в README команды через `npm`).
+- **Node** `^18.20.2 || >=20.9.0` в `package.json engines`; `.nvmrc` пинит **24** (совпадает со сборкой/
+  рантаймом в CI/на VPS — `nvm use`/`fnm use` без аргумента даёт правильную версию для `dev`/`build`).
+  ⚠️ **Кроме сидов** — `payload run` (сиды, `tsx`) пока не поддерживает Node 24 module loader
+  (`node:crypto` ENOENT); сиды гонять на **Node 22**: `fnm use 22 && npm run seed:baseline` (см. §«Сиды»,
+  и inline-комментарий вверху `src/seed/seedBaseline.ts`).
+- **pnpm** упомянут в `package.json engines`/`pnpm.onlyBuiltDependencies` (наследие шаблона Payload), но
+  **фактический менеджер пакетов проекта — npm**: канонический lockfile — `package-lock.json`
+  (`pnpm-lock.yaml` в `.gitignore`), CI использует `npm ci`/`npm run build`. `.npmrc` содержит
+  `legacy-peer-deps=true` (влияет на `npm install`). Одно расхождение: `playwright.config.ts`
+  `webServer.command` — `pnpm dev`, а не `npm run dev`; без pnpm `npm run test:e2e` не поднимет сервер
+  сам — либо поставить pnpm, либо держать `npm run dev` запущенным заранее.
 - Доступный **Postgres**: локальный, или облачный в EU (Neon/Supabase). Адаптер — `@payloadcms/db-postgres`.
 
 ## ENV (`.env`)
@@ -36,10 +45,12 @@ npm run dev              # Next + Payload; схема БД синхронизи�
 | `npm run generate:types` | сгенерировать `src/payload-types.ts` — **после изменения схемы** |
 | `npm run generate:importmap` | пересобрать import map админки |
 | `npm run lint` | ESLint |
+| `npm run seed:baseline` | посев обязательного MUST-HAVE минимума (сейчас: строка `games` для лидерборда) — нужен на любой свежей БД, иначе `unknown_game` |
 | `npm run seed:glossary` | посев глоссария/translation memory (идемпотентно) |
 | `npm run seed:m1` | посев демо-контента и видов (`ru`/`en`) |
 | `npm run test:int` | Vitest (integration) |
 | `npm run test:e2e` | Playwright (e2e) |
+| `npm test` | `test:int` + `test:e2e` подряд |
 
 ## База данных
 - **Dev — push-режим:** Payload синхронизирует схему с Postgres автоматически, миграций пока нет.
@@ -49,28 +60,53 @@ npm run dev              # Next + Payload; схема БД синхронизи�
 
 ## Сиды (демо-данные)
 ```bash
+npm run seed:baseline   # обязательный минимум (games) — нужен на любой свежей БД
 npm run seed:glossary   # словарь терминов/тюль-сленга (апсерт по source)
 npm run seed:m1         # демо статьи/новости/мемы/виды, ru+en
 ```
-Данные правятся в `src/seed/` (`glossaryTerms.ts`, `m1SeedData.ts`); логика записи — `seedGlossary.ts`,
-`seedM1.ts`. Сиды используют `payload run` — корректное завершение через top-level await (иначе запись в БД
-не успевает; см. историю проекта).
+Данные правятся в `src/seed/` (`glossaryTerms.ts`, `m1SeedData.ts`); логика записи — `seedBaseline.ts`,
+`seedGlossary.ts`, `seedM1.ts`. Сиды используют `payload run` — корректное завершение через top-level
+await (иначе запись в БД не успевает; см. историю проекта).
+
+⚠️ **Сиды гонять на Node 22, не 24** (`payload run`/`tsx` пока не поддерживает Node 24 module loader —
+inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`): `fnm use 22 && npm run seed:baseline`.
+Сборка/dev-сервер — на Node 24 (`.nvmrc`), это разные версии для разных команд. См. также `DEPLOYMENT.md` §5.7/§9.
 
 ## Тесты
-- **Integration** — Vitest (`vitest.config.mts`, `test.env`), `tests/int/api.int.spec.ts`.
-- **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/` (admin, frontend). Покрывают в т.ч. route
-  guards: контент- и legal-роуты работают на `/ru`, `/en`, `/de`; неизвестные локали и slug → 404.
+- **Integration** — Vitest (`vitest.config.mts`, `test.env`): `tests/int/api.int.spec.ts` (пока один
+  smoke-тест — `payload.find('users')`, без проверки access control/хуков).
+- **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
+  - `admin.e2e.spec.ts` — логин в админку, dashboard, списки/создание пользователя.
+  - `frontend.e2e.spec.ts` — ⚠️ **устарел**, всё ещё проверяет заголовок Payload blank-шаблона
+    («Welcome to your new project»), не реальный контент sealife/sealrescue — упадёт, если запустить
+    (Roadmap **QA-05**).
+  - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка, alpha-notice,
+    `?lang=`, запись языка в `localStorage` только после явного выбора).
+  - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
+    авто-скролла к строке игрока; **dev-only, не в CI** (снят коммитом `1e113b3`; Roadmap **QA-07**).
+- ⚠️ **Мультилокальных route guards (404 на неизвестной локали/slug) автотест пока НЕ покрывает**
+  (Roadmap **QA-04**) — это заявлено как инвариант в `CLAUDE.md`/`api.md`, но не проверено автоматически.
+- **Ни один из тестов не запускается в CI** — `.github/workflows/*.yml` вызывают только `npm ci`/
+  `npm run build`, без `lint`/`test:int`/`test:e2e` (Roadmap **M0-T07**, **QA-06**).
 ```bash
 npm run test:int
 npm run test:e2e
 ```
 
 ## Docker (опционально)
-В корне есть `Dockerfile` и `docker-compose.yml` (Postgres + приложение) — для воспроизводимого окружения.
+- `docker-compose.yml` — **только Postgres**-сервис (алтернатива Neon для локальной БД; в комментарии
+  файла отмечено, что требует Docker Desktop, который по умолчанию не установлен). Приложение в
+  `docker-compose.yml` НЕ описано.
+- `Dockerfile` — не задействован нигде в реальном деплое (прод собирается как `.next/standalone` +
+  systemd, см. `DEPLOYMENT.md`); это неадаптированный boilerplate из примера Next.js `with-docker`.
+  Не полагаться на него как на актуальный деплой-путь.
 
 ## Стиль кода
 - TypeScript **strict**, без `any`; внешний/агентный ввод валидировать (Zod).
-- ESLint + Prettier (`.prettierrc.json`, `eslint.config.mjs`); pre-commit (lint/typecheck).
+- ESLint + Prettier (`.prettierrc.json`, `eslint.config.mjs`) настроены и рабочие.
+  ⚠️ **Pre-commit хука (husky/lint-staged) сейчас фактически НЕТ** — `.git/hooks/` без активных хуков,
+  `package.json` без `prepare`/`husky`; lint/typecheck не проверяются автоматически ни локально при
+  коммите, ни в CI (см. Roadmap **M0-T07**). Запускать `npm run lint` вручную до коммита.
 - В компонентах — только **semantic-токены** (не raw `--baltic`); см. [DESIGN_BRIEF.md](DESIGN_BRIEF.md).
 - Conventional commits, маленькие PR; ветка/коммит со ссылкой на ID задачи из [Roadmap.md](Roadmap.md);
   после выполнения — `[ ]`→`[x]` в Roadmap.
