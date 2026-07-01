@@ -204,6 +204,50 @@ backdrop. Two source images (**ultra-wide ~21:9**, **ultra-tall ~9:21**) + the g
 - **Status:** placeholder art replaced with real art; iterating on look. **Before merge:** confirm
   `?fps=1` on a real (low-end/high-DPR) phone; merging auto-deploys to the alpha.
 
+## 6. Prey-icon redesign (branch `feat/game-prey-icons-redesign`, 2026-07-01)
+
+Cosmetic-only pass on the prey art — **kept procedural vector** (decided over PNG sprites: vector
+scales at any radius/DPR, recolours freely, no assets, matches the vector seal, and small fast
+icons win on silhouette/contrast not detail). The trigger was the new reef backdrop (PR #32): prey
+on flat teal read fine, but on the busy AI reef they needed real figure/ground separation.
+
+- **`entities/prey.js`** — `drawFish`/`drawStar`/`drawSquid` reworked: a dark **separation edge**
+  (`OUTLINE`, an enlarged ink silhouette behind each creature) + a light **top rim** (pops on both
+  bright reef and dark deep water); **vertical counter-shading** gradient (dark back→light belly,
+  like the seal); stronger silhouettes (added **dorsal fin**, chunkier star, cleaner squid mantle).
+- **Prize fish** — `goldie` (coral scheme) flagged `prize: true`, threaded through `drawPrey` →
+  brighter rim + a sparkle so the rare catch stands out.
+- **`core/theme.js`** — nudged `PALETTE.fish.teal` greener (separate it from steel/silver) and
+  `coral` brighter ("golden" prize).
+- **No mechanics touched** — diff doesn't touch `core/{sim,input,balance}.js` spawn/collision or
+  `entities/prey.js`'s physics; only the draw functions + the `prize` flag/param. Fairness harness
+  unaffected. `sw.js` `CACHE` bumped **v7 → v8**. Verified by rendering the real renderer over both
+  backgrounds (species lineup) — clean separation, no syntax errors (`node --check`).
+
+**Swim animation + heading (same branch):** prey now **face where they swim, like the seal** — a
+stored `f.ang` yaws toward the velocity in `updatePrey` (`PREY_TURN` rad/s, render-only → still
+fairness-neutral) and `drawPrey` rotates the sprite by it. Fin-fish (`round`/`slim`/`eel`) orient
+(and roll belly-up when heading left, exactly like the seal — full rotation, no flip, so no
+flicker on vertical spawns); **squid & starfish stay upright** (not `+x`-facing). Added a **tail
+wag** (fin-fish tail pivots at its base, `anim.tailWag`, backing edge kept aligned through the same
+transform) and an **animated squid tentacle wave** (`anim.tentPhase/tentAmp`, travelling wave
+across the arms); amplitudes scale with swim effort, all gated by `prefers-reduced-motion`.
+Verified with an animated preview of the real renderer (`node --check` clean).
+
+**Belly-down orientation (same branch):**
+- Prey now **face their heading WITHOUT rolling belly-up** (dropped the seal-style full roll). In
+  `drawPrey`, orientation is a **sticky left/right flip** (`f.face`, hysteresis on `cos(f.ang)` in
+  `updatePrey` so near-vertical swims don't flip-flicker) **+ a pitch tilt**:
+  `scale(face,1); rotate(atan2(sin ang, face·cos ang))` reproduces the heading with the belly
+  always down. Still render-only → fairness-neutral (harness re-run: spread unchanged).
+- **Seal — tiny separation edge only.** `entities/seal.js` gets **one purely-additive** change
+  (insertions only, 0 deletions): a **thin** dark silhouette of the whole seal (same
+  `rgba(12,34,48,0.7)` ink as the prey outline, grow ≈ 3.7%) drawn *behind* every part so he reads
+  on the reef — matching the prey's separation edge. No volume/sheen/occlusion; body gradient,
+  colours, flippers, tail, claws, whiskers all byte-identical (an earlier volume experiment was
+  fully reverted).
+- **Open:** real-device look check alongside the PR #32 backdrop before merge.
+
 ## Next steps / open items
 0. **Backdrop (PR #32) — OPEN.** See §5. Final visual polish + real-device FPS check, then merge.
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to

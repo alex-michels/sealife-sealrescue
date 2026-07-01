@@ -30,8 +30,19 @@ const CRUISE = {
   accel: 192, // how quickly they regain that slow cruise (px/s^2) — ×1.6 tempo
   wander: 29, // tiny heading meander (px/s^2) — ×1.6 tempo
 };
+// How fast prey yaw toward their heading (rad/s) — like the seal's turnRate, a touch snappier.
+// Drives the FACING render only (drawPrey); does not touch velocity/collision → fairness-neutral.
+const PREY_TURN = 9;
 
 const F = PALETTE.fish;
+
+// Dark separation edge: a near-opaque ink silhouette drawn slightly enlarged BEHIND each
+// creature so it reads against the busy reef backdrop, not only flat water. One tone for all
+// species → a cohesive flat-art "sticker" edge; paired with the light dorsal rim below, prey
+// pop on BOTH the bright reef and dark deep water (dark edge separates on light, light rim on
+// dark). Grows ~constant px at any fish radius.
+const OUTLINE = 'rgba(12,34,48,0.7)';
+const outlineGrow = (r) => 1 + Math.min(0.16, 2.2 / r);
 
 // ——— Shared flat-art fish renderer (one cohesive style, brand schemes).
 // Variants: 'round' | 'slim' | 'eel' | 'squid' | 'star'. Fish face +x (head right).
@@ -48,50 +59,92 @@ function fishBody(ctx, r, variant) {
   }
 }
 
-function drawStar(ctx, r, c) {
-  ctx.fillStyle = c.body;
+function starPath(ctx, r) {
   ctx.beginPath();
   for (let i = 0; i < 5; i++) {
     const a = i * (Math.PI * 2 / 5) - Math.PI / 2;
-    const x = Math.cos(a) * r * 0.85, y = Math.sin(a) * r * 0.85;
-    const ax = Math.cos(a + 0.6) * r * 0.38, ay = Math.sin(a + 0.6) * r * 0.38;
+    const x = Math.cos(a) * r * 0.92, y = Math.sin(a) * r * 0.92;
+    const ax = Math.cos(a + 0.63) * r * 0.4, ay = Math.sin(a + 0.63) * r * 0.4;
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     ctx.lineTo(ax, ay);
   }
   ctx.closePath();
+}
+
+function drawStar(ctx, r, c) {
+  // separation edge
+  ctx.save();
+  ctx.scale(outlineGrow(r), outlineGrow(r));
+  ctx.fillStyle = OUTLINE;
+  starPath(ctx, r);
   ctx.fill();
-  ctx.globalAlpha = 0.45;
+  ctx.restore();
+
+  // body: radial centre→arm shade (raised centre, flatter arms) for a little volume
+  starPath(ctx, r);
+  const g = ctx.createRadialGradient(0, 0, r * 0.08, 0, 0, r);
+  g.addColorStop(0, c.belly);
+  g.addColorStop(0.5, c.body);
+  g.addColorStop(1, c.back);
+  ctx.fillStyle = g;
+  ctx.fill();
+
+  // tube-feet dots down each arm
+  ctx.save();
+  starPath(ctx, r);
+  ctx.clip();
+  ctx.globalAlpha = 0.4;
   ctx.fillStyle = c.back;
   for (let i = 0; i < 5; i++) {
     const a = i * (Math.PI * 2 / 5) - Math.PI / 2;
-    ctx.beginPath();
-    ctx.arc(Math.cos(a) * r * 0.3, Math.sin(a) * r * 0.3, r * 0.05, 0, Math.PI * 2);
-    ctx.fill();
+    for (let d = 0.32; d < 0.85; d += 0.22) {
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * r * d, Math.sin(a) * r * d, r * 0.055, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
-function drawSquid(ctx, r, c) {
-  ctx.strokeStyle = c.back;
-  ctx.lineWidth = Math.max(1.5, r * 0.12);
-  ctx.lineCap = 'round';
-  for (let k = -2; k <= 2; k++) {
-    ctx.beginPath();
-    ctx.moveTo(k * r * 0.16, r * 0.5);
-    ctx.quadraticCurveTo(k * r * 0.22, r * 0.92, k * r * 0.28, r * 1.2);
-    ctx.stroke();
-  }
-  ctx.fillStyle = c.body;
-  ctx.beginPath();
-  ctx.ellipse(0, -r * 0.1, r * 0.62, r * 0.92, 0, 0, Math.PI * 2);
-  ctx.fill();
+function drawSquid(ctx, r, c, anim = null) {
+  const ph = anim ? anim.tentPhase : 0;
+  const amp = anim ? anim.tentAmp : 0;
+  const mantle = () => { ctx.beginPath(); ctx.ellipse(0, -r * 0.1, r * 0.62, r * 0.92, 0, 0, Math.PI * 2); };
+  const tentacles = (color, width) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    for (let k = -2; k <= 2; k++) {
+      // a travelling wave across the arms — control point and tip sway out of phase so they curl
+      const sway = Math.sin(ph + k * 0.9) * r * 0.18 * amp;
+      const tipSway = Math.sin(ph + k * 0.9 + 0.7) * r * 0.26 * amp;
+      ctx.beginPath();
+      ctx.moveTo(k * r * 0.16, r * 0.5);
+      ctx.quadraticCurveTo(k * r * 0.22 + sway, r * 0.92, k * r * 0.28 + tipSway, r * 1.2);
+      ctx.stroke();
+    }
+  };
+
+  // separation edge: heavier tentacles + enlarged mantle, behind everything
   ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(0, -r * 0.1, r * 0.62, r * 0.92, 0, 0, Math.PI * 2);
-  ctx.clip();
-  ctx.fillStyle = c.belly;
-  ctx.fillRect(-r * 0.7, r * 0.12, r * 1.4, r);
+  ctx.scale(outlineGrow(r), outlineGrow(r));
+  tentacles(OUTLINE, Math.max(2, r * 0.2));
+  ctx.fillStyle = OUTLINE;
+  mantle(); ctx.fill();
   ctx.restore();
+
+  tentacles(c.back, Math.max(1.5, r * 0.12));
+
+  // mantle with a vertical counter-shade (dark top → light belly)
+  mantle();
+  const g = ctx.createLinearGradient(0, -r, 0, r);
+  g.addColorStop(0, c.back);
+  g.addColorStop(0.5, c.body);
+  g.addColorStop(1, c.belly);
+  ctx.fillStyle = g;
+  ctx.fill();
+
   ctx.fillStyle = c.eye;
   ctx.beginPath(); ctx.arc(-r * 0.26, -r * 0.04, r * 0.1, 0, Math.PI * 2); ctx.fill();
   ctx.beginPath(); ctx.arc(r * 0.26, -r * 0.04, r * 0.1, 0, Math.PI * 2); ctx.fill();
@@ -100,61 +153,105 @@ function drawSquid(ctx, r, c) {
   ctx.beginPath(); ctx.arc(r * 0.29, -r * 0.07, r * 0.035, 0, Math.PI * 2); ctx.fill();
 }
 
-function drawFish(ctx, r, c, variant, tailKick = 0) {
+function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null) {
   if (variant === 'star') return drawStar(ctx, r, c);
-  if (variant === 'squid') return drawSquid(ctx, r, c);
+  if (variant === 'squid') return drawSquid(ctx, r, c, anim);
 
   const rx = variant === 'slim' ? r * 1.12 : variant === 'eel' ? r * 1.2 : r * 0.95;
+  const ry = variant === 'slim' ? r * 0.46 : r * 0.6;
+  const hasFins = variant !== 'eel';
+  const k = r * 0.5 * (0.7 + tailKick); // tail half-height (widens a touch on flee)
+  const wag = anim ? anim.tailWag : 0; // tail sway while swimming
 
-  // tail fin (round/slim) — widens a touch on flee
-  if (variant !== 'eel') {
-    const k = r * 0.5 * (0.7 + tailKick);
-    ctx.fillStyle = c.back;
+  // tail pivots at its base so it sways like a swimming fish; body/dorsal/belly stay put. The
+  // path is built under its own transform, so the separation-edge pass (drawn under scale(grow))
+  // and the colour pass stay aligned through the same wag.
+  const tail = () => {
+    ctx.save();
+    ctx.translate(-rx * 0.82, 0);
+    ctx.rotate(wag);
     ctx.beginPath();
-    ctx.moveTo(-rx * 0.82, 0);
-    ctx.lineTo(-rx * 1.5, -k);
-    ctx.lineTo(-rx * 1.5, k);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-rx * 0.68, -k);
+    ctx.lineTo(-rx * 0.68, k);
     ctx.closePath();
-    ctx.fill();
-  }
+    ctx.restore();
+  };
+  const dorsal = () => { ctx.beginPath(); ctx.moveTo(-r * 0.05, -ry * 0.78); ctx.quadraticCurveTo(r * 0.32, -ry * 1.7, r * 0.5, -ry * 0.66); ctx.closePath(); };
 
-  // body base
+  // 1) separation edge — enlarged ink silhouette of the whole fish, drawn behind everything
+  ctx.save();
+  ctx.scale(outlineGrow(r), outlineGrow(r));
+  ctx.fillStyle = OUTLINE;
+  if (hasFins) { tail(); ctx.fill(); dorsal(); ctx.fill(); }
+  fishBody(ctx, r, variant); ctx.fill();
+  ctx.restore();
+
+  // 2) tail fin (round/slim)
+  if (hasFins) { ctx.fillStyle = c.back; tail(); ctx.fill(); }
+
+  // 3) body — vertical counter-shade (dark back → light belly), matching the seal
   fishBody(ctx, r, variant);
-  ctx.fillStyle = c.body;
+  const fur = ctx.createLinearGradient(0, -ry, 0, ry);
+  fur.addColorStop(0, c.back);
+  fur.addColorStop(0.5, c.body);
+  fur.addColorStop(1, c.belly);
+  ctx.fillStyle = fur;
   ctx.fill();
 
-  // two-tone belly + subtle lateral line, clipped to the body
+  // 4) dorsal fin on the back (stronger fishy silhouette)
+  if (hasFins) { ctx.fillStyle = c.back; dorsal(); ctx.fill(); }
+
+  // 5) inner details clipped to the body: lateral line + glossy top rim
   ctx.save();
   fishBody(ctx, r, variant);
   ctx.clip();
-  ctx.fillStyle = c.belly;
-  ctx.fillRect(-r * 2, r * 0.04, r * 4, r * 2);
-  ctx.globalAlpha = 0.4;
+  ctx.globalAlpha = 0.32;
   ctx.strokeStyle = c.back;
-  ctx.lineWidth = Math.max(1, r * 0.07);
+  ctx.lineWidth = Math.max(1, r * 0.06);
   ctx.beginPath();
-  ctx.moveTo(-rx * 0.9, -r * 0.05);
-  ctx.lineTo(rx * 0.7, -r * 0.05);
+  ctx.moveTo(-rx * 0.85, -r * 0.03);
+  ctx.lineTo(rx * 0.62, -r * 0.03);
+  ctx.stroke();
+  // top rim light — separates the fish on dark deep water; brighter on the prize
+  ctx.globalAlpha = prize ? 0.85 : 0.5;
+  ctx.strokeStyle = prize ? '#FFEACB' : PALETTE.highlight;
+  ctx.lineWidth = Math.max(1, r * (prize ? 0.16 : 0.12));
+  ctx.beginPath();
+  ctx.ellipse(0, 0, rx * 0.9, ry * 0.92, 0, Math.PI * 1.12, Math.PI * 1.96);
   ctx.stroke();
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  // eye + highlight
+  // 6) eye + highlight
   ctx.fillStyle = c.eye;
-  ctx.beginPath(); ctx.arc(rx * 0.55, -r * 0.12, r * 0.11, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rx * 0.55, -r * 0.12, r * 0.12, 0, Math.PI * 2); ctx.fill();
   ctx.fillStyle = PALETTE.highlight;
-  ctx.beginPath(); ctx.arc(rx * 0.58, -r * 0.15, r * 0.04, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(rx * 0.58, -r * 0.15, r * 0.045, 0, Math.PI * 2); ctx.fill();
 
-  // soft mouth
+  // 7) soft mouth
   ctx.strokeStyle = c.eye;
-  ctx.globalAlpha = 0.65;
+  ctx.globalAlpha = 0.6;
   ctx.lineWidth = Math.max(1, r * 0.045);
   ctx.lineCap = 'round';
   ctx.beginPath();
-  ctx.moveTo(rx * 0.78, r * 0.07);
-  ctx.quadraticCurveTo(rx * 0.9, r * 0.09, rx * 0.97, r * 0.05);
+  ctx.moveTo(rx * 0.78, r * 0.08);
+  ctx.quadraticCurveTo(rx * 0.92, r * 0.1, rx * 0.99, r * 0.05);
   ctx.stroke();
   ctx.globalAlpha = 1;
+
+  // 8) prize fish (goldie) — a tiny sparkle so the rare, valuable catch stands out
+  if (prize) {
+    ctx.fillStyle = '#FFF4E0';
+    const sx = rx * 0.12, sy = -ry * 0.72, s = r * 0.22;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy - s); ctx.lineTo(sx + s * 0.28, sy - s * 0.28);
+    ctx.lineTo(sx + s, sy); ctx.lineTo(sx + s * 0.28, sy + s * 0.28);
+    ctx.lineTo(sx, sy + s); ctx.lineTo(sx - s * 0.28, sy + s * 0.28);
+    ctx.lineTo(sx - s, sy); ctx.lineTo(sx - s * 0.28, sy - s * 0.28);
+    ctx.closePath();
+    ctx.fill();
+  }
 }
 
 // -------------------------------------------------------
@@ -165,7 +262,7 @@ function drawFish(ctx, r, c, variant, tailKick = 0) {
 //   'benthic' — seabed dwellers (octopus, starfish, sand-burrowers, demersal cod); enter
 //               from the bottom or sides, never the top.
 const SPECIES = [
-  { name: 'goldie', habitat: 'pelagic', size: 1.0, scheme: F.coral, variant: 'round', wiggle: (f, dt, i) => { f.vx += Math.sin(f.t * 4.8 + i) * 4 * dt; f.vy += Math.cos(f.t * 4.2 + i) * 4 * dt; } },
+  { name: 'goldie', habitat: 'pelagic', size: 1.0, scheme: F.coral, variant: 'round', prize: true, wiggle: (f, dt, i) => { f.vx += Math.sin(f.t * 4.8 + i) * 4 * dt; f.vy += Math.cos(f.t * 4.2 + i) * 4 * dt; } },
   { name: 'herring', habitat: 'pelagic', size: 0.9, scheme: F.silver, variant: 'slim', wiggle: (f, dt, i) => { f.vy += Math.sin(f.t * 3.6 + i) * 5 * dt; } },
   { name: 'sprat', habitat: 'pelagic', size: 0.7, scheme: F.pale, variant: 'slim', wiggle: (f, dt, i) => { f.vx += Math.sin(f.t * 5.0 + i) * 3 * dt; } },
   { name: 'anchovy', habitat: 'pelagic', size: 0.75, scheme: F.steel, variant: 'slim', wiggle: (f, dt, i) => { f.vy += Math.cos(f.t * 4.2 + i) * 4 * dt; } },
@@ -216,7 +313,7 @@ export function spawnPrey(world, n = 1) {
     else { x = Math.random() * world.w; y = -20; vx = lat; vy = speed; dir = Math.sign(vx) || 1; } // top
 
     PREY.push({
-      x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, sp,
+      x, y, px: x, py: y, vx, vy, r: baseR, t: 0, dir, ang: Math.atan2(vy, vx), face: vx >= 0 ? 1 : -1, sp,
       phase: Math.random() * Math.PI * 2,
       fleeT: 0, restT: 0, tailKick: 0,
     });
@@ -293,6 +390,28 @@ export function updatePrey(dt, seal, world, eatCb) {
       if (sp > vmax) { const k = vmax / sp; f.vx *= k; f.vy *= k; }
     }
 
+    // Face the way it swims, like the seal: yaw a stored angle toward the velocity, capped per
+    // frame so it turns smoothly (drawPrey rotates the sprite by f.ang). Render-only — no effect
+    // on position/collision/balance, so the fairness harness is unaffected.
+    {
+      if (typeof f.ang !== 'number') f.ang = Math.atan2(f.vy, f.vx);
+      const spd = Math.hypot(f.vx, f.vy);
+      if (spd > 4) {
+        const wrap = (a) => (a + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+        let d = wrap(Math.atan2(f.vy, f.vx) - f.ang);
+        const step = PREY_TURN * dt;
+        if (Math.abs(d) > step) d = Math.sign(d) * step;
+        f.ang = wrap(f.ang + d);
+      }
+      // Sticky left/right facing (hysteresis): so a fish can face its heading WITHOUT rolling
+      // belly-up. Near-vertical headings (|cos| < 0.15) keep the last facing → no flip-flicker
+      // on straight up/down swims. drawPrey then flips + tilts (never a full roll).
+      const cx = Math.cos(f.ang);
+      if (typeof f.face !== 'number') f.face = cx >= 0 ? 1 : -1;
+      else if (cx > 0.15) f.face = 1;
+      else if (cx < -0.15) f.face = -1;
+    }
+
     f.x += f.vx * dt; f.y += f.vy * dt;
 
     // HYBRID: keep PR#24's even 4-edge shuffle-bag spawn, but the ORIGINAL "fish stay" physics
@@ -346,16 +465,40 @@ export function drawPrey(ctx, world) {
   ctx.clip();
 
   for (const f of PREY) {
-    const dir = (f.dir || (f.vx >= 0 ? 1 : -1)) >= 0 ? 1 : -1;
-    const wig = reduced ? 0 : Math.sin((t + f.phase) * WIGGLE.rotFreq) * WIGGLE.rotAmp;
+    const variant = f.sp.variant;
+    const ph = t + f.phase;
+    const wig = reduced ? 0 : Math.sin(ph * WIGGLE.rotFreq) * WIGGLE.rotAmp;
     const sclY = 1 + (reduced ? 0 : Math.sin((t + f.phase * 0.7) * (WIGGLE.rotFreq * 0.33)) * WIGGLE.scaleAmp);
+
+    // Fin-fish face their heading but stay BELLY-DOWN (they do NOT roll over like the seal): a
+    // sticky left/right flip (f.face) + a pitch that tilts the nose up/down. scale(face,1) then
+    // rotate(pitch) reproduces the heading direction with the belly always down — combining
+    // "look where you swim" with "never flip upside-down". Squid & starfish aren't +x-facing
+    // (vertical mantle / radial body), so they stay upright — only their parts move.
+    const orient = variant !== 'squid' && variant !== 'star';
+
+    // swim animation (off under reduced-motion): tail sway for fin-fish, tentacle wave for squid,
+    // scaled by how hard the creature is swimming so idle prey only drift gently.
+    const swim = Math.min(1, Math.hypot(f.vx, f.vy) / (BAL.fishSpeedMax * 0.6));
+    const anim = reduced ? null : {
+      tailWag: Math.sin(ph * 8) * 0.4 * (0.45 + 0.55 * swim),
+      tentPhase: ph * 2.4,
+      tentAmp: 0.4 + 0.6 * swim,
+    };
 
     ctx.save();
     ctx.translate(f.x, f.y);
-    ctx.scale(dir, 1);
-    ctx.rotate(wig);
+    if (orient) {
+      const a = (typeof f.ang === 'number') ? f.ang : Math.atan2(f.vy, f.vx);
+      const face = f.face || (Math.cos(a) >= 0 ? 1 : -1);
+      const pitch = Math.atan2(Math.sin(a), face * Math.cos(a)); // ∈ (−90°,90°) → belly stays down
+      ctx.scale(face, 1);
+      ctx.rotate(pitch + wig);
+    } else {
+      ctx.rotate(wig);
+    }
     ctx.scale(1, sclY);
-    drawFish(ctx, f.r, f.sp.scheme, f.sp.variant, f.tailKick);
+    drawFish(ctx, f.r, f.sp.scheme, variant, f.tailKick, f.sp.prize, anim);
     ctx.restore();
   }
 
