@@ -34,8 +34,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'pnpm dev',
+    // npm to match the repo's package manager (deploy + CI use `npm ci`). Locally this is skipped
+    // when a dev server is already on :3000 (reuseExistingServer). Generous timeout for a cold
+    // Next+Payload boot in CI.
+    command: 'npm run dev',
     reuseExistingServer: true,
     url: 'http://localhost:3000',
+    timeout: 120_000,
   },
 })

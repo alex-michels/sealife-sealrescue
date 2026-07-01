@@ -102,15 +102,27 @@ function displayName(parts, suffix, l) {
 }
 
 // Прокрутить список так, чтобы строка игрока («me») оказалась по центру видимой области.
+// ВАЖНО: на финальном экране доску сначала рендерят СКРЫТОЙ — интерстишл держит
+// `#overlay.is-waiting .board { display:none }`, пока идёт сабмит и минимальная пауза. У display:none
+// нет лейаута, поэтому scrollTop там не применяется (getBoundingClientRect = нули) — раньше это
+// «съедало» прыжок к игроку, и доска открывалась на топе. Поэтому ждём (через rAF), пока доска реально
+// станет видимой (`clientHeight > 0`), и только тогда центрируем. Дедлайн — на случай, если доску так
+// и не показали (например, начали новый раунд): тогда `.me` исчезает и мы просто выходим.
 function scrollToMe(container) {
-  requestAnimationFrame(() => {
+  const deadline = performance.now() + 8000;
+  const attempt = () => {
     const list = container.querySelector('.lb-list');
     const me = container.querySelector('.lb-row.me');
-    if (!list || !me) return;
+    if (!list || !me) return; // доску очистили / нет строки игрока — нечего центрировать
+    if (list.clientHeight === 0) { // ещё скрыта интерстишлом — ждём показа
+      if (performance.now() < deadline) requestAnimationFrame(attempt);
+      return;
+    }
     const lr = list.getBoundingClientRect();
     const mr = me.getBoundingClientRect();
     list.scrollTop += mr.top - lr.top - (list.clientHeight / 2 - mr.height / 2);
-  });
+  };
+  requestAnimationFrame(attempt);
 }
 
 function rowHtml(r, you, board) {
