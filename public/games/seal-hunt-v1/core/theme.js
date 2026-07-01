@@ -50,9 +50,9 @@ export const PALETTE = {
   fish: {
     silver: { back: '#4E7C99', body: '#AFC6D4', belly: '#E4EDF2', eye: INK },
     steel: { back: AZURE, body: '#86ADC4', belly: AZURE_SOFT, eye: INK },
-    teal: { back: BALTIC, body: '#5C948F', belly: '#CBE0DA', eye: INK },
+    teal: { back: '#17524C', body: '#4E9184', belly: '#CBE6DA', eye: INK }, // зеленее — отделить от steel/silver
     pale: { back: '#9FB6C0', body: '#D3E0E6', belly: FOG, eye: INK },
-    coral: { back: '#C2452A', body: BUOY, belly: '#F3A88D', eye: '#2A0F0A' }, // приз, редко
+    coral: { back: '#B23A1F', body: BUOY, belly: '#FFC9A6', eye: '#2A0F0A' }, // приз, редко — ярче «золотистый»
     sand: { back: '#C9B79A', body: SANDBANK, belly: '#F3ECDC', eye: INK }, // тёплый
     squid: { back: '#AE6459', body: '#CD897C', belly: '#E5BCB2', eye: '#1B0B18' },
   },

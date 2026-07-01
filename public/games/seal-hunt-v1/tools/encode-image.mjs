@@ -11,10 +11,10 @@
 //   --blur  <sigma>   soft-blur the source (foggy look; 0 = off)   (default: 0)
 //   --qa <0-100>      AVIF quality (default 50) · --qw WebP (72) · --qj JPEG (78)
 //
-// Examples:
-//   node tools/encode-image.mjs backdrop-src.png --name backdrop-landscape --out assets --width 1600 --blur 2
-//   node tools/encode-image.mjs cover-src.png     --name cover            --out .       --width 1200
-//   node tools/encode-image.mjs cover-mobile.png  --name cover_mobile     --out .       --width 800
+// Sources + outputs all live in assets/ (sources are *-src.png, git-ignored). Examples:
+//   node tools/encode-image.mjs assets/backdrop-landscape-src.png --name backdrop-landscape --out assets --width 1600 --blur 2
+//   node tools/encode-image.mjs assets/cover-src.png              --name cover             --out assets --width 1200
+//   node tools/encode-image.mjs assets/cover-mobile-src.png       --name cover_mobile      --out assets --width 1080
 import sharp from 'sharp';
 import { mkdir } from 'node:fs/promises';
 import { statSync } from 'node:fs';

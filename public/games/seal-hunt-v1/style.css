@@ -7,17 +7,20 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto S
 button{appearance:none;border:0;border-radius:.6rem;padding:.5rem .8rem;background:#1E5B5B;color:#EDF1F3;font-weight:600}
 button.primary{background:#2C6A8F}
 button:active{transform:translateY(1px)}
-/* Стартовый/финальный экран: затемнённая обложка фоном (cover.jpg) — текст и поля читаемы.
+/* Стартовый/финальный экран: затемнённая обложка фоном (assets/cover.jpg) — текст и поля читаемы.
    Градиент-скрим поверх изображения; если cover.jpg нет — остаётся просто тёмный фон. */
 /* `justify-content:safe center` keeps the screen centred when it fits but falls back to
    top-aligned (never clips the top) when the content is taller than the viewport; `overflow-y:auto`
    then lets the user reach the bottom (feedback line). The plain `center` first keeps old browsers
    centred if they don't understand `safe`. */
-#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;text-align:center;overflow-y:auto;overscroll-behavior:contain;padding:2rem;padding-bottom:max(2rem,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,40,50,.62),rgba(11,40,50,.76)),url("cover.jpg") center top/cover no-repeat;z-index:10}
+/* Cover background: browsers get the small AVIF→WebP→JPEG ladder via image-set() (same formats as
+   the backdrop); the plain url("assets/cover.jpg") line before it is the fallback for browsers without
+   image-set/type(). The JPEG stays the source of truth for OG (index.html) — scrapers need JPEG. */
+#overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;justify-content:safe center;text-align:center;overflow-y:auto;overscroll-behavior:contain;padding:2rem;padding-bottom:max(2rem,env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(11,40,50,.62),rgba(11,40,50,.76)),url("assets/cover.jpg") center top/cover no-repeat;background:linear-gradient(180deg,rgba(11,40,50,.62),rgba(11,40,50,.76)),image-set(url("assets/cover.avif") type("image/avif"),url("assets/cover.webp") type("image/webp"),url("assets/cover.jpg") type("image/jpeg")) center top/cover no-repeat;z-index:10}
 /* Портрет: широкая landscape-обложка режет заголовок по бокам (background-size:cover кадрирует
    ширину). На портретных экранах — отдельная портретная обложка cover_mobile.jpg (без вшитого
    заголовка — его даёт <h1>). Нет файла → url() не сработает, останется тёмный градиент. */
-@media (orientation: portrait){#overlay{background:linear-gradient(180deg,rgba(11,40,50,.6),rgba(11,40,50,.78)),url("cover_mobile.jpg") center top/cover no-repeat}}
+@media (orientation: portrait){#overlay{background:linear-gradient(180deg,rgba(11,40,50,.6),rgba(11,40,50,.78)),url("assets/cover_mobile.jpg") center top/cover no-repeat;background:linear-gradient(180deg,rgba(11,40,50,.6),rgba(11,40,50,.78)),image-set(url("assets/cover_mobile.avif") type("image/avif"),url("assets/cover_mobile.webp") type("image/webp"),url("assets/cover_mobile.jpg") type("image/jpeg")) center top/cover no-repeat}}
 #overlay h1{margin-top:0}
 #overlay[hidden]{display:none}
 .overlay-buttons{display:flex;gap:.6rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center}

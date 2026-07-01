@@ -8,20 +8,21 @@
   <meta name="theme-color" content="#1E5B5B">
 
   <!-- Link preview (Open Graph + Twitter). Static EN canonical for the standalone alpha; absolute
-       URLs are required by scrapers. cover.jpg is served from the domain root on sealthehunter.online. -->
+       URLs are required by scrapers. /assets/cover.jpg maps to the game dir via the Caddy catch-all
+       (deploy/Caddyfile) on sealthehunter.online — must stay JPEG (some scrapers reject WebP/AVIF). -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Seal The Hunter">
   <meta property="og:title" content="Seal The Hunter — a web game">
   <meta property="og:description" content="Catch fish as a seal in 60 seconds. A quick browser game with a weekly leaderboard.">
   <meta property="og:url" content="https://sealthehunter.online/">
-  <meta property="og:image" content="https://sealthehunter.online/cover.jpg">
+  <meta property="og:image" content="https://sealthehunter.online/assets/cover.jpg">
   <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="669">
+  <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Seal The Hunter — a cartoon seal hunting fish underwater">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Seal The Hunter — a web game">
   <meta name="twitter:description" content="Catch fish as a seal in 60 seconds.">
-  <meta name="twitter:image" content="https://sealthehunter.online/cover.jpg">
+  <meta name="twitter:image" content="https://sealthehunter.online/assets/cover.jpg">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">

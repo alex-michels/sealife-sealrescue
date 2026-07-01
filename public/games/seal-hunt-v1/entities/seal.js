@@ -6,6 +6,7 @@ import { PALETTE } from '../core/theme.js';
 
 const { sin, hypot } = Math;
 const S = PALETTE.seal;
+const SEAL_EDGE = 'rgba(12,34,48,0.7)'; // тонкий контур-отбивка — тот же «ink», что у добычи
 
 export function makeSeal(makeSpots) {
   return {
@@ -63,6 +64,38 @@ const flipperFill = S.back; // ровный серый цвет ласт, бли
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.rotate(this.angle);
+
+      // tiny separation edge — a THIN dark silhouette of the whole seal, drawn BEHIND every part
+      // so he reads against the reef backdrop (like the prey). Re-traces the SAME part paths a hair
+      // larger and fills them dark; the real parts below are untouched and drawn on top. Edge only.
+      {
+        const grow = 1 + Math.min(0.09, 1.1 / r);
+        ctx.save();
+        ctx.scale(grow, grow);
+        ctx.fillStyle = SEAL_EDGE;
+        body(); ctx.fill();
+        ctx.save();
+        ctx.translate(-r * 1.25, 0); ctx.rotate(tailAng);
+        ctx.beginPath();
+        ctx.moveTo(r * 0.1, 0);
+        ctx.quadraticCurveTo(-r * 0.76, -r * 0.64, -r * 0.54, -r * 0.04);
+        ctx.quadraticCurveTo(-r * 0.92, r * 0.12, -r * 0.54, r * 0.54);
+        ctx.quadraticCurveTo(-r * 0.16, r * 0.7, r * 0.1, 0);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.34, -r * 0.16);
+        ctx.quadraticCurveTo(-r * 1.74, -r * 0.08, -r * 1.6, r * 0.03);
+        ctx.quadraticCurveTo(-r * 1.48, r * 0.1, -r * 1.34, r * 0.04);
+        ctx.closePath(); ctx.fill();
+        ctx.save();
+        ctx.translate(r * 0.15, r * 0.34); ctx.rotate(flapAng);
+        ctx.beginPath();
+        ctx.ellipse(-r * 0.15, r * 0.18, r * 0.62, r * 0.27, -0.18, 0, Math.PI * 2);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+        ctx.restore();
+      }
 
 // задние ласты — за телом, ровный серый цвет
 ctx.save();
@@ -126,8 +159,8 @@ ctx.restore();
       ctx.beginPath();
       ctx.ellipse(-r * 0.15, r * 0.18, r * 0.62, r * 0.27, -0.18, 0, Math.PI * 2);
       ctx.fill();
-// когти (тёмные, тупые) у «пальцев» ласта — очень короткие
-const tipX = -r * 0.76, tipY = r * 0.29;
+// когти (тёмные, тупые) — на кромке ласта, «пальцами» как у лапы; очень короткие
+const tipX = -r * 0.58, tipY = r * 0.29;
 const dx = -0.982, dy = 0.181; // вдоль главной оси ласта, наружу
 const px = -dy, py = dx; // перпендикуляр
 ctx.strokeStyle = S.claw;
