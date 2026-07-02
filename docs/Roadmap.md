@@ -511,9 +511,9 @@ players (auth: true)
 * [x] **QA-08** CI-workflow `test.yml`: `lint` + `tsc --noEmit` + `test:int` на каждый PR и push в
   `main`; тестовая БД — ephemeral Postgres (service container, образ **postgis/postgis** — поле
   `point` у RescueCenters требует PostGIS), схему создаёт push-режим Payload. Сделано 2026-07-02.
-  ⚠️ Required check на `main` включить НЕЛЬЗЯ (private-репо на Free-плане; GitHub просит
-  Pro/public) — до апгрейда дисциплина «не мержить на красном `test`»; включить protection сразу
-  при переходе. Шаг `test:unit` добавится при разнесении слоёв (**QA-10**); drift-чек
+  Required check `test` на `main` ВКЛЮЧЁН (branch protection; репо стало public 2026-07-02):
+  мерж в `main` невозможен на красном `test`; strict=false (PR не обязан быть up-to-date),
+  enforce_admins=false. Шаг `test:unit` добавится при разнесении слоёв (**QA-10**); drift-чек
   `generate:types` остался в **M0-T07**. Закрывает **QA-06**. *[M]*
 * [ ] **QA-09** Playwright в CI: `next build && next start` + e2e-прогон (chromium headless shell);
   трейсы/скриншоты как артефакты при фейле; retries=2 только в CI. Включает обратно
