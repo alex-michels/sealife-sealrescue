@@ -49,9 +49,11 @@ npm run dev              # Next + Payload; схема БД синхронизи�
 | `npm run seed:baseline` | посев обязательного MUST-HAVE минимума (сейчас: строка `games` для лидерборда) — нужен на любой свежей БД, иначе `unknown_game` |
 | `npm run seed:glossary` | посев глоссария/translation memory (идемпотентно) |
 | `npm run seed:m1` | посев демо-контента и видов (`ru`/`en`) |
-| `npm run test:int` | Vitest (integration) |
+| `npm run test:unit` | Vitest, unit-слой (`tests/unit/`, чистая логика, без БД — секунды) |
+| `npm run test:int` | Vitest, integration (`tests/int/`, Payload + БД) |
+| `npm run test:coverage` | unit + int одним прогоном с coverage-гейтом (пороги в `vitest.config.mts`; так же гоняет CI) |
 | `npm run test:e2e` | Playwright (e2e) |
-| `npm test` | `test:int` + `test:e2e` подряд |
+| `npm test` | `test:unit` + `test:int` + `test:e2e` подряд |
 
 ## База данных
 - **Dev — push-режим:** Payload синхронизирует схему с Postgres автоматически, миграций пока нет.
@@ -94,8 +96,13 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
 
 **Текущее состояние:**
 
-- **Integration** — Vitest (`vitest.config.mts`, `test.env`): `tests/int/api.int.spec.ts` (пока один
-  smoke-тест — `payload.find('users')`; access control/хуки/лидерборд — Roadmap **QA-13…QA-18**).
+- **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
+  ролей, `resolveSiteId`, инварианты локалей, `t()`/`buildAlternates`, alias-рендер лидерборда,
+  `factOfDay`, sections/legal/`formatDate`. Coverage-гейт: пороги в `vitest.config.mts`
+  (ratchet — только вверх; branches поднимется с QA-15).
+- **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup):
+  `api.int.spec.ts` (пока один smoke-тест — `payload.find('users')`; access control/хуки/лидерборд —
+  Roadmap **QA-13…QA-18**).
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные 3 локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
@@ -105,8 +112,8 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
     авто-скролла к строке игрока (в CI с QA-09; расширение обвязки — Roadmap **QA-32**).
-- **CI-гейт (QA-08 + QA-09):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
-  job `test` — `lint` + `typecheck` + `test:int`; job `e2e` — схема через
+- **CI-гейт (QA-08 + QA-09 + QA-10):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
+  job `test` — `lint` + `typecheck` + `test:coverage` (unit+int+пороги); job `e2e` — схема через
   `scripts/push-dev-schema.mts` → `next build` → Playwright поднимает `next start` и гоняет весь
   e2e-набор на chromium headless shell (трейсы/отчёт — артефакты при фейле). Обе джобы — против
   ephemeral Postgres (PostGIS-образ; поле `point` требует расширение). Required check на `main`

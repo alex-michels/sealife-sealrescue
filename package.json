@@ -16,9 +16,11 @@
     "seed:glossary": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/seedGlossary.ts",
     "seed:m1": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/seedM1.ts",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
-    "test": "npm run test:int && npm run test:e2e",
+    "test": "npm run test:unit && npm run test:int && npm run test:e2e",
+    "test:coverage": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts --coverage",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts --project int",
+    "test:unit": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts --project unit",
     "typecheck": "cross-env NODE_OPTIONS=--no-deprecation tsc --noEmit"
   },
   "dependencies": {
@@ -44,6 +46,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "4.5.2",
+    "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^9.16.0",
     "eslint-config-next": "16.2.6",
     "jsdom": "28.0.0",
