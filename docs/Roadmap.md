@@ -572,11 +572,19 @@ players (auth: true)
   возраст токена — фейк ТОЛЬКО Date (`vi.useFakeTimers({ toFake: ['Date'] })`), без sleep;
   rate-limit изолирован уникальным `x-forwarded-for` на запрос. Coverage-ratchet поднят до
   lines/stmts/funcs 80, branches 65 (актуалы 88/87/88/74 — план «branches 40» перевыполнен).
-* [ ] **QA-16** Alias-контракт server↔client (страховка «KEEP IN SYNC» в `leaderboard.ts` ↔
+* [x] **QA-16** Alias-контракт server↔client (страховка «KEEP IN SYNC» в `leaderboard.ts` ↔
   `core/alias.js`): golden-вектор `(seed, game) → canonical EN alias`, прогоняемый обоими
-  движками; расхождение списков/PRNG/порядка бросков валит тест. *[M]*
-* [ ] **QA-17** Unit season-математики: `currentSeason`/`seasonEnd` на граничных датах (смена года,
-  ISO-неделя 52/53, вс→пн UTC); детерминизм `mulberry32`/`hashStr`. *[S]*
+  движками; расхождение списков/PRNG/порядка бросков валит тест. *[M]* — сделано 2026-07-02:
+  `tests/unit/alias-contract.unit.spec.ts` — 6 golden-векторов (EN + RU/DE с правилами рода:
+  ж.р. «Брызгучая Русалочка», DE-род от суффикса «Spritziger…Klops»/«Glitschiges…Brötchen»)
+  + sweep 300 (seed,game)-пар по всему uint32-диапазону: parts и EN-рендер движков идентичны.
+  Клиентский JS импортируется в vitest напрямую (node-safe).
+* [x] **QA-17** Unit season-математики: `currentSeason`/`seasonEnd` на граничных датах (смена года,
+  ISO-неделя 52/53, вс→пн UTC); детерминизм `mulberry32`/`hashStr`. *[S]* — сделано 2026-07-02:
+  `tests/unit/season.unit.spec.ts` — вс→пн, декабрь→W01 следующего ISO-года (2025-12-29 →
+  2026-W01), 53-недельный 2026 (W53 до 2027-01-03), ведущий ноль недели, инварианты на 60 днях
+  (конец всегда будущий понедельник; сезон стабилен до конца и меняется ровно в него);
+  `currentSeason`/`seasonEnd` экспортированы. Детерминизм PRNG — в alias-спеках (QA-10/16).
 * [ ] **QA-18** Сиды: `seed:baseline`/`seed:glossary`/`seed:m1` идемпотентны (повторный прогон не
   дублирует записи); после сида выполняются инварианты (все 3 локали заполнены, slug каноничны). *[M]*
 
