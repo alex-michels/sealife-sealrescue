@@ -492,13 +492,13 @@ players (auth: true)
 * [ ] **QA-01** Тесты access control (agent не может publish/delete). *[M]*
 * [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]*
 * [ ] **QA-03** Lighthouse в CI. *[S]*
-* [ ] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
-  локаль/slug → 404). *[S]* — сейчас такого теста НЕТ, хотя `local-development.md`/`api.md`/`CLAUDE.md`
-  описывают это покрытие как существующее (аудит 2026-07-01). Либо добавить тест, либо смягчить
-  формулировку в доках до факта.
-* [ ] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — это неизменённый
-  Payload-boilerplate («Welcome to your new project», `/Payload Blank Template/`), упадёт при реальном
-  запуске против текущего sealife/sealrescue-контента; сейчас просто никогда не выполняется в CI.
+* [x] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
+  локаль/slug → 404). *[S]* — сделано в `tests/e2e/frontend.e2e.spec.ts` (PR #39 + real-404 fix
+  2026-07-02): брендинг/`<html lang>`/свитчер по локалям, redirect-политика, настоящие HTTP 404
+  для несуществующих slug и чужих разделов, локализованная `not-found.tsx`.
+* [x] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — переписан (PR #39):
+  boilerplate-ассерты заменены контрактными тестами брендинга/роутинга; в CI по-прежнему не
+  выполняется (см. QA-06).
 * [ ] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* — сейчас `npm run test`/`test:int`/
   `test:e2e` не вызываются ни в одном workflow (`.github/workflows/*.yml`) — см. также **M0-T07**.
 * [ ] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —

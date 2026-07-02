@@ -1,6 +1,5 @@
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { getPayload } from 'payload'
-import config from '@payload-config'
 import type { Metadata } from 'next'
 
 import { isLocale, type Locale } from '@/i18n/config'
@@ -8,6 +7,8 @@ import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { SealifeHome } from '@/app/(frontend)/_components/home/SealifeHome'
 import { SealrescueHome } from '@/app/(frontend)/_components/home/SealrescueHome'
+import { LatestFeed } from '@/app/(frontend)/_components/home/LatestFeed'
+import { CardGridSkeleton } from '@/app/(frontend)/_components/ui/CardGridSkeleton'
 
 export async function generateMetadata({
   params,
@@ -34,21 +35,16 @@ export default async function HomePage({
 
   if (site === 'sealrescue') return <SealrescueHome locale={locale as Locale} />
 
-  // sealife: лента опубликованного контента в активной локали.
-  const payload = await getPayload({ config })
-  const { docs } = await payload.find({
-    collection: 'content',
-    locale: locale as Locale,
-    where: { _status: { equals: 'published' } },
-    sort: '-updatedAt',
-    limit: 20,
-    depth: 0,
-  })
-
+  // sealife: hero/хаб отдаются сразу, лента Payload стримится в <Suspense>
+  // (M0-T19: loading-граница только у ленты, страница целиком не soft-404-ится).
   return (
     <SealifeHome
       locale={locale as Locale}
-      docs={docs.map((d) => ({ id: d.id, slug: d.slug, title: d.title, type: d.type }))}
+      feed={
+        <Suspense fallback={<CardGridSkeleton />}>
+          <LatestFeed locale={locale as Locale} />
+        </Suspense>
+      }
     />
   )
 }

@@ -67,7 +67,11 @@ export function proxy(req: NextRequest) {
   // Язык НЕ запоминаем здесь — cookie NEXT_LOCALE ставит LanguageSwitcher при явном выборе.
   const url = req.nextUrl.clone()
   url.pathname = `/${siteId}${pathname}`
-  const res = NextResponse.rewrite(url)
+  // x-site/x-locale — для мест без params (not-found.tsx рендерится без props).
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-site', siteId)
+  requestHeaders.set('x-locale', pathLocale)
+  const res = NextResponse.rewrite(url, { request: { headers: requestHeaders } })
 
   // Дев/превью-override сайта.
   if (searchParams.get('site')) res.cookies.set('site', siteId, { path: '/' })

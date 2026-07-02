@@ -53,7 +53,8 @@ Next 16 `proxy` (бывш. middleware) делает две вещи на пуб�
   > языка входят в `locales`.
 - **Есть локаль** (`/ru`, `/en` или `/de`) → `rewrite` на `/[site]/[locale]/…`. Язык здесь НЕ запоминается
   (cookie ставится только при явном выборе в свитчере — требование TDDDG: хранить выбор языка только
-  после явного действия).
+  после явного действия). При rewrite proxy добавляет запросу заголовки **`x-site`/`x-locale`** — их
+  читают места, куда не приходят params (например `not-found.tsx`).
 
 ### Legal-роуты
 Slug общий для всех локалей (`legal-notice`/`privacy`/`cookies`/`terms`); заголовок и подпись в футере
@@ -70,11 +71,12 @@ Admin, API (Payload), внутренние пути Next и файлы с рас
 
 ```
 app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
-  page.tsx                 # главная (sealife / sealrescue)
-  articles, news, memes/   # медиа sealife
-  species, species/[slug]  # Тюленепедия
+  page.tsx                 # главная (sealife / sealrescue); лента Payload — в <Suspense>
+  not-found.tsx            # локализованная 404 (site/locale — из x-site/x-locale proxy)
+  articles, news, memes/   # медиа sealife (у списков — свой loading.tsx)
+  species/(list), species/[slug]  # Тюленепедия (loading.tsx только в (list))
   quizzes, quizzes/[slug]  # квизы
-  games, games/[slug]      # игры (встраивает /public/games/<slug>, ?lang=<locale>)
+  games/(list), games/[slug]      # игры (встраивает /public/games/<slug>, ?lang=<locale>)
   rescue-centers/[slug]    # центры (sealrescue) — сейчас на dev-моках, не на Payload (см. M2-T02)
   what-to-do, report       # emergency / нотис
   rescue-news, rescue-quest
@@ -85,6 +87,17 @@ app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
 
 > Все локали (вкл. `de`) обслуживаются одним сегментом `[locale]`; отдельного статического `de`-шелла
 > больше нет. `[locale]/layout.tsx` выставляет `<html lang>` и `data-site` динамически.
+
+### 404 и loading-границы (M0-T19)
+
+Скелеты загрузки живут **только на списочных страницах**: `loading.tsx` раздела (articles/news/memes),
+route-группа `(list)` у разделов с детальными детьми (species, games), `<Suspense>` вокруг ленты
+главной. У детальных роутов loading-границы нет **намеренно**: без неё `notFound()` успевает выставить
+настоящий **HTTP 404** до первого флаша ответа. С границей выше страница стримится со статусом 200
+(soft-404) — и `notFound()` в `generateMetadata` этого не чинит (проверено на Next 16.2.9: dev,
+`next build/start`, html-limited-бот UA). Несматченные пути под валидной локалью и `notFound()`
+рендерят локализованную `[locale]/not-found.tsx` (микрокопия по сайту — бриф §7). Контракт закреплён
+e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
 
 ## hreflang / canonical / sitemap
 
