@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { isEditor } from '../access/roles'
+import { isEditor, isEditorField } from '../access/roles'
 
 /**
  * UGC: премодерация всегда. Минимум персональных данных (GDPR / data minimization).
@@ -44,6 +44,10 @@ export const UserSubmissions: CollectionConfig = {
       name: 'status',
       type: 'select',
       defaultValue: 'pending',
+      // Премодерация (EU-10/DSA): статус меняет ТОЛЬКО editor/admin. Без field-access
+      // аноним мог прислать status:'approved' в публичный create и самоодобриться
+      // (найдено тестом QA-25) — теперь значение отбрасывается, остаётся default pending.
+      access: { create: isEditorField, update: isEditorField },
       options: ['pending', 'approved', 'rejected'],
     },
   ],

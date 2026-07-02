@@ -84,9 +84,12 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 ### `user-submissions` — заявки/нотисы
 UGC всегда на премодерации. Минимум данных: **email НЕ запрашиваем**, только опциональный `contactHandle`
 (ник TG/VK), если человек хочет ответ. Поля: `summary`, `submissionType`, `content`*, `relatedCollection`/
-`relatedId`, `contactHandle`, `status` (`pending`/`approved`/`rejected`). **Доступ:** read `isEditor`
-(не публичны до модерации), **create публичный** (прислать может любой без аккаунта), update/delete
-`isEditor`. ⚠️ Публичный `create` пока БЕЗ rate-limit/CAPTCHA (в отличие от лидерборда) — см. **SEC-05**.
+`relatedId`, `contactHandle`, `status` (`pending`/`approved`/`rejected`; **field-access
+`isEditorField` на create/update** — иначе аноним мог прислать `status: approved` в публичный
+create и самоодобриться; закрыто в QA-25, контракт — `tests/int/user-submissions.int.spec.ts`).
+**Доступ:** read `isEditor` (не публичны до модерации), **create публичный** (прислать может любой
+без аккаунта), update/delete `isEditor`. ⚠️ Публичный `create` пока БЕЗ rate-limit/CAPTCHA
+(в отличие от лидерборда) — см. **SEC-05**.
 
 ### `reactions` — анонимные реакции
 Анонимные реакции на контент (без PII, без аккаунтов): `key` (`collection:id`), `emoji`, `count`.
