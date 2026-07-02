@@ -638,9 +638,16 @@ players (auth: true)
   сохраняется (/en/articles→/de/articles) и `<html lang>` меняется; cookie ТОЛЬКО по клику
   (навигация/редиректы не создают) + после выбора `/` уважает cookie; свитчер и в футере
   (открывается вверх).
-* [ ] **QA-25** Report/notice-форма (e2e): поля email НЕТ (ассерт отсутствия — инвариант №4);
+* [~] **QA-25** Report/notice-форма (e2e): поля email НЕТ (ассерт отсутствия — инвариант №4);
   сабмит уходит в премодерацию (submission со статусом pending); empty/error/success-состояния.
-  Дополнить rate-limit-тестом после **SEC-05**. *[M]*
+  Дополнить rate-limit-тестом после **SEC-05**. *[M]* — сделано 2026-07-02 в объёме существующего:
+  `tests/e2e/report-form.e2e.spec.ts` (3: нет email-полей + плашка + контакт оператора в
+  legal-notice; required блокирует пустую отправку; success role=status) и
+  `tests/int/user-submissions.int.spec.ts` (5: анонимный create без аккаунта → pending;
+  **самоодобрение закрыто** — status в анонимном create отбрасывается field-access'ом (баг найден
+  тестом: поле было без access, аноним мог прислать `status: approved`); anon update/read
+  Forbidden; editor одобряет). Остаток при M2-T04 (форма сейчас ДЕМО, ничего не шлёт): e2e-ассерт
+  «сабмит формы создаёт pending-строку»; rate-limit — после **SEC-05**.
 
 #### QA-D — Дизайн-система, доступность, визуальная регрессия
 

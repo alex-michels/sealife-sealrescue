@@ -146,6 +146,9 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     футер-ссылки на 6 типах страниц (QA-22).
   - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение
     пути, `NEXT_LOCALE` только по явному клику (QA-24).
+  - `report-form.e2e.spec.ts` — форма «сообщить»: нет email-полей, error/success-состояния (QA-25;
+    форма пока демо — DB-ассерты придут с M2-T04, серверный контракт премодерации —
+    `tests/int/user-submissions.int.spec.ts`).
 - **CI-гейт (QA-08 + QA-09 + QA-10):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
   job `test` — `lint` + `typecheck` + `test:coverage` (unit+int+пороги); job `e2e` — схема через
   `scripts/push-dev-schema.mts` → `next build` → Playwright поднимает `next start` и гоняет весь
