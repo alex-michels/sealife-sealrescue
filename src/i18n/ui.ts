@@ -19,6 +19,10 @@ type UIKey =
   | 'crossRescueCurious'
   | 'crossRescueCuriousCta'
   | 'backHome'
+  // 404 (микрокопия различается по сайту — бриф §7)
+  | 'notFoundTitle'
+  | 'notFoundBodyLife'
+  | 'notFoundBodyRescue'
   | 'filterAll'
   | 'filterByTopic'
   | 'factOfDay'
@@ -66,6 +70,10 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     crossRescueCurious: 'А как вообще спасают тюленей?',
     crossRescueCuriousCta: 'Узнать →',
     backHome: '← На главную',
+    notFoundTitle: 'Страница не найдена',
+    notFoundBodyLife: 'Эта страница уплыла — или её никогда и не было.',
+    notFoundBodyRescue:
+      'Такой страницы нет. Проверьте адрес или вернитесь на главную — там есть инструкция «нашёл тюленя» и список разделов.',
     filterAll: 'Все',
     filterByTopic: 'Фильтр по теме',
     factOfDay: 'Факт дня',
@@ -114,6 +122,10 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     crossRescueCurious: 'How are seals actually rescued?',
     crossRescueCuriousCta: 'Find out →',
     backHome: '← Home',
+    notFoundTitle: 'Page not found',
+    notFoundBodyLife: 'This page swam away — or maybe it never existed.',
+    notFoundBodyRescue:
+      'This page does not exist. Check the address or return to the start page — it has the "found a seal" guide and all sections.',
     filterAll: 'All',
     filterByTopic: 'Filter by topic',
     factOfDay: 'Fact of the day',
@@ -162,6 +174,10 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     crossRescueCurious: 'Wie werden Robben eigentlich gerettet?',
     crossRescueCuriousCta: 'Erfahren →',
     backHome: '← Startseite',
+    notFoundTitle: 'Seite nicht gefunden',
+    notFoundBodyLife: 'Diese Seite ist davongeschwommen — oder es gab sie nie.',
+    notFoundBodyRescue:
+      'Diese Seite existiert nicht. Prüfen Sie die Adresse oder kehren Sie zur Startseite zurück — dort finden Sie die Anleitung „Robbe gefunden“ und alle Bereiche.',
     filterAll: 'Alle',
     filterByTopic: 'Nach Thema filtern',
     factOfDay: 'Fakt des Tages',

@@ -56,37 +56,33 @@ test.describe('Frontend', () => {
     })
   })
 
-  // Несуществующие slug: рендерится not-found UI + <meta name="robots" content="noindex">.
-  //
-  // NB: HTTP-статус при этом 200 (soft-404), а не 404 из инварианта CLAUDE.md.
-  // notFound() на детальных роутах срабатывает ниже loading.tsx ([site]/[locale]/loading.tsx):
-  // shell уже отправлен со статусом 200, и даже notFound() в generateMetadata статус не меняет
-  // (проверено и на dev, и на next build/start, и с UA html-limited-бота). Настоящий 404
-  // требует решения по границе стриминга (см. Roadmap); пока фиксируем noindex-контракт.
+  // Несуществующие slug → настоящий HTTP 404 + локализованная not-found.tsx (M0-T19).
+  // Работает потому, что у детальных роутов НЕТ loading-границы: скелеты живут только
+  // у списков (loading.tsx раздела / route-группы `(list)` / <Suspense> ленты главной),
+  // поэтому notFound() успевает выставить статус до первого флаша ответа.
   for (const [route, path] of [
     ['content [slug]', '/en/definitely-not-a-page'],
     ['quizzes', '/en/quizzes/definitely-not-a-page'],
     ['species', '/en/species/definitely-not-a-page'],
     ['rescue-centers', '/en/rescue-centers/definitely-not-a-page?site=sealrescue'],
   ] as const) {
-    test(`nonexistent ${route} slug renders not-found with noindex`, async ({ page }) => {
-      await page.goto(`${BASE}${path}`)
-      await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute(
-        'content',
-        /noindex/,
-      )
-      await expect(page.getByText('This page could not be found')).toBeVisible()
+    test(`nonexistent ${route} slug returns 404`, async ({ page }) => {
+      const response = await page.goto(`${BASE}${path}`)
+      expect(response?.status()).toBe(404)
+      await expect(page.getByRole('heading', { level: 1 })).toHaveText('Page not found')
     })
   }
 
-  test('section of the other site renders not-found (route guard)', async ({ page }) => {
+  test('not-found page is localized (ru)', async ({ page }) => {
+    const response = await page.goto(`${BASE}/ru/definitely-not-a-page`)
+    expect(response?.status()).toBe(404)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Страница не найдена')
+  })
+
+  test('section of the other site returns 404 (route guard)', async ({ page }) => {
     // rescue-centers — раздел sealrescue; на sealife (default на localhost) его нет.
-    await page.goto(`${BASE}/en/rescue-centers`)
-    await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute(
-      'content',
-      /noindex/,
-    )
-    await expect(page.getByText('This page could not be found')).toBeVisible()
+    const response = await page.goto(`${BASE}/en/rescue-centers`)
+    expect(response?.status()).toBe(404)
   })
 
   test('unknown locale prefix ends in 404', async ({ page }) => {

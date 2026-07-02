@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 import type { Locale } from '@/i18n/config'
 import { sites } from '@/site/config'
 import { t } from '@/i18n/ui'
@@ -9,10 +10,12 @@ import { SealMascot } from '../ui/SealMascot'
 import { CrossLink } from '../content/CrossLink'
 import { sectionsForSite } from '@/site/sections'
 
-export type HomeDoc = { id: number | string; slug: string; title: string; type: string }
-
-/** Главная sealife — медиа-хаб, игривый тон (M0-T08 каркас; полный bento — M1-T05). */
-export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] }) {
+/**
+ * Главная sealife — медиа-хаб, игривый тон (M0-T08 каркас; полный bento — M1-T05).
+ * Лента приходит слотом `feed` (page оборачивает её в <Suspense> со скелетом),
+ * чтобы hero и хаб разделов не ждали Payload.
+ */
+export function SealifeHome({ locale, feed }: { locale: Locale; feed: ReactNode }) {
   const site = sites.sealife
   return (
     <div className="mx-auto max-w-5xl px-5 py-10">
@@ -47,25 +50,7 @@ export function SealifeHome({ locale, docs }: { locale: Locale; docs: HomeDoc[] 
       <WhiskerDivider className="my-8" />
 
       <h2 className="mb-5 text-2xl">{t(locale, 'latest')}</h2>
-      {docs.length === 0 ? (
-        // Empty как настоящий UI-блок на info-поверхности (azure-soft), текст тёмный (§4c/§2e).
-        <div className="rounded-card bg-surface-info p-6 text-text">{t(locale, 'empty')}</div>
-      ) : (
-        <EqualCardGrid>
-          {docs.map((doc) => (
-            <li key={doc.id}>
-              <Link href={`/${locale}/${doc.slug}`} className="block h-full">
-                <Card className="h-full transition-transform hover:-translate-y-0.5">
-                  <span className="font-mono text-xs uppercase tracking-wide text-muted">
-                    {doc.type}
-                  </span>
-                  <h3 className="mt-2 text-xl">{doc.title}</h3>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </EqualCardGrid>
-      )}
+      {feed}
 
       {/* Перелинковка sealife → sealrescue (M1-T04). Тревожный регистр (--critical). */}
       <CrossLink locale={locale} variant="emergency" />
