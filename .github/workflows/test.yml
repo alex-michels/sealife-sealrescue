@@ -23,7 +23,9 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17-alpine
+        # PostGIS обязателен: RescueCenters.location — Payload `point` → колонка `geometry`
+        # (на Neon расширение тоже включено). Обычный postgres:17 валит push-схему.
+        image: postgis/postgis:17-3.5-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -31,7 +33,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres"
+          --health-cmd "pg_isready -U postgres -d sealife_test"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
