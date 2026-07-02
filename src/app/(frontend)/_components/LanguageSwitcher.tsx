@@ -22,6 +22,12 @@ import { cx } from './ui/cx'
 const LOCALE_RE = new RegExp(`^/(${locales.join('|')})(?=/|$)`)
 const ONE_YEAR = 60 * 60 * 24 * 365
 
+/** Cookie ставится ТОЛЬКО при явном клике (TDDDG). Модульная функция, не компонентная:
+ *  запись document.cookie внутри компонента запрещает react-hooks/immutability. */
+function rememberLocale(locale: Locale) {
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${ONE_YEAR}; samesite=lax`
+}
+
 export function LanguageSwitcher({
   current,
   placement = 'down',
@@ -50,10 +56,6 @@ export function LanguageSwitcher({
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
-
-  const remember = (locale: Locale) => {
-    document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=${ONE_YEAR}; samesite=lax`
-  }
 
   return (
     <div
@@ -111,7 +113,7 @@ export function LanguageSwitcher({
             lang={locale}
             aria-current={locale === current ? 'true' : undefined}
             onClick={() => {
-              remember(locale)
+              rememberLocale(locale)
               setOpen(false)
             }}
             className={cx(
