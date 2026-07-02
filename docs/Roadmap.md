@@ -615,8 +615,12 @@ players (auth: true)
 * [ ] **QA-21** Контент-страницы по seeded-данным (e2e): деталь article/news/meme/species рендерится
   на 3 локалях; AiBadge/provenance видимы; TopicFilter фильтрует и держит URL-параметр;
   FactOfDay детерминирован по дате (заморозить clock). *[M]*
-* [ ] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 локали отвечают 200; DE рендерит «Impressum»/
-  «Datenschutz»; legal-ссылки присутствуют в футере каждой публичной страницы. *[S]*
+* [x] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 локали отвечают 200; DE рендерит «Impressum»/
+  «Datenschutz»; legal-ссылки присутствуют в футере каждой публичной страницы. *[S]* — сделано
+  2026-07-02: `tests/e2e/legal.e2e.spec.ts` (9): 12 роутов по 200; DE-заголовки
+  Impressum/Datenschutzerklärung/Nutzungsbedingungen; draft-плашка placeholder-контента на 3
+  локалях; футер-ссылки (slug/подписи из `src/site/legal.ts`) на 6 типах страниц — главные обоих
+  сайтов, раздел, mock-деталь, legal и 404.
 * [x] **QA-23** Consent/аналитика (e2e, КРИТИЧНО — §25 TDDDG): до opt-in скрипт Plausible НЕ
   загружается (network-ассерт); Accept подгружает; Reject/отзыв отключает; выбор хранится только
   в consent-cookie (не в localStorage); кнопки Accept/Reject равнозначны; Cookie-Settings
@@ -626,9 +630,14 @@ players (auth: true)
   спек пропускается — CI остаётся точкой принуждения); равнозначность кнопок ассертится
   computed-стилями (font/bg/height); отзыв через футер → Cookie-Settings → reload выгружает
   скрипт; повторное включение без перезагрузки; localStorage пуст после выбора.
-* [ ] **QA-24** LanguageSwitcher (e2e): открытие/закрытие (клик вне, Esc, уход фокуса);
+* [x] **QA-24** LanguageSwitcher (e2e): открытие/закрытие (клик вне, Esc, уход фокуса);
   выбор ставит `NEXT_LOCALE` ТОЛЬКО по явному клику; путь сохраняется при переключении локали;
-  aria-атрибуты (haspopup/expanded/current). *[S]*
+  aria-атрибуты (haspopup/expanded/current). *[S]* — сделано 2026-07-02:
+  `tests/e2e/language-switcher.e2e.spec.ts` (5): aria-контракт (haspopup/expanded, 3 текстовых
+  пункта, aria-current+hreflang у активной); закрытие Esc/кликом вне/Tab'ом наружу; путь
+  сохраняется (/en/articles→/de/articles) и `<html lang>` меняется; cookie ТОЛЬКО по клику
+  (навигация/редиректы не создают) + после выбора `/` уважает cookie; свитчер и в футере
+  (открывается вверх).
 * [ ] **QA-25** Report/notice-форма (e2e): поля email НЕТ (ассерт отсутствия — инвариант №4);
   сабмит уходит в премодерацию (submission со статусом pending); empty/error/success-состояния.
   Дополнить rate-limit-тестом после **SEC-05**. *[M]*

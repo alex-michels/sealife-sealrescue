@@ -142,6 +142,10 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     в `.env`, иначе спек пропускается).
   - `seo.e2e.spec.ts` — hreflang/canonical на страницах ×3 локали + контракт `sitemap.xml`
     (published-only, прод-домены, x-default; sealrescue — только главная до M2) (QA-20).
+  - `legal.e2e.spec.ts` — legal-shell: 12 роутов ×200, DE-заголовки (Impressum/…), draft-плашка,
+    футер-ссылки на 6 типах страниц (QA-22).
+  - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение
+    пути, `NEXT_LOCALE` только по явному клику (QA-24).
 - **CI-гейт (QA-08 + QA-09 + QA-10):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
   job `test` — `lint` + `typecheck` + `test:coverage` (unit+int+пороги); job `e2e` — схема через
   `scripts/push-dev-schema.mts` → `next build` → Playwright поднимает `next start` и гоняет весь
