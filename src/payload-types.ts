@@ -111,8 +111,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'de') | ('ru' | 'en' | 'de')[];
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'section-content': SectionContent;
+  };
+  globalsSelect: {
+    'section-content': SectionContentSelect<false> | SectionContentSelect<true>;
+  };
   locale: 'ru' | 'en' | 'de';
   widgets: {
     collections: CollectionsWidget;
@@ -458,6 +462,14 @@ export interface Game {
    * Путь к встроенной статической игре из /public (напр. /games/seal-hunt-v1/index.html). Язык игры подставляется автоматически (?lang=). Пусто — пока без играбельного фрейма.
    */
   embed?: string | null;
+  /**
+   * Обложка игры: карточка в списке игр и (при showCover) заставка на странице. Пусто — декоративный плейсхолдер. Отдача через CDN/geo — M0-T04.
+   */
+  coverImage?: (number | null) | Media;
+  /**
+   * Показывать загруженную обложку на КАРТОЧКЕ в списке игр. Выкл — плейсхолдер (картинка сохраняется).
+   */
+  showCardCover?: boolean | null;
   /**
    * Показывать картинку-заставку над игрой на её странице. Выкл — сразу крупный игровой фрейм.
    */
@@ -962,6 +974,8 @@ export interface GamesSelect<T extends boolean = true> {
   excerpt?: T;
   how?: T;
   embed?: T;
+  coverImage?: T;
+  showCardCover?: T;
   showCover?: T;
   coverSeed?: T;
   order?: T;
@@ -1137,6 +1151,67 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Переопределения заголовка/лида/обложки разделов. Пустое поле = значение из кода. Сами разделы (маршруты) добавляются только в коде.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "section-content".
+ */
+export interface SectionContent {
+  id: number;
+  /**
+   * Не больше одной записи на раздел (лишние игнорируются рендером).
+   */
+  overrides?:
+    | {
+        section:
+          | 'articles'
+          | 'news'
+          | 'memes'
+          | 'quizzes'
+          | 'games'
+          | 'species'
+          | 'what-to-do'
+          | 'rescue-centers'
+          | 'rescue-news'
+          | 'report'
+          | 'rescue-quest';
+        /**
+         * H1 страницы раздела. Пусто — из кода.
+         */
+        title?: string | null;
+        /**
+         * Лид-абзац раздела и текст карточки в хабе. Пусто — из кода.
+         */
+        intro?: string | null;
+        /**
+         * Обложка карточки раздела в хабе на главной. Пусто — карточка без картинки.
+         */
+        cover?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "section-content_select".
+ */
+export interface SectionContentSelect<T extends boolean = true> {
+  overrides?:
+    | T
+    | {
+        section?: T;
+        title?: T;
+        intro?: T;
+        cover?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

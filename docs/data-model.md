@@ -37,19 +37,30 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`ma
 ### `games` — мини-игры (метаданные)
 Метаданные игры, не сам код: `title`*/`slug` (канонический), `excerpt`, `how` (локализованное «как
 играть» — текст вне canvas, доступность), `embed` (путь к статической игре в `/public/games/<...>`,
-язык передаётся через `?lang=<locale>`), `showCover`/`coverSeed` (управление заставкой), `order`
-(сортировка в списке). Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
-См. [game-seal-hunter.md](game-seal-hunter.md).
+язык передаётся через `?lang=<locale>`), `coverImage` (upload → `media`: обложка карточки в списке
+игр и заставки страницы) + `showCardCover` (выкл — на карточке плейсхолдер, картинка сохраняется),
+`showCover`/`coverSeed` (заставка на странице игры: загруженная обложка либо плейсхолдер по seed),
+`order` (сортировка в списке). Чистая логика обложки карточки — `cardCover()` в `getGames.ts`
+(unit-тест). Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
+Отдача картинок через CDN/geo — **M0-T04**. См. [game-seal-hunter.md](game-seal-hunter.md).
 
 ### `media` — загрузки
 `upload: true`. Поле `alt` — **локализованное и обязательное** (WCAG/EAA + SEO — инвариант, не «на словах»).
 Определена **инлайн в `payload.config.ts`** (не отдельным файлом). **Доступ:** read публичный
-(`() => true`); ⚠️ `create`/`update`/`delete` НЕ заданы явно → Payload по умолчанию пускает любого
-залогиненного — единственная коллекция без полного явного access-блока (нарушает правило CLAUDE.md
-«в каждой коллекции — явный access»), см. **SEC-07** в Roadmap.
-> ⚠️ `src/collections/Media.ts` — мёртвый неиспользуемый файл: похожая, но не идентичная схема
-> (там `alt` НЕ localized), никогда не импортируется в `payload.config.ts`. Не путать с реальной
-> (инлайн) коллекцией выше; см. **SEC-07**.
+(`() => true`); `create`/`update`/`delete` — editor (явный access с SEC-07, 2026-07-02).
+
+## Globals
+
+### `section-content` — редактируемый контент разделов (M1-T27)
+Payload **global** (не коллекция): массив `overrides` — `section` (select из `sectionDefs`, не
+свободный ввод), `title`/`intro` (localized: ru/en/de), `cover` (upload → `media`, обложка карточки
+раздела в хабе на главной). **Структура разделов (slug/site/nav/hasDetail) живёт ТОЛЬКО в коде**
+(`src/site/sections.ts`); рендер накладывает overrides по slug с fallback'ом на код при пустом
+значении (`src/site/sectionContent.ts`, чтение с `fallbackLocale: false` — пустой en НЕ подменяется
+русским override'ом). Строки с неизвестным slug игнорируются → БД дополняет, но не может
+создать/сломать раздел. **Доступ:** read публичный, update — editor/admin (create/delete у globals
+нет). Закреплено тестами: `tests/unit/section-content.unit.spec.ts` +
+`tests/int/section-content.int.spec.ts`.
 
 ## Rescue
 

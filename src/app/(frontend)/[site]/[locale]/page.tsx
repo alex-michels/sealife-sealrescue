@@ -9,6 +9,7 @@ import { SealifeHome } from '@/app/(frontend)/_components/home/SealifeHome'
 import { SealrescueHome } from '@/app/(frontend)/_components/home/SealrescueHome'
 import { LatestFeed } from '@/app/(frontend)/_components/home/LatestFeed'
 import { CardGridSkeleton } from '@/app/(frontend)/_components/ui/CardGridSkeleton'
+import { sectionCardsForSite } from '@/site/sectionContent'
 
 export async function generateMetadata({
   params,
@@ -37,9 +38,12 @@ export default async function HomePage({
 
   // sealife: hero/хаб отдаются сразу, лента Payload стримится в <Suspense>
   // (M0-T19: loading-граница только у ленты, страница целиком не soft-404-ится).
+  // Карточки хаба — разделы из кода + admin-overrides (M1-T27: intro/cover из админки).
+  const sections = await sectionCardsForSite('sealife', locale as Locale)
   return (
     <SealifeHome
       locale={locale as Locale}
+      sections={sections}
       feed={
         <Suspense fallback={<CardGridSkeleton />}>
           <LatestFeed locale={locale as Locale} />

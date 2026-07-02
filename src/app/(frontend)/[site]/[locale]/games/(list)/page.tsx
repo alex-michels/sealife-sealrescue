@@ -5,7 +5,7 @@ import {
 } from '@/app/(frontend)/_components/mock/mockSection'
 import { PageShell } from '@/app/(frontend)/_components/content/PageShell'
 import { ContentList } from '@/app/(frontend)/_components/content/ContentList'
-import { findAllGames } from '@/app/(frontend)/_components/content/getGames'
+import { cardCover, findAllGames } from '@/app/(frontend)/_components/content/getGames'
 
 const SLUG = 'games'
 
@@ -22,6 +22,9 @@ export default async function GamesPage({ params }: { params: RouteParams }) {
     title: g.title,
     excerpt: g.excerpt ?? undefined,
     meta: { ru: 'Игра', en: 'Game', de: 'Spiel' }[locale],
+    // Обложка карточки из админки (Games.coverImage / showCardCover);
+    // null → декоративный плейсхолдер по seed.
+    coverImage: cardCover(g),
     seed: typeof g.id === 'number' ? g.id + 4 : 4,
   }))
 

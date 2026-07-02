@@ -4,6 +4,7 @@ import { isLocale, type Locale } from '@/i18n/config'
 import { isSite, sites, type SiteId } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { getSection, type SectionDef } from '@/site/sections'
+import { resolvedSection } from '@/site/sectionContent'
 import { SectionShell } from './SectionShell'
 import { StateSwitcher, parseState, type MockState } from './StateSwitcher'
 import { MockList, type SampleCardItem } from './MockList'
@@ -26,7 +27,9 @@ export async function requireSection(
   if (!isSite(site) || !isLocale(locale)) notFound()
   const section = getSection(site, slug)
   if (!section) notFound()
-  return { site, locale, section }
+  // Admin-overrides контента раздела (M1-T27): title/intro из global `section-content`,
+  // структура — из кода. Callers читают section.title[locale] как раньше.
+  return { site, locale, section: await resolvedSection(section, locale) }
 }
 
 /** Метаданные раздела (title + canonical/hreflang). На чужом сайте → пусто (route отдаст 404). */
@@ -35,8 +38,9 @@ export async function sectionMetadata(params: RouteParams, slug: string): Promis
   if (!isSite(site) || !isLocale(locale)) return {}
   const section = getSection(site, slug)
   if (!section) return {}
+  const resolved = await resolvedSection(section, locale)
   return {
-    title: section.title[locale],
+    title: resolved.title[locale],
     alternates: buildAlternates(`/${slug}`, locale, sites[site]),
   }
 }
@@ -50,7 +54,8 @@ export async function requireDetail(
   if (!isSite(site) || !isLocale(locale)) notFound()
   const section = getSection(site, sectionSlug)
   if (!section) notFound()
-  return { site, locale, slug, section }
+  // Overrides и здесь: back-ссылки деталей используют section.title[locale].
+  return { site, locale, slug, section: await resolvedSection(section, locale) }
 }
 
 /** Метаданные детальной страницы; title резолвится по найденной sample-записи. */

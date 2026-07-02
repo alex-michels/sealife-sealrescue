@@ -1,7 +1,17 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
-import type { Game } from '@/payload-types'
+import type { Game, Media } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
+
+/**
+ * Обложка КАРТОЧКИ игры: загруженная картинка, если она есть И не скрыта тумблером
+ * showCardCover (выкл = «показывай плейсхолдер, картинку не удаляй»). Чистая функция —
+ * закреплена unit-тестом.
+ */
+export function cardCover(game: Pick<Game, 'coverImage' | 'showCardCover'>): Media | null {
+  if (game.showCardCover === false) return null
+  return game.coverImage && typeof game.coverImage === 'object' ? game.coverImage : null
+}
 
 /** Все опубликованные мини-игры в активной локали, в заданном порядке (order ↑). */
 export async function findAllGames(locale: Locale): Promise<Game[]> {

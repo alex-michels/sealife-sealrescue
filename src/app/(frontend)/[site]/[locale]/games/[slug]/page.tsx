@@ -7,7 +7,7 @@ import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { getSection } from '@/site/sections'
 import { findGameBySlug } from '@/app/(frontend)/_components/content/getGames'
-import { PlaceholderMedia } from '@/app/(frontend)/_components/mock/PlaceholderMedia'
+import { Cover } from '@/app/(frontend)/_components/content/Cover'
 
 type SlugParams = Promise<{ site: string; locale: string; slug: string }>
 const SLUG = 'games'
@@ -45,9 +45,10 @@ export default async function GameDetail({ params }: { params: SlugParams }) {
         </span>
         <h1 className="mt-2 text-4xl">{game.title}</h1>
 
-        {/* Картинка-заставка — опционально, переключается в админке (showCover). */}
+        {/* Картинка-заставка — опционально, переключается в админке (showCover):
+            загруженная обложка (coverImage) либо декоративный плейсхолдер по coverSeed. */}
         {game.showCover && (
-          <PlaceholderMedia seed={game.coverSeed ?? 0} className="mt-6 rounded-card" />
+          <Cover image={game.coverImage} seed={game.coverSeed ?? 0} className="mt-6 rounded-card" />
         )}
 
         {game.excerpt && <p className="mt-6 text-muted">{game.excerpt}</p>}
