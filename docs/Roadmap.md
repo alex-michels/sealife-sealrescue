@@ -608,10 +608,15 @@ players (auth: true)
   FactOfDay детерминирован по дате (заморозить clock). *[M]*
 * [ ] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 локали отвечают 200; DE рендерит «Impressum»/
   «Datenschutz»; legal-ссылки присутствуют в футере каждой публичной страницы. *[S]*
-* [ ] **QA-23** Consent/аналитика (e2e, КРИТИЧНО — §25 TDDDG): до opt-in скрипт Plausible НЕ
+* [x] **QA-23** Consent/аналитика (e2e, КРИТИЧНО — §25 TDDDG): до opt-in скрипт Plausible НЕ
   загружается (network-ассерт); Accept подгружает; Reject/отзыв отключает; выбор хранится только
   в consent-cookie (не в localStorage); кнопки Accept/Reject равнозначны; Cookie-Settings
-  доступна из футера и реально переключает состояние. *[M]*
+  доступна из футера и реально переключает состояние. *[M]* — сделано 2026-07-02:
+  `tests/e2e/consent.e2e.spec.ts` (5 тестов): network-перехват фиктивного
+  `NEXT_PUBLIC_PLAUSIBLE_SRC=https://plausible.test/...` (задаётся в CI-job `e2e`; без переменной
+  спек пропускается — CI остаётся точкой принуждения); равнозначность кнопок ассертится
+  computed-стилями (font/bg/height); отзыв через футер → Cookie-Settings → reload выгружает
+  скрипт; повторное включение без перезагрузки; localStorage пуст после выбора.
 * [ ] **QA-24** LanguageSwitcher (e2e): открытие/закрытие (клик вне, Esc, уход фокуса);
   выбор ставит `NEXT_LOCALE` ТОЛЬКО по явному клику; путь сохраняется при переключении локали;
   aria-атрибуты (haspopup/expanded/current). *[S]*
