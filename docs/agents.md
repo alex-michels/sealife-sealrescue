@@ -64,9 +64,12 @@ SysAdmin, SEO.
 ## Трекинг устаревших переводов — `markTranslationsStale`
 `beforeChange` на исходной локали (`ru`): считает `sha256` от `title`+`body`, и для каждой целевой локали
 ставит `localeStatus[locale].status = 'stale'`, если хэш изменился. На partial-update прежнее состояние
-берётся из `originalDoc` (чтобы не потерять `translatedAt`/`sourceHash`). Дашборд и агент-переводчик видят,
+берётся из `originalDoc` (чтобы не потерять `translatedAt`/`sourceHash`), и **hash тоже считается с
+подстановкой `title`/`body` из `originalDoc`**, когда их нет в data — иначе апдейт «только topics»
+ложно помечал переводы stale (пофикшено в QA-14). Дашборд и агент-переводчик видят,
 что перевод устарел; агент после перевода записывает актуальный hash. Полную мультилокальную сверку
-удобнее вынести в отдельный сервис/агента.
+удобнее вынести в отдельный сервис/агента. Поведение закреплено тестами (QA-14):
+`tests/unit/content-hooks.unit.spec.ts` + `tests/int/content-hooks.int.spec.ts`.
 
 > ⚠️ Хук подключён **только к `content`**. `species`/`quizzes`/`games` тоже имеют локализованные поля +
 > drafts, но пока используют лишь `forceAgentDrafts` — их переводы НЕ отслеживаются на устаревание

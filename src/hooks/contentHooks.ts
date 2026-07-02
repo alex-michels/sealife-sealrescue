@@ -30,7 +30,11 @@ export const forceAgentDrafts: CollectionBeforeChangeHook = ({ data, req }) => {
 export const markTranslationsStale: CollectionBeforeChangeHook = ({ data, req, originalDoc }) => {
   if (req.locale && req.locale !== SOURCE_LOCALE) return data
 
-  const sourceText = `${data?.title ?? ''}\n${JSON.stringify(data?.body ?? '')}`
+  // Partial-update может не содержать title/body — берём прежние значения из originalDoc,
+  // иначе hash считается от пустых строк и en/de ложно помечаются stale (QA-14).
+  const title = data?.title ?? originalDoc?.title ?? ''
+  const body = data?.body ?? originalDoc?.body ?? ''
+  const sourceText = `${title}\n${JSON.stringify(body)}`
   const hash = crypto.createHash('sha256').update(sourceText).digest('hex')
 
   // На partial-update `data.localeStatus` может отсутствовать — берём прежнее состояние

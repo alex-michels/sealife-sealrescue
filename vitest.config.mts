@@ -44,14 +44,13 @@ export default defineConfig({
         'src/seed/**', // скрипты сидов гоняются вручную (QA-18 добавит им int-тесты)
         'src/mock/**', // сэмпл-данные dev-моков
       ],
-      // Порог — QA-10: ratchet, только растёт (актуалы после QA-13: lines 49 / stmts 51 /
-      // funcs 64 / branches 29). branches ниже прочих: ветвление сосредоточено в
-      // endpoint-ветках leaderboard.ts — поднять до 40 вместе с контракт-тестами QA-15.
+      // Порог — QA-10: ratchet, только растёт (актуалы после QA-15: lines 88 / stmts 87 /
+      // funcs 88 / branches 74). Запас ~8 п.п. под новый ещё-не-покрытый код.
       thresholds: {
-        lines: 45,
-        functions: 55,
-        statements: 46,
-        branches: 25,
+        lines: 80,
+        functions: 80,
+        statements: 80,
+        branches: 65,
       },
     },
   },
