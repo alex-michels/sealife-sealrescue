@@ -105,8 +105,8 @@ export function renderEn(p: NameParts): string {
   return out.join(' ')
 }
 
-/** ISO-неделя (YYYY-Www) — сезон доски, сбрасывается еженедельно. */
-function currentSeason(d = new Date()): string {
+/** ISO-неделя (YYYY-Www) — сезон доски, сбрасывается еженедельно. Экспорт — для QA-17. */
+export function currentSeason(d = new Date()): string {
   const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
   const dayNum = (date.getUTCDay() + 6) % 7
   date.setUTCDate(date.getUTCDate() - dayNum + 3)
@@ -116,8 +116,8 @@ function currentSeason(d = new Date()): string {
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
-/** Конец сезона = старт следующей ISO-недели (ближайший понедельник 00:00 UTC). */
-function seasonEnd(d = new Date()): Date {
+/** Конец сезона = старт следующей ISO-недели (ближайший понедельник 00:00 UTC). Экспорт — для QA-17. */
+export function seasonEnd(d = new Date()): Date {
   const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()))
   const dow = (date.getUTCDay() + 6) % 7 // 0=Пн … 6=Вс
   date.setUTCDate(date.getUTCDate() + (7 - dow)) // следующий понедельник
