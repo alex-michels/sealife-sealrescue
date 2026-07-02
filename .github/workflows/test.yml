@@ -1,0 +1,63 @@
+name: Test
+
+# PR-гейт (QA-08, закрывает M0-T07/QA-06): lint + typecheck + integration-тесты на каждый PR
+# и на push в main. Правило проекта: любая фича без теста — баг (CLAUDE.md → Dev best practices).
+#
+# Тестовая БД — ephemeral Postgres в service-контейнере: пустая на каждый прогон, без секретов
+# и без касания dev/prod-данных. Схему Payload создаёт сам при старте (drizzle push-режим,
+# см. docs/local-development.md § БД). E2E-прогон в CI — отдельная задача (QA-09).
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        # PostGIS обязателен: RescueCenters.location — Payload `point` → колонка `geometry`
+        # (на Neon расширение тоже включено). Обычный postgres:17 валит push-схему.
+        image: postgis/postgis:17-3.5-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sealife_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sealife_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://postgres:postgres@localhost:5432/sealife_test
+      PAYLOAD_SECRET: ci-only-secret-never-prod
+      SERVER_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Integration tests
+        run: npm run test:int
