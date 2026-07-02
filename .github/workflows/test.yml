@@ -1,7 +1,7 @@
 name: Test
 
-# PR-гейт (QA-08 + QA-09, закрывает M0-T07/QA-06/QA-07): на каждый PR и push в main —
-#   job `test`: lint + typecheck + integration-тесты;
+# PR-гейт (QA-08 + QA-09 + QA-10, закрывает M0-T07/QA-06/QA-07): на каждый PR и push в main —
+#   job `test`: lint + typecheck + unit- и integration-тесты с coverage-гейтом;
 #   job `e2e`:  Playwright против ПРОД-сборки (next build && next start, chromium headless shell).
 # Правило проекта: любая фича без теста — баг (CLAUDE.md → Dev best practices).
 #
@@ -62,8 +62,10 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      - name: Integration tests
-        run: npm run test:int
+      # Unit + integration одним прогоном с coverage-гейтом (QA-10): пороги в vitest.config.mts,
+      # ratchet — пороги только растут по мере покрытия (QA-13…QA-20).
+      - name: Unit + integration tests (coverage gate)
+        run: npm run test:coverage
 
   e2e:
     runs-on: ubuntu-latest

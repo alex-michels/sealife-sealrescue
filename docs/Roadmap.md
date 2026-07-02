@@ -521,8 +521,15 @@ players (auth: true)
   и `reuseExistingServer:false` только в CI; кэш браузеров по версии Playwright. Включает обратно
   game-leaderboard-scroll (**QA-07**). Заодно починен локальный `test:e2e`: webServer теперь
   `npm run dev` (был `pnpm dev` — не поднимался без pnpm). Сделано 2026-07-02. *[M]*
-* [ ] **QA-10** Разнести Vitest на `test:unit` (чистая логика, без БД, секунды) и `test:int`
-  (Payload+БД); coverage (V8) с порогом на `src/` — старт 40%, повышать по мере покрытия. *[M]*
+* [x] **QA-10** Разнести Vitest на `test:unit` (чистая логика, без БД, секунды) и `test:int`
+  (Payload+БД); coverage (V8) с порогом на `src/` — старт 40%, повышать по мере покрытия. *[M]* —
+  сделано 2026-07-02: vitest `projects` (unit: node-env `tests/unit/`, int: jsdom `tests/int/`);
+  скрипты `test:unit`/`test:int`/`test:coverage`; в CI job `test` гоняет `test:coverage`.
+  Стартовый unit-слой — 6 спеков (~50 тестов): access-матрица ролей (срез QA-13), resolveSiteId,
+  инварианты локалей + t() + buildAlternates, alias-рендер лидерборда (срез QA-16), factOfDay,
+  sections/legal/formatDate. Пороги (ratchet, только вверх): lines/statements/functions 40,
+  branches 18 (ветвление в endpoint-ветках leaderboard.ts — поднять до 40 с **QA-15**).
+  Coverage include: `src/**` без `src/app` (e2e-территория), payload-types, seed, mock.
 * [ ] **QA-11** Изоляция тестовой БД: отдельная схема/БД на прогон + сид фикстур в `beforeAll`;
   int-тесты не читают и не портят dev-данные. *[M]*
 * [ ] **QA-12** Политика флаки: quarantine-тег, запрет `waitForTimeout` в пользу assertions,
