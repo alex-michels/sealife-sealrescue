@@ -77,6 +77,24 @@ await (иначе запись в БД не успевает; см. истори
 inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`): `fnm use 22 && npm run seed:baseline`.
 Сборка/dev-сервер — на Node 24 (`.nvmrc`), это разные версии для разных команд. См. также `DEPLOYMENT.md` §5.7/§9.
 
+## Перед коммитом
+
+Полный локальный прогон **перед каждым коммитом/пушем** (правило CLAUDE.md → Dev best practices):
+
+```bash
+npm run lint          # 0 errors (warnings — по warn-политике)
+npm run typecheck     # tsc --noEmit
+npm run test:coverage # unit + int + порог покрытия (то же, что гоняет CI)
+npm run build         # если менял фронтенд, схему Payload или конфиги сборки
+npm run test:e2e      # затронутые спеки, если менял e2e-поведение
+```
+
+Красное = не коммитим. Изменил схему Payload → дополнительно `npm run generate:types` и помнить:
+локальный `build` проходит против ТВОЕЙ БД (push уже прошёл при первом бооте), а БД, в которые
+смотрят deploy-build и CI, получают схему своими шагами (`Sync DB schema` в `deploy.yml`;
+`scripts/push-dev-schema.mts` в jobs `test`/`e2e`). Новое окружение без этого шага упадёт
+на `relation … does not exist` (инцидент PR #53) — см. `DEPLOYMENT.md` §9.
+
 ## Тесты
 
 > **Правило проекта: любая фича без теста — баг** (CLAUDE.md → Dev best practices). Тесты — часть

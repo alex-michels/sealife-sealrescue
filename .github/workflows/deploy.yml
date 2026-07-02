@@ -45,6 +45,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
+      # Схема пока push-based (миграций нет): `next build` (NODE_ENV=production) push НЕ делает,
+      # а пререндер читает БД живьём — новая коллекция/global без этого шага валит сборку
+      # («relation … does not exist», инцидент PR #53). Идемпотентно; тот же скрипт, что в CI e2e.
+      # Заодно актуализирует схему alpha-БД ДО рестарта рантайма (он смотрит в ту же Neon-ветку).
+      - name: Sync DB schema (drizzle push)
+        run: npx tsx scripts/push-dev-schema.mts
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
+
       - name: Build (Next standalone)
         run: npm run build
         env:
