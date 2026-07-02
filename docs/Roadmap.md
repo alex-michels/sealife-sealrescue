@@ -554,15 +554,24 @@ players (auth: true)
   (явный access у `media` — тест иначе падал) и поднят coverage-ratchet
   (lines 45 / stmts 46 / funcs 55 / branches 25). Int-файлы сериализованы
   (`fileParallelism: false`) — параллельный boot Payload гонял drizzle push наперегонки.
-* [ ] **QA-14** Хуки контента: `forceAgentDrafts` (запись от роли agent всегда `_status: draft`,
+* [x] **QA-14** Хуки контента: `forceAgentDrafts` (запись от роли agent всегда `_status: draft`,
   даже при явном `published` в data) и `markTranslationsStale` (смена RU помечает en/de stale;
-  partial-update не теряет `localeStatus`; hash стабилен при no-op записи). Unit + int. *[M]*
-* [ ] **QA-15** Контракт лидерборда (int, все ветки `src/endpoints/leaderboard.ts`):
+  partial-update не теряет `localeStatus`; hash стабилен при no-op записи). Unit + int. *[M]* —
+  сделано 2026-07-02: `tests/unit/content-hooks.unit.spec.ts` (8) + `tests/int/content-hooks.int.spec.ts`
+  (5, live Payload: create→stale, фиксация перевода hash'ем, no-op, partial, EN-запись не трогает).
+  Тест выявил и починил баг: partial-update без `title`/`body` (напр. только topics) считал hash
+  от пустых строк и ложно помечал переводы stale — теперь значения подставляются из `originalDoc`.
+* [x] **QA-15** Контракт лидерборда (int, все ветки `src/endpoints/leaderboard.ts`):
   happy-path start→submit→read; Zod-отказы (400); `invalid_token`(401), `token_age`(422),
   `duration_mismatch`(422), `implausible_duration/score`(422), `token_used`(409, одноразовость
   nonce), `rate_limited`(429), `unknown_game`(404); upsert-max одного игрока; смена name-списков →
   освежение alias; suffix-дедуп при коллизии base двух игроков; пагинация GET (`page`/`limit`/
-  `hasMore`); прунинг прошлых сезонов. *[L]*
+  `hasMore`); прунинг прошлых сезонов. *[L]* — сделано 2026-07-02:
+  `tests/int/leaderboard.int.spec.ts` (17 тестов, все перечисленные ветки + lazy prune через
+  expect.poll + GET-дефолты на кривых параметрах). Хендлеры вызываются напрямую с Web Request;
+  возраст токена — фейк ТОЛЬКО Date (`vi.useFakeTimers({ toFake: ['Date'] })`), без sleep;
+  rate-limit изолирован уникальным `x-forwarded-for` на запрос. Coverage-ratchet поднят до
+  lines/stmts/funcs 80, branches 65 (актуалы 88/87/88/74 — план «branches 40» перевыполнен).
 * [ ] **QA-16** Alias-контракт server↔client (страховка «KEEP IN SYNC» в `leaderboard.ts` ↔
   `core/alias.js`): golden-вектор `(seed, game) → canonical EN alias`, прогоняемый обоими
   движками; расхождение списков/PRNG/порядка бросков валит тест. *[M]*
