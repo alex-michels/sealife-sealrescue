@@ -128,10 +128,21 @@ npm run test:e2e
 
 - Тесты детерминированы: фиксированный seed, замороженное время где нужно; фикстуры сидируются
   в `beforeAll`, без зависимости от dev-данных.
-- Никаких `waitForTimeout`/sleep — только web-first assertions (`expect(...).toBeVisible()` и т.п.).
+- **Изоляция БД (QA-11):** int-тесты идут в `DATABASE_URI_TEST`, если он задан в `.env` —
+  заведите отдельную БД или Neon-ветку dev-БД; без него — dev-БД с громким предупреждением
+  (`vitest.setup.ts`). В CI изоляция всегда полная (ephemeral Postgres на прогон). На e2e
+  НЕ распространяется: Playwright тестирует сервер, который сам читает `DATABASE_URI`, поэтому
+  сид (`tests/helpers/seedUser.ts`) и сервер обязаны смотреть в одну БД.
 - Сеть в e2e мокируется, где внешняя зависимость не является предметом теста
   (`tests/e2e/helpers/mock-leaderboard.ts` — образец).
-- Флаки-тест чинится или удаляется в течение недели; ретраи (max 2) — только в CI (QA-12).
+- **Политика флаки (QA-12):**
+  - `waitForTimeout`/sleep в тестах **запрещены ESLint-правилом** (`no-restricted-syntax` для
+    `tests/**` в `eslint.config.mjs`) — ждать только web-first assertions;
+  - ретраи (max 2) — только в CI (`retries` в `playwright.config.ts`);
+  - флакующий e2e-тест помечается тегом: `test('…', { tag: '@quarantine' }, …)` — в CI он
+    исключается (`grepInvert` в конфиге) и не блокирует мерж, локально продолжает бегать;
+  - карантин — не жизнь: тест чинится или удаляется **в течение недели**; неактуальный,
+    скипнутый или флакующий тест — такой же баг, как его отсутствие (CLAUDE.md).
 - **Новая игра** обязана с первого PR иметь: DOM-free sim-ядро, seeded golden-run,
   контрактные тесты лидерборда, e2e-смоук, fairness-пороги (QA-35; образец — Seal The Hunter:
   `core/sim.js` + `tools/fairness-sim.mjs`).

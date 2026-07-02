@@ -530,11 +530,18 @@ players (auth: true)
   sections/legal/formatDate. Пороги (ratchet, только вверх): lines/statements/functions 40,
   branches 18 (ветвление в endpoint-ветках leaderboard.ts — поднять до 40 с **QA-15**).
   Coverage include: `src/**` без `src/app` (e2e-территория), payload-types, seed, mock.
-* [ ] **QA-11** Изоляция тестовой БД: отдельная схема/БД на прогон + сид фикстур в `beforeAll`;
-  int-тесты не читают и не портят dev-данные. *[M]*
-* [ ] **QA-12** Политика флаки: quarantine-тег, запрет `waitForTimeout` в пользу assertions,
+* [x] **QA-11** Изоляция тестовой БД: отдельная схема/БД на прогон + сид фикстур в `beforeAll`;
+  int-тесты не читают и не портят dev-данные. *[M]* — сделано 2026-07-02: в CI — ephemeral
+  Postgres на прогон (с QA-08); локально int-тесты идут в `DATABASE_URI_TEST` (отдельная
+  БД/Neon-ветка, `.env.example`), подмена в `vitest.setup.ts` с громким предупреждением при
+  фолбэке на dev-БД. E2e сознательно вне механизма (сид и сервер должны смотреть в одну БД).
+  Сид фикстур: паттерн `tests/helpers/seedUser.ts`; полные фикстуры придут с QA-13/15/18.
+* [x] **QA-12** Политика флаки: quarantine-тег, запрет `waitForTimeout` в пользу assertions,
   максимум 2 ретрая в CI, флаки-тест чинится или удаляется в течение недели. Задокументировать
-  в `local-development.md`. *[S]*
+  в `local-development.md`. *[S]* — сделано 2026-07-02: `waitForTimeout` запрещён ESLint-правилом
+  (`no-restricted-syntax` для `tests/**`); тег `@quarantine` исключается в CI (`grepInvert` в
+  playwright.config.ts), локально бежит; retries=2 CI-only (было с QA-09); политика —
+  `local-development.md` § Тесты → Конвенции.
 
 #### QA-B — Бэкенд: access control, хуки, endpoints, сиды
 
