@@ -91,6 +91,8 @@ jobs:
       DATABASE_URI: postgres://postgres:postgres@localhost:5432/sealife_test
       PAYLOAD_SECRET: ci-only-secret-never-prod
       SERVER_URL: http://localhost:3000
+      # Включает consent-стек для QA-23 (домен .test не резолвится; в тестах перехват роутом).
+      NEXT_PUBLIC_PLAUSIBLE_SRC: https://plausible.test/js/script.js
 
     steps:
       - uses: actions/checkout@v5
