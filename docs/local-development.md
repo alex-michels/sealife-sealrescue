@@ -45,6 +45,7 @@ npm run dev              # Next + Payload; схема БД синхронизи�
 | `npm run generate:types` | сгенерировать `src/payload-types.ts` — **после изменения схемы** |
 | `npm run generate:importmap` | пересобрать import map админки |
 | `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` (гоняется и в CI на каждый PR) |
 | `npm run seed:baseline` | посев обязательного MUST-HAVE минимума (сейчас: строка `games` для лидерборда) — нужен на любой свежей БД, иначе `unknown_game` |
 | `npm run seed:glossary` | посев глоссария/translation memory (идемпотентно) |
 | `npm run seed:m1` | посев демо-контента и видов (`ru`/`en`) |
@@ -104,8 +105,9 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
     авто-скролла к строке игрока; **dev-only, не в CI** (Roadmap **QA-09/QA-32**).
-- ⚠️ **Ни один из тестов не запускается в CI** — `.github/workflows/*.yml` вызывают только `npm ci`/
-  `npm run build` (Roadmap **QA-08/QA-09** — первый приоритет QA-блока).
+- **CI-гейт (QA-08):** `.github/workflows/test.yml` гоняет `lint` + `typecheck` + `test:int` на
+  каждый PR и push в `main`; тестовая БД — ephemeral Postgres (service container), схему создаёт
+  push-режим Payload на пустой базе. E2E в CI пока НЕ гоняются (Roadmap **QA-09**).
 
 ```bash
 npm run test:int

@@ -52,11 +52,10 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 * [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — на alpha БД =
   **Neon EU** (бэкапы покрывает PITR Neon; данные анонимны, без PII). Собственный `pg_dump`-бэкап —
   **гейт перед self-hosted prod / любым PII** (DEPLOYMENT.md §7).
-* [ ] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA — подтверждено аудитом
-  (2026-07-01): сейчас `npm run lint`/тесты/typecheck нигде не запускаются автоматически — ни в CI
-  (`.github/workflows/deploy.yml` делает только `npm ci && npm run build`), ни pre-commit хуком
-  (несмотря на формулировку в `CLAUDE.md`/`local-development.md` — husky/lint-staged не установлены,
-  `.git/hooks/` пуст). До этой задачи — ноль автоматических гейтов качества перед деплоем.
+* [~] **M0-T07** CI: lint + typecheck + `generate:types` на PR. *[M]* → QA — lint + typecheck +
+  `test:int` гейтят PR с QA-08 (`.github/workflows/test.yml`, 2026-07-02). Осталось: drift-чек
+  `generate:types` (сгенерированные типы не разошлись со схемой) и pre-commit хук
+  (husky/lint-staged) — либо снять формулировку хука из `CLAUDE.md`/`local-development.md`.
 
 ### Роутинг и i18n
 
@@ -509,9 +508,10 @@ players (auth: true)
 
 #### QA-A — Фундамент: CI-гейт и слои тестов
 
-* [ ] **QA-08** CI-workflow `test.yml`: `lint` + `tsc --noEmit` + `test:unit` + `test:int` на каждый
-  PR; required check для `main`. Тестовая БД — ephemeral Postgres (service container) или отдельная
-  Neon-ветка. Закрывает **M0-T07** и **QA-06**. *[M]*
+* [x] **QA-08** CI-workflow `test.yml`: `lint` + `tsc --noEmit` + `test:int` на каждый PR и push в
+  `main`; тестовая БД — ephemeral Postgres (service container), схему создаёт push-режим Payload;
+  required check `test` для `main`. Сделано 2026-07-02. Шаг `test:unit` добавится при разнесении
+  слоёв (**QA-10**); drift-чек `generate:types` остался в **M0-T07**. Закрывает **QA-06**. *[M]*
 * [ ] **QA-09** Playwright в CI: `next build && next start` + e2e-прогон (chromium headless shell);
   трейсы/скриншоты как артефакты при фейле; retries=2 только в CI. Включает обратно
   game-leaderboard-scroll (**QA-07**). *[M]*
@@ -627,7 +627,8 @@ players (auth: true)
 * [x] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — переписан (PR #39):
   boilerplate-ассерты заменены контрактными тестами брендинга/роутинга; в CI по-прежнему не
   выполняется (см. QA-06).
-* [ ] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* → поглощается **QA-08**
+* [x] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* — сделано в **QA-08**
+  (`.github/workflows/test.yml`, 2026-07-02)
 * [ ] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —
   сейчас dev-only (снят из CI коммитом `1e113b3`, см. `game-seal-hunter-worklog.md` §5) →
   поглощается **QA-09** (CI) и **QA-32** (обвязка).
