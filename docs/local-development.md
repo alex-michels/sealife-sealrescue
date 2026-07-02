@@ -73,25 +73,56 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
 Сборка/dev-сервер — на Node 24 (`.nvmrc`), это разные версии для разных команд. См. также `DEPLOYMENT.md` §5.7/§9.
 
 ## Тесты
+
+> **Правило проекта: любая фича без теста — баг** (CLAUDE.md → Dev best practices). Тесты — часть
+> Definition of Done: фича/бизнес-логика/изменение поведения приходит в PR вместе с тестом своего
+> уровня. Изменение, валящее существующий тест, чинит код или осознанно обновляет тест в том же PR.
+> Неактуальный (устаревший, скипнутый, флаки) тест — такой же баг, как его отсутствие.
+> Полный план покрытия — `docs/Roadmap.md` § «QA — Качество».
+
+**Карта уровней — что каким тестом закрывать:**
+
+| Логика | Уровень | Инструмент / место |
+| --- | --- | --- |
+| Чистые функции (i18n, alias/PRNG, season-математика, `pickLocale`, sim-ядро игры) | unit | Vitest, без БД/DOM |
+| Access control, хуки коллекций, endpoints (лидерборд), сиды | integration | Vitest + Payload local API + тестовая БД, `tests/int/` |
+| Роутинг/страницы/UI-контракты/consent/игра в браузере | e2e | Playwright, `tests/e2e/` |
+| Доступность | a11y | `@axe-core/playwright` поверх e2e (QA-26) |
+| Внешний вид компонентов/токены | visual | `toHaveScreenshot` по styleguide (QA-27) |
+| Скорость/CWV | perf | Lighthouse CI (QA-36), FPS-бюджет игры (QA-34) |
+
+**Текущее состояние:**
+
 - **Integration** — Vitest (`vitest.config.mts`, `test.env`): `tests/int/api.int.spec.ts` (пока один
-  smoke-тест — `payload.find('users')`, без проверки access control/хуков).
+  smoke-тест — `payload.find('users')`; access control/хуки/лидерборд — Roadmap **QA-13…QA-18**).
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
+  - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные 3 локалей (title/h1/`lang`/свитчер),
+    sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
+    `not-found.tsx` (QA-04/05 — done, PR #39/#40).
   - `admin.e2e.spec.ts` — логин в админку, dashboard, списки/создание пользователя.
-  - `frontend.e2e.spec.ts` — ⚠️ **устарел**, всё ещё проверяет заголовок Payload blank-шаблона
-    («Welcome to your new project»), не реальный контент sealife/sealrescue — упадёт, если запустить
-    (Roadmap **QA-05**).
   - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка, alpha-notice,
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
-    авто-скролла к строке игрока; **dev-only, не в CI** (снят коммитом `1e113b3`; Roadmap **QA-07**).
-- ⚠️ **Мультилокальных route guards (404 на неизвестной локали/slug) автотест пока НЕ покрывает**
-  (Roadmap **QA-04**) — это заявлено как инвариант в `CLAUDE.md`/`api.md`, но не проверено автоматически.
-- **Ни один из тестов не запускается в CI** — `.github/workflows/*.yml` вызывают только `npm ci`/
-  `npm run build`, без `lint`/`test:int`/`test:e2e` (Roadmap **M0-T07**, **QA-06**).
+    авто-скролла к строке игрока; **dev-only, не в CI** (Roadmap **QA-09/QA-32**).
+- ⚠️ **Ни один из тестов не запускается в CI** — `.github/workflows/*.yml` вызывают только `npm ci`/
+  `npm run build` (Roadmap **QA-08/QA-09** — первый приоритет QA-блока).
+
 ```bash
 npm run test:int
 npm run test:e2e
 ```
+
+**Конвенции:**
+
+- Тесты детерминированы: фиксированный seed, замороженное время где нужно; фикстуры сидируются
+  в `beforeAll`, без зависимости от dev-данных.
+- Никаких `waitForTimeout`/sleep — только web-first assertions (`expect(...).toBeVisible()` и т.п.).
+- Сеть в e2e мокируется, где внешняя зависимость не является предметом теста
+  (`tests/e2e/helpers/mock-leaderboard.ts` — образец).
+- Флаки-тест чинится или удаляется в течение недели; ретраи (max 2) — только в CI (QA-12).
+- **Новая игра** обязана с первого PR иметь: DOM-free sim-ядро, seeded golden-run,
+  контрактные тесты лидерборда, e2e-смоук, fairness-пороги (QA-35; образец — Seal The Hunter:
+  `core/sim.js` + `tools/fairness-sim.mjs`).
 
 ## Docker (опционально)
 - `docker-compose.yml` — **только Postgres**-сервис (алтернатива Neon для локальной БД; в комментарии

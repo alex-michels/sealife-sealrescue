@@ -487,11 +487,139 @@ players (auth: true)
 * [ ] **DESIGN-02** Не перекрашивать админку Payload; dashboard агентов — плотный, без декора. *[S]*
 * [ ] **DESIGN-03** Производительность: SVG-дудлы, self-host шрифты, бюджет Core Web Vitals. *[S]* → SEO
 
-### QA — Качество
+### QA — Качество (расширенный план тестирования)
 
-* [ ] **QA-01** Тесты access control (agent не может publish/delete). *[M]*
-* [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]*
-* [ ] **QA-03** Lighthouse в CI. *[S]*
+> **Правило проекта: любая фича без теста — баг** (закреплено в `CLAUDE.md` → Dev best practices
+> и `docs/local-development.md` § Тесты). Сайт активно развивается, и изменения регулярно ломают
+> соседний функционал; единственная защита — чтобы каждый контракт был закреплён зелёным тестом,
+> падающим при поломке ИЛИ при устаревании самого контракта.
+>
+> **Модель — test trophy, слои снизу вверх:**
+> 1. **Unit** (Vitest, без БД/DOM, < 5 c): чистая логика — i18n, alias/PRNG, season-математика, хуки.
+> 2. **Integration** (Vitest + Payload local API + тестовая БД): access-матрица, хуки на записи,
+>    endpoints (лидерборд), сиды.
+> 3. **E2E** (Playwright против `next build && next start`): роутинг/страницы/UI-контракты/игра.
+> 4. **Специальные слои:** a11y (axe), визуальная регрессия (скриншоты styleguide), перф (Lighthouse
+>    CI + CWV-бюджеты), детерминированная симуляция для игр (seeded golden runs).
+>
+> **Конвенции:** тесты детерминированы (фиксированный seed, замороженное время где надо); никаких
+> sleep-ожиданий — только web-first assertions; сетевые зависимости в e2e мокируются
+> (`tests/e2e/helpers/mock-leaderboard.ts` — образец); фикстуры не зависят от dev-данных.
+> Порядок внедрения: **A (гейт) → B (инварианты бэкенда) → C/E (пользовательские контракты) → D/F**.
+
+#### QA-A — Фундамент: CI-гейт и слои тестов
+
+* [ ] **QA-08** CI-workflow `test.yml`: `lint` + `tsc --noEmit` + `test:unit` + `test:int` на каждый
+  PR; required check для `main`. Тестовая БД — ephemeral Postgres (service container) или отдельная
+  Neon-ветка. Закрывает **M0-T07** и **QA-06**. *[M]*
+* [ ] **QA-09** Playwright в CI: `next build && next start` + e2e-прогон (chromium headless shell);
+  трейсы/скриншоты как артефакты при фейле; retries=2 только в CI. Включает обратно
+  game-leaderboard-scroll (**QA-07**). *[M]*
+* [ ] **QA-10** Разнести Vitest на `test:unit` (чистая логика, без БД, секунды) и `test:int`
+  (Payload+БД); coverage (V8) с порогом на `src/` — старт 40%, повышать по мере покрытия. *[M]*
+* [ ] **QA-11** Изоляция тестовой БД: отдельная схема/БД на прогон + сид фикстур в `beforeAll`;
+  int-тесты не читают и не портят dev-данные. *[M]*
+* [ ] **QA-12** Политика флаки: quarantine-тег, запрет `waitForTimeout` в пользу assertions,
+  максимум 2 ретрая в CI, флаки-тест чинится или удаляется в течение недели. Задокументировать
+  в `local-development.md`. *[S]*
+
+#### QA-B — Бэкенд: access control, хуки, endpoints, сиды
+
+* [ ] **QA-13** Access-матрица ВСЕХ коллекций (13 шт.) параметризованным int-тестом: роли
+  (anon/viewer/translator/editor/admin/agent) × операции (create/read draft+published/update/delete/
+  publish) × ожидание из `data-model.md`. Инварианты №1–2 CLAUDE.md (agent никогда publish/delete)
+  — отдельные явные ассерты. Расширяет **QA-01**, закрывает проверочную часть **SEC-06**. *[L]*
+* [ ] **QA-14** Хуки контента: `forceAgentDrafts` (запись от роли agent всегда `_status: draft`,
+  даже при явном `published` в data) и `markTranslationsStale` (смена RU помечает en/de stale;
+  partial-update не теряет `localeStatus`; hash стабилен при no-op записи). Unit + int. *[M]*
+* [ ] **QA-15** Контракт лидерборда (int, все ветки `src/endpoints/leaderboard.ts`):
+  happy-path start→submit→read; Zod-отказы (400); `invalid_token`(401), `token_age`(422),
+  `duration_mismatch`(422), `implausible_duration/score`(422), `token_used`(409, одноразовость
+  nonce), `rate_limited`(429), `unknown_game`(404); upsert-max одного игрока; смена name-списков →
+  освежение alias; suffix-дедуп при коллизии base двух игроков; пагинация GET (`page`/`limit`/
+  `hasMore`); прунинг прошлых сезонов. *[L]*
+* [ ] **QA-16** Alias-контракт server↔client (страховка «KEEP IN SYNC» в `leaderboard.ts` ↔
+  `core/alias.js`): golden-вектор `(seed, game) → canonical EN alias`, прогоняемый обоими
+  движками; расхождение списков/PRNG/порядка бросков валит тест. *[M]*
+* [ ] **QA-17** Unit season-математики: `currentSeason`/`seasonEnd` на граничных датах (смена года,
+  ISO-неделя 52/53, вс→пн UTC); детерминизм `mulberry32`/`hashStr`. *[S]*
+* [ ] **QA-18** Сиды: `seed:baseline`/`seed:glossary`/`seed:m1` идемпотентны (повторный прогон не
+  дублирует записи); после сида выполняются инварианты (все 3 локали заполнены, slug каноничны). *[M]*
+
+#### QA-C — Фронтенд: роутинг, i18n, страницы, consent
+
+* [ ] **QA-19** Unit `proxy.ts`: `pickLocale` (cookie > Accept-Language с q-весами > fallback `en`;
+  неподдерживаемый язык → `en`) и `resolveSiteId` (host/override); `x-site`/`x-locale` ставятся
+  при rewrite. *[S]*
+* [ ] **QA-20** hreflang/canonical/sitemap: unit на `buildAlternates`; e2e-ассерты альтернатов на
+  3 локалях (перекрёстные + x-default); контракт `sitemap.xml` (только published; пока только
+  sealife — ассерт текущего поведения, обновить при M2). *[M]*
+* [ ] **QA-21** Контент-страницы по seeded-данным (e2e): деталь article/news/meme/species рендерится
+  на 3 локалях; AiBadge/provenance видимы; TopicFilter фильтрует и держит URL-параметр;
+  FactOfDay детерминирован по дате (заморозить clock). *[M]*
+* [ ] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 локали отвечают 200; DE рендерит «Impressum»/
+  «Datenschutz»; legal-ссылки присутствуют в футере каждой публичной страницы. *[S]*
+* [ ] **QA-23** Consent/аналитика (e2e, КРИТИЧНО — §25 TDDDG): до opt-in скрипт Plausible НЕ
+  загружается (network-ассерт); Accept подгружает; Reject/отзыв отключает; выбор хранится только
+  в consent-cookie (не в localStorage); кнопки Accept/Reject равнозначны; Cookie-Settings
+  доступна из футера и реально переключает состояние. *[M]*
+* [ ] **QA-24** LanguageSwitcher (e2e): открытие/закрытие (клик вне, Esc, уход фокуса);
+  выбор ставит `NEXT_LOCALE` ТОЛЬКО по явному клику; путь сохраняется при переключении локали;
+  aria-атрибуты (haspopup/expanded/current). *[S]*
+* [ ] **QA-25** Report/notice-форма (e2e): поля email НЕТ (ассерт отсутствия — инвариант №4);
+  сабмит уходит в премодерацию (submission со статусом pending); empty/error/success-состояния.
+  Дополнить rate-limit-тестом после **SEC-05**. *[M]*
+
+#### QA-D — Дизайн-система, доступность, визуальная регрессия
+
+* [ ] **QA-26** A11y-автоматизация: `@axe-core/playwright` на ключевых страницах (обе главные,
+  список, деталь, legal, 404, styleguide) в обоих `data-site`-режимах; serious/critical
+  нарушения = fail. Ручной чек-лист WCAG 2.2 AA поверх — остаётся в **EU-04**. *[M]*
+* [ ] **QA-27** Визуальная регрессия: `toHaveScreenshot` по styleguide (все компоненты в обоих
+  режимах) + главные обоих сайтов + 404; маскировать динамический контент; baseline в git;
+  прогон в CI на фиксированном viewport/шрифтах. *[M]*
+* [ ] **QA-28** Токен-инварианты как статический тест: в компонентах только semantic-токены
+  (запрет raw `--baltic` и др. primitive), `--buoy` не используется под белым текстом,
+  Baloo 2 отсутствует в кодовой базе. Скрипт/ESLint-правило в CI. *[S]*
+* [ ] **QA-29** Состояния UI (e2e): loading/empty/error/populated через `StateSwitcher` на
+  mock-разделах; скелеты списков реально показываются (CPU/network throttle) и не вызывают
+  layout shift (CLS-ассерт). *[M]*
+
+#### QA-E — Игры (Seal The Hunter сейчас; шаблон для всех будущих)
+
+* [ ] **QA-30** Sim-детерминизм (golden run): фиксированный seed → идентичный лог состояний и
+  финальный счёт `core/sim.js`; любые изменения физики/спавна осознанно обновляют golden-файл.
+  Прогон как `test:unit` (sim DOM-free — уже готов к этому). *[M]*
+* [ ] **QA-31** Fairness-регрессия: сокращённый прогон `tools/fairness-sim.mjs` в CI с ассертом
+  порогов (desktop/mobile catch-rate в допуске 2:1 clamp из `balance.js`); полный прогон — вручную
+  при изменении баланса. *[M]*
+* [ ] **QA-32** Game e2e (полный цикл, mock-leaderboard): старт → ввод (клавиатура+тач-эмуляция) →
+  конец раунда → interstitial (3 c) → board с автоскроллом к строке игрока (поглощает **QA-07**);
+  standalone vs embedded (есть база); `visibilitychange`-пауза; resize/fullscreen с сохранением
+  2:1 clamp. *[L]*
+* [ ] **QA-33** Service worker: смена версии `CACHE` в `sw.js` подхватывает новую версию по
+  network-first (e2e с двумя «релизами»); `manifest.webmanifest` валиден. *[S]*
+* [ ] **QA-34** Перф-бюджет игры: FPS-замер в e2e (метки rAF, порог на CI-профиле), суммарный
+  размер статики игры < бюджета (ассерт в CI); без регрессий при добавлении ассетов. *[M]*
+* [ ] **QA-35** Шаблон QA для новых игр (Seal Run и далее): DOM-free sim-ядро + seeded harness +
+  golden run + контракт лидерборда + e2e-смоук + fairness-пороги обязательны **с первого PR**
+  (зеркалит SR-аудит: изоморфный course-модуль, token-pinned courseSeed). Задокументировать как
+  чек-лист в `docs/local-development.md` § Тесты. *[S]*
+
+#### QA-F — Перф, SEO, ссылки, прод-смоук
+
+* [ ] **QA-36** Lighthouse CI с бюджетами (расширяет **QA-03**): perf ≥ 90, a11y ≥ 95, LCP/CLS/INP
+  бюджеты на главных + деталях обоих сайтов; отчёт как артефакт PR. *[M]*
+* [ ] **QA-37** Link checker (реализует **QA-02**): обход по sitemap + навигации, включая
+  hreflang-альтернаты и футер-ссылки; битые внутренние ссылки = fail; внешние — warning. *[S]*
+* [ ] **QA-38** Пост-деплой smoke в `deploy.yml`: healthcheck, критические роуты (главные ×3 локали,
+  legal, игра, `/api/leaderboard` GET) отвечают 200, security-заголовки на месте; фейл = алерт. *[S]*
+
+#### Задел (сделано / унаследовано)
+
+* [ ] **QA-01** Тесты access control (agent не может publish/delete). *[M]* → поглощается **QA-13**
+* [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]* → реализуется в **QA-37**
+* [ ] **QA-03** Lighthouse в CI. *[S]* → реализуется в **QA-36**
 * [x] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
   локаль/slug → 404). *[S]* — сделано в `tests/e2e/frontend.e2e.spec.ts` (PR #39 + real-404 fix
   2026-07-02): брендинг/`<html lang>`/свитчер по локалям, redirect-политика, настоящие HTTP 404
@@ -499,11 +627,10 @@ players (auth: true)
 * [x] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — переписан (PR #39):
   boilerplate-ассерты заменены контрактными тестами брендинга/роутинга; в CI по-прежнему не
   выполняется (см. QA-06).
-* [ ] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* — сейчас `npm run test`/`test:int`/
-  `test:e2e` не вызываются ни в одном workflow (`.github/workflows/*.yml`) — см. также **M0-T07**.
+* [ ] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* → поглощается **QA-08**
 * [ ] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —
-  сейчас dev-only (снят из CI коммитом `1e113b3`, см. `game-seal-hunter-worklog.md` §5); нужна более
-  широкая обвязка/стабильность прежде чем включать обратно.
+  сейчас dev-only (снят из CI коммитом `1e113b3`, см. `game-seal-hunter-worklog.md` §5) →
+  поглощается **QA-09** (CI) и **QA-32** (обвязка).
 
 ---
 
