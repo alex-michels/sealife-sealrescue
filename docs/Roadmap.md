@@ -597,12 +597,21 @@ players (auth: true)
 
 #### QA-C — Фронтенд: роутинг, i18n, страницы, consent
 
-* [ ] **QA-19** Unit `proxy.ts`: `pickLocale` (cookie > Accept-Language с q-весами > fallback `en`;
+* [x] **QA-19** Unit `proxy.ts`: `pickLocale` (cookie > Accept-Language с q-весами > fallback `en`;
   неподдерживаемый язык → `en`) и `resolveSiteId` (host/override); `x-site`/`x-locale` ставятся
-  при rewrite. *[S]*
-* [ ] **QA-20** hreflang/canonical/sitemap: unit на `buildAlternates`; e2e-ассерты альтернатов на
+  при rewrite. *[S]* — сделано 2026-07-02: `tests/unit/proxy.unit.spec.ts` (13 тестов на реальном
+  `NextRequest`): cookie>header>fallback, q-веса против порядка, региональные теги, первый
+  ПОДДЕРЖИВАЕМЫЙ из ранжированных; redirect-контракт (307 + Vary + сохранение пути/query);
+  rewrite-контракт через x-middleware-заголовки (rewrite-цель /[site]/…, x-site/x-locale,
+  host→sealrescue, ?site=override, «прокси не ставит NEXT_LOCALE»). `pickLocale` экспортирован;
+  `resolveSiteId` был закрыт в QA-10.
+* [x] **QA-20** hreflang/canonical/sitemap: unit на `buildAlternates`; e2e-ассерты альтернатов на
   3 локалях (перекрёстные + x-default); контракт `sitemap.xml` (только published; пока только
-  sealife — ассерт текущего поведения, обновить при M2). *[M]*
+  sealife — ассерт текущего поведения, обновить при M2). *[M]* — сделано 2026-07-02:
+  `tests/e2e/seo.e2e.spec.ts` (7): canonical+alternates на главных ×3 локали, странице раздела и
+  контентной странице (прод-домены, x-default→en, canonical slug общий); sitemap — главная ×3,
+  published-контент с hreflang, черновик исключён, sealrescue-вариант только с главной и своим
+  доменом. Фикстуры (published+draft) сидятся Payload'ом из спека. `buildAlternates` — с QA-10.
 * [ ] **QA-21** Контент-страницы по seeded-данным (e2e): деталь article/news/meme/species рендерится
   на 3 локалях; AiBadge/provenance видимы; TopicFilter фильтрует и держит URL-параметр;
   FactOfDay детерминирован по дате (заморозить clock). *[M]*

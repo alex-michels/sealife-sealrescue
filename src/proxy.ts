@@ -14,7 +14,7 @@ import { resolveSiteId } from '@/site/config'
  *
  * Payload (admin/api) и служебные пути исключены matcher'ом ниже.
  */
-function pickLocale(req: NextRequest): string {
+export function pickLocale(req: NextRequest): string {
   // 1. Явный выбор пользователя (cookie) — важнее языка браузера.
   const cookie = req.cookies.get('NEXT_LOCALE')?.value
   if (cookie && (locales as readonly string[]).includes(cookie)) return cookie
