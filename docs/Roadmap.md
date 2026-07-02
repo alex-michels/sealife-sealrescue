@@ -515,9 +515,12 @@ players (auth: true)
   мерж в `main` невозможен на красном `test`; strict=false (PR не обязан быть up-to-date),
   enforce_admins=false. Шаг `test:unit` добавится при разнесении слоёв (**QA-10**); drift-чек
   `generate:types` остался в **M0-T07**. Закрывает **QA-06**. *[M]*
-* [ ] **QA-09** Playwright в CI: `next build && next start` + e2e-прогон (chromium headless shell);
-  трейсы/скриншоты как артефакты при фейле; retries=2 только в CI. Включает обратно
-  game-leaderboard-scroll (**QA-07**). *[M]*
+* [x] **QA-09** Playwright в CI: job `e2e` в `test.yml` — схема через `scripts/push-dev-schema.mts`
+  → `next build` → Playwright сам поднимает `next start` (webServer, ветка CI) → полный e2e-прогон
+  на chromium headless shell (channel-пин снят); трейсы/скриншоты — артефакты при фейле; retries=2
+  и `reuseExistingServer:false` только в CI; кэш браузеров по версии Playwright. Включает обратно
+  game-leaderboard-scroll (**QA-07**). Заодно починен локальный `test:e2e`: webServer теперь
+  `npm run dev` (был `pnpm dev` — не поднимался без pnpm). Сделано 2026-07-02. *[M]*
 * [ ] **QA-10** Разнести Vitest на `test:unit` (чистая логика, без БД, секунды) и `test:int`
   (Payload+БД); coverage (V8) с порогом на `src/` — старт 40%, повышать по мере покрытия. *[M]*
 * [ ] **QA-11** Изоляция тестовой БД: отдельная схема/БД на прогон + сид фикстур в `beforeAll`;
@@ -632,9 +635,8 @@ players (auth: true)
   выполняется (см. QA-06).
 * [x] **QA-06** Подключить хотя бы `test:int` в CI (PR-гейт). *[S]* — сделано в **QA-08**
   (`.github/workflows/test.yml`, 2026-07-02)
-* [ ] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —
-  сейчас dev-only (снят из CI коммитом `1e113b3`, см. `game-seal-hunter-worklog.md` §5) →
-  поглощается **QA-09** (CI) и **QA-32** (обвязка).
+* [~] **QA-07** Расширить + подключить в CI `tests/e2e/game-leaderboard-scroll.e2e.spec.ts`. *[S]* —
+  в CI снова гоняется с **QA-09** (2026-07-02, job `e2e`); расширение обвязки — **QA-32**.
 
 ---
 
