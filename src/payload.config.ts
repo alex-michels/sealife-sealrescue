@@ -16,6 +16,7 @@ import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
+import { isEditor } from './access/roles'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
 import { en } from '@payloadcms/translations/languages/en'
@@ -29,7 +30,9 @@ const dirname = path.dirname(filename)
 const Media: CollectionConfig = {
   slug: 'media',
   upload: true,
-  access: { read: () => true },
+  // Явный access (SEC-07): без него Payload по умолчанию пускал в create/update/delete
+  // ЛЮБОГО залогиненного, включая agent — нарушение инварианта «delete никогда не agent».
+  access: { read: () => true, create: isEditor, update: isEditor, delete: isEditor },
   fields: [
     {
       name: 'alt',

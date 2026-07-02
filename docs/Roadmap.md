@@ -456,15 +456,14 @@ players (auth: true)
 * [ ] **SEC-05** Rate-limiting форм и API. *[S]* — `user-submissions.create` сейчас публичный
   (`() => true`) БЕЗ rate-limit/CAPTCHA, в отличие от лидерборда (HMAC+Zod+rate-limit); реальный
   вектор спама модерационной очереди до **M2-T14** (Turnstile). Приоритизировать перед M2-T04 идёт в прод.
-* [ ] **SEC-06** Проверка: только admin/editor имеют `delete`; `agent` не публикует. *[S]* —
-  подтверждено аудитом (2026-07-01) по всем 13 коллекциям: `delete` нигде не включает `agent`,
-  `forceAgentDrafts` форсит `_status: draft`. Инвариант держится.
-* [ ] **SEC-07** Явный access (create/update/delete) для коллекции `media`. *[S]* — inline-коллекция
-  `Media` в `src/payload.config.ts` задаёт только `read: () => true`; без явных `create`/`update`/
-  `delete` Payload по умолчанию разрешает запись любому залогиненному — нарушение собственного правила
-  CLAUDE.md «в каждой коллекции — явный access». Заодно удалить мёртвый неиспользуемый файл
-  `src/collections/Media.ts` (дублирует конфиг с расхождением: `alt` там НЕ localized, в реально
-  используемой inline-версии — localized) — код никогда не импортирует этот файл.
+* [x] **SEC-06** Проверка: только admin/editor имеют `delete`; `agent` не публикует. *[S]* —
+  закреплено автотестом (QA-13, 2026-07-02): `tests/int/access-matrix.int.spec.ts` гоняет всю
+  матрицу и отдельными ассертами проверяет «delete нигде не содержит agent» +
+  `forceAgentDrafts` (create/update агентом с `_status: published` сохраняется draft'ом).
+* [x] **SEC-07** Явный access (create/update/delete) для коллекции `media`. *[S]* — сделано в
+  QA-13 (2026-07-02): inline `Media` в `payload.config.ts` получил `create/update/delete: isEditor`
+  (до этого Payload-дефолт пускал ЛЮБОГО залогиненного, включая agent); мёртвый
+  `src/collections/Media.ts` удалён; матрица в `data-model.md` обновлена и закреплена тестом.
 
 ### EU — Compliance (GDPR / TDDDG / DDG / BFSG / DSA / AI Act) — см. `COMPLIANCE_EU_DE.md`
 
@@ -545,10 +544,16 @@ players (auth: true)
 
 #### QA-B — Бэкенд: access control, хуки, endpoints, сиды
 
-* [ ] **QA-13** Access-матрица ВСЕХ коллекций (13 шт.) параметризованным int-тестом: роли
+* [x] **QA-13** Access-матрица ВСЕХ коллекций (14 шт.) параметризованным int-тестом: роли
   (anon/viewer/translator/editor/admin/agent) × операции (create/read draft+published/update/delete/
   publish) × ожидание из `data-model.md`. Инварианты №1–2 CLAUDE.md (agent никогда publish/delete)
-  — отдельные явные ассерты. Расширяет **QA-01**, закрывает проверочную часть **SEC-06**. *[L]*
+  — отдельные явные ассерты. Расширяет **QA-01**, закрывает проверочную часть **SEC-06**. *[L]* —
+  сделано 2026-07-02: `tests/int/access-matrix.int.spec.ts`, 110 тестов (матрица C/U/D по 14
+  коллекциям, boolean-read группы, read-фильтр черновиков, least-privilege `users`,
+  `forceAgentDrafts` create+update, контроль «editor публикует»). Заодно закрыт **SEC-07**
+  (явный access у `media` — тест иначе падал) и поднят coverage-ratchet
+  (lines 45 / stmts 46 / funcs 55 / branches 25). Int-файлы сериализованы
+  (`fileParallelism: false`) — параллельный boot Payload гонял drizzle push наперегонки.
 * [ ] **QA-14** Хуки контента: `forceAgentDrafts` (запись от роли agent всегда `_status: draft`,
   даже при явном `published` в data) и `markTranslationsStale` (смена RU помечает en/de stale;
   partial-update не теряет `localeStatus`; hash стабилен при no-op записи). Unit + int. *[M]*
@@ -637,7 +642,8 @@ players (auth: true)
 
 #### Задел (сделано / унаследовано)
 
-* [ ] **QA-01** Тесты access control (agent не может publish/delete). *[M]* → поглощается **QA-13**
+* [x] **QA-01** Тесты access control (agent не может publish/delete). *[M]* — сделано в **QA-13**
+  (2026-07-02, `tests/int/access-matrix.int.spec.ts`)
 * [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]* → реализуется в **QA-37**
 * [ ] **QA-03** Lighthouse в CI. *[S]* → реализуется в **QA-36**
 * [x] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
