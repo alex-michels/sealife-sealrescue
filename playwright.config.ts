@@ -15,6 +15,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
+  /* Карантин флаки (QA-12): тест с tag '@quarantine' не гоняется в CI (не блокирует мерж),
+     но продолжает бегать локально. Чинить или удалять в течение недели — политика в
+     docs/local-development.md § Тесты. */
+  grepInvert: process.env.CI ? /@quarantine/ : undefined,
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */

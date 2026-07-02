@@ -29,6 +29,21 @@ const eslintConfig = [
     },
   },
   {
+    // Политика флаки (QA-12) — запреты в коде, не только в доках:
+    // sleep-ожидания в тестах флачат; ждать надо web-first assertions.
+    files: ['tests/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.property.name='waitForTimeout']",
+          message:
+            'Sleep-ожидания запрещены (QA-12): используйте web-first assertions (expect(...).toBeVisible() и т.п.).',
+        },
+      ],
+    },
+  },
+  {
     ignores: ['.next/', 'src/payload-types.ts', 'src/payload-generated-schema.ts'],
   },
 ]
