@@ -100,9 +100,11 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
   ролей, `resolveSiteId`, инварианты локалей, `t()`/`buildAlternates`, alias-рендер лидерборда,
   `factOfDay`, sections/legal/`formatDate`. Coverage-гейт: пороги в `vitest.config.mts`
   (ratchet — только вверх; branches поднимется с QA-15).
-- **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup):
-  `api.int.spec.ts` (пока один smoke-тест — `payload.find('users')`; access control/хуки/лидерборд —
-  Roadmap **QA-13…QA-18**).
+- **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup; файлы бегут
+  последовательно — `fileParallelism: false`, иначе параллельный boot Payload гоняет drizzle push
+  наперегонки): `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110
+  тестов, включая инварианты №1–2 и `forceAgentDrafts`); `api.int.spec.ts` — smoke.
+  Лидерборд/хуки/сиды — Roadmap **QA-15…QA-18**.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные 3 локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная

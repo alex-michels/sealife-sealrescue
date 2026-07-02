@@ -27,6 +27,9 @@ export default defineConfig({
           environment: 'jsdom',
           setupFiles: ['./vitest.setup.ts'],
           include: ['tests/int/**/*.int.spec.ts'],
+          // Int-файлы делят одну БД: параллельный boot Payload гоняет drizzle push
+          // наперегонки (DDL-гонка «constraint does not exist») — только последовательно.
+          fileParallelism: false,
         },
       },
     ],
@@ -41,14 +44,14 @@ export default defineConfig({
         'src/seed/**', // скрипты сидов гоняются вручную (QA-18 добавит им int-тесты)
         'src/mock/**', // сэмпл-данные dev-моков
       ],
-      // Порог — QA-10: старт 40%, повышать по мере закрытия QA-13…QA-20 (ratchet: порог
-      // только растёт). branches ниже: ветвление сосредоточено в endpoint-ветках
-      // leaderboard.ts — поднять до 40 вместе с контракт-тестами QA-15.
+      // Порог — QA-10: ratchet, только растёт (актуалы после QA-13: lines 49 / stmts 51 /
+      // funcs 64 / branches 29). branches ниже прочих: ветвление сосредоточено в
+      // endpoint-ветках leaderboard.ts — поднять до 40 вместе с контракт-тестами QA-15.
       thresholds: {
-        lines: 40,
-        functions: 40,
-        statements: 40,
-        branches: 18,
+        lines: 45,
+        functions: 55,
+        statements: 46,
+        branches: 25,
       },
     },
   },

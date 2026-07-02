@@ -149,19 +149,23 @@ number/text, все null/omitted у существующих строк Seal Hun
 | --- | --- | --- | --- | --- |
 | `content`, `species`, `quizzes`, `games` | published/staff | +agent (draft) | translator/+agent | editor |
 | `rescue-centers` | public | editor | editor | editor |
-| `media` | public | ⚠️ не задан явно³ | ⚠️ не задан явно³ | ⚠️ не задан явно³ |
+| `media` | public | editor | editor | editor |
 | `glossary` | public | staff | staff | editor |
 | `sources` | logged-in | +agent | translator/+agent | editor |
-| `user-submissions` | editor | **public**⁴ | editor | editor |
+| `user-submissions` | editor | **public**³ | editor | editor |
 | `game-scores` | public | editor¹ | editor¹ | editor |
 | `agent-proposals` | logged-in | +agent | editor² | editor |
 | `agent-runs` | logged-in | +agent | translator/+agent | editor |
+| `reactions` | public | editor | editor | editor |
 | `users` | self only (admin: все) | admin | admin | admin |
 
 ¹ публичная запись — только через endpoint лидерборда (валидация + local API). · ² коллекционный `isEditor`
 (агент не редактирует предложение вообще после создания, не только `status`) — доп. field-access
-`isEditorField` на `status`. · ³ Payload по умолчанию пускает любого залогиненного — не «никто», это
-пробел (см. **SEC-07**). · ⁴ без rate-limit/CAPTCHA (см. **SEC-05**).
+`isEditorField` на `status`. · ³ без rate-limit/CAPTCHA (см. **SEC-05**).
 **Инвариант: `delete` НИКОГДА не у роли `agent`.** «+agent» и «translator» в `update` идут через
 `canUpdateContent`, который включает admin/editor/translator/agent одновременно — таблица не разбивает
 их построчно, но обе роли реально есть везде, где стоит `canUpdateContent`.
+
+> Вся матрица (включая read-фильтры черновиков, least-privilege чтение `users` и хук
+> `forceAgentDrafts`) закреплена параметризованным int-тестом
+> `tests/int/access-matrix.int.spec.ts` (**QA-13**): расхождение кода с этой таблицей валит CI.
