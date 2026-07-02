@@ -67,8 +67,10 @@ npm run seed:baseline   # обязательный минимум (games) — н
 npm run seed:glossary   # словарь терминов/тюль-сленга (апсерт по source)
 npm run seed:m1         # демо статьи/новости/мемы/виды, ru+en
 ```
-Данные правятся в `src/seed/` (`glossaryTerms.ts`, `m1SeedData.ts`); логика записи — `seedBaseline.ts`,
-`seedGlossary.ts`, `seedM1.ts`. Сиды используют `payload run` — корректное завершение через top-level
+Данные правятся в `src/seed/` (`glossaryTerms.ts`, `m1SeedData.ts`); логика записи — `src/seed/lib.ts`
+(экспортируемые функции, QA-18), а `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts` — тонкие
+`payload run`-обёртки. Сиды идемпотентны (upsert по slug/source) — закреплено
+`tests/int/seeds.int.spec.ts`. Запуск через `payload run` — корректное завершение через top-level
 await (иначе запись в БД не успевает; см. историю проекта).
 
 ⚠️ **Сиды гонять на Node 22, не 24** (`payload run`/`tsx` пока не поддерживает Node 24 module loader —
@@ -105,7 +107,8 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
   наперегонки): `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
-  на живом Payload (QA-14); `api.int.spec.ts` — smoke. Сиды — Roadmap **QA-18**.
+  на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
+  (QA-18); `api.int.spec.ts` — smoke.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные 3 локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная

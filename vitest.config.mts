@@ -41,7 +41,7 @@ export default defineConfig({
       exclude: [
         'src/app/**',
         'src/payload-types.ts',
-        'src/seed/**', // скрипты сидов гоняются вручную (QA-18 добавит им int-тесты)
+        'src/seed/**', // данные сидов + payload-run обёртки; логика (lib.ts) закрыта tests/int/seeds.int.spec.ts (QA-18), но данные раздували бы метрику
         'src/mock/**', // сэмпл-данные dev-моков
       ],
       // Порог — QA-10: ratchet, только растёт (актуалы после QA-15: lines 88 / stmts 87 /
