@@ -355,6 +355,10 @@ describe('идентичность и дедуп', () => {
   })
 
   it('коллизия base-имени двух РАЗНЫХ игроков → суффикс « 2»', async () => {
+    // Изолируем на board=mobile: остальные тесты сабмитят в desktop, а имена
+    // детерминированы от (seed, GAME) с уникальным per-run GAME-слагом — на desktop
+    // чужой сабмит может СЛУЧАЙНО дать тот же base и сдвинуть счётчик (флак в CI,
+    // «Marlin 3» vs «Marlin 2»). На mobile единственный носитель base — наша фикстура.
     const seed = 555
     const base = renderEn(makeParts(seed, GAME))
     // Другой игрок уже занял этот base.
@@ -369,11 +373,11 @@ describe('идентичность и дедуп', () => {
         nameParts: { noun: 0 },
         score: 99,
         durationMs: 60_000,
-        board: 'desktop',
+        board: 'mobile',
         season,
       },
     })
-    const { json } = await playRound({ seed, score: 12 })
+    const { json } = await playRound({ seed, score: 12, board: 'mobile' })
     expect(json.alias).toBe(`${base} 2`)
     expect(json.suffix).toBe(2)
   })
