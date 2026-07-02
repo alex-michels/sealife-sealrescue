@@ -1,11 +1,14 @@
 name: Test
 
-# PR-гейт (QA-08, закрывает M0-T07/QA-06): lint + typecheck + integration-тесты на каждый PR
-# и на push в main. Правило проекта: любая фича без теста — баг (CLAUDE.md → Dev best practices).
+# PR-гейт (QA-08 + QA-09, закрывает M0-T07/QA-06/QA-07): на каждый PR и push в main —
+#   job `test`: lint + typecheck + integration-тесты;
+#   job `e2e`:  Playwright против ПРОД-сборки (next build && next start, chromium headless shell).
+# Правило проекта: любая фича без теста — баг (CLAUDE.md → Dev best practices).
 #
 # Тестовая БД — ephemeral Postgres в service-контейнере: пустая на каждый прогон, без секретов
 # и без касания dev/prod-данных. Схему Payload создаёт сам при старте (drizzle push-режим,
-# см. docs/local-development.md § БД). E2E-прогон в CI — отдельная задача (QA-09).
+# см. docs/local-development.md § БД); для e2e-job схему готовит scripts/push-dev-schema.mts
+# ДО сборки (next build с NODE_ENV=production push не делает, а пререндер читает БД).
 
 on:
   pull_request:
@@ -61,3 +64,71 @@ jobs:
 
       - name: Integration tests
         run: npm run test:int
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        # PostGIS обязателен (RescueCenters.location — Payload `point`), см. job `test`.
+        image: postgis/postgis:17-3.5-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: sealife_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sealife_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://postgres:postgres@localhost:5432/sealife_test
+      PAYLOAD_SECRET: ci-only-secret-never-prod
+      SERVER_URL: http://localhost:3000
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Get Playwright version
+        id: pw
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Prepare DB schema (drizzle push on empty Postgres)
+        run: npx tsx scripts/push-dev-schema.mts
+
+      - name: Build (production)
+        run: npm run build
+
+      # Playwright сам поднимает `next start` (webServer в playwright.config.ts, ветка CI).
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Upload traces/report on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

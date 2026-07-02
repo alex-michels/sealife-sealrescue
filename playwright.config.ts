@@ -18,7 +18,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  reporter: process.env.CI ? [['html', { open: 'never' }], ['github']] : 'html',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -26,16 +26,23 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
     {
+      // Без channel: headless-прогон использует chromium headless shell (дефолт Playwright) —
+      // легче в CI и не зависит от полного Chrome for Testing (QA-09).
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
   webServer: {
-    command: 'pnpm dev',
-    reuseExistingServer: true,
+    // CI (QA-09): e2e гоняются против прод-сборки — job делает `npm run build`, Playwright
+    // поднимает `next start`. Локально — dev-сервер; уже запущенный переиспользуется.
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
+    reuseExistingServer: !process.env.CI,
     url: 'http://localhost:3000',
+    // Холодный старт dev-сервера (первый компайл) занимает ~90 с — дефолтных 60 с мало.
+    timeout: 180_000,
   },
 })

@@ -11,9 +11,9 @@
 - **pnpm** упомянут в `package.json engines`/`pnpm.onlyBuiltDependencies` (наследие шаблона Payload), но
   **фактический менеджер пакетов проекта — npm**: канонический lockfile — `package-lock.json`
   (`pnpm-lock.yaml` в `.gitignore`), CI использует `npm ci`/`npm run build`. `.npmrc` содержит
-  `legacy-peer-deps=true` (влияет на `npm install`). Одно расхождение: `playwright.config.ts`
-  `webServer.command` — `pnpm dev`, а не `npm run dev`; без pnpm `npm run test:e2e` не поднимет сервер
-  сам — либо поставить pnpm, либо держать `npm run dev` запущенным заранее.
+  `legacy-peer-deps=true` (влияет на `npm install`). `playwright.config.ts` `webServer` локально
+  поднимает `npm run dev` сам (уже запущенный dev-сервер переиспользуется), в CI — `npm run start`
+  против прод-сборки.
 - Доступный **Postgres**: локальный, или облачный в EU (Neon/Supabase). Адаптер — `@payloadcms/db-postgres`.
 
 ## ENV (`.env`)
@@ -104,10 +104,13 @@ inline-комментарий в `seedBaseline.ts`/`seedGlossary.ts`/`seedM1.ts`
   - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка, alpha-notice,
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
-    авто-скролла к строке игрока; **dev-only, не в CI** (Roadmap **QA-09/QA-32**).
-- **CI-гейт (QA-08):** `.github/workflows/test.yml` гоняет `lint` + `typecheck` + `test:int` на
-  каждый PR и push в `main`; тестовая БД — ephemeral Postgres (service container), схему создаёт
-  push-режим Payload на пустой базе. E2E в CI пока НЕ гоняются (Roadmap **QA-09**).
+    авто-скролла к строке игрока (в CI с QA-09; расширение обвязки — Roadmap **QA-32**).
+- **CI-гейт (QA-08 + QA-09):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
+  job `test` — `lint` + `typecheck` + `test:int`; job `e2e` — схема через
+  `scripts/push-dev-schema.mts` → `next build` → Playwright поднимает `next start` и гоняет весь
+  e2e-набор на chromium headless shell (трейсы/отчёт — артефакты при фейле). Обе джобы — против
+  ephemeral Postgres (PostGIS-образ; поле `point` требует расширение). Required check на `main`
+  пока только `test`; `e2e` добавить в protection после недели стабильности.
 
 ```bash
 npm run test:int
