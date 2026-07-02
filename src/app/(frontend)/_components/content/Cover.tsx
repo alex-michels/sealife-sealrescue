@@ -23,7 +23,10 @@ export function Cover({
       // eslint-disable-next-line @next/next/no-img-element -- media-домены не сконфигурированы под next/image; CLS закрыт aspect + width/height.
       <img
         src={image.url}
-        alt={image.alt}
+        // alt локализован; при чтении без locale-fallback'а (напр. section-content
+        // c fallbackLocale:false) может прийти пустым — тогда alt="" (декоративная),
+        // а не отсутствующий атрибут (скринридер прочёл бы имя файла).
+        alt={image.alt ?? ''}
         width={image.width ?? undefined}
         height={image.height ?? undefined}
         loading="lazy"

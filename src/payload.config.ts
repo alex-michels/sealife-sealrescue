@@ -16,6 +16,7 @@ import { Sources } from './collections/Sources'
 import { Glossary } from './collections/Glossary'
 import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
+import { SectionContent } from './globals/SectionContent'
 import { isEditor } from './access/roles'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
@@ -64,6 +65,7 @@ export default buildConfig({
     Reactions,
     Media,
   ],
+  globals: [SectionContent],
   endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead],
   localization: {
     // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en/de.

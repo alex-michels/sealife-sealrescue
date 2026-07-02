@@ -54,6 +54,26 @@ export const Games: CollectionConfig = {
       },
     },
     {
+      name: 'coverImage',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Обложка игры: карточка в списке игр и (при showCover) заставка на странице. ' +
+          'Пусто — декоративный плейсхолдер. Отдача через CDN/geo — M0-T04.',
+      },
+    },
+    {
+      name: 'showCardCover',
+      type: 'checkbox',
+      defaultValue: true,
+      admin: {
+        condition: (data) => Boolean(data?.coverImage),
+        description:
+          'Показывать загруженную обложку на КАРТОЧКЕ в списке игр. Выкл — плейсхолдер (картинка сохраняется).',
+      },
+    },
+    {
       name: 'showCover',
       type: 'checkbox',
       defaultValue: false,
