@@ -140,6 +140,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     кнопки, consent-cookie (не localStorage), отзыв через Cookie-Settings. Бежит только при
     заданном `NEXT_PUBLIC_PLAUSIBLE_SRC` (CI ставит фиктивный `.test`-URL; локально — по желанию
     в `.env`, иначе спек пропускается).
+  - `seo.e2e.spec.ts` — hreflang/canonical на страницах ×3 локали + контракт `sitemap.xml`
+    (published-only, прод-домены, x-default; sealrescue — только главная до M2) (QA-20).
 - **CI-гейт (QA-08 + QA-09 + QA-10):** `.github/workflows/test.yml`, на каждый PR и push в `main`:
   job `test` — `lint` + `typecheck` + `test:coverage` (unit+int+пороги); job `e2e` — схема через
   `scripts/push-dev-schema.mts` → `next build` → Playwright поднимает `next start` и гоняет весь
