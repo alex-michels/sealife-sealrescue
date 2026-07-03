@@ -318,6 +318,24 @@ one visual pass on a 16:10 display after deploy. `sw.js` CACHE v15→**v16**.
 **Rode along (same PR):** RU leaderboard name → **«Доска тюлидеров»** (`lbTitle`, `lbOffline`
 in i18n.js) — тюль-сленг per the sealife brand voice; EN/DE unchanged.
 
+**Border matrix (owner review + code check):** gaps land on at most ONE axis (contain-fit of a
+fixed-aspect field): landscape wider than 16:9 (21:9/32:9) and portrait wider than 9:16 (3:4
+tablets) → **kelp walls** left+right; landscape narrower than 16:9 (16:10/4:3) and portrait
+taller than 9:16 (9:19.5/9:21 phones) → **sky+boat strip on top AND seabed strip below**
+(`hasTopBottom` draws both). On tall screens the field's own bottom kelp flora sits right above
+the seabed strip, so the composition reads as kelp + seabed + surface together — that's field
+decor, not the side walls.
+
+**Fix after owner test (same PR):** on screens with a visible surface border, fish crossing the
+top edge vanished a hair EARLY — `drawPrey` clipped at the raw field edge, which sits up to
+~3.5 px BELOW the drawn wavy waterline, so a fish visibly touching water got cut ("поверхность
+перекрывает рыбу"); the seal never crosses (physics clamp) so it looked fine. Render-only fix:
+the top clip now extends to the drawn wave (`surf.topExt` ≈ 4.5 css px → world units) and a
+small **surface ripple ring** marks the crossing point (top-edge spawn entries/flee exits now
+read as "нырнула/ушла за поверхность", not "испарилась"). Reduced-motion: no ripples.
+Side/bottom behavior unchanged (fish hide behind the cove wall / under the seabed — intended).
+Sim/spawn/cull untouched — fairness and QA-30 golden unaffected.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.

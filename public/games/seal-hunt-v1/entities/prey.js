@@ -436,8 +436,10 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     // Safety cull only (the push keeps prey in; a hard flee burst can still take one out, then
     // respawn tops up). Symmetric margin (40) > spawn offset (20) so a fresh fish isn't culled
-    // on frame 1. Rendering is clipped to the field (drawPrey), so any straggler never shows in
-    // the border.
+    // on frame 1. Rendering is clipped to the field (drawPrey): side/bottom stragglers hide
+    // behind the cove wall / under the seabed; at the TOP the clip runs along the DRAWN wavy
+    // waterline (+ ripple marker) so a fish reads as slipping through the surface (SH-12 made
+    // the surface border common — a raw field-edge clip cut fish visibly early).
     if (f.x < -40 || f.x > world.w + 40 || f.y < -40 || f.y > world.h + 40 ||
         Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
@@ -456,17 +458,41 @@ export function updatePrey(dt, seal, world, eatCb) {
   }
 }
 
-export function drawPrey(ctx, world) {
+/**
+ * @param surf опц. поверхность над полем (портретный бордюр, SH-12): { topExt } — на сколько
+ *   world-единиц продлить clip ВВЕРХ, чтобы рыбу резало по НАРИСОВАННОЙ волнистой линии
+ *   (её амплитуда — screen px), а не по сырому краю поля чуть ниже волны; `ripples` — рисовать
+ *   кольцо-рябь в точке пересечения поверхности (продаёт «ушла за поверхность» вместо
+ *   «испарилась»). Рендер-only: физика/спавн/кулл не трогаются (fairness).
+ */
+export function drawPrey(ctx, world, surf = null) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const t = performance.now() / 1000;
 
   // Clip prey to the play frame: a fish entering/leaving laterally appears/disappears at the
-  // arena edge (off-screen on 16:9/portrait, behind the cove wall on widescreen) instead of
-  // swimming visibly in the border where the seal can't reach it.
+  // arena edge (off-screen on exact 16:9/9:16, behind the cove wall on wider screens, under
+  // the seabed at the bottom) instead of swimming visibly in the border where the seal can't
+  // reach it. With a visible SURFACE border the top clip follows the drawn waterline (surf).
+  const topExt = surf ? surf.topExt : 0;
   ctx.save();
   ctx.beginPath();
-  ctx.rect(0, 0, world.w, world.h);
+  ctx.rect(0, -topExt, world.w, world.h + topExt);
   ctx.clip();
+
+  // Рябь на поверхности там, где рыба пересекает линию воды (вход из top-спавна / бегство
+  // вверх): маркер вместо «рыба испарилась». Чисто визуально, под reduced-motion выключено.
+  if (surf && surf.ripples && !reduced) {
+    for (const f of PREY) {
+      if (f.y > -34 && f.y < 8) {
+        const a = 1 - Math.min(1, Math.abs(f.y) / 34);
+        ctx.strokeStyle = `rgba(237,241,243,${(0.38 * a).toFixed(3)})`;
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.ellipse(f.x, -topExt * 0.4, f.r * (1.6 - 0.6 * a), 3.2, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+  }
 
   for (const f of PREY) {
     const variant = f.sp.variant;
