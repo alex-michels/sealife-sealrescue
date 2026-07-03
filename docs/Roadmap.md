@@ -239,12 +239,20 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     чист) по матрице устройств (как у Seal Hunter) × N сидов трассы; отчёт по разбросу дистанции/
     жизней/улова — и по девайсам, и по сидам. Гейт перед тюнингом баланса. *[M]*
 * **Фаза 2 — Core-механика + Phaser-интеграция**
-  * [ ] **SR-05** Vendored **Phaser 4** (≥4.1.0 «Salusa», ESM-билд; `public/games/seal-run-v1/vendor/
+  * [x] **SR-05** Vendored **Phaser 4** (≥4.1.0 «Salusa», ESM-билд; `public/games/seal-run-v1/vendor/
     phaser.esm.js`, статический файл, БЕЗ нового бандлера) + сцены Boot→Preload→MainMenu→Play→
     GameOver; Play-сцена — тонкий рендер-слой над `core/sim.js`/`core/course.js` (object pooling для
     рыбы/препятствий, Arcade Physics). Динамический `import()` вендор-бандла (~400–500 КБ gzip) ТОЛЬКО
     по нажатию «Старт». **iframe-гочи:** `allowfullscreen`; fullscreen-запрос на `pointerup` (iOS);
-    guard против залипания тача при уходе iframe в фон. *[L]* → PERF
+    guard против залипания тача при уходе iframe в фон. *[L]* → PERF — сделано (vertical slice):
+    vendored **Phaser 4.2.0** ESM min (1.4 МБ), `index.html`+`style.css`+`game.js`; сцены по
+    спеке §2.1 — Boot/Preload схлопнуты в create() Play-сцены (текстуры процедурные, грузить
+    нечего), **MainMenu/GameOver = HTML вне canvas** (доступность); **Arcade Physics НЕ
+    подключена намеренно** — коллизии авторитетны в sim-core (спека §12), спрайты позиционируются
+    из состояния + `predatorPos`; пулы спрайтов; фикс-шаг аккумулятор + интерполяция; equal
+    horizon через `Scale.FIT` 960×540; ввод палец/мышь/клавиши + guard залипшего тача
+    (blur/visibilitychange/pointercancel); fullscreen по `pointerup`. Арт — SR-06, HUD/a11y
+    полностью — SR-07, лидерборд — SR-09/10, i18n/SW — SR-11.
   * [ ] **SR-06** Арт: спрайт-атлас тюленя (профиль сбоку — свободное плавание с лёгким наклоном;
     задел под будущую «галумпинг»-анимацию, не для v1) + хищники **v1 биом-точные (орка/белая акула +
     крупная акула-вариант; белый медведь/морской леопард отложены со своими биомами)** + мусор (сеть-

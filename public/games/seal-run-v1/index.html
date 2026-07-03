@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Seal Run — заплыв тюленя</title>
+  <meta name="description" content="Side-scroll раннер: тюлень уворачивается от хищников, мусора и камней, ловит рыбу. Дистанция — очки." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- SR-05 vertical slice: меню/HUD/результат — HTML ВНЕ canvas (доступность, спека §2.1/SR-07);
+       Phaser (vendor/phaser.esm.js) грузится динамически ТОЛЬКО по «Старт» — бюджет CWV. -->
+  <main id="app">
+    <div id="stage-wrap">
+      <div id="stage" aria-hidden="true"></div>
+
+      <div id="hud" hidden>
+        <span id="hud-lives" aria-label="Жизни"></span>
+        <div id="hud-stamina" role="meter" aria-label="Дыхание" aria-valuemin="0" aria-valuemax="100">
+          <div id="hud-stamina-fill"></div>
+        </div>
+        <span id="hud-dist" aria-label="Дистанция">0 м</span>
+      </div>
+
+      <section id="menu" class="overlay">
+        <h1>Seal Run</h1>
+        <p class="tagline">Заплыв тюленя: 900 метров прибрежной воды.</p>
+        <div class="how">
+          <p><b>Управление:</b> веди тюленя по глубине — палец/мышь задают цель,
+            <kbd>↑</kbd>/<kbd>↓</kbd> или <kbd>W</kbd>/<kbd>S</kbd> — с клавиатуры.</p>
+          <p><b>Рыба</b> — очки и дыхание (метр падает сам — ешь, чтобы плыть).
+            <b>Хищники</b> отнимают жизнь. <b>Сети и пластик</b> вязнут и душат.
+            <b>Камни</b> отбрасывают.</p>
+          <p>Трасса недели одна на всех — дистанция решает.</p>
+        </div>
+        <button id="start" type="button">Старт</button>
+        <p class="note">Прототип (SR-05): арт и лидерборд — позже. Трасса: <span id="seed-label"></span></p>
+      </section>
+
+      <section id="over" class="overlay" hidden>
+        <h2 id="over-title">Заплыв окончен</h2>
+        <dl id="result">
+          <div><dt>Дистанция</dt><dd id="r-dist"></dd></div>
+          <div><dt>Рыба</dt><dd id="r-fish"></dd></div>
+          <div><dt>Жизни</dt><dd id="r-lives"></dd></div>
+          <div><dt>Очки</dt><dd id="r-score"></dd></div>
+        </dl>
+        <button id="restart" type="button">Ещё заплыв</button>
+      </section>
+    </div>
+
+    <footer class="bar">
+      <span>Seal Run · прототип</span>
+      <button id="fs" type="button" hidden>На весь экран</button>
+    </footer>
+  </main>
+
+  <script type="module" src="game.js"></script>
+</body>
+</html>

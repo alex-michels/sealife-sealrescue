@@ -9,7 +9,27 @@ Phaser эталон, см. `docs/Roadmap.md` «🕹 Phaser»). Статус: д�
 `public/games/seal-run-v1/core/{course.js,chunks/}` (18 авторских чанков), инварианты §9.4 спеки
 охраняет `tools/chunk-lint{,-lib}.mjs` + CI-тест `tests/unit/seal-run-course.unit.spec.ts`.
 **SR-03 закрыт:** DOM-free sim-core — `core/{sim.js,balance.js}` (физика/ресурсы/коллизии,
-константы спеки §14) + CI-тест `tests/unit/seal-run-sim.unit.spec.ts`.
+константы спеки §14) + CI-тест `tests/unit/seal-run-sim.unit.spec.ts`. **SR-05 закрыт
+(vertical slice играбелен):** vendored Phaser 4.2.0 + `index.html`/`game.js` — тонкая
+Play-сцена над sim-core, меню/HUD/результат HTML вне canvas, динамический `import()` по
+«Старт»; Arcade Physics намеренно не подключена (коллизии авторитетны в sim — спека §12).
+
+## Файлы (текущее состояние)
+```
+public/games/seal-run-v1/
+  index.html            # меню/HUD/результат — HTML вне canvas; загрузка game.js
+  style.css             # slice-минимум (Foggy Coastal Utility — SR-06/SR-07)
+  game.js               # bootstrap: ввод, HTML-оверлеи, динамический import Phaser,
+                        #   Play-сцена (фикс-шаг аккумулятор → sim, пулы спрайтов)
+  vendor/phaser.esm.js  # Phaser 4.2.0 ESM (min, 1.4 МБ) — зафиксированная версия
+  core/
+    course.js           # SR-02: сид-детерминированный генератор трассы (изоморфный)
+    chunks/             # SR-02: библиотека авторских чанков + реестр (sorted by id)
+    balance.js          # SR-03: константы спеки §14 + SURFACE-задел v2
+    sim.js              # SR-03: DOM-free ядро (физика/ресурсы/коллизии/события)
+  tools/
+    chunk-lint{,-lib}.mjs # SR-02: CI-гейт инвариантов трассы (§9.4)
+```
 
 ## 0. Решения (TL;DR)
 
