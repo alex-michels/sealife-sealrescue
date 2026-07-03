@@ -2,7 +2,7 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-07-01.**
+> Last updated: **2026-07-03.**
 
 ---
 
@@ -294,6 +294,73 @@ density keep the main spread bounded.
 simplified. Back-compat for the deploy window: legacy `board` in body/URL is ignored, old tokens
 with `b` stay valid, and a player's duplicate rows (ex-desktop+mobile) are lazily merged on submit
 (max score wins) until the weekly prune.
+
+## 9. Fixed 16:9 / 9:16 play field — SH-12 (2026-07-03)
+
+**Decision (owner):** the play field is now FIXED — 960×540 lu (16:9) landscape, 540×960 (9:16)
+portrait. The screen no longer shapes the world at all: every landscape player gets a
+byte-identical world, every portrait player too — the full "equal horizon" Seal Run pioneered,
+completing the fairness arc (SH-02b constant-short-axis → 2:1 clamp → SH-11 single board → SH-12).
+
+**Measured (seed 0, N=80, 16 profiles):** all landscape profiles 92.2 catch/round (identical),
+all portrait 93.0 — **total spread 0.8%**, down from 5.5% under the clamp. The only remaining
+axis is the 16:9-field vs 9:16-field shape (+0.9% easier portrait) — accepted consciously on the
+single board.
+
+**What changed:** `computeWorld` returns one of two fixed worlds (mechanics/spawn/animations
+untouched — the diff is view math only); harness `CLAMP` experiment knob → `ASPECT`;
+fairness CI thresholds consciously tightened 15%/10% → **5%/3%** + a fixed-field assert on all
+16 profiles; QA-30 golden unchanged (FHD mapped to 960×540 under both models). Border now
+appears on ANY non-16:9 screen (16:10/4:3 laptops get seabed+sky strips, portrait tablets get
+kelp walls) — `initBorder` already keyed off real ox/oy gaps, no renderer changes needed; worth
+one visual pass on a 16:10 display after deploy. `sw.js` CACHE v15→**v16**.
+
+**Rode along (same PR):** RU leaderboard name → **«Доска тюлидеров»** (`lbTitle`, `lbOffline`
+in i18n.js) — тюль-сленг per the sealife brand voice; EN/DE unchanged.
+
+**Border matrix (owner review + code check):** gaps land on at most ONE axis (contain-fit of a
+fixed-aspect field): landscape wider than 16:9 (21:9/32:9) and portrait wider than 9:16 (3:4
+tablets) → **kelp walls** left+right; landscape narrower than 16:9 (16:10/4:3) and portrait
+taller than 9:16 (9:19.5/9:21 phones) → **sky+boat strip on top AND seabed strip below**
+(`hasTopBottom` draws both). On tall screens the field's own bottom kelp flora sits right above
+the seabed strip, so the composition reads as kelp + seabed + surface together — that's field
+decor, not the side walls.
+
+**Visual follow-up after owner test (same PR):** keep spawn/play mechanics untouched, but make the
+border read correctly in the visible art. `drawPrey` no longer hard-clips to the raw field rect:
+side/bottom exits can render into the border with an `EDGE_FADE_LU` alpha falloff before safety-cull.
+The side wall is split into static rocks in `drawBorderBack` and animated kelp in
+`drawBorderFront`, so both prey and the seal paint behind the left/right kelp walls when they reach
+the border. On ultra-tall screens (>9:16) the top border is air, so top-surface prey are **clipped
+at the waterline** (`worldY ≥ 0`) and drawn at their **real sim position**, fading out (`EDGE_FADE_LU`)
+as they breach with a small ripple marker — they read as diving back under the water rather than
+flying into the air, and a fully-breached fish is **not** painted as a solid target below the water
+(the field-clamped seal can't reach it; collision tests the real position, so a mirrored phantom
+made catches silently fail). Reduced-motion: no ripples. Regression:
+`tests/e2e/game-visual-borders.e2e.spec.ts` samples real canvas pixels for side-wall occlusion,
+left/right no-clip prey, and top-surface clip (no air pixels, no solid phantom below water).
+`sw.js` cache v16→v17. Sim/spawn/cull/catch untouched — fairness and QA-30 golden unaffected.
+
+**Contract lock-in (owner request, same PR):** the current visual/mechanics/fairness state is now
+pinned by tests so future changes can't silently regress it. Full inventory:
+- *Visual* (`tests/e2e/game-visual-borders.e2e.spec.ts`, **7 контрактов**, real-pixel sampling,
+  seeded): (1) side kelp walls repaint OVER seal and prey; (2) prey stay visible beyond
+  left/right borders (no hard clip); (3) top surface — no air pixels, no catchable phantom
+  below water; (4) **border matrix per orientation** — 16:10 и 9:19.5 → светлое небо сверху И
+  дно снизу (и ноль боковых зазоров), 3:4-планшет и 21:9 → стены водорослей с обеих сторон
+  (и ноль верх/низ); (5) полевые водоросли ПОВЕРХ фона, но ПОД добычей (порядок слоёв
+  пиксельно); (6) **фейд по вылету за край** — внутри поля полная плотность, на 30 lu ~21%,
+  на 39 lu (за `EDGE_FADE_LU` 38) ноль → кулл невидим; (7) **рябь «флоп-плюх»** у ватерлинии —
+  дифференциально (ripples:true добавляет кольцо поверх той же сцены; хвост прорвавшейся рыбы
+  легитимно остаётся в воде — это желанный look, закреплён).
+- *Mechanics* (`tests/unit/seal-hunt-prey-edges.unit.spec.ts`, **6 контрактов**, детерминированно):
+  спавн — 4-edge shuffle-bag (первые 4 спавна = все 4 края), позиция ровно ±20 за краем,
+  скорость строго внутрь; edge-push возвращает рыбу с ВСЕХ 4 сторон (за 3 с крейсерская рыба
+  никогда не доходит до кулл-порога ±40 и возвращается в поле); safety-cull — −39 живёт,
+  −45/NaN удаляются. Вместе с QA-30 golden (трасса физики/спавна/счёта) и QA-31
+  (фикс-поле 960×540/540×960 на всех 16 профилях, спред ≤5%, девиация ≤3%) — полный
+  контрактный замок текущего состояния. Не покрыто сознательно: resize()-проводка game.js
+  (те же формулы, что в фикстурах; тонкий слой) и i18n-строки.
 
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to

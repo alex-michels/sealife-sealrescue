@@ -5,10 +5,11 @@ import { describe, it, beforeAll, afterAll, expect } from 'vitest'
  * Полный прогон (16 профилей × 60+ раундов) — вручную при изменении баланса:
  *   node public/games/seal-hunt-v1/tools/fairness-sim.mjs 60
  *
- * Базлайн (2026-07-03, seed 0, N=12, после фикса resetSpawnState): разброс по всем
- * 16 профилям 5.5% (min 91.5, max 96.7). До фикса carry-over edgeBag добавлял
- * ложный шум (9.3%). Пороги с запасом: они ловят РЕАЛЬНЫЙ перекос баланса
- * (изменение механики/кламп-конфига), не шум — прогон seeded и детерминирован.
+ * Базлайн (2026-07-03, SH-12 — фикс. поле 16:9/9:16, seed 0, N=80): все ландшафты
+ * байт-идентичны (92.2), все портреты байт-идентичны (93.0) — миров всего два;
+ * разброс по всем 16 профилям 0.8% (остаточная разница форм 16:9 vs 9:16).
+ * До SH-12 (кламп 2:1): 5.5%. Пороги осознанно ужаты с 15/10 до 5/3 — ловят
+ * РЕАЛЬНЫЙ перекос баланса, не шум (прогон seeded и детерминирован).
  */
 
 type FairnessLib = {
@@ -17,7 +18,7 @@ type FairnessLib = {
   runRound: (world: unknown) => number
 }
 type BalanceLib = {
-  VIEW_CFG: { maxAspect: number }
+  VIEW_CFG: { aspect: number }
   computeWorld: (w: number, h: number) => { w: number; h: number }
   recomputeBalance: (w: number, h: number) => void
 }
@@ -33,8 +34,8 @@ const SUBSET = [
   'super-ultra 32:9   ',
 ]
 const ROUNDS = 12
-const MAX_SPREAD_PCT = 15 // базлайн 9.3% по всем профилям
-const MAX_PROFILE_DEVIATION_PCT = 10 // худшее отклонение от среднего в базлайне ~6.4%
+const MAX_SPREAD_PCT = 5 // базлайн SH-12: 0.8% (только 16:9-поле vs 9:16-поле)
+const MAX_PROFILE_DEVIATION_PCT = 3 // при двух мирах отклонение ≈ половина разброса
 
 let lib: FairnessLib
 let balance: BalanceLib
@@ -53,12 +54,13 @@ beforeAll(async () => {
 afterAll(() => rng?.restore())
 
 describe('fairness across screen profiles', () => {
-  it('кламп поля — 2:1 (осознанное решение PR #25/#26) и держится на всех профилях', () => {
-    expect(balance.VIEW_CFG.maxAspect).toBe(2)
+  it('поле фиксировано — 16:9 / 9:16 (SH-12, сменило кламп 2:1 из PR #25/#26)', () => {
+    expect(balance.VIEW_CFG.aspect).toBeCloseTo(16 / 9, 9)
     for (const p of lib.PROFILES) {
       const world = balance.computeWorld(p.w, p.h)
-      const aspect = Math.max(world.w, world.h) / Math.min(world.w, world.h)
-      expect(aspect, p.name).toBeLessThanOrEqual(2 + 1e-9)
+      // Экран поле НЕ меняет: у всех ландшафтов идентичный мир, у всех портретов идентичный.
+      if (p.w >= p.h) expect(world, p.name).toEqual({ w: 960, h: 540 })
+      else expect(world, p.name).toEqual({ w: 540, h: 960 })
     }
   })
 

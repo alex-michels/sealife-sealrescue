@@ -1,27 +1,21 @@
-// Fairness model (SH-02b — full-screen): the game fills the WHOLE screen (no black bars),
-// yet the catch rate stays the same on every screen. The trick is to make difficulty a set
-// of invariants that are constant in LOGICAL units:
-//   • SHORT screen axis = a constant number of logical units (so the seal/prey are the same
-//     fraction of the screen everywhere — they don't shrink to dots on big displays);
-//   • LONG axis simply FILLS the screen (no clamp → no letterbox);
+// Fairness model (SH-12 — единый аспект; сменил SH-02b «full-screen + кламп 2:1»):
+// играбельное поле ФИКСИРОВАНО — 960×540 lu (16:9) в ландшафте, 540×960 (9:16) в портрете.
+// Экран поле не меняет вообще: у всех ландшафтов идентичный мир, у всех портретов идентичный
+// мир (полный «равный горизонт», как у Seal Run). Инварианты SH-02b остаются основой:
 //   • constant seal/fish speed and size;
-//   • constant prey DENSITY: prey count ∝ area (NOT a fixed cap — a fixed cap diluted
-//     density on wide screens, which is what made wide screens harder).
-// Catch rate ≈ density × seal_speed × catch_width, so with all three constant it's screen-
-// independent: a wide screen holds more prey over more area, but the LOCAL density the seal
-// sweeps is identical, and a finite-speed seal can only eat at that local rate. Verified by
-// the bot harness (tools/fairness-sim.mjs). Leaderboards still split coarse mobile/desktop
-// for the residual portrait-vs-landscape shape difference.
+//   • constant prey DENSITY: prey count ∝ area (оба фикс-поля равноплощадны → cap одинаков).
+// История: SH-02b держал короткую ось 540 lu и позволял длинной следовать за экраном с
+// клампом 2:1 — бот-харнесс показал, что поле длиннее ~2:1 измеримо легче (длинное узкое
+// поле выгодно охотнику); внутри ≤2:1 оставался остаточный спред ~5% по форме поля. SH-12
+// (после SH-11: доска единая) убирает и его: сравнивать формы больше нечего, остаётся только
+// честная разница 16:9-поля vs 9:16-поля (ландшафт vs портрет) — замерена харнессом, числа в
+// docs/game-seal-hunter.md. Экраны не ровно 16:9 (16:10, 4:3, 21:9, телефоны) получают
+// диегетический бордюр «край бухты» (render/scenery.js обрабатывает ЛЮБУЮ ось зазора) —
+// принято осознанно (Roadmap SH-12). Механика/спавн/анимации НЕ тронуты — только вью-математика.
 
 export const VIEW_CFG = {
-  logicalShort: 540, // logical units along the shorter screen axis (constant for everyone)
-  // Bound the PLAY-FIELD aspect for fairness: the bot harness shows a field longer than ~2:1
-  // is measurably easier to hunt (a long thin field favours the chaser), which would hand
-  // ultra-wide screens a leaderboard edge. 2:1 keeps the catch rate flat (within noise) AND
-  // still fills the screen for every common screen/window (≤2:1). Only TRUE ultra-wide
-  // (21:9/32:9) or very tall (>2:1 portrait) gets a small border, which the renderer dresses
-  // as scenery rather than black. Verified by tools/fairness-sim.mjs.
-  maxAspect: 2.0,
+  logicalShort: 540, // logical units по короткой оси поля (константа для всех)
+  aspect: 16 / 9, // фиксированный аспект поля (ландшафт 16:9; портрет — обратный, 9:16)
 };
 
 // Reference world (landscape 960×540) used for density + legacy diag ratios.
@@ -47,17 +41,13 @@ export const BAL = {
 };
 
 /**
- * Logical world dimensions for a given display size (CSS px). Short axis is a constant
- * number of logical units; long axis = short × the REAL aspect ratio, so the world fills
- * the whole screen (no clamp → no letterbox). Orientation follows the display.
+ * Логический мир для дисплея (CSS px): ФИКСИРОВАННОЕ поле (SH-12) — от экрана зависит только
+ * ориентация. 16:9 в ландшафте (960×540), 9:16 в портрете (540×960). Рендер contain-fit'ит
+ * поле в экран (game.js: VIEW.scale/ox/oy), остаток одевает бордюр (render/scenery.js).
+ * Третий параметр — override аспекта ТОЛЬКО для экспериментов харнесса (ASPECT=…).
  */
-export function computeWorld(dispW, dispH, maxAspect = VIEW_CFG.maxAspect) {
+export function computeWorld(dispW, dispH, aspect = VIEW_CFG.aspect) {
   const short = VIEW_CFG.logicalShort;
-  const longSide = Math.max(dispW, dispH) || short;
-  const shortSide = Math.min(dispW, dispH) || short;
-  // Clamp the play-field aspect (default VIEW_CFG.maxAspect) for fairness. The fairness
-  // harness overrides this to measure other clamps.
-  const aspect = Math.min(maxAspect, Math.max(1, longSide / shortSide));
   const longLogical = Math.round(short * aspect);
   return dispW >= dispH ? { w: longLogical, h: short } : { w: short, h: longLogical };
 }

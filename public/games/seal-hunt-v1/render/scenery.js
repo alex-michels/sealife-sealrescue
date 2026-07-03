@@ -318,11 +318,13 @@ export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra
 }
 
 // ——————————————————————————————————————————————————————————————————————
-// Diegetic border — only appears when the screen is wider/taller than the 2:1 play field
-// (true ultra-wide / very-tall). The leftover strips are NOT play space; we dress them as the
-// world around the cove so they read as an intentional boundary instead of black bars. With
-// the 2:1 clamp only ONE axis ever has leftover, so a screen shows EITHER side kelp walls
-// (wide) OR seabed + sea surface (tall) — never both. Coords are CSS px (caller resets to DPR).
+// Diegetic border — appears when the screen is not exactly the fixed 16:9 / 9:16 play field
+// (SH-12: любой не-16:9 экран получает бордюр — 16:10/4:3 сверху-снизу, 21:9 по бокам,
+// портретные планшеты по бокам, вытянутые телефоны сверху-снизу). The leftover strips are
+// NOT play space; we dress them as the world around the cove so they read as an intentional
+// boundary instead of black bars. Contain-fit of a fixed-aspect field leaves leftover on at
+// most ONE axis, so a screen shows EITHER side kelp walls OR seabed + sea surface — never
+// both (initBorder keys off the REAL ox/oy gaps, not orientation). Coords are CSS px.
 
 let B = null; // border scene, rebuilt each resize
 const _mod = (a, n) => ((a % n) + n) % n;
@@ -451,28 +453,33 @@ export function drawDeepBackdrop(ctx, view) {
   ctx.fillRect(0, 0, view.dispW, view.dispH);
 }
 
-// Border layers BEHIND the play field (seabed, sky + clouds + boats, side walls).
+// Border layers BEHIND the play field (seabed, sky + clouds + boats, side-wall rocks).
 export function drawBorderBack(ctx, view, world, t, reducedMotion = false, bd = false) {
   if (!B) return;
   if (B.hasTopBottom) { drawSeabed(ctx, t, reducedMotion, bd); drawSkyBack(ctx, t, reducedMotion, bd); }
-  if (B.hasSides) drawSideWalls(ctx, t, reducedMotion, bd);
+  if (B.hasSides) drawSideWallRocks(ctx, bd);
 }
 
-// Border layers IN FRONT of the play field: the wavy water surface + the edge vignette.
+// Border layers IN FRONT of the play field: side kelp walls, the wavy water surface + edge vignette.
 export function drawBorderFront(ctx, view, world, t, reducedMotion = false) {
   if (!B) return;
+  if (B.hasSides) drawSideWallKelp(ctx, t, reducedMotion);
   if (B.hasTopBottom) drawWaterline(ctx, B.ay0, B.dispW, t, reducedMotion);
   drawEdgeVignette(ctx);
 }
 
-function drawSideWalls(ctx, t, reduced, bd = false) {
-  const { dispH } = B;
-  if (!bd) for (const r of B.rocks) { // static base rocks — the art provides them in backdrop mode
+function drawSideWallRocks(ctx, bd = false) {
+  if (bd) return; // static base rocks -- the art provides them in backdrop mode
+  for (const r of B.rocks) {
     ctx.fillStyle = r.c;
     ctx.beginPath(); ctx.ellipse(r.x, r.y, r.rw, r.rh, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(237,241,243,0.05)';
     ctx.beginPath(); ctx.ellipse(r.x - r.rw * 0.3, r.y - r.rh * 0.4, r.rw * 0.5, r.rh * 0.4, 0, 0, Math.PI * 2); ctx.fill();
   }
+}
+
+function drawSideWallKelp(ctx, t, reduced) {
+  const { dispH } = B;
   ctx.save(); ctx.lineCap = 'round'; // animated kelp-wall — always (the boundary marker)
   for (const k of B.kelp) {
     const sway = reduced ? 0 : Math.sin(t * 0.8 + k.phase) * 10;

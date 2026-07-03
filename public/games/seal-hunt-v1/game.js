@@ -165,15 +165,14 @@ function resize(){
   VIEW.dispW = cssW;
   VIEW.dispH = cssH;
 
-  // Full-screen logical world: short axis constant, long axis follows the real aspect, so
-  // the world fills the viewport (no letterbox). Fairness is held in the balance invariants
-  // (constant density/speed/size), not by clamping the view — see core/balance.js (SH-02b).
+  // Фиксированное поле (SH-12): 960×540 в ландшафте / 540×960 в портрете — у всех одинаковый
+  // мир («равный горизонт», как у Seal Run). См. core/balance.js.
   const world = computeWorld(cssW, cssH);
   WORLD.w = world.w;
   WORLD.h = world.h;
 
-  // World aspect == screen aspect, so this fit is exact: scale equal on both axes, ox/oy ≈ 0
-  // (only sub-pixel rounding). The seal roams the whole screen.
+  // Contain-fit поля в экран; остаток (любая ось) одевается диегетическим бордюром
+  // (render/scenery.js: initBorder ветвится по РЕАЛЬНЫМ зазорам ox/oy, не по ориентации).
   VIEW.scale = Math.min(cssW / WORLD.w, cssH / WORLD.h);
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;
@@ -421,10 +420,14 @@ function drawFrame(dt){
   // the bottom border) so kelp grows from the real seabed on >1:2 screens, not the floating field edge.
   const bottomExtra = (bd && VIEW.oy > 0.5) ? VIEW.oy / VIEW.scale : 0;
   drawBackground(CTX, WORLD, t, reduced, bottomExtra);
-  drawPrey(CTX, WORLD);
+  // Видимая поверхность над полем (верхний бордюр = воздух): добыча клипается по ватерлинии и
+  // фейдится, «ныряя» под воду (drawPrey), а рябь маркирует пересечение. Рыба не «летит» в воздух
+  // и не рисуется ловимым фантомом под водой. Рендер-only: физика/спавн/кулл/поимка не меняются.
+  const surf = VIEW.oy > 0.5 ? { ripples: true } : null;
+  drawPrey(CTX, WORLD, surf);
   seal.draw(CTX);
 
-  // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
+  // Border layers IN FRONT of the field: side kelp walls, the wavy sea surface + vignette.
   if (hasBorder) {
     CTX.save();
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);
