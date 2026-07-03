@@ -2,7 +2,7 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-07-01.**
+> Last updated: **2026-07-03.**
 
 ---
 
@@ -326,15 +326,17 @@ taller than 9:16 (9:19.5/9:21 phones) → **sky+boat strip on top AND seabed str
 the seabed strip, so the composition reads as kelp + seabed + surface together — that's field
 decor, not the side walls.
 
-**Fix after owner test (same PR):** on screens with a visible surface border, fish crossing the
-top edge vanished a hair EARLY — `drawPrey` clipped at the raw field edge, which sits up to
-~3.5 px BELOW the drawn wavy waterline, so a fish visibly touching water got cut ("поверхность
-перекрывает рыбу"); the seal never crosses (physics clamp) so it looked fine. Render-only fix:
-the top clip now extends to the drawn wave (`surf.topExt` ≈ 4.5 css px → world units) and a
-small **surface ripple ring** marks the crossing point (top-edge spawn entries/flee exits now
-read as "нырнула/ушла за поверхность", not "испарилась"). Reduced-motion: no ripples.
-Side/bottom behavior unchanged (fish hide behind the cove wall / under the seabed — intended).
-Sim/spawn/cull untouched — fairness and QA-30 golden unaffected.
+**Visual follow-up after owner test (same PR):** keep spawn/play mechanics untouched, but make the
+border read correctly in the visible art. `drawPrey` no longer hard-clips to the raw field rect:
+side/bottom exits can render into the border with an `EDGE_FADE_LU` alpha falloff before safety-cull.
+The side wall is split into static rocks in `drawBorderBack` and animated kelp in
+`drawBorderFront`, so both prey and the seal paint behind the left/right kelp walls when they reach
+the border. On ultra-tall screens (>9:16) top-surface prey with negative logical `y` are rendered
+back below the waterline with a small ripple marker, so they read as returning to water rather than
+flying into the air or disappearing at the raw field edge. Reduced-motion: no ripples. Regression:
+`tests/e2e/game-visual-borders.e2e.spec.ts` samples real canvas pixels for side-wall occlusion,
+left/right no-clip prey, and ultra-tall surface return. `sw.js` cache v16→v17. Sim/spawn/cull
+untouched — fairness and QA-30 golden unaffected.
 
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to

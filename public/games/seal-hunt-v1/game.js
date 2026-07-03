@@ -420,15 +420,14 @@ function drawFrame(dt){
   // the bottom border) so kelp grows from the real seabed on >1:2 screens, not the floating field edge.
   const bottomExtra = (bd && VIEW.oy > 0.5) ? VIEW.oy / VIEW.scale : 0;
   drawBackground(CTX, WORLD, t, reduced, bottomExtra);
-  // Видимая поверхность над полем (верхний бордюр): рыбу режем по НАРИСОВАННОЙ волне
-  // (амплитуда ~3.5 css px выше края поля), а не по сырому краю — иначе она «испаряется»
-  // чуть раньше линии воды; рябь маркирует пересечение поверхности. Тюлень клампится
-  // физикой и поверхность не пересекает — его это не касается.
+  // Видимая поверхность над полем (верхний бордюр): добыча с отрицательным logical-y
+  // визуально возвращается под ватерлинию, а рябь маркирует пересечение поверхности.
+  // Рендер-only: физика/спавн/кулл не меняются.
   const surf = VIEW.oy > 0.5 ? { topExt: 4.5 / VIEW.scale, ripples: true } : null;
   drawPrey(CTX, WORLD, surf);
   seal.draw(CTX);
 
-  // Border layers IN FRONT of the field: the wavy sea surface (top) + the edge vignette.
+  // Border layers IN FRONT of the field: side kelp walls, the wavy sea surface + vignette.
   if (hasBorder) {
     CTX.save();
     CTX.setTransform(DPR, 0, 0, DPR, 0, 0);

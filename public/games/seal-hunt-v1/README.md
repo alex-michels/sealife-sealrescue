@@ -17,7 +17,7 @@ seal-hunt-v1/
 │  ├─ alias.js                # анонимная идентичность игрока (seed) + рендер имени
 │  ├─ leaderboard.js          # клиент лидерборда (fetch к /api/leaderboard*)
 │  ├─ sim.js                  # DOM-free ядро симуляции (общее с fairness-харнессом)
-│  ├─ balance.js              # тюнинг темпа/баланса + VIEW_CFG (2:1 кламп)
+│  ├─ balance.js              # тюнинг темпа/баланса + VIEW_CFG (фикс. поле 16:9 / 9:16)
 │  ├─ input.js                # клавиатура/тач
 │  └─ theme.js                # цвета/токены под бренд
 ├─ entities/

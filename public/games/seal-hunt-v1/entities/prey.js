@@ -540,7 +540,7 @@ export function drawPrey(ctx, world, surf = null) {
       ctx.rotate(wig);
     }
     ctx.scale(1, sclY);
-    drawFish(ctx, f.r, f.sp.scheme, variant, f.tailKick, f.sp.prize, anim);
+    drawFish(ctx, f.r, f.sp.scheme, variant, f.tailKick, f.sp.prize, anim, fadeA);
     ctx.restore();
   }
 
