@@ -117,9 +117,11 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 **Текущее состояние:**
 
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
-  ролей, `resolveSiteId`, инварианты локалей, `t()`/`buildAlternates`, alias-рендер лидерборда,
-  `factOfDay`, sections/legal/`formatDate`. Coverage-гейт: пороги в `vitest.config.mts`
-  (ratchet — только вверх; branches поднимется с QA-15).
+  ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
+  alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
+  хуки контента, **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
+  **fairness** (пороги честности по профилям экранов, QA-31). Coverage-гейт: пороги в
+  `vitest.config.mts` (ratchet — только вверх).
 - **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup; файлы бегут
   последовательно — `fileParallelism: false`, иначе параллельный boot Payload гоняет drizzle push
   наперегонки): `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110

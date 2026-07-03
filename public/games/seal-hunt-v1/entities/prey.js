@@ -283,6 +283,10 @@ export const PREY = []; // active list
 // inflow). A shuffle "bag" hands out each edge exactly once per four spawns, random order — so
 // no edge floods and players can't camp one to farm prey, yet the order stays unpredictable.
 let edgeBag = [];
+// Сброс спавн-состояния (QA-30/31): bag переживает раунды, из-за чего раунд i зависел от
+// хвоста предыдущего — харнесс/golden-тесты требуют «раунд = f(seed)». Живая игра сброс
+// не зовёт (ей не важно), харнесс — в начале каждого раунда.
+export function resetSpawnState() { edgeBag = []; }
 function nextEdge() {
   if (edgeBag.length === 0) {
     edgeBag = ['left', 'right', 'top', 'bottom'];

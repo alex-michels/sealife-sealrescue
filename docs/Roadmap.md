@@ -666,12 +666,22 @@ players (auth: true)
 
 #### QA-E — Игры (Seal The Hunter сейчас; шаблон для всех будущих)
 
-* [ ] **QA-30** Sim-детерминизм (golden run): фиксированный seed → идентичный лог состояний и
+* [x] **QA-30** Sim-детерминизм (golden run): фиксированный seed → идентичный лог состояний и
   финальный счёт `core/sim.js`; любые изменения физики/спавна осознанно обновляют golden-файл.
-  Прогон как `test:unit` (sim DOM-free — уже готов к этому). *[M]*
-* [ ] **QA-31** Fairness-регрессия: сокращённый прогон `tools/fairness-sim.mjs` в CI с ассертом
+  Прогон как `test:unit` (sim DOM-free — уже готов к этому). *[M]* — сделано 2026-07-03:
+  `tests/unit/sim-golden.unit.spec.ts` + `tests/golden/seal-hunt-sim.golden.json` (60 посекундных
+  снапшотов + финальный счёт, квантование 1e-3 от дрейфа transcendental-функций между V8);
+  обновление — осознанно через `UPDATE_GOLDEN=1`. Тест НАШЁЛ утечку детерминизма: `edgeBag`
+  (спавн-мешок рёбер) тянулся между раундами — добавлен `resetSpawnState()` (prey.js), харнесс
+  сбрасывает его на каждый раунд; SW-кэш бампнут (v14).
+* [x] **QA-31** Fairness-регрессия: сокращённый прогон `tools/fairness-sim.mjs` в CI с ассертом
   порогов (desktop/mobile catch-rate в допуске 2:1 clamp из `balance.js`); полный прогон — вручную
-  при изменении баланса. *[M]*
+  при изменении баланса. *[M]* — сделано 2026-07-03: логика харнесса вынесена в
+  `tools/fairness-lib.mjs` (CLI и CI гоняют ОДИН код); `tests/unit/fairness.unit.spec.ts` —
+  6 представительных профилей × 12 seeded-раундов (~6 с): разброс ≤15%, каждый профиль ±10% от
+  среднего, кламп 2:1 (`VIEW_CFG.maxAspect`) закреплён ассертом на всех 16 профилях. Бонус фикса
+  edgeBag: честный базлайн разброса упал 9.3% → **5.5%** (carry-over добавлял ложный шум в
+  common-random-numbers сравнение).
 * [ ] **QA-32** Game e2e (полный цикл, mock-leaderboard): старт → ввод (клавиатура+тач-эмуляция) →
   конец раунда → interstitial (3 c) → board с автоскроллом к строке игрока (поглощает **QA-07**);
   standalone vs embedded (есть база); `visibilitychange`-пауза; resize/fullscreen с сохранением
