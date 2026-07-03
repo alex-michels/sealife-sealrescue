@@ -198,10 +198,13 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     **нормативная спека: [`game-seal-run-spec.md`](game-seal-run-spec.md)** (единицы/детерминизм,
     формулы физики Y, автомат стамины, кинематика хищников, формат чанка + `generateCourse`,
     формула очков ≤100k, серверные проверки; константы предварительные — гейт SR-04)
-  * [ ] **SR-02** **Изоморфный** `core/course.js` + `core/chunks/*.js` (dependency-free ESM, без DOM/
+  * [x] **SR-02** **Изоморфный** `core/course.js` + `core/chunks/*.js` (dependency-free ESM, без DOM/
     Phaser, целочисленный `mulberry32` — одни файлы для браузера И для Node-адаптера анти-чита SR-10):
     формат чанка (difficultyScore/biome/**bands**/obstacles/fish) + библиотека 15–25 авторских чанков
-    (один biome `coastal` в v1) + `generateCourse(seed, biome)` сид-детерминированный сборщик. *[M]*
+    (один biome `coastal` в v1) + `generateCourse(seed, biome)` сид-детерминированный сборщик. *[M]* —
+    сделано: `public/games/seal-run-v1/core/{course.js,chunks/}` (18 чанков) + **chunk-lint**
+    (`tools/chunk-lint{,-lib}.mjs`: проходимость safe-interval-BFS, коридоры, питание, бюджет рыбы)
+    + CI-тест `tests/unit/seal-run-course.unit.spec.ts` (детерминизм + сборки по 20 сидам)
   * [ ] **SR-03** `core/sim.js`+`core/balance.js` (DOM-free): физика тюленя по Y (**eased target-Y
     follow**, описать на собственных условиях), стамина/жизни/баффы/дебаффы как в спеке SR-01,
     константы из таблицы балансировки первого прохода. *[M]*
