@@ -467,12 +467,18 @@ export function updatePrey(dt, seal, world, eatCb) {
 const EDGE_FADE_LU = 38;
 
 /**
- * Решение владельца (SH-12 follow-up): добыча за границей поля НЕ исчезает — остаётся видимой
- * в бордюре (никакого clip). «Прятать» её могут только диегетические слои: стены водорослей
- * по бокам рисуются ПОВЕРХ добычи (drawBorderFront), у поверхности — отражение ниже ватерлинии
- * + кольцо-рябь в точке пересечения (`surf.ripples`). Рендер-фейд у EDGE_FADE_LU маскирует
- * side/bottom sim-кулл; top-surface overshoot не фейдим, а возвращаем в воду визуально.
- * Рендер-only: физика/спавн/кулл не трогаются (fairness).
+ * Добыча за краем поля остаётся видимой в бордюре по бокам/снизу (никакого clip там): её прячут
+ * диегетические слои — стены водорослей рисуются ПОВЕРХ добычи (drawBorderFront), снизу — фейд
+ * под дно. СВЕРХУ (граница воды) особый случай: верхний бордюр — воздух, туда добычу пускать
+ * нельзя. Раньше её «зеркалили» вниз солидным спрайтом — так получался ловимый на вид, но
+ * недостижимый фантом: тюлень закламплен в поле (core/sim.js), а коллизия проверяет РЕАЛЬНУЮ
+ * позицию рыбы (updatePrey), поэтому клик по фантому не засчитывался. Теперь у поверхности:
+ *   (1) clip по ватерлинии (worldY ≥ 0) — над водой не рисуем (никакой рыбы «в воздухе»);
+ *   (2) рыба рисуется на СВОЕЙ реальной позиции и фейдится по мере всплытия (over/EDGE_FADE_LU)
+ *       → плавно «ныряет» под поверхность, а не исчезает рывком;
+ *   (3) кольцо-рябь (`surf.ripples`) маркирует точку пересечения.
+ * Рендер честен относительно коллизии → видимая под водой добыча всегда достижима. Физика/
+ * спавн/кулл/поимка НЕ трогаются (fairness).
  */
 export function drawPrey(ctx, world, surf = null) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -494,16 +500,23 @@ export function drawPrey(ctx, world, surf = null) {
     }
   }
 
-  for (const f of PREY) {
-    // On ultra-tall screens the top border is air/sky. Keep the simulation coordinates intact,
-    // but mirror only the render position back below the drawn waterline so prey never "fly".
-    const surfaceReturn = Boolean(surf && f.y < 0);
-    const drawY = surfaceReturn ? Math.min(-f.y, EDGE_FADE_LU) : f.y;
-    const drawAng = surfaceReturn && typeof f.ang === 'number' ? -f.ang : f.ang;
+  // Top-surface exit (ultra-tall screens): the top border is air. Clip prey to BELOW the
+  // waterline (half-plane worldY ≥ 0) so a fish crossing the surface sinks out of view instead
+  // of flying in the sky — while sides/bottom stay open (prey slide behind the kelp walls /
+  // fade under the seabed, tested separately). The fish keeps its REAL sim position and only
+  // fades as it breaches, so it never becomes a solid "catchable" phantom where the seal can't
+  // reach (the seal is clamped to the field — core/sim.js). Render stays honest with collision.
+  if (surf) {
+    ctx.beginPath();
+    ctx.rect(-1e5, 0, 2e5, world.h + 1e5);
+    ctx.clip();
+  }
 
-    // Насколько рыба вышла за поле (по любой оси) → альфа 1 → 0 к EDGE_FADE_LU.
+  for (const f of PREY) {
+    // Насколько рыба вышла за поле по ЛЮБОЙ оси → альфа 1 → 0 к EDGE_FADE_LU. Верхний overshoot
+    // фейдится так же, как бока/низ, поэтому прорыв поверхности растворяется (без резкого «поп»).
     const overX = f.x < 0 ? -f.x : f.x > world.w ? f.x - world.w : 0;
-    const overY = surfaceReturn ? 0 : f.y < 0 ? -f.y : f.y > world.h ? f.y - world.h : 0;
+    const overY = f.y < 0 ? -f.y : f.y > world.h ? f.y - world.h : 0;
     const over = Math.max(overX, overY);
     const fadeA = over > 0 ? Math.max(0, 1 - over / EDGE_FADE_LU) : 1;
     if (fadeA <= 0) continue;
@@ -529,9 +542,9 @@ export function drawPrey(ctx, world, surf = null) {
     };
 
     ctx.save();
-    ctx.translate(f.x, drawY);
+    ctx.translate(f.x, f.y);
     if (orient) {
-      const a = (typeof drawAng === 'number') ? drawAng : Math.atan2(surfaceReturn ? -f.vy : f.vy, f.vx);
+      const a = (typeof f.ang === 'number') ? f.ang : Math.atan2(f.vy, f.vx);
       const face = f.face || (Math.cos(a) >= 0 ? 1 : -1);
       const pitch = Math.atan2(Math.sin(a), face * Math.cos(a)); // ∈ (−90°,90°) → belly stays down
       ctx.scale(face, 1);

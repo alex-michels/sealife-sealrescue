@@ -331,12 +331,15 @@ border read correctly in the visible art. `drawPrey` no longer hard-clips to the
 side/bottom exits can render into the border with an `EDGE_FADE_LU` alpha falloff before safety-cull.
 The side wall is split into static rocks in `drawBorderBack` and animated kelp in
 `drawBorderFront`, so both prey and the seal paint behind the left/right kelp walls when they reach
-the border. On ultra-tall screens (>9:16) top-surface prey with negative logical `y` are rendered
-back below the waterline with a small ripple marker, so they read as returning to water rather than
-flying into the air or disappearing at the raw field edge. Reduced-motion: no ripples. Regression:
+the border. On ultra-tall screens (>9:16) the top border is air, so top-surface prey are **clipped
+at the waterline** (`worldY ≥ 0`) and drawn at their **real sim position**, fading out (`EDGE_FADE_LU`)
+as they breach with a small ripple marker — they read as diving back under the water rather than
+flying into the air, and a fully-breached fish is **not** painted as a solid target below the water
+(the field-clamped seal can't reach it; collision tests the real position, so a mirrored phantom
+made catches silently fail). Reduced-motion: no ripples. Regression:
 `tests/e2e/game-visual-borders.e2e.spec.ts` samples real canvas pixels for side-wall occlusion,
-left/right no-clip prey, and ultra-tall surface return. `sw.js` cache v16→v17. Sim/spawn/cull
-untouched — fairness and QA-30 golden unaffected.
+left/right no-clip prey, and top-surface clip (no air pixels, no solid phantom below water).
+`sw.js` cache v16→v17. Sim/spawn/cull/catch untouched — fairness and QA-30 golden unaffected.
 
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to

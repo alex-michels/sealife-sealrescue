@@ -36,7 +36,7 @@ type PreyModule = {
   drawPrey: (
     ctx: CanvasRenderingContext2D,
     world: World,
-    surf?: { topExt: number; ripples: boolean } | null,
+    surf?: { topExt?: number; ripples: boolean } | null,
   ) => void
 }
 type SceneryModule = {
@@ -290,73 +290,103 @@ test.describe('Seal The Hunter visual borders', () => {
     ).toBeGreaterThan(120)
   })
 
-  test('returns top-surface prey below the water on ultra-tall screens', async ({ page }) => {
+  test('clips top-surface prey at the waterline without faking a catchable target', async ({
+    page,
+  }) => {
     await openGame(page)
-
+    // On ultra-tall screens the top border is air. Prey crossing the waterline must NOT paint in
+    // the air, and — critically — a fish that has fully breached the surface (above worldY 0,
+    // where the field-clamped seal can never reach it) must NOT be drawn as a solid target below
+    // the water. Otherwise the render lies about the sim position and clicks on that phantom fail
+    // to register a catch. The honest treatment: clip at the waterline + draw at the real
+    // position, so what shows below the water is always reachable. Collision stays sim-tested.
     const metrics = await page.evaluate(async () => {
       const preySpec = '/games/seal-hunt-v1/entities/prey.js'
       const themeSpec = '/games/seal-hunt-v1/core/theme.js'
       const prey = (await import(/* @vite-ignore */ preySpec)) as unknown as PreyModule
       const theme = (await import(/* @vite-ignore */ themeSpec)) as unknown as ThemeModule
 
-      const canvas = document.createElement('canvas')
-      canvas.width = 240
-      canvas.height = 210
-      const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: true })
-      if (!ctx) throw new Error('2D canvas context is unavailable')
-
       const world = { w: 180, h: 120 }
       const ox = 30
-      const waterY = 90
-      prey.PREY.length = 0
-      prey.PREY.push({
-        x: world.w * 0.5,
-        y: -28,
-        px: world.w * 0.5,
-        py: -28,
-        vx: 0,
-        vy: -120,
-        r: 20,
-        t: 0,
-        dir: 1,
-        ang: -Math.PI / 2,
-        face: 1,
-        sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
-        phase: 0,
-        fleeT: 0,
-        restT: 0,
-        tailKick: 0,
-      })
+      const waterY = 90 // worldY 0 → canvas y 90 (air above, water below)
 
-      ctx.save()
-      ctx.translate(ox, waterY)
-      prey.drawPrey(ctx, world, { topExt: 20, ripples: true })
-      ctx.restore()
-
-      const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
       // Object method shorthand avoids esbuild keepNames __name() injection.
       const h = {
-        alphaPixels(rect: { x: number; y: number; w: number; h: number }) {
-          let pixels = 0
-          for (let y = rect.y; y < rect.y + rect.h; y++) {
-            for (let x = rect.x; x < rect.x + rect.w; x++) {
-              if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
-            }
+        makeSurfaceFish(y: number): PreyShape {
+          return {
+            x: world.w * 0.5,
+            y,
+            px: world.w * 0.5,
+            py: y,
+            vx: 0,
+            vy: -120,
+            r: 20,
+            t: 0,
+            dir: 1,
+            ang: -Math.PI / 2,
+            face: 1,
+            sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
+            phase: 0,
+            fleeT: 0,
+            restT: 0,
+            tailKick: 0,
           }
-          return pixels
+        },
+        render(fishY: number) {
+          const canvas = document.createElement('canvas')
+          canvas.width = 240
+          canvas.height = 210
+          const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: true })
+          if (!ctx) throw new Error('2D canvas context is unavailable')
+          prey.PREY.length = 0
+          prey.PREY.push(this.makeSurfaceFish(fishY))
+          ctx.save()
+          ctx.translate(ox, waterY)
+          prey.drawPrey(ctx, world, { ripples: true })
+          ctx.restore()
+          const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
+          const count = (rect: { x: number; y: number; w: number; h: number }) => {
+            let pixels = 0
+            for (let y = rect.y; y < rect.y + rect.h; y++) {
+              for (let x = rect.x; x < rect.x + rect.w; x++) {
+                if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
+              }
+            }
+            return pixels
+          }
+          return {
+            airPixels: count({ x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
+            waterPixels: count({ x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
+          }
         },
       }
 
       return {
-        airPixels: h.alphaPixels({ x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
-        waterPixels: h.alphaPixels({ x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
+        // Straddling the surface: sprite radius pokes above the waterline, body dips below it.
+        straddle: h.render(6),
+        // Fully breached above the surface — unreachable by the seal.
+        breached: h.render(-30),
       }
     })
 
-    expect(metrics.airPixels, 'prey should not render in the air above the surface').toBe(0)
+    // A fish at the surface shows its below-water body and paints nothing in the air.
     expect(
-      metrics.waterPixels,
-      'top-surface prey should be visibly returned under the waterline',
+      metrics.straddle.airPixels,
+      'surface prey should not render in the air above the waterline',
+    ).toBe(0)
+    expect(
+      metrics.straddle.waterPixels,
+      'surface prey should stay visible below the waterline',
     ).toBeGreaterThan(220)
+
+    // A fully-breached fish is clipped away — no air pixels AND no solid catchable phantom below.
+    expect(
+      metrics.breached.airPixels,
+      'breached prey should not render in the air',
+    ).toBe(0)
+    expect(
+      metrics.breached.waterPixels,
+      'breached prey must not be drawn as a solid target below the water',
+    ).toBeLessThan(60)
   })
 })

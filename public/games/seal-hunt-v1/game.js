@@ -420,10 +420,10 @@ function drawFrame(dt){
   // the bottom border) so kelp grows from the real seabed on >1:2 screens, not the floating field edge.
   const bottomExtra = (bd && VIEW.oy > 0.5) ? VIEW.oy / VIEW.scale : 0;
   drawBackground(CTX, WORLD, t, reduced, bottomExtra);
-  // Видимая поверхность над полем (верхний бордюр): добыча с отрицательным logical-y
-  // визуально возвращается под ватерлинию, а рябь маркирует пересечение поверхности.
-  // Рендер-only: физика/спавн/кулл не меняются.
-  const surf = VIEW.oy > 0.5 ? { topExt: 4.5 / VIEW.scale, ripples: true } : null;
+  // Видимая поверхность над полем (верхний бордюр = воздух): добыча клипается по ватерлинии и
+  // фейдится, «ныряя» под воду (drawPrey), а рябь маркирует пересечение. Рыба не «летит» в воздух
+  // и не рисуется ловимым фантомом под водой. Рендер-only: физика/спавн/кулл/поимка не меняются.
+  const surf = VIEW.oy > 0.5 ? { ripples: true } : null;
   drawPrey(CTX, WORLD, surf);
   seal.draw(CTX);
 
