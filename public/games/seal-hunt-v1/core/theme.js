@@ -55,6 +55,9 @@ export const PALETTE = {
     coral: { back: '#B23A1F', body: BUOY, belly: '#FFC9A6', eye: '#2A0F0A' }, // приз, редко — ярче «золотистый»
     sand: { back: '#C9B79A', body: SANDBANK, belly: '#F3ECDC', eye: INK }, // тёплый
     squid: { back: '#AE6459', body: '#CD897C', belly: '#E5BCB2', eye: '#1B0B18' },
+    // ⚡ молниевая звезда (SH-13): электрический жёлто-белый + голубоватое свечение — единственная
+    // «светящаяся» схема, читается и силуэтом (зигзаг-лучи), и цветом
+    lightning: { back: '#E8B64A', body: '#FFE87A', belly: '#FFF6D8', eye: INK, glow: '#FFF4C2', spark: '#CFF0FF' },
   },
   highlight: 'rgba(237,241,243,0.9)', // блик на глазу
 };

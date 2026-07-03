@@ -5,7 +5,7 @@
 
 import { BAL } from '../core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from '../core/sim.js';
-import { PREY, updatePrey, resetSpawnState } from '../entities/prey.js';
+import { PREY, updatePrey, resetSpawnState, scheduleStar } from '../entities/prey.js';
 import { makeSeal } from '../entities/seal.js';
 
 export const DT = 1 / 60; // фиксированный тик (≈60fps) — детерминизм
@@ -95,8 +95,10 @@ export function runRound(world, onTick) {
   seal.px = seal.x;
   seal.py = seal.y;
   seal.vx = seal.vy = 0;
+  seal.buffT = 0; // ⚡ бафф звезды не тянется из прошлого раунда
   PREY.length = 0;
   resetSpawnState(); // раунд = чистая функция seed'а (edgeBag не тянется из прошлого раунда)
+  scheduleStar(world); // ⚡ SH-13: раундовое расписание звезды (ровно 4 RNG-броска — как в игре)
 
   let timeLeft = ROUND_MS,
     spawnTimer = 0,
@@ -105,7 +107,8 @@ export function runRound(world, onTick) {
     timeLeft -= DT * 1000;
     spawnTimer = spawnTick(spawnTimer, DT, timeLeft, world);
     stepSeal(seal, botControl(seal), DT, world);
-    updatePrey(DT, seal, world, () => score++);
+    // ⚡ очки = модель счёта игры: обычная добыча 1, молниевая звезда — STAR.points (5)
+    updatePrey(DT, seal, world, (f) => { score += (f && f.sp.points) || 1; });
     if (onTick) onTick(i, seal, score);
   }
   return score;
