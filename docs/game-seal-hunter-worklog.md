@@ -295,6 +295,29 @@ simplified. Back-compat for the deploy window: legacy `board` in body/URL is ign
 with `b` stay valid, and a player's duplicate rows (ex-desktop+mobile) are lazily merged on submit
 (max score wins) until the weekly prune.
 
+## 9. Fixed 16:9 / 9:16 play field — SH-12 (2026-07-03)
+
+**Decision (owner):** the play field is now FIXED — 960×540 lu (16:9) landscape, 540×960 (9:16)
+portrait. The screen no longer shapes the world at all: every landscape player gets a
+byte-identical world, every portrait player too — the full "equal horizon" Seal Run pioneered,
+completing the fairness arc (SH-02b constant-short-axis → 2:1 clamp → SH-11 single board → SH-12).
+
+**Measured (seed 0, N=80, 16 profiles):** all landscape profiles 92.2 catch/round (identical),
+all portrait 93.0 — **total spread 0.8%**, down from 5.5% under the clamp. The only remaining
+axis is the 16:9-field vs 9:16-field shape (+0.9% easier portrait) — accepted consciously on the
+single board.
+
+**What changed:** `computeWorld` returns one of two fixed worlds (mechanics/spawn/animations
+untouched — the diff is view math only); harness `CLAMP` experiment knob → `ASPECT`;
+fairness CI thresholds consciously tightened 15%/10% → **5%/3%** + a fixed-field assert on all
+16 profiles; QA-30 golden unchanged (FHD mapped to 960×540 under both models). Border now
+appears on ANY non-16:9 screen (16:10/4:3 laptops get seabed+sky strips, portrait tablets get
+kelp walls) — `initBorder` already keyed off real ox/oy gaps, no renderer changes needed; worth
+one visual pass on a 16:10 display after deploy. `sw.js` CACHE v15→**v16**.
+
+**Rode along (same PR):** RU leaderboard name → **«Доска тюлидеров»** (`lbTitle`, `lbOffline`
+in i18n.js) — тюль-сленг per the sealife brand voice; EN/DE unchanged.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.

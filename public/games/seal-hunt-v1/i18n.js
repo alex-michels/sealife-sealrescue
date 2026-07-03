@@ -60,10 +60,10 @@
       linkCopied: 'Ссылка скопирована!',
       copyShare: 'Скопируйте и поделитесь:',
       // — лидерборд
-      lbTitle: 'Лидерборд',
+      lbTitle: 'Доска тюлидеров',
       lbResetNote: 'за неделю',
       lbEmpty: 'Пока пусто — будь первым!',
-      lbOffline: 'Лидерборд недоступен.',
+      lbOffline: 'Доска тюлидеров недоступна.',
       lbLoading: 'Загрузка…',
       lbMore: 'Показать ещё',
       lbPlayers: function (v) {

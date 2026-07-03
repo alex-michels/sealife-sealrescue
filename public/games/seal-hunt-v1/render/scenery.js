@@ -318,11 +318,13 @@ export function drawBackground(ctx, world, t, reducedMotion = false, bottomExtra
 }
 
 // ——————————————————————————————————————————————————————————————————————
-// Diegetic border — only appears when the screen is wider/taller than the 2:1 play field
-// (true ultra-wide / very-tall). The leftover strips are NOT play space; we dress them as the
-// world around the cove so they read as an intentional boundary instead of black bars. With
-// the 2:1 clamp only ONE axis ever has leftover, so a screen shows EITHER side kelp walls
-// (wide) OR seabed + sea surface (tall) — never both. Coords are CSS px (caller resets to DPR).
+// Diegetic border — appears when the screen is not exactly the fixed 16:9 / 9:16 play field
+// (SH-12: любой не-16:9 экран получает бордюр — 16:10/4:3 сверху-снизу, 21:9 по бокам,
+// портретные планшеты по бокам, вытянутые телефоны сверху-снизу). The leftover strips are
+// NOT play space; we dress them as the world around the cove so they read as an intentional
+// boundary instead of black bars. Contain-fit of a fixed-aspect field leaves leftover on at
+// most ONE axis, so a screen shows EITHER side kelp walls OR seabed + sea surface — never
+// both (initBorder keys off the REAL ox/oy gaps, not orientation). Coords are CSS px.
 
 let B = null; // border scene, rebuilt each resize
 const _mod = (a, n) => ((a % n) + n) % n;

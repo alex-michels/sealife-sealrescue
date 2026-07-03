@@ -19,8 +19,9 @@ import { VIEW_CFG, computeWorld, recomputeBalance, BAL } from '../core/balance.j
 import { PROFILES, TICKS, installSeededRandom, runRound } from './fairness-lib.mjs';
 
 const N = Number(process.argv[2]) || 60;
-// Default: the game's configured clamp (VIEW_CFG.maxAspect). CLAMP=999 tests "no clamp".
-const CLAMP = process.env.CLAMP !== undefined ? Number(process.env.CLAMP) : VIEW_CFG.maxAspect;
+// Default: фикс. аспект поля (SH-12, VIEW_CFG.aspect = 16/9). ASPECT=<x> — эксперимент с
+// другим фикс. аспектом (напр. ASPECT=2 — старая «длина» клампа SH-02b).
+const ASPECT = process.env.ASPECT !== undefined ? Number(process.env.ASPECT) : VIEW_CFG.aspect;
 
 // SEED=off|none|random → UNSEEDED: keep the real Math.random (non-deterministic, like the
 // live game). Use with large N (1000–2000) to average noise out the "real" way.
@@ -45,10 +46,10 @@ console.log(
 );
 console.log('profile               world(logical)  prey  catch/round  ±sd   (±se)');
 console.log('─'.repeat(74));
-console.log(CLAMP >= 100 ? '(no clamp — full screen)' : `(play-field aspect clamped at ${CLAMP}:1)`);
+console.log(`(fixed play-field aspect ${ASPECT.toFixed(3)}:1 per orientation — SH-12)`);
 const results = [];
 for (const p of PROFILES) {
-  const world = computeWorld(p.w, p.h, CLAMP);
+  const world = computeWorld(p.w, p.h, ASPECT);
   recomputeBalance(world.w, world.h);
   const cap = BAL.maxPreyCap;
   const scores = Array.from({ length: N }, (_, i) => {

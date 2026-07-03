@@ -165,15 +165,14 @@ function resize(){
   VIEW.dispW = cssW;
   VIEW.dispH = cssH;
 
-  // Full-screen logical world: short axis constant, long axis follows the real aspect, so
-  // the world fills the viewport (no letterbox). Fairness is held in the balance invariants
-  // (constant density/speed/size), not by clamping the view — see core/balance.js (SH-02b).
+  // Фиксированное поле (SH-12): 960×540 в ландшафте / 540×960 в портрете — у всех одинаковый
+  // мир («равный горизонт», как у Seal Run). См. core/balance.js.
   const world = computeWorld(cssW, cssH);
   WORLD.w = world.w;
   WORLD.h = world.h;
 
-  // World aspect == screen aspect, so this fit is exact: scale equal on both axes, ox/oy ≈ 0
-  // (only sub-pixel rounding). The seal roams the whole screen.
+  // Contain-fit поля в экран; остаток (любая ось) одевается диегетическим бордюром
+  // (render/scenery.js: initBorder ветвится по РЕАЛЬНЫМ зазорам ox/oy, не по ориентации).
   VIEW.scale = Math.min(cssW / WORLD.w, cssH / WORLD.h);
   VIEW.ox = (cssW - WORLD.w * VIEW.scale) / 2;
   VIEW.oy = (cssH - WORLD.h * VIEW.scale) / 2;

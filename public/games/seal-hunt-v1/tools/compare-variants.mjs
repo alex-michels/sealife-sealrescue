@@ -12,7 +12,7 @@
 //
 // Run:  node tools/compare-variants.mjs [N]      (default 120 rounds/profile/variant)
 //       SEED=7 node tools/compare-variants.mjs   (different deterministic stream)
-//       CLAMP=999 node tools/compare-variants.mjs (test no clamp)
+//       ASPECT=2 node tools/compare-variants.mjs (эксперимент с другим фикс. аспектом, SH-12)
 
 import { BAL, BASE, VIEW_CFG, computeWorld, recomputeBalance } from '../core/balance.js';
 import { ROUND_MS, stepSeal } from '../core/sim.js';
@@ -25,7 +25,7 @@ import * as VARIED from './variants/prey-varied.js';
 const DT = 1 / 60;
 const TICKS = Math.round(ROUND_MS / 1000 / DT);
 const N = Number(process.argv[2]) || 120;
-const CLAMP = process.env.CLAMP !== undefined ? Number(process.env.CLAMP) : VIEW_CFG.maxAspect;
+const ASPECT = process.env.ASPECT !== undefined ? Number(process.env.ASPECT) : VIEW_CFG.aspect;
 
 // — Seeded RNG (mulberry32), same scheme as fairness-sim.mjs. seedRound(i) depends ONLY on the
 //   round index, so round i starts from the same stream for every variant & profile (common
@@ -131,7 +131,7 @@ const perVariantMeans = { main: [], hybrid: [], varied: [] };
 
 for (const v of VARIANTS) {
   PROFILES.forEach((p, pi) => {
-    const world = computeWorld(p.w, p.h, CLAMP);
+    const world = computeWorld(p.w, p.h, ASPECT);
     let sum = 0;
     for (let i = 0; i < N; i++) { if (!UNSEEDED) seedRound(i); sum += runRound(world, v.mod); }
     const mean = sum / N;
@@ -142,7 +142,7 @@ for (const v of VARIANTS) {
 
 console.log(`\nSeal The Hunter — prey-variant head-to-head  (${N} rounds/profile/variant, ` +
   `${UNSEEDED ? 'UNSEEDED real RNG' : `seeded SEED=${SEED_BASE}`})`);
-console.log(CLAMP >= 100 ? '(no clamp — full screen)\n' : `(play-field aspect clamped at ${CLAMP}:1)\n`);
+console.log(`(fixed play-field aspect ${ASPECT.toFixed(3)}:1 per orientation — SH-12)\n`);
 for (const v of VARIANTS) console.log(`  ${v.key.padEnd(7)} ${v.label}`);
 
 console.log('\nprofile                 main   hybrid  varied   range');
