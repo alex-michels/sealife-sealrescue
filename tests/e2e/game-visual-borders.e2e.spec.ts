@@ -91,70 +91,76 @@ test.describe('Seal The Hunter visual borders', () => {
       const sealMod = (await import(/* @vite-ignore */ sealSpec)) as unknown as SealModule
       const theme = (await import(/* @vite-ignore */ themeSpec)) as unknown as ThemeModule
 
-      const makeCanvas = (w: number, h: number) => {
-        const canvas = document.createElement('canvas')
-        canvas.width = w
-        canvas.height = h
-        const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: true })
-        if (!ctx) throw new Error('2D canvas context is unavailable')
-        return { canvas, ctx }
-      }
-      const withSeed = <T>(seed: number, fn: () => T) => {
-        const original = Math.random
-        let s = seed >>> 0
-        Math.random = () => {
-          s = (s * 1664525 + 1013904223) >>> 0
-          return s / 2 ** 32
-        }
-        try {
-          return fn()
-        } finally {
-          Math.random = original
-        }
-      }
-      const makePrey = (x: number, y: number, face: number): PreyShape => ({
-        x,
-        y,
-        px: x,
-        py: y,
-        vx: face > 0 ? 120 : -120,
-        vy: 0,
-        r: 24,
-        t: 0,
-        dir: face,
-        ang: face > 0 ? 0 : Math.PI,
-        face,
-        sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
-        phase: 0,
-        fleeT: 0,
-        restT: 0,
-        tailKick: 0,
-      })
-      const countChanged = (
-        before: Uint8ClampedArray,
-        after: Uint8ClampedArray,
-        width: number,
-        rect: { x: number; y: number; w: number; h: number },
-      ) => {
-        let changed = 0
-        for (let y = rect.y; y < rect.y + rect.h; y++) {
-          for (let x = rect.x; x < rect.x + rect.w; x++) {
-            const i = (y * width + x) * 4
-            const delta =
-              Math.abs(after[i] - before[i]) +
-              Math.abs(after[i + 1] - before[i + 1]) +
-              Math.abs(after[i + 2] - before[i + 2])
-            if (delta > 32) changed++
+      // Helpers defined as object methods to avoid esbuild keepNames injecting
+      // __name() wrappers that are undefined in the browser's page.evaluate scope.
+      const h = {
+        makeCanvas(w: number, h: number) {
+          const canvas = document.createElement('canvas')
+          canvas.width = w
+          canvas.height = h
+          const ctx = canvas.getContext('2d', { alpha: true, willReadFrequently: true })
+          if (!ctx) throw new Error('2D canvas context is unavailable')
+          return { canvas, ctx }
+        },
+        withSeed<T>(seed: number, fn: () => T): T {
+          const original = Math.random
+          let s = seed >>> 0
+          Math.random = () => {
+            s = (s * 1664525 + 1013904223) >>> 0
+            return s / 2 ** 32
           }
-        }
-        return changed
+          try {
+            return fn()
+          } finally {
+            Math.random = original
+          }
+        },
+        makePrey(x: number, y: number, face: number): PreyShape {
+          return {
+            x,
+            y,
+            px: x,
+            py: y,
+            vx: face > 0 ? 120 : -120,
+            vy: 0,
+            r: 24,
+            t: 0,
+            dir: face,
+            ang: face > 0 ? 0 : Math.PI,
+            face,
+            sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
+            phase: 0,
+            fleeT: 0,
+            restT: 0,
+            tailKick: 0,
+          }
+        },
+        countChanged(
+          before: Uint8ClampedArray,
+          after: Uint8ClampedArray,
+          width: number,
+          rect: { x: number; y: number; w: number; h: number },
+        ) {
+          let changed = 0
+          for (let y = rect.y; y < rect.y + rect.h; y++) {
+            for (let x = rect.x; x < rect.x + rect.w; x++) {
+              const i = (y * width + x) * 4
+              const delta =
+                Math.abs(after[i] - before[i]) +
+                Math.abs(after[i + 1] - before[i + 1]) +
+                Math.abs(after[i + 2] - before[i + 2])
+              if (delta > 32) changed++
+            }
+          }
+          return changed
+        },
       }
 
       const world = { w: 960, h: 540 }
       const view = { scale: 1, ox: 160, oy: 0, dispW: 1280, dispH: 540 }
-      const { canvas, ctx } = makeCanvas(view.dispW, view.dispH)
+      const { canvas, ctx } = h.makeCanvas(view.dispW, view.dispH)
 
-      withSeed(7, () => scenery.initBorder(view, world, ctx))
+      h.withSeed(7, () => scenery.initBorder(view, world, ctx))
       ctx.fillStyle = '#0B2832'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       scenery.drawBorderBack(ctx, view, world, 1.25, true, false)
@@ -172,7 +178,7 @@ test.describe('Seal The Hunter visual borders', () => {
       seal.angle = 0
       seal.draw(ctx)
       prey.PREY.length = 0
-      prey.PREY.push(makePrey(world.w + 12, world.h * 0.5, -1))
+      prey.PREY.push(h.makePrey(world.w + 12, world.h * 0.5, -1))
       prey.drawPrey(ctx, world, null)
       ctx.restore()
 
@@ -181,13 +187,13 @@ test.describe('Seal The Hunter visual borders', () => {
       const afterFront = ctx.getImageData(0, 0, canvas.width, canvas.height).data
 
       return {
-        leftChanged: countChanged(beforeFront, afterFront, canvas.width, {
+        leftChanged: h.countChanged(beforeFront, afterFront, canvas.width, {
           x: view.ox - 62,
           y: 214,
           w: 57,
           h: 112,
         }),
-        rightChanged: countChanged(beforeFront, afterFront, canvas.width, {
+        rightChanged: h.countChanged(beforeFront, afterFront, canvas.width, {
           x: view.ox + world.w + 5,
           y: 226,
           w: 76,
@@ -225,26 +231,42 @@ test.describe('Seal The Hunter visual borders', () => {
       const world = { w: 180, h: 110 }
       const ox = 50
       const oy = 35
-      const makeFish = (x: number, face: number): PreyShape => ({
-        x,
-        y: world.h * 0.5,
-        px: x,
-        py: world.h * 0.5,
-        vx: face > 0 ? 100 : -100,
-        vy: 0,
-        r: 20,
-        t: 0,
-        dir: face,
-        ang: face > 0 ? 0 : Math.PI,
-        face,
-        sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
-        phase: 0,
-        fleeT: 0,
-        restT: 0,
-        tailKick: 0,
-      })
+
+      // Object method shorthands avoid esbuild keepNames __name() injection.
+      const h = {
+        makeFish(x: number, face: number): PreyShape {
+          return {
+            x,
+            y: world.h * 0.5,
+            px: x,
+            py: world.h * 0.5,
+            vx: face > 0 ? 100 : -100,
+            vy: 0,
+            r: 20,
+            t: 0,
+            dir: face,
+            ang: face > 0 ? 0 : Math.PI,
+            face,
+            sp: { variant: 'round', scheme: theme.PALETTE.fish.coral, prize: true },
+            phase: 0,
+            fleeT: 0,
+            restT: 0,
+            tailKick: 0,
+          }
+        },
+        alphaPixels(rect: { x: number; y: number; w: number; h: number }) {
+          let pixels = 0
+          for (let y = rect.y; y < rect.y + rect.h; y++) {
+            for (let x = rect.x; x < rect.x + rect.w; x++) {
+              if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
+            }
+          }
+          return pixels
+        },
+      }
+
       prey.PREY.length = 0
-      prey.PREY.push(makeFish(-18, 1), makeFish(world.w + 18, -1))
+      prey.PREY.push(h.makeFish(-18, 1), h.makeFish(world.w + 18, -1))
 
       ctx.save()
       ctx.translate(ox, oy)
@@ -252,19 +274,10 @@ test.describe('Seal The Hunter visual borders', () => {
       ctx.restore()
 
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-      const alphaPixels = (rect: { x: number; y: number; w: number; h: number }) => {
-        let pixels = 0
-        for (let y = rect.y; y < rect.y + rect.h; y++) {
-          for (let x = rect.x; x < rect.x + rect.w; x++) {
-            if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
-          }
-        }
-        return pixels
-      }
 
       return {
-        leftOutside: alphaPixels({ x: 0, y: oy, w: ox, h: world.h }),
-        rightOutside: alphaPixels({ x: ox + world.w, y: oy, w: 50, h: world.h }),
+        leftOutside: h.alphaPixels({ x: 0, y: oy, w: ox, h: world.h }),
+        rightOutside: h.alphaPixels({ x: ox + world.w, y: oy, w: 50, h: world.h }),
       }
     })
 
@@ -321,19 +334,22 @@ test.describe('Seal The Hunter visual borders', () => {
       ctx.restore()
 
       const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-      const alphaPixels = (rect: { x: number; y: number; w: number; h: number }) => {
-        let pixels = 0
-        for (let y = rect.y; y < rect.y + rect.h; y++) {
-          for (let x = rect.x; x < rect.x + rect.w; x++) {
-            if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
+      // Object method shorthand avoids esbuild keepNames __name() injection.
+      const h = {
+        alphaPixels(rect: { x: number; y: number; w: number; h: number }) {
+          let pixels = 0
+          for (let y = rect.y; y < rect.y + rect.h; y++) {
+            for (let x = rect.x; x < rect.x + rect.w; x++) {
+              if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
+            }
           }
-        }
-        return pixels
+          return pixels
+        },
       }
 
       return {
-        airPixels: alphaPixels({ x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
-        waterPixels: alphaPixels({ x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
+        airPixels: h.alphaPixels({ x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
+        waterPixels: h.alphaPixels({ x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
       }
     })
 
