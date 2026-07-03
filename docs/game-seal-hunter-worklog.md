@@ -381,6 +381,10 @@ seeded FHD round; RNG stream shifted by the 4 schedule rolls). Fairness N=80: sp
 headroom). Contracts: `tests/unit/seal-hunt-star.unit.spec.ts` (8) + e2e
 `game-lightning-star.e2e.spec.ts` (halo/brightness/expiry-fade, real-pixel). `sw.js` v17→**v18**.
 
+**Owner playtest tweak (same day):** buff duration **2 s → 3 s** (`STAR.buffSec`) — 2 s faded too
+fast to enjoy. Golden unchanged (the seeded round has no star; tests read `buffSec` dynamically);
+fairness N=80 re-measured: 94.0 / 94.2, spread **0.2%**. `sw.js` v18→**v19**.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.
