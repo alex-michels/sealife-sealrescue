@@ -71,7 +71,10 @@ function starPath(ctx, r) {
   ctx.closePath();
 }
 
-function drawStar(ctx, r, c) {
+// `alpha` (SH-12 follow-up): базовый множитель прозрачности рыбы — рендер-фейд за краем поля
+// (см. drawPrey/EDGE_FADE_LU). Внутренние absolute-присваивания globalAlpha умножаются на него.
+function drawStar(ctx, r, c, alpha = 1) {
+  ctx.globalAlpha = alpha;
   // separation edge
   ctx.save();
   ctx.scale(outlineGrow(r), outlineGrow(r));
@@ -93,7 +96,7 @@ function drawStar(ctx, r, c) {
   ctx.save();
   starPath(ctx, r);
   ctx.clip();
-  ctx.globalAlpha = 0.4;
+  ctx.globalAlpha = 0.4 * alpha;
   ctx.fillStyle = c.back;
   for (let i = 0; i < 5; i++) {
     const a = i * (Math.PI * 2 / 5) - Math.PI / 2;
@@ -103,11 +106,12 @@ function drawStar(ctx, r, c) {
       ctx.fill();
     }
   }
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
   ctx.restore();
 }
 
-function drawSquid(ctx, r, c, anim = null) {
+function drawSquid(ctx, r, c, anim = null, alpha = 1) {
+  ctx.globalAlpha = alpha;
   const ph = anim ? anim.tentPhase : 0;
   const amp = anim ? anim.tentAmp : 0;
   const mantle = () => { ctx.beginPath(); ctx.ellipse(0, -r * 0.1, r * 0.62, r * 0.92, 0, 0, Math.PI * 2); };
@@ -153,9 +157,10 @@ function drawSquid(ctx, r, c, anim = null) {
   ctx.beginPath(); ctx.arc(r * 0.29, -r * 0.07, r * 0.035, 0, Math.PI * 2); ctx.fill();
 }
 
-function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null) {
-  if (variant === 'star') return drawStar(ctx, r, c);
-  if (variant === 'squid') return drawSquid(ctx, r, c, anim);
+function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null, alpha = 1) {
+  if (variant === 'star') return drawStar(ctx, r, c, alpha);
+  if (variant === 'squid') return drawSquid(ctx, r, c, anim, alpha);
+  ctx.globalAlpha = alpha;
 
   const rx = variant === 'slim' ? r * 1.12 : variant === 'eel' ? r * 1.2 : r * 0.95;
   const ry = variant === 'slim' ? r * 0.46 : r * 0.6;
@@ -206,7 +211,7 @@ function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null) 
   ctx.save();
   fishBody(ctx, r, variant);
   ctx.clip();
-  ctx.globalAlpha = 0.32;
+  ctx.globalAlpha = 0.32 * alpha;
   ctx.strokeStyle = c.back;
   ctx.lineWidth = Math.max(1, r * 0.06);
   ctx.beginPath();
@@ -214,13 +219,13 @@ function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null) 
   ctx.lineTo(rx * 0.62, -r * 0.03);
   ctx.stroke();
   // top rim light — separates the fish on dark deep water; brighter on the prize
-  ctx.globalAlpha = prize ? 0.85 : 0.5;
+  ctx.globalAlpha = (prize ? 0.85 : 0.5) * alpha;
   ctx.strokeStyle = prize ? '#FFEACB' : PALETTE.highlight;
   ctx.lineWidth = Math.max(1, r * (prize ? 0.16 : 0.12));
   ctx.beginPath();
   ctx.ellipse(0, 0, rx * 0.9, ry * 0.92, 0, Math.PI * 1.12, Math.PI * 1.96);
   ctx.stroke();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
   ctx.restore();
 
   // 6) eye + highlight
@@ -231,14 +236,14 @@ function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null) 
 
   // 7) soft mouth
   ctx.strokeStyle = c.eye;
-  ctx.globalAlpha = 0.6;
+  ctx.globalAlpha = 0.6 * alpha;
   ctx.lineWidth = Math.max(1, r * 0.045);
   ctx.lineCap = 'round';
   ctx.beginPath();
   ctx.moveTo(rx * 0.78, r * 0.08);
   ctx.quadraticCurveTo(rx * 0.92, r * 0.1, rx * 0.99, r * 0.05);
   ctx.stroke();
-  ctx.globalAlpha = 1;
+  ctx.globalAlpha = alpha;
 
   // 8) prize fish (goldie) — a tiny sparkle so the rare, valuable catch stands out
   if (prize) {
@@ -436,10 +441,9 @@ export function updatePrey(dt, seal, world, eatCb) {
 
     // Safety cull only (the push keeps prey in; a hard flee burst can still take one out, then
     // respawn tops up). Symmetric margin (40) > spawn offset (20) so a fresh fish isn't culled
-    // on frame 1. Rendering is clipped to the field (drawPrey): side/bottom stragglers hide
-    // behind the cove wall / under the seabed; at the TOP the clip runs along the DRAWN wavy
-    // waterline (+ ripple marker) so a fish reads as slipping through the surface (SH-12 made
-    // the surface border common — a raw field-edge clip cut fish visibly early).
+    // on frame 1. Rendering handles edge exits diegetically in drawPrey: side walls cover the
+    // cove edges, bottom fades under the seabed, and top overshoot is painted back under the
+    // drawn waterline so fish never appear in the air strip on ultra-tall screens.
     if (f.x < -40 || f.x > world.w + 40 || f.y < -40 || f.y > world.h + 40 ||
         Number.isNaN(f.x) || Number.isNaN(f.y)) { PREY.splice(i, 1); continue; }
 
@@ -458,29 +462,25 @@ export function updatePrey(dt, seal, world, eatCb) {
   }
 }
 
+// Зона рендер-фейда за краем поля (lu): чуть УЖЕ sim-кулла (±40, updatePrey), чтобы добыча
+// растворялась ДО удаления — сам кулл становится невидимым. Только альфа-рендер, не механика.
+const EDGE_FADE_LU = 38;
+
 /**
- * @param surf опц. поверхность над полем (портретный бордюр, SH-12): { topExt } — на сколько
- *   world-единиц продлить clip ВВЕРХ, чтобы рыбу резало по НАРИСОВАННОЙ волнистой линии
- *   (её амплитуда — screen px), а не по сырому краю поля чуть ниже волны; `ripples` — рисовать
- *   кольцо-рябь в точке пересечения поверхности (продаёт «ушла за поверхность» вместо
- *   «испарилась»). Рендер-only: физика/спавн/кулл не трогаются (fairness).
+ * Решение владельца (SH-12 follow-up): добыча за границей поля НЕ исчезает — остаётся видимой
+ * в бордюре (никакого clip). «Прятать» её могут только диегетические слои: стены водорослей
+ * по бокам рисуются ПОВЕРХ добычи (drawBorderFront), у поверхности — отражение ниже ватерлинии
+ * + кольцо-рябь в точке пересечения (`surf.ripples`). Рендер-фейд у EDGE_FADE_LU маскирует
+ * side/bottom sim-кулл; top-surface overshoot не фейдим, а возвращаем в воду визуально.
+ * Рендер-only: физика/спавн/кулл не трогаются (fairness).
  */
 export function drawPrey(ctx, world, surf = null) {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const t = performance.now() / 1000;
-
-  // Clip prey to the play frame: a fish entering/leaving laterally appears/disappears at the
-  // arena edge (off-screen on exact 16:9/9:16, behind the cove wall on wider screens, under
-  // the seabed at the bottom) instead of swimming visibly in the border where the seal can't
-  // reach it. With a visible SURFACE border the top clip follows the drawn waterline (surf).
-  const topExt = surf ? surf.topExt : 0;
   ctx.save();
-  ctx.beginPath();
-  ctx.rect(0, -topExt, world.w, world.h + topExt);
-  ctx.clip();
 
   // Рябь на поверхности там, где рыба пересекает линию воды (вход из top-спавна / бегство
-  // вверх): маркер вместо «рыба испарилась». Чисто визуально, под reduced-motion выключено.
+  // вверх): маркер «нырнула/ушла за поверхность». Чисто визуально, под reduced-motion выключено.
   if (surf && surf.ripples && !reduced) {
     for (const f of PREY) {
       if (f.y > -34 && f.y < 8) {
@@ -488,13 +488,25 @@ export function drawPrey(ctx, world, surf = null) {
         ctx.strokeStyle = `rgba(237,241,243,${(0.38 * a).toFixed(3)})`;
         ctx.lineWidth = 1.6;
         ctx.beginPath();
-        ctx.ellipse(f.x, -topExt * 0.4, f.r * (1.6 - 0.6 * a), 3.2, 0, 0, Math.PI * 2);
+        ctx.ellipse(f.x, 1.5, f.r * (1.6 - 0.6 * a), 3.2, 0, 0, Math.PI * 2);
         ctx.stroke();
       }
     }
   }
 
   for (const f of PREY) {
+    // On ultra-tall screens the top border is air/sky. Keep the simulation coordinates intact,
+    // but mirror only the render position back below the drawn waterline so prey never "fly".
+    const surfaceReturn = Boolean(surf && f.y < 0);
+    const drawY = surfaceReturn ? Math.min(-f.y, EDGE_FADE_LU) : f.y;
+    const drawAng = surfaceReturn && typeof f.ang === 'number' ? -f.ang : f.ang;
+
+    // Насколько рыба вышла за поле (по любой оси) → альфа 1 → 0 к EDGE_FADE_LU.
+    const overX = f.x < 0 ? -f.x : f.x > world.w ? f.x - world.w : 0;
+    const overY = surfaceReturn ? 0 : f.y < 0 ? -f.y : f.y > world.h ? f.y - world.h : 0;
+    const over = Math.max(overX, overY);
+    const fadeA = over > 0 ? Math.max(0, 1 - over / EDGE_FADE_LU) : 1;
+    if (fadeA <= 0) continue;
     const variant = f.sp.variant;
     const ph = t + f.phase;
     const wig = reduced ? 0 : Math.sin(ph * WIGGLE.rotFreq) * WIGGLE.rotAmp;
@@ -517,9 +529,9 @@ export function drawPrey(ctx, world, surf = null) {
     };
 
     ctx.save();
-    ctx.translate(f.x, f.y);
+    ctx.translate(f.x, drawY);
     if (orient) {
-      const a = (typeof f.ang === 'number') ? f.ang : Math.atan2(f.vy, f.vx);
+      const a = (typeof drawAng === 'number') ? drawAng : Math.atan2(surfaceReturn ? -f.vy : f.vy, f.vx);
       const face = f.face || (Math.cos(a) >= 0 ? 1 : -1);
       const pitch = Math.atan2(Math.sin(a), face * Math.cos(a)); // ∈ (−90°,90°) → belly stays down
       ctx.scale(face, 1);
