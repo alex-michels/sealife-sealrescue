@@ -525,7 +525,6 @@ export interface GameScore {
     | null;
   score: number;
   durationMs: number;
-  board: 'desktop' | 'mobile';
   /**
    * ISO-неделя (YYYY-Www) — для еженедельного сброса доски.
    */
@@ -996,7 +995,6 @@ export interface GameScoresSelect<T extends boolean = true> {
   nameParts?: T;
   score?: T;
   durationMs?: T;
-  board?: T;
   season?: T;
   updatedAt?: T;
   createdAt?: T;

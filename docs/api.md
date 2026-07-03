@@ -16,8 +16,13 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 (валидация Zod, анти-чит, transient rate-limit). PII не хранится. Регистрируются в `payload.config.ts`
 (`endpoints: [...]`) и доступны под префиксом `/api`.
 
-### `GET /api/leaderboard/start?game=<slug>&board=<desktop|mobile>`
-Выдаёт **play-token** на старте раунда (анти-чит). Токен — подписанный HMAC, привязан к game/board,
+> **Доска единая** — деление `desktop`/`mobile` снято (2026-07-03): Seal Run играет в фиксированном
+> логическом поле («равный горизонт», см. `game-seal-run-spec.md` §1.2), и для консистентности между
+> играми Seal Hunter тоже идёт одной доской. Легаси-параметр/поле `board` старых клиентов сервер
+> молча игнорирует (Zod strip / неиспользуемый query-параметр).
+
+### `GET /api/leaderboard/start?game=<slug>`
+Выдаёт **play-token** на старте раунда (анти-чит). Токен — подписанный HMAC, привязан к game,
 с временной меткой. ⚠️ Этот endpoint сам по себе БЕЗ rate-limit (только `POST /api/leaderboard` его
 проверяет) — риск смягчён тем, что токен нужно ещё «прожить» ≥ `MIN_PLAY_MS` и израсходовать один раз.
 → `{ token: string }`
@@ -31,7 +36,6 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
   "game": "seal-hunt-v1",   // slug, 1..64
   "score": 42,               // int 0..100000
   "durationMs": 60000,       // int 0..600000
-  "board": "desktop",        // "desktop" | "mobile"
   "seed": 123456789,         // uint32 — детерминирует имя игрока
   "token": "<body>.<sig>"    // play-token из /start
 }
@@ -42,7 +46,7 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 | --- | --- | --- |
 | `rate_limited` | 429 | > 30 запросов / 60 c с IP (IP в БД не хранится) |
 | `bad_json` / `invalid_input` | 400 | не JSON / не прошёл Zod |
-| `invalid_token` | 401 | подпись неверна или game/board не совпали |
+| `invalid_token` | 401 | подпись неверна или game не совпал |
 | `token_age` | 422 | сыграно < 40 c (`MIN_PLAY_MS`, запас под cold-start dev/Turbopack) или токену > 30 мин |
 | `duration_mismatch` | 422 | заявленная длительность > реально прошедшего (+8 c) |
 | `implausible_duration` | 422 | `durationMs` вне 50000..70000 (раунд ~60 c) |
@@ -50,11 +54,11 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 | `token_used` | 409 | nonce уже израсходован (токен одноразовый) |
 | `unknown_game` | 404 | нет игры с таким slug |
 
-→ `{ alias, parts, suffix, board, season, resetAt, score, submitted, improved, rank, total, percentile, page, hasMore, top[] }`
+→ `{ alias, parts, suffix, season, resetAt, score, submitted, improved, rank, total, percentile, page, hasMore, top[] }`
 
-### `GET /api/leaderboard?game=<slug>&board=<...>&page=<n>&limit=<n>`
+### `GET /api/leaderboard?game=<slug>&page=<n>&limit=<n>`
 Прочитать доску текущего сезона (ISO-неделя). `limit` ≤ 100, страница = 50 по умолчанию.
-→ `{ board, season, resetAt, total, page, hasMore, top: [{ rank, alias, parts, suffix, score }] }`
+→ `{ season, resetAt, total, page, hasMore, top: [{ rank, alias, parts, suffix, score }] }`
 
 Детали анти-чита, сезонов и имён — в [game-seal-hunter.md](game-seal-hunter.md).
 

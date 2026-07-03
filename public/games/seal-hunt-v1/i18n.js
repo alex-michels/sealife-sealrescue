@@ -62,8 +62,6 @@
       // — лидерборд
       lbTitle: 'Лидерборд',
       lbResetNote: 'за неделю',
-      lbDesktop: 'Десктоп',
-      lbMobile: 'Мобайл',
       lbEmpty: 'Пока пусто — будь первым!',
       lbOffline: 'Лидерборд недоступен.',
       lbLoading: 'Загрузка…',
@@ -138,8 +136,6 @@
       // — leaderboard
       lbTitle: 'Leaderboard',
       lbResetNote: 'this week',
-      lbDesktop: 'Desktop',
-      lbMobile: 'Mobile',
       lbEmpty: 'Empty — be the first!',
       lbOffline: 'Leaderboard unavailable.',
       lbLoading: 'Loading…',
@@ -218,8 +214,6 @@
       // — Bestenliste
       lbTitle: 'Bestenliste',
       lbResetNote: 'diese Woche',
-      lbDesktop: 'Desktop',
-      lbMobile: 'Mobil',
       lbEmpty: 'Noch leer — sei der Erste!',
       lbOffline: 'Bestenliste nicht verfügbar.',
       lbLoading: 'Lädt…',

@@ -117,7 +117,8 @@ URL-источники для агентов и проверки rescue-данн
 EU-чистая модель: **нет PII** (ни email, ни IP, ни аккаунтов, ни сырого seed). `playerKey` —
 недельный односторонний `sha256(seed:game:season)` (только для дедупа строки за неделю, ротируется и
 удаляется при сбросе). Имя локализуемо: `nameParts` + `baseAlias` (EN) + `suffix`; `alias` — EN display
-для админки. `board` (грубо desktop/mobile, без пиксельных размеров → без fingerprint), `season` (ISO-неделя).
+для админки. `season` (ISO-неделя). Доска **единая** — поле `board` (desktop/mobile) удалено 2026-07-03
+(консистентность с Seal Run, см. [game-seal-hunter.md](game-seal-hunter.md) § Fairness).
 **Доступ:** read публичный (нет PII); create/update/**delete** `isEditor` — публичная запись идёт ТОЛЬКО через
 валидирующий server-authoritative endpoint (local API, overrideAccess). См. [api.md](api.md) и
 [game-seal-hunter.md](game-seal-hunter.md).

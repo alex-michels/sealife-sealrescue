@@ -11,10 +11,15 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
  * расширяет пространство имён до ~40k без чисел. Идентичность собирается из (seed, game)
  * детерминированным PRNG → набор частей (locale-независимо). В БД храним canonical EN-рендер
  * (alias, ключ дедупа) + части (nameParts, для локализации на клиенте). Свободного текста нет
- * (нет UGC). Дедуп: одна строка на (game, alias, board, season), храним МАКСИМУМ счёта.
+ * (нет UGC). Дедуп: одна строка на (game, playerKey, season), храним МАКСИМУМ счёта.
+ *
+ * Доска ЕДИНАЯ — деление desktop/mobile снято (решение 2026-07-03): Seal Run играет в
+ * фиксированном логическом поле («равный горизонт»), и для консистентности между играми
+ * Seal Hunter тоже идёт одной доской — остаточный портрет-vs-ландшафт спред (~единицы %)
+ * принят осознанно; см. docs/game-seal-hunter.md § Fairness.
  *
  *  POST /api/leaderboard   — отправить результат (upsert max), вернуть ранг + первую страницу
- *  GET  /api/leaderboard   — прочитать доску (?game=&board=&page=&limit=)
+ *  GET  /api/leaderboard   — прочитать доску (?game=&page=&limit=)
  */
 
 // ⚠️ KEEP IN SYNC (порядок/длина списков, PATTERNS, mulberry32, порядок бросков) с
@@ -153,7 +158,7 @@ function clientIp(req: PayloadRequest): string {
 }
 
 // — Play-token (анти-чит, SH-08): подписанный HMAC-токен выдаётся на СТАРТЕ игры; на submit
-// проверяется подпись, привязка к game/board, возраст (нужно реально отыграть ~раунд) и
+// проверяется подпись, привязка к game, возраст (нужно реально отыграть ~раунд) и
 // одноразовость. Без БД/PII: секрет подписывает stateless-токен, израсходованные nonce —
 // в памяти. Это поднимает планку: счёт нельзя залить, не «прожив» ~раунд, и токен — на 1 раз.
 const TOKEN_TTL_MS = 1_800_000 // 30 мин — окно валидности токена
@@ -162,12 +167,14 @@ const TOKEN_TTL_MS = 1_800_000 // 30 мин — окно валидности т
 // (особенно dev/Turbopack — наблюдали 6.4с, первый компайл бывает 10–20с) съедает margin и
 // легитимный 60-секундный раунд получает `token_age`. 40с всё ещё требует существенной игры.
 const MIN_PLAY_MS = 40_000
-type TokenData = { g: string; b: string; t: number; n: string }
+// В теле токена нет поля board (снято): старые токены с лишним `b` остаются валидными
+// на окно деплоя — подпись цела, а лишнее поле просто игнорируется.
+type TokenData = { g: string; t: number; n: string }
 function tokenSecret(): string {
   return process.env.PAYLOAD_SECRET || 'seal-dev-secret'
 }
-function signToken(game: string, board: string): string {
-  const body = Buffer.from(JSON.stringify({ g: game, b: board, t: Date.now(), n: randomBytes(9).toString('hex') })).toString('base64url')
+function signToken(game: string): string {
+  const body = Buffer.from(JSON.stringify({ g: game, t: Date.now(), n: randomBytes(9).toString('hex') })).toString('base64url')
   const sig = createHmac('sha256', tokenSecret()).update(body).digest('base64url')
   return `${body}.${sig}`
 }
@@ -181,7 +188,7 @@ function verifyToken(token: string): TokenData | null {
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null
   try {
     const d = JSON.parse(Buffer.from(body, 'base64url').toString()) as TokenData
-    if (typeof d.g === 'string' && typeof d.b === 'string' && typeof d.t === 'number' && typeof d.n === 'string') return d
+    if (typeof d.g === 'string' && typeof d.t === 'number' && typeof d.n === 'string') return d
   } catch {
     /* ignore */
   }
@@ -196,12 +203,12 @@ function consumeNonce(n: string): boolean {
   return true
 }
 
-const Board = z.enum(['desktop', 'mobile'])
+// `board` в теле старых клиентов Zod молча отбрасывает (unknown keys strip) — обратная
+// совместимость на окно деплоя.
 const SubmitBody = z.object({
   game: z.string().min(1).max(64),
   score: z.number().int().min(0).max(100_000),
   durationMs: z.number().int().min(0).max(600_000),
-  board: Board,
   seed: z.number().int().min(0).max(4_294_967_295),
   token: z.string().min(10).max(512),
 })
@@ -222,12 +229,11 @@ async function gameIdBySlug(req: PayloadRequest, slug: string): Promise<number |
 async function page(
   req: PayloadRequest,
   game: number,
-  board: 'desktop' | 'mobile',
   season: string,
   pageNum: number,
   limit: number,
 ) {
-  const where = { game: { equals: game }, board: { equals: board }, season: { equals: season } }
+  const where = { game: { equals: game }, season: { equals: season } }
   const res = await req.payload.find({
     collection: 'game-scores',
     where,
@@ -266,11 +272,11 @@ export const leaderboardSubmit: Endpoint = {
     if (!parsed.success) {
       return Response.json({ error: 'invalid_input' }, { status: 400 })
     }
-    const { game: slug, score, durationMs, board, seed, token } = parsed.data
+    const { game: slug, score, durationMs, seed, token } = parsed.data
 
-    // — Play-token: подпись, привязка к game/board, реально отыгранное время, одноразовость.
+    // — Play-token: подпись, привязка к game, реально отыгранное время, одноразовость.
     const tok = verifyToken(token)
-    if (!tok || tok.g !== slug || tok.b !== board) {
+    if (!tok || tok.g !== slug) {
       return Response.json({ error: 'invalid_token' }, { status: 401 })
     }
     const elapsed = Date.now() - tok.t
@@ -309,19 +315,28 @@ export const leaderboardSubmit: Endpoint = {
     const baseAlias = renderEn(parts)
     const playerKey = playerKeyFor(seed, slug, season)
 
-    // — Идентичность игрока за неделю = playerKey. Одна строка на (game, playerKey, board, season).
+    // — Идентичность игрока за неделю = playerKey. Одна строка на (game, playerKey, season).
+    // limit 5 + ленивое слияние: на неделе деплоя «единой доски» у игрока могли остаться
+    // ДВЕ строки (бывшие desktop/mobile) — оставляем лучшую, лишние удаляем.
     const mineRes = await req.payload.find({
       collection: 'game-scores',
       where: {
         game: { equals: game },
         playerKey: { equals: playerKey },
-        board: { equals: board },
         season: { equals: season },
       },
-      limit: 1,
+      sort: ['-score', 'createdAt'],
+      limit: 5,
       depth: 0,
     })
     const mine = mineRes.docs[0]
+    for (const dup of mineRes.docs.slice(1)) {
+      try {
+        await req.payload.delete({ collection: 'game-scores', id: dup.id })
+      } catch {
+        /* best-effort */
+      }
+    }
     let best = score
     let alias: string
     let suffix: number
@@ -345,7 +360,6 @@ export const leaderboardSubmit: Endpoint = {
           where: {
             game: { equals: game },
             baseAlias: { equals: baseAlias },
-            board: { equals: board },
             season: { equals: season },
             id: { not_equals: mine.id },
           },
@@ -378,7 +392,6 @@ export const leaderboardSubmit: Endpoint = {
         where: {
           game: { equals: game },
           baseAlias: { equals: baseAlias },
-          board: { equals: board },
           season: { equals: season },
         },
       })
@@ -386,7 +399,7 @@ export const leaderboardSubmit: Endpoint = {
       alias = suffix >= 2 ? `${baseAlias} ${suffix}` : baseAlias
       await req.payload.create({
         collection: 'game-scores',
-        data: { game, playerKey, baseAlias, suffix, alias, nameParts: parts, score, durationMs, board, season },
+        data: { game, playerKey, baseAlias, suffix, alias, nameParts: parts, score, durationMs, season },
       })
     }
 
@@ -395,13 +408,12 @@ export const leaderboardSubmit: Endpoint = {
       collection: 'game-scores',
       where: {
         game: { equals: game },
-        board: { equals: board },
         season: { equals: season },
         score: { greater_than: best },
       },
     })
     const rank = better.totalDocs + 1
-    const first = await page(req, game, board, season, 1, PAGE_SIZE)
+    const first = await page(req, game, season, 1, PAGE_SIZE)
     const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
     void pruneOldSeasons(req, season)
@@ -410,7 +422,6 @@ export const leaderboardSubmit: Endpoint = {
       alias,
       parts,
       suffix,
-      board,
       season,
       resetAt: seasonEnd().toISOString(),
       score: best,
@@ -432,8 +443,6 @@ export const leaderboardRead: Endpoint = {
   handler: async (req) => {
     const url = new URL(req.url ?? '')
     const slug = url.searchParams.get('game') ?? ''
-    const boardParsed = Board.safeParse(url.searchParams.get('board') ?? 'desktop')
-    const board = boardParsed.success ? boardParsed.data : 'desktop'
     const pageNum = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1)
     const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(url.searchParams.get('limit') ?? String(PAGE_SIZE), 10) || PAGE_SIZE))
     const season = currentSeason()
@@ -441,23 +450,21 @@ export const leaderboardRead: Endpoint = {
     const resetAt = seasonEnd().toISOString()
     const game = slug ? await gameIdBySlug(req, slug) : null
     if (game == null) {
-      return Response.json({ board, season, resetAt, total: 0, page: pageNum, hasMore: false, top: [] })
+      return Response.json({ season, resetAt, total: 0, page: pageNum, hasMore: false, top: [] })
     }
-    const res = await page(req, game, board, season, pageNum, limit)
-    return Response.json({ board, season, resetAt, ...res })
+    const res = await page(req, game, season, pageNum, limit)
+    return Response.json({ season, resetAt, ...res })
   },
 }
 
-/** Выдать play-token на старте раунда (анти-чит, SH-08). */
+/** Выдать play-token на старте раунда (анти-чит, SH-08). ?board= старых клиентов игнорируется. */
 export const leaderboardStart: Endpoint = {
   path: '/leaderboard/start',
   method: 'get',
   handler: async (req) => {
     const url = new URL(req.url ?? '')
     const slug = url.searchParams.get('game') ?? ''
-    const boardParsed = Board.safeParse(url.searchParams.get('board') ?? 'desktop')
-    const board = boardParsed.success ? boardParsed.data : 'desktop'
     if (!slug) return Response.json({ error: 'bad_request' }, { status: 400 })
-    return Response.json({ token: signToken(slug, board) })
+    return Response.json({ token: signToken(slug) })
   },
 }

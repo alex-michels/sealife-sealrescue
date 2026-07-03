@@ -49,8 +49,11 @@ jobs:
       # а пререндер читает БД живьём — новая коллекция/global без этого шага валит сборку
       # («relation … does not exist», инцидент PR #53). Идемпотентно; тот же скрипт, что в CI e2e.
       # Заодно актуализирует схему alpha-БД ДО рестарта рантайма (он смотрит в ту же Neon-ветку).
+      # `echo y |` авто-подтверждает data-loss prompt drizzle (интерактивный TTY-вопрос в CI иначе
+      # виснет; первый случай — удаление колонки `board` в SH-11). Осознанный трейдофф push-фазы:
+      # данные alpha-лидерборда анонимны и еженедельно прунятся; перед prod — миграции (Roadmap).
       - name: Sync DB schema (drizzle push)
-        run: npx tsx scripts/push-dev-schema.mts
+        run: echo y | npx tsx scripts/push-dev-schema.mts
         env:
           DATABASE_URI: ${{ secrets.DATABASE_URI }}
           PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}
