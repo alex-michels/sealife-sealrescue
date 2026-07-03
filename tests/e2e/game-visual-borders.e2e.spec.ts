@@ -73,6 +73,13 @@ type SealModule = {
 type ThemeModule = { PALETTE: { fish: { coral: FishScheme; silver: FishScheme } } }
 
 async function openGame(page: Page) {
+  // tsx/esbuild `keepNames` (путь загрузки спеков в CI) оборачивает именованные функции в
+  // __name(fn, "name"); Playwright сериализует evaluate-колбэки через toString() БЕЗ
+  // bundle-scope, где __name определён → ReferenceError в браузере. Глобальный стаб делает
+  // колбэки нечувствительными к транспайлеру; передан СТРОКОЙ, чтобы сам init-скрипт не
+  // транспилировался. (Локально спеки идут через транспайлер Playwright без keepNames —
+  // поэтому баг воспроизводился только в CI.)
+  await page.addInitScript({ content: 'globalThis.__name = globalThis.__name || ((f) => f);' })
   await page.goto(GAME)
   await page.waitForFunction(() => Boolean((window as unknown as { SealI18n?: unknown }).SealI18n))
 }
@@ -332,6 +339,21 @@ test.describe('Seal The Hunter visual borders', () => {
             tailKick: 0,
           }
         },
+        // NB: никаких именованных const-arrow ВНУТРИ методов — esbuild keepNames обернул бы их
+        // в __name(...) (см. openGame). Хелпер подсчёта — соседний метод-шортхенд.
+        countPixels(
+          data: Uint8ClampedArray,
+          width: number,
+          rect: { x: number; y: number; w: number; h: number },
+        ) {
+          let pixels = 0
+          for (let y = rect.y; y < rect.y + rect.h; y++) {
+            for (let x = rect.x; x < rect.x + rect.w; x++) {
+              if (data[(y * width + x) * 4 + 3] > 16) pixels++
+            }
+          }
+          return pixels
+        },
         render(fishY: number) {
           const canvas = document.createElement('canvas')
           canvas.width = 240
@@ -345,18 +367,9 @@ test.describe('Seal The Hunter visual borders', () => {
           prey.drawPrey(ctx, world, { ripples: true })
           ctx.restore()
           const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data
-          const count = (rect: { x: number; y: number; w: number; h: number }) => {
-            let pixels = 0
-            for (let y = rect.y; y < rect.y + rect.h; y++) {
-              for (let x = rect.x; x < rect.x + rect.w; x++) {
-                if (data[(y * canvas.width + x) * 4 + 3] > 16) pixels++
-              }
-            }
-            return pixels
-          }
           return {
-            airPixels: count({ x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
-            waterPixels: count({ x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
+            airPixels: this.countPixels(data, canvas.width, { x: ox + 35, y: 0, w: 110, h: waterY - 6 }),
+            waterPixels: this.countPixels(data, canvas.width, { x: ox + 35, y: waterY + 4, w: 110, h: 76 }),
           }
         },
       }
