@@ -44,7 +44,13 @@ const eslintConfig = [
     },
   },
   {
-    ignores: ['.next/', 'src/payload-types.ts', 'src/payload-generated-schema.ts'],
+    ignores: [
+      '.next/',
+      'src/payload-types.ts',
+      'src/payload-generated-schema.ts',
+      // vendored минифицированный бандл (Phaser) — не наш код, не линтится
+      'public/games/*/vendor/',
+    ],
   },
 ]
 
