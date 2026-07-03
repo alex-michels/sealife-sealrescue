@@ -227,9 +227,13 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     сделано: `public/games/seal-run-v1/core/{course.js,chunks/}` (18 чанков) + **chunk-lint**
     (`tools/chunk-lint{,-lib}.mjs`: проходимость safe-interval-BFS, коридоры, питание, бюджет рыбы)
     + CI-тест `tests/unit/seal-run-course.unit.spec.ts` (детерминизм + сборки по 20 сидам)
-  * [ ] **SR-03** `core/sim.js`+`core/balance.js` (DOM-free): физика тюленя по Y (**eased target-Y
+  * [x] **SR-03** `core/sim.js`+`core/balance.js` (DOM-free): физика тюленя по Y (**eased target-Y
     follow**, описать на собственных условиях), стамина/жизни/баффы/дебаффы как в спеке SR-01,
-    константы из таблицы балансировки первого прохода. *[M]*
+    константы из таблицы балансировки первого прохода. *[M]* — сделано:
+    `public/games/seal-run-v1/core/{sim.js,balance.js}` (1D ARRIVE, ресурсный автомат
+    NORMAL/EXHAUSTED/grace + хит-стан/i-frames независимыми таймерами, кинематика хищников —
+    чистые функции мировой X, `SURFACE`-задел v2) + `tests/unit/seal-run-sim.unit.spec.ts`
+    (11 контрактов: тайминг перехода полосы, каскад стамины, все три яруса, детерминизм-трейс)
   * [ ] **SR-04** `tools/fairness-sim.mjs` + `tools/compare-variants.mjs`: headless-бот (фикс.
     политика **непрерывного Y-контроля**: держаться безопасной полосы, заходить за рыбой, если путь
     чист) по матрице устройств (как у Seal Hunter) × N сидов трассы; отчёт по разбросу дистанции/

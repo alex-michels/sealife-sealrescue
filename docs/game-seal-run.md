@@ -8,6 +8,8 @@ Phaser эталон, см. `docs/Roadmap.md` «🕹 Phaser»). Статус: д�
 «почему», спека — «что именно»). **SR-02 закрыт:** изоморфный генератор трассы живёт в
 `public/games/seal-run-v1/core/{course.js,chunks/}` (18 авторских чанков), инварианты §9.4 спеки
 охраняет `tools/chunk-lint{,-lib}.mjs` + CI-тест `tests/unit/seal-run-course.unit.spec.ts`.
+**SR-03 закрыт:** DOM-free sim-core — `core/{sim.js,balance.js}` (физика/ресурсы/коллизии,
+константы спеки §14) + CI-тест `tests/unit/seal-run-sim.unit.spec.ts`.
 
 ## 0. Решения (TL;DR)
 
