@@ -341,6 +341,27 @@ made catches silently fail). Reduced-motion: no ripples. Regression:
 left/right no-clip prey, and top-surface clip (no air pixels, no solid phantom below water).
 `sw.js` cache v16→v17. Sim/spawn/cull/catch untouched — fairness and QA-30 golden unaffected.
 
+**Contract lock-in (owner request, same PR):** the current visual/mechanics/fairness state is now
+pinned by tests so future changes can't silently regress it. Full inventory:
+- *Visual* (`tests/e2e/game-visual-borders.e2e.spec.ts`, **7 контрактов**, real-pixel sampling,
+  seeded): (1) side kelp walls repaint OVER seal and prey; (2) prey stay visible beyond
+  left/right borders (no hard clip); (3) top surface — no air pixels, no catchable phantom
+  below water; (4) **border matrix per orientation** — 16:10 и 9:19.5 → светлое небо сверху И
+  дно снизу (и ноль боковых зазоров), 3:4-планшет и 21:9 → стены водорослей с обеих сторон
+  (и ноль верх/низ); (5) полевые водоросли ПОВЕРХ фона, но ПОД добычей (порядок слоёв
+  пиксельно); (6) **фейд по вылету за край** — внутри поля полная плотность, на 30 lu ~21%,
+  на 39 lu (за `EDGE_FADE_LU` 38) ноль → кулл невидим; (7) **рябь «флоп-плюх»** у ватерлинии —
+  дифференциально (ripples:true добавляет кольцо поверх той же сцены; хвост прорвавшейся рыбы
+  легитимно остаётся в воде — это желанный look, закреплён).
+- *Mechanics* (`tests/unit/seal-hunt-prey-edges.unit.spec.ts`, **6 контрактов**, детерминированно):
+  спавн — 4-edge shuffle-bag (первые 4 спавна = все 4 края), позиция ровно ±20 за краем,
+  скорость строго внутрь; edge-push возвращает рыбу с ВСЕХ 4 сторон (за 3 с крейсерская рыба
+  никогда не доходит до кулл-порога ±40 и возвращается в поле); safety-cull — −39 живёт,
+  −45/NaN удаляются. Вместе с QA-30 golden (трасса физики/спавна/счёта) и QA-31
+  (фикс-поле 960×540/540×960 на всех 16 профилях, спред ≤5%, девиация ≤3%) — полный
+  контрактный замок текущего состояния. Не покрыто сознательно: resize()-проводка game.js
+  (те же формулы, что в фикстурах; тонкий слой) и i18n-строки.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.
