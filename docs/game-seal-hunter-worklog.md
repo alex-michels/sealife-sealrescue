@@ -277,6 +277,24 @@ cover with a smaller/more compact wordmark so the title isn't cropped on wide mo
 (`background-size: cover` crops width) — same 1200×630 aspect, OG meta unchanged. `sw.js` `CACHE`
 bumped v8→v11→v12→**v13**.
 
+## 8. Single leaderboard — desktop/mobile split removed (2026-07-03)
+
+**Decision (owner, 2026-07-03):** one board per game. Seal Run (SR-01 spec §1.2) plays in a fixed
+960×540 lu "equal horizon" field — the world is device-independent, so a device split has nothing
+to absorb there; Seal Hunter follows for cross-game consistency. The residual portrait-vs-landscape
+catch-rate spread of Seal Hunter (single-digit %, bot-measured, see §2/§4 above) now lives inside
+one shared board — accepted consciously as the price of consistency; the 2:1 clamp + constant
+density keep the main spread bounded.
+
+**What changed (Roadmap SH-11):** `leaderboard.ts` (Zod body, play-token `{g,t,n}`, dedup key
+`(game, playerKey, season)`, rank/suffix counts, responses — no `board`); `game-scores` collection
+(field dropped, `generate:types`); client `core/leaderboard.js` (no `detectBoard`, no board tabs —
+`lbDesktop`/`lbMobile` i18n keys and `.lb-tab` CSS removed, `CACHE` v14→v15); int-tests reworked
+(collision-isolation moved from `board=mobile` to a dedicated game slug), e2e leaderboard mock
+simplified. Back-compat for the deploy window: legacy `board` in body/URL is ignored, old tokens
+with `b` stay valid, and a player's duplicate rows (ex-desktop+mobile) are lazily merged on submit
+(max score wins) until the weekly prune.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.

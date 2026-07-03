@@ -3,12 +3,13 @@ import type { Page, Route } from '@playwright/test'
 /**
  * Generic, DB-free mock for the anonymous leaderboard API used by the Seal The Hunter game
  * client (`public/games/seal-hunt-v1/core/leaderboard.js`). Reusable by any leaderboard e2e —
- * scroll-to-player, tie ranks, pagination, board tabs — instead of a live Payload/DB.
+ * scroll-to-player, tie ranks, pagination — instead of a live Payload/DB.
  *
- * It fulfils the three endpoints the client talks to:
- *   • GET  /api/leaderboard/start?game=&board=   → { token }            (anti-cheat play-token)
- *   • POST /api/leaderboard                        → the player's standing + page 1   (submitScore)
- *   • GET  /api/leaderboard?game=&board=&page=     → one page of rows                 (fetchPage)
+ * It fulfils the three endpoints the client talks to (single board — the desktop/mobile
+ * split was removed 2026-07-03):
+ *   • GET  /api/leaderboard/start?game=      → { token }            (anti-cheat play-token)
+ *   • POST /api/leaderboard                   → the player's standing + page 1   (submitScore)
+ *   • GET  /api/leaderboard?game=&page=       → one page of rows                 (fetchPage)
  *
  * Rows are generated deterministically 1..total. The player's row (at `rank`) carries `alias`,
  * which the POST response echoes so the client marks it `.lb-row.me`. `makeRow` lets a caller
@@ -26,8 +27,6 @@ export interface MockLbRow {
 }
 
 export interface LeaderboardMockOptions {
-  /** Board the responses report. Default 'desktop'. */
-  board?: 'desktop' | 'mobile'
   /** Total players on the board. Default 120. */
   total?: number
   /** The submitting player's rank (1-based). Default 40 (mid page 1 → needs scrolling). */
@@ -43,7 +42,6 @@ export interface LeaderboardMockOptions {
 }
 
 export interface LeaderboardMock {
-  board: 'desktop' | 'mobile'
   total: number
   rank: number
   alias: string
@@ -56,7 +54,6 @@ export async function installLeaderboardMock(
   page: Page,
   options: LeaderboardMockOptions = {},
 ): Promise<LeaderboardMock> {
-  const board = options.board ?? 'desktop'
   const total = options.total ?? 120
   const rank = options.rank ?? 40
   const alias = options.alias ?? 'me-alias'
@@ -83,7 +80,6 @@ export async function installLeaderboardMock(
   const hasMore = (pageNum: number): boolean => pageNum * pageSize < total
   const standing = (pageNum: number) => ({
     alias,
-    board,
     rank,
     total,
     percentile,
@@ -104,9 +100,9 @@ export async function installLeaderboardMock(
     }
     const pageNum = Number(url.searchParams.get('page') || '1')
     return route.fulfill({
-      json: { board, total, resetAt, top: pageRows(pageNum), page: pageNum, hasMore: hasMore(pageNum) },
+      json: { total, resetAt, top: pageRows(pageNum), page: pageNum, hasMore: hasMore(pageNum) },
     })
   })
 
-  return { board, total, rank, alias, pageSize, percentile, resetAt }
+  return { total, rank, alias, pageSize, percentile, resetAt }
 }

@@ -1,7 +1,8 @@
 // core/leaderboard.js — клиент анонимного лидерборда (SH-07).
 // Источник правды — сервер. Локально храним только opaque-seed (см. alias.js).
-// Имена приходят как индексы и рисуются на языке зрителя. Доска недельная, две доски
-// (desktop/mobile), пагинация (скролл + «показать ещё»).
+// Имена приходят как индексы и рисуются на языке зрителя. Доска недельная и ЕДИНАЯ
+// (деление desktop/mobile снято 2026-07-03 — консистентность с Seal Run), пагинация
+// (скролл + «показать ещё»).
 import { getSeed, renderName } from './alias.js';
 
 const ROUND_MS = 60000; // раунд всегда 60с
@@ -12,27 +13,18 @@ function lang() {
   return (window.SealI18n && window.SealI18n.lang) || 'ru';
 }
 
-function detectBoard() {
-  try {
-    return window.matchMedia && window.matchMedia('(pointer: coarse)').matches ? 'mobile' : 'desktop';
-  } catch {
-    return 'desktop';
-  }
-}
-
-// Play-token (анти-чит): берём на СТАРТЕ раунда, чтобы серверу было видно реально отыгранное
-// время. Фиксируем board вместе с токеном (submit должен совпасть с ним).
+// Play-token (анти-чит): берём на СТАРТЕ раунда, чтобы серверу было видно реально
+// отыгранное время.
 let pending = null;
 export async function startRound(gameSlug) {
-  const board = detectBoard();
   // Ретрай один раз: одиночный сетевой блип на старте раунда не должен лишать
   // игрока сабмита (иначе доска покажет «недоступно» за весь раунд).
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await fetch(`/api/leaderboard/start?game=${encodeURIComponent(gameSlug)}&board=${board}`);
+      const res = await fetch(`/api/leaderboard/start?game=${encodeURIComponent(gameSlug)}`);
       if (!res.ok) throw new Error('start ' + res.status);
       const data = await res.json();
-      pending = { token: data.token, board };
+      pending = { token: data.token };
       return;
     } catch {
       pending = null;
@@ -49,7 +41,6 @@ async function submitScore(gameSlug, score) {
       game: gameSlug,
       score,
       durationMs: ROUND_MS,
-      board: pending.board,
       seed: getSeed(),
       token: pending.token,
     }),
@@ -59,8 +50,8 @@ async function submitScore(gameSlug, score) {
   return res.json();
 }
 
-async function fetchPage(gameSlug, board, pageNum) {
-  const res = await fetch(`/api/leaderboard?game=${encodeURIComponent(gameSlug)}&board=${board}&page=${pageNum}`);
+async function fetchPage(gameSlug, pageNum) {
+  const res = await fetch(`/api/leaderboard?game=${encodeURIComponent(gameSlug)}&page=${pageNum}`);
   if (!res.ok) throw new Error('read ' + res.status);
   return res.json();
 }
@@ -125,8 +116,8 @@ function scrollToMe(container) {
   requestAnimationFrame(attempt);
 }
 
-function rowHtml(r, you, board) {
-  const me = you && board === you.board && r.alias === you.alias;
+function rowHtml(r, you) {
+  const me = you && r.alias === you.alias;
   return (
     `<li class="lb-row${me ? ' me' : ''}">` +
     `<span class="lb-rk">#${r.rank}</span>` +
@@ -137,12 +128,8 @@ function rowHtml(r, you, board) {
 
 function render(container, st, t) {
   const { you, view, gameSlug } = st;
-  const tab = (b) =>
-    `<button type="button" class="lb-tab${view.board === b ? ' on' : ''}" data-b="${b}">` +
-    `${esc(b === 'desktop' ? t('lbDesktop') : t('lbMobile'))}</button>`;
-
   const rows = view.rows.length
-    ? view.rows.map((r) => rowHtml(r, you, view.board)).join('')
+    ? view.rows.map((r) => rowHtml(r, you)).join('')
     : `<li class="lb-empty">${esc(t('lbEmpty'))}</li>`;
 
   const youLine = you
@@ -160,35 +147,20 @@ function render(container, st, t) {
     `<span class="lb-note">${esc(t('lbPlayers', { n: view.total }))}</span></div>` +
     `<div class="lb-reset"></div>` +
     youLine +
-    `<div class="lb-tabs">${tab('desktop')}${tab('mobile')}</div>` +
     `<ol class="lb-list">${rows}</ol>` +
     more +
     `</div>`;
 
   startCountdown(container, st.resetMs, t);
 
-  container.querySelectorAll('.lb-tab').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      const b = btn.getAttribute('data-b');
-      if (b === view.board) return;
-      try {
-        const r = await fetchPage(gameSlug, b, 1);
-        st.view = { board: b, total: r.total, page: 1, rows: r.top, hasMore: r.hasMore };
-        render(container, st, t);
-      } catch {
-        /* keep current view on failure */
-      }
-    });
-  });
-
   const moreBtn = container.querySelector('.lb-more');
   if (moreBtn) {
     moreBtn.addEventListener('click', async () => {
       moreBtn.disabled = true;
       try {
-        const r = await fetchPage(gameSlug, view.board, view.page + 1);
+        const r = await fetchPage(gameSlug, view.page + 1);
         const list = container.querySelector('.lb-list');
-        if (list) list.insertAdjacentHTML('beforeend', r.top.map((x) => rowHtml(x, you, view.board)).join(''));
+        if (list) list.insertAdjacentHTML('beforeend', r.top.map((x) => rowHtml(x, you)).join(''));
         view.rows = view.rows.concat(r.top);
         view.page = r.page;
         view.hasMore = r.hasMore && view.rows.length < MAX_ROWS;
@@ -213,7 +185,7 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     let hasMore = r.hasMore;
     const targetPage = Math.min(Math.ceil(r.rank / PAGE_SIZE), Math.ceil(MAX_ROWS / PAGE_SIZE));
     while (page < targetPage && hasMore) {
-      const more = await fetchPage(gameSlug, r.board, page + 1);
+      const more = await fetchPage(gameSlug, page + 1);
       rows = rows.concat(more.top);
       page = more.page;
       hasMore = more.hasMore;
@@ -221,8 +193,8 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     const st = {
       gameSlug,
       resetMs: Date.parse(r.resetAt) || 0,
-      you: { alias: r.alias, board: r.board, rank: r.rank, total: r.total, percentile: r.percentile },
-      view: { board: r.board, total: r.total, page, rows, hasMore },
+      you: { alias: r.alias, rank: r.rank, total: r.total, percentile: r.percentile },
+      view: { total: r.total, page, rows, hasMore },
     };
 
     // Keep the "Вы: #N из M" line consistent with the table. The server's `rank` is
@@ -247,13 +219,12 @@ export async function mountAfterPlay(container, gameSlug, score, t) {
     // Сабмит не прошёл (напр. play-token потерялся на старте раунда). Всё равно
     // показываем доску в режиме чтения — лучше реальные стендинги, чем «недоступно».
     try {
-      const board = detectBoard();
-      const r = await fetchPage(gameSlug, board, 1);
+      const r = await fetchPage(gameSlug, 1);
       const st = {
         gameSlug,
         resetMs: Date.parse(r.resetAt) || 0,
         you: null,
-        view: { board: r.board || board, total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
+        view: { total: r.total, page: r.page, rows: r.top, hasMore: r.hasMore },
       };
       container._lbState = st; // для relocalizeBoard при смене языка (standalone)
       render(container, st, t);

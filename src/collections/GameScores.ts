@@ -10,7 +10,8 @@ import { isEditor } from '../access/roles'
  *  - Имя локализуемо: храним части (`nameParts`) + EN base (`baseAlias`) + `suffix`. Имя
  *    рисуется на клиенте на языке зрителя; уникальность дисплея — суффиксом при коллизии
  *    («Triton Loaf 2»). `alias` (EN display) — для админки. Свободного текста нет (НЕ UGC).
- *  - `board` — грубо desktop/mobile (без пиксельных размеров → без fingerprint).
+ *  - Доска ЕДИНАЯ: деление desktop/mobile снято (2026-07-03) — консистентность с Seal Run
+ *    («равный горизонт»); остаточный портрет-vs-ландшафт спред Seal Hunter принят осознанно.
  *  - `season` — ISO-неделя: доска сбрасывается еженедельно (фильтр + еженедельная очистка).
  *
  * Запись — только через server-authoritative endpoint (см. src/endpoints/leaderboard.ts),
@@ -21,7 +22,7 @@ export const GameScores: CollectionConfig = {
   slug: 'game-scores',
   admin: {
     useAsTitle: 'alias',
-    defaultColumns: ['alias', 'score', 'board', 'game', 'season', 'createdAt'],
+    defaultColumns: ['alias', 'score', 'game', 'season', 'createdAt'],
     description: 'Анонимные результаты мини-игр (лидерборд). PII не хранится.',
   },
   access: {
@@ -69,16 +70,6 @@ export const GameScores: CollectionConfig = {
     },
     { name: 'score', type: 'number', required: true, min: 0 },
     { name: 'durationMs', type: 'number', required: true },
-    {
-      name: 'board',
-      type: 'select',
-      required: true,
-      index: true,
-      options: [
-        { label: 'Desktop', value: 'desktop' },
-        { label: 'Mobile', value: 'mobile' },
-      ],
-    },
     {
       name: 'season',
       type: 'text',

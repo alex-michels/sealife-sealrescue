@@ -212,11 +212,16 @@ self-hosted Postgres + off-box бэкапы (§7), Environment-секреты + 
 * **Изменение схемы Payload ломало deploy-build** («relation … does not exist», инцидент PR #53):
   `next build` идёт с NODE_ENV=production → drizzle push НЕ выполняется, а новая коллекция/global
   требует новых таблиц. Решено (2026-07-02): шаг **«Sync DB schema»** в `deploy.yml` гоняет
-  `npx tsx scripts/push-dev-schema.mts` против `secrets.DATABASE_URI` ДО сборки (идемпотентно;
-  тот же скрипт, что в CI-jobs `test`/`e2e`). Заодно рантайм alpha (та же Neon-ветка) получает
-  схему до рестарта. ⚠️ Когда появится отдельный self-hosted prod Postgres (M0-T04/INFRA),
-  ему понадобится свой schema-шаг (или к тому моменту переходим на миграции — см. память
-  проекта «DB push-based in dev»).
+  `echo y | npx tsx scripts/push-dev-schema.mts` против `secrets.DATABASE_URI` ДО сборки
+  (идемпотентно; тот же скрипт, что в CI-jobs `test`/`e2e`). Заодно рантайм alpha (та же
+  Neon-ветка) получает схему до рестарта. `echo y |` (2026-07-03, SH-11) авто-подтверждает
+  data-loss prompt drizzle при **деструктивных** изменениях (удаление колонки) — иначе
+  интерактивный вопрос вешает CI; принято для push-фазы, т.к. данные alpha-лидерборда анонимны
+  и еженедельно прунятся. Деструктивный push также означает короткое окно (build+deploy), когда
+  СТАРЫЙ рантайм ссылается на удалённую колонку — на alpha приемлемо (лидерборд ответит 500 до
+  рестарта). ⚠️ Когда появится отдельный self-hosted prod Postgres (M0-T04/INFRA),
+  ему понадобится свой schema-шаг И переход на миграции — см. память
+  проекта «DB push-based in dev».
 * **Свежий DB = schema-only.** Новая ветка Neon приходит со схемой, но без строк → лидерборд отвечает
   `unknown_game` на submit (резолв игры по slug). Решение: `seed:baseline` (§5.7 / «Seed database»).
 * **tsx не поддерживает Node 24.** `payload run` (сиды) на Node 24 падает (`node:crypto` ENOENT, даже

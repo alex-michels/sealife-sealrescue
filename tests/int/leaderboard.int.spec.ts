@@ -23,6 +23,7 @@ import { leaderboardStart, leaderboardSubmit, leaderboardRead, makeParts, render
 const RUN = `qa15-${Date.now()}`
 const GAME = `${RUN}-game`
 const GAME_PAGES = `${RUN}-pages`
+const GAME_COLLIDE = `${RUN}-collide` // изолированная игра для теста коллизии имён
 const GHOST = `${RUN}-ghost` // slug без строки в games
 
 const BASE_TIME = new Date('2026-07-01T12:00:00Z') // середина ISO-недели — тесты её не пересекают
@@ -40,9 +41,9 @@ function bind(req: Request): PayloadRequest {
   return r
 }
 
-async function start(game: string, board = 'desktop') {
+async function start(game: string) {
   const res = await leaderboardStart.handler(
-    bind(new Request(`http://localhost:3000/api/leaderboard/start?game=${game}&board=${board}`)),
+    bind(new Request(`http://localhost:3000/api/leaderboard/start?game=${game}`)),
   )
   return (await res.json()) as { token: string }
 }
@@ -78,22 +79,19 @@ async function playRound(opts: {
   game?: string
   seed?: number
   score?: number
-  board?: string
   durationMs?: number
   ageMs?: number
   ip?: string
   token?: string
 }) {
   const game = opts.game ?? GAME
-  const board = opts.board ?? 'desktop'
-  const token = opts.token ?? (await start(game, board)).token
+  const token = opts.token ?? (await start(game)).token
   vi.setSystemTime(Date.now() + (opts.ageMs ?? 65_000))
   const res = await post(
     {
       game,
       score: opts.score ?? 42,
       durationMs: opts.durationMs ?? 60_000,
-      board,
       seed: opts.seed ?? 1,
       token,
     },
@@ -119,6 +117,10 @@ beforeAll(async () => {
     collection: 'games',
     data: { title: `${RUN} pages`, slug: GAME_PAGES, _status: 'published' },
   })
+  await payload.create({
+    collection: 'games',
+    data: { title: `${RUN} collide`, slug: GAME_COLLIDE, _status: 'published' },
+  })
   // Строка прошлого сезона — должна исчезнуть после первого successful submit (lazy prune).
   await payload.create({
     collection: 'game-scores',
@@ -131,7 +133,6 @@ beforeAll(async () => {
       nameParts: { noun: 0 },
       score: 1,
       durationMs: 60_000,
-      board: 'desktop',
       season: '2020-W01',
     },
   })
@@ -164,7 +165,7 @@ describe('happy path', () => {
     expect(typeof json.resetAt).toBe('string')
     expect((json.top as Array<{ alias: string }>).map((t) => t.alias)).toContain(json.alias)
 
-    const board = await readBoard(`game=${GAME}&board=desktop`)
+    const board = await readBoard(`game=${GAME}`)
     expect(board.total).toBe(1)
     expect(board.top[0]).toMatchObject({ rank: 1, score: 55 })
   })
@@ -192,10 +193,10 @@ describe('валидация и анти-чит', () => {
     expect(json.error).toBe('bad_json')
   })
 
-  it('Zod-отказ (отрицательный score, лишний тип) → 400 invalid_input', async () => {
+  it('Zod-отказ (отрицательный score, кривой seed) → 400 invalid_input', async () => {
     for (const bad of [
-      { game: GAME, score: -1, durationMs: 60_000, board: 'desktop', seed: 1, token: 'x'.repeat(16) },
-      { game: GAME, score: 10, durationMs: 60_000, board: 'tv', seed: 1, token: 'x'.repeat(16) },
+      { game: GAME, score: -1, durationMs: 60_000, seed: 1, token: 'x'.repeat(16) },
+      { game: GAME, score: 10, durationMs: 60_000, seed: -5, token: 'x'.repeat(16) },
       { game: GAME, score: 10 },
     ]) {
       const { status, json } = await post(bad)
@@ -204,12 +205,25 @@ describe('валидация и анти-чит', () => {
     }
   })
 
+  it('лишний board старого клиента молча отбрасывается (обратная совместимость)', async () => {
+    const { token } = await start(GAME)
+    vi.setSystemTime(Date.now() + 65_000)
+    const { status } = await post({
+      game: GAME,
+      score: 11,
+      durationMs: 60_000,
+      board: 'desktop', // поле снято 2026-07-03; старый клиент его ещё шлёт
+      seed: 31337,
+      token,
+    })
+    expect(status).toBe(200)
+  })
+
   it('мусорный токен → 401 invalid_token', async () => {
     const { status, json } = await post({
       game: GAME,
       score: 10,
       durationMs: 60_000,
-      board: 'desktop',
       seed: 1,
       token: 'garbage.token-value',
     })
@@ -217,14 +231,13 @@ describe('валидация и анти-чит', () => {
     expect(json.error).toBe('invalid_token')
   })
 
-  it('токен чужой доски (desktop-токен на mobile) → 401', async () => {
-    const { token } = await start(GAME, 'desktop')
+  it('токен чужой игры → 401 invalid_token', async () => {
+    const { token } = await start(GAME_PAGES)
     vi.setSystemTime(Date.now() + 65_000)
     const { status, json } = await post({
       game: GAME,
       score: 10,
       durationMs: 60_000,
-      board: 'mobile',
       seed: 1,
       token,
     })
@@ -238,7 +251,6 @@ describe('валидация и анти-чит', () => {
       game: GAME,
       score: 10,
       durationMs: 60_000,
-      board: 'desktop',
       seed: 1,
       token,
     })
@@ -281,7 +293,6 @@ describe('валидация и анти-чит', () => {
       game: GAME,
       score: 25,
       durationMs: 60_000,
-      board: 'desktop',
       seed: 8,
       token: first.token,
     })
@@ -340,7 +351,6 @@ describe('идентичность и дедуп', () => {
         nameParts: { noun: 999 },
         score: 10,
         durationMs: 60_000,
-        board: 'desktop',
         season,
       },
     })
@@ -355,17 +365,22 @@ describe('идентичность и дедуп', () => {
   })
 
   it('коллизия base-имени двух РАЗНЫХ игроков → суффикс « 2»', async () => {
-    // Изолируем на board=mobile: остальные тесты сабмитят в desktop, а имена
-    // детерминированы от (seed, GAME) с уникальным per-run GAME-слагом — на desktop
-    // чужой сабмит может СЛУЧАЙНО дать тот же base и сдвинуть счётчик (флак в CI,
-    // «Marlin 3» vs «Marlin 2»). На mobile единственный носитель base — наша фикстура.
+    // Изолируем на отдельной игре (GAME_COLLIDE): доска единая (деление desktop/mobile
+    // снято 2026-07-03), и на общем GAME чужой сабмит может СЛУЧАЙНО дать тот же base
+    // и сдвинуть счётчик (флак в CI, «Marlin 3» vs «Marlin 2»). На GAME_COLLIDE
+    // единственный носитель base — наша фикстура.
     const seed = 555
-    const base = renderEn(makeParts(seed, GAME))
+    const base = renderEn(makeParts(seed, GAME_COLLIDE))
+    const collideGame = await payload.find({
+      collection: 'games',
+      where: { slug: { equals: GAME_COLLIDE } },
+      depth: 0,
+    })
     // Другой игрок уже занял этот base.
     await payload.create({
       collection: 'game-scores',
       data: {
-        game: gameId,
+        game: collideGame.docs[0].id as number,
         playerKey: `${RUN}-other-player`,
         baseAlias: base,
         suffix: 0,
@@ -373,11 +388,10 @@ describe('идентичность и дедуп', () => {
         nameParts: { noun: 0 },
         score: 99,
         durationMs: 60_000,
-        board: 'mobile',
         season,
       },
     })
-    const { json } = await playRound({ seed, score: 12, board: 'mobile' })
+    const { json } = await playRound({ game: GAME_COLLIDE, seed, score: 12 })
     expect(json.alias).toBe(`${base} 2`)
     expect(json.suffix).toBe(2)
   })
@@ -403,30 +417,29 @@ describe('чтение доски', () => {
           nameParts: { noun: i },
           score: i * 10,
           durationMs: 60_000,
-          board: 'desktop',
           season,
         },
       })
     }
-    const p1 = await readBoard(`game=${GAME_PAGES}&board=desktop&page=1&limit=3`)
+    const p1 = await readBoard(`game=${GAME_PAGES}&page=1&limit=3`)
     expect(p1.total).toBe(7)
     expect(p1.hasMore).toBe(true)
     expect(p1.top.map((t) => t.score)).toEqual([70, 60, 50])
     expect(p1.top.map((t) => t.rank)).toEqual([1, 2, 3])
 
-    const p3 = await readBoard(`game=${GAME_PAGES}&board=desktop&page=3&limit=3`)
+    const p3 = await readBoard(`game=${GAME_PAGES}&page=3&limit=3`)
     expect(p3.hasMore).toBe(false)
     expect(p3.top.map((t) => t.rank)).toEqual([7])
     expect(p3.top[0].score).toBe(10)
   })
 
   it('неизвестная игра в GET → пустая доска, не ошибка', async () => {
-    const board = await readBoard(`game=${GHOST}&board=desktop`)
+    const board = await readBoard(`game=${GHOST}`)
     expect(board.total).toBe(0)
     expect(board.top).toEqual([])
   })
 
-  it('битый board в GET падает на desktop, кривой limit зажимается', async () => {
+  it('легаси ?board= игнорируется, кривые page/limit зажимаются', async () => {
     const board = await readBoard(`game=${GAME_PAGES}&board=fridge&page=0&limit=9999`)
     expect(board.total).toBeGreaterThan(0) // отработал с дефолтами, не упал
     expect(board.page).toBe(1)
