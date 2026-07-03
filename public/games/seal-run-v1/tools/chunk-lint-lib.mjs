@@ -30,19 +30,24 @@ import {
   generateCourse,
   courseHash,
 } from '../core/course.js';
+import {
+  SPEED_MAX,
+  FISH_SPEED_BUFF_MULT,
+  SHARK_CHARGE_REL,
+  SHARK_BIG_CHARGE_REL,
+} from '../core/balance.js';
 
-// — Константы модели (производные спеки §2.2/§9.4; фиксируются здесь, чтобы дрейф
-// был осознанным диффом, а не «случайно поехало»).
-const SPEED_MAX = 420; // lu/с (плато, спека §4.1)
-const FISH_SPEED_BUFF_MULT = 1.15;
+// — Константы модели (производные спеки §2.2/§9.4). Скорости/баффы/чардж — из
+// core/balance.js (SR-03, единый источник правды); дериваты фиксируются здесь,
+// чтобы дрейф был осознанным диффом, а не «случайно поехало».
 const WORST_SPEED = SPEED_MAX * FISH_SPEED_BUFF_MULT; // 483 lu/с
 const REACT_S = 0.25;
 const BAND_HOP_S = 0.34;
 export const HOP_LU = Math.ceil(WORST_SPEED * (REACT_S + BAND_HOP_S)); // 285
 const PAD = 8; // страховочный зазор вокруг хитбоксов, lu
 const CHARGE_EXTEND = {
-  shark_white: Math.ceil((FIELD_W * 180) / SPEED_MAX), // 412
-  shark_big: Math.ceil((FIELD_W * 120) / SPEED_MAX), // 275
+  shark_white: Math.ceil((FIELD_W * SHARK_CHARGE_REL) / SPEED_MAX), // 412
+  shark_big: Math.ceil((FIELD_W * SHARK_BIG_CHARGE_REL) / SPEED_MAX), // 275
 };
 const START_BAND = 2; // стартовая полоса тюленя (середина столба)
 const MIN_CORRIDOR = 3 * SEAL_R; // 72 lu — спека §9.4-2
