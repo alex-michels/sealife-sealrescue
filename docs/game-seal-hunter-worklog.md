@@ -362,6 +362,25 @@ pinned by tests so future changes can't silently regress it. Full inventory:
   контрактный замок текущего состояния. Не покрыто сознательно: resize()-проводка game.js
   (те же формулы, что в фикстурах; тонкий слой) и i18n-строки.
 
+## 10. ⚡ Lightning sea star — SH-13 (2026-07-03)
+
+Owner-updated spec: the VERY RARE lightning star now gives **5 points** (was 1 in the backlog
+text) and plays a **magic "воаля" sound** (rising triangle arpeggio C6-E6-G6-C7 + a sine
+bell-shimmer gliss E7→C8 — deliberately unlike the ordinary catch pop) — "some magic happened".
+Best-practice pass (searched): distinctive glowing pickup, multi-channel collect feedback,
+VISIBLE buff duration (golden aura ring with rotating sparks on the seal while ×2 speed runs,
+fading with the remaining time), rarity kept low so the delight stays special.
+
+Engineering: schedule is round-scoped and consumes exactly **4 RNG rolls regardless of outcome**
+(stream position stable → golden/fairness stay f(seed)); spawn runs inside `spawnTick` so game
+and harness share one path; the star is `still` (doesn't flee — a reward, not prey-chase);
+buff lives in `stepSeal` (`seal.buffT`, speed AND accel ×2, self-decaying); `eatCb(f)` now passes
+the caught prey (points = `sp.points || 1`). Golden regenerated consciously (92 pts for the
+seeded FHD round; RNG stream shifted by the 4 schedule rolls). Fairness N=80: spread **0.4%**
+(star is orientation-fair under CRN). Server plausibility caps untouched (+4 pts max ≪ cap
+headroom). Contracts: `tests/unit/seal-hunt-star.unit.spec.ts` (8) + e2e
+`game-lightning-star.e2e.spec.ts` (halo/brightness/expiry-fade, real-pixel). `sw.js` v17→**v18**.
+
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.

@@ -1,5 +1,5 @@
 // entities/prey.js
-import { BAL } from '../core/balance.js';
+import { BAL, STAR } from '../core/balance.js';
 import { PALETTE } from '../core/theme.js';
 
 // tiny helper
@@ -69,6 +69,73 @@ function starPath(ctx, r) {
     ctx.lineTo(ax, ay);
   }
   ctx.closePath();
+}
+
+// ⚡ Силуэт молниевой звезды (SH-13): лучи с ИЗЛОМОМ-зигзагом — отличим от обычной звезды
+// формой, не только цветом (WCAG: цвет — не единственный носитель смысла).
+function lightningStarPath(ctx, r) {
+  ctx.beginPath();
+  for (let i = 0; i < 5; i++) {
+    const a = i * (Math.PI * 2 / 5) - Math.PI / 2;
+    const tipX = Math.cos(a) * r, tipY = Math.sin(a) * r;
+    const zigA = a + 0.2, zagA = a + 0.36, inA = a + 0.63;
+    if (i === 0) ctx.moveTo(tipX, tipY); else ctx.lineTo(tipX, tipY);
+    ctx.lineTo(Math.cos(zigA) * r * 0.52, Math.sin(zigA) * r * 0.52); // излом внутрь
+    ctx.lineTo(Math.cos(zagA) * r * 0.74, Math.sin(zagA) * r * 0.74); // излом наружу (зиг-заг)
+    ctx.lineTo(Math.cos(inA) * r * 0.36, Math.sin(inA) * r * 0.36); // впадина
+  }
+  ctx.closePath();
+}
+
+/**
+ * ⚡ Молниевая звезда: пульсирующий ореол-свечение + зигзаг-тело + электрические искры.
+ * `pulse` = анимационная фаза; 0 (reduced-motion) → статичный ореол без вспышек/мерцания.
+ */
+function drawLightningStar(ctx, r, c, alpha = 1, pulse = 0) {
+  const throb = 1 + (pulse ? 0.1 * Math.sin(pulse * 2.6) : 0);
+  // свечение-ореол (главный «магический» маркер редкости)
+  ctx.globalAlpha = 0.5 * alpha;
+  const halo = ctx.createRadialGradient(0, 0, r * 0.2, 0, 0, r * 2.1 * throb);
+  halo.addColorStop(0, c.glow);
+  halo.addColorStop(1, 'rgba(255,244,194,0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(0, 0, r * 2.1 * throb, 0, Math.PI * 2);
+  ctx.fill();
+
+  // separation edge (общий «стикер»-контур со всей добычей)
+  ctx.globalAlpha = alpha;
+  ctx.save();
+  ctx.scale(outlineGrow(r), outlineGrow(r));
+  ctx.fillStyle = OUTLINE;
+  lightningStarPath(ctx, r);
+  ctx.fill();
+  ctx.restore();
+
+  // тело: светящийся центр → электрический край
+  lightningStarPath(ctx, r);
+  const body = ctx.createRadialGradient(0, 0, r * 0.1, 0, 0, r);
+  body.addColorStop(0, c.belly);
+  body.addColorStop(0.55, c.body);
+  body.addColorStop(1, c.back);
+  ctx.fillStyle = body;
+  ctx.fill();
+
+  // искры-разряды вокруг (дрожат только при pulse ≠ 0)
+  ctx.strokeStyle = c.spark;
+  ctx.lineWidth = Math.max(1, r * 0.09);
+  ctx.lineCap = 'round';
+  ctx.globalAlpha = (0.5 + (pulse ? 0.3 * Math.sin(pulse * 3.1) : 0)) * alpha;
+  for (let i = 0; i < 3; i++) {
+    const a = i * 2.1 + (pulse ? Math.sin(pulse) * 0.5 : 0);
+    const x = Math.cos(a) * r * 1.35, y = Math.sin(a) * r * 1.35;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(a + 2.2) * r * 0.3, y + Math.sin(a + 2.2) * r * 0.3);
+    ctx.lineTo(x + Math.cos(a + 1.4) * r * 0.55, y + Math.sin(a + 1.4) * r * 0.55);
+    ctx.stroke();
+  }
+  ctx.globalAlpha = alpha;
 }
 
 // `alpha` (SH-12 follow-up): базовый множитель прозрачности рыбы — рендер-фейд за краем поля
@@ -160,6 +227,7 @@ function drawSquid(ctx, r, c, anim = null, alpha = 1) {
 function drawFish(ctx, r, c, variant, tailKick = 0, prize = false, anim = null, alpha = 1) {
   if (variant === 'star') return drawStar(ctx, r, c, alpha);
   if (variant === 'squid') return drawSquid(ctx, r, c, anim, alpha);
+  if (variant === 'lightning') return drawLightningStar(ctx, r, c, alpha, anim ? anim.tentPhase : 0);
   ctx.globalAlpha = alpha;
 
   const rx = variant === 'slim' ? r * 1.12 : variant === 'eel' ? r * 1.2 : r * 0.95;
@@ -283,6 +351,42 @@ Object.freeze(SPECIES);
 
 export const PREY = []; // active list
 
+// ⚡ Молниевая звезда (SH-13) — вне обычного каталога/shuffle-bag: отдельный редкий пикап.
+// `still` — не убегает и не крейсирует (награду можно взять); `points` — 5 вместо 1.
+const LIGHTNING_STAR = Object.freeze({
+  name: 'lightning-star', habitat: 'benthic', size: 1, scheme: F.lightning,
+  variant: 'lightning', prize: true, lightning: true, still: true, points: STAR.points,
+  wiggle: () => {},
+});
+
+// Расписание звезды на раунд. Сид-дисциплина: scheduleStar ВСЕГДА потребляет ровно 4 броска
+// Math.random (chance/время/x/y) независимо от исхода — позиция RNG-потока одинакова в
+// раундах со звездой и без, golden/fairness остаются функцией сида.
+let starPlan = null;
+export function scheduleStar(world) {
+  const roll = Math.random(), tR = Math.random(), xR = Math.random(), yR = Math.random();
+  const [t0, t1] = STAR.windowMs;
+  starPlan = roll < STAR.chance
+    ? {
+        atMs: t0 + tR * (t1 - t0),
+        x: STAR.inset + xR * (world.w - 2 * STAR.inset),
+        y: STAR.inset + yR * (world.h - 2 * STAR.inset),
+        spawned: false,
+      }
+    : null;
+}
+/** Спавн по расписанию; зовётся из core/sim.js spawnTick (общий путь игры и харнесса). */
+export function starTick(elapsedMs) {
+  if (!starPlan || starPlan.spawned || elapsedMs < starPlan.atMs) return;
+  starPlan.spawned = true;
+  PREY.push({
+    x: starPlan.x, y: starPlan.y, px: starPlan.x, py: starPlan.y,
+    vx: 0, vy: 0, r: STAR.r * BAL.fishSizeK, t: 0, dir: 1, ang: 0, face: 1,
+    sp: LIGHTNING_STAR, phase: 0, fleeT: 0, restT: 0, tailKick: 0,
+    starT: STAR.lifeMs / 1000, // время жизни; в конце — предупреждающий фейд (drawPrey)
+  });
+}
+
 // Spawn edge: an EVEN but unpredictable rotation of ALL FOUR edges (symmetric variant — top
 // included so entry, like exit, is rotation-invariant; no orientation gets a denser/easier
 // inflow). A shuffle "bag" hands out each edge exactly once per four spawns, random order — so
@@ -290,8 +394,8 @@ export const PREY = []; // active list
 let edgeBag = [];
 // Сброс спавн-состояния (QA-30/31): bag переживает раунды, из-за чего раунд i зависел от
 // хвоста предыдущего — харнесс/golden-тесты требуют «раунд = f(seed)». Живая игра сброс
-// не зовёт (ей не важно), харнесс — в начале каждого раунда.
-export function resetSpawnState() { edgeBag = []; }
+// не зовёт (ей не важно), харнесс — в начале каждого раунда. Стар-план тоже раундовый.
+export function resetSpawnState() { edgeBag = []; starPlan = null; }
 function nextEdge() {
   if (edgeBag.length === 0) {
     edgeBag = ['left', 'right', 'top', 'bottom'];
@@ -341,7 +445,12 @@ export function updatePrey(dt, seal, world, eatCb) {
     f.px = f.x; f.py = f.y;
     f.t += dt; f.phase += dt;
 
-    {
+    if (f.sp.still) {
+      // ⚡ звезда: не убегает и не крейсирует — награду можно взять; мягкий детерминированный
+      // боб на месте (никакого RNG в апдейте — golden/fairness-дисциплина).
+      f.vx = 0;
+      f.vy = Math.sin(f.phase * 2.4) * 7;
+    } else {
       const dx = f.x - seal.x, dy = f.y - seal.y;
       const d2 = dx * dx + dy * dy;
       const threatR = (seal.r * threatK) + f.r * 1.2;
@@ -456,7 +565,20 @@ export function updatePrey(dt, seal, world, eatCb) {
       const ex = fx - sx, ey = fy - sy;
       if (ex * ex + ey * ey < eatR2) { hit = true; break; }
     }
-    if (hit) { PREY.splice(i, 1); eatCb(); continue; }
+    if (hit) {
+      PREY.splice(i, 1);
+      // ⚡ бафф скорости живёт в симе (общий путь игры и харнесса): поимка звезды = ×2 на 2 c.
+      if (f.sp.lightning) seal.buffT = STAR.buffSec;
+      eatCb(f); // добыча передаётся наружу: очки (sp.points || 1) и звук решает вызывающий
+      continue;
+    }
+
+    // ⚡ истечение времени жизни звезды — ПОСЛЕ проверки поимки (поимка в последний миг честно
+    // побеждает); последние STAR.fadeMs рендер фейдит как предупреждение (drawPrey).
+    if (f.starT != null) {
+      f.starT -= dt;
+      if (f.starT <= 0) { PREY.splice(i, 1); continue; }
+    }
 
     if (f.tailKick > 0) f.tailKick = Math.max(0, f.tailKick - dt * 5);
   }
@@ -518,7 +640,9 @@ export function drawPrey(ctx, world, surf = null) {
     const overX = f.x < 0 ? -f.x : f.x > world.w ? f.x - world.w : 0;
     const overY = f.y < 0 ? -f.y : f.y > world.h ? f.y - world.h : 0;
     const over = Math.max(overX, overY);
-    const fadeA = over > 0 ? Math.max(0, 1 - over / EDGE_FADE_LU) : 1;
+    let fadeA = over > 0 ? Math.max(0, 1 - over / EDGE_FADE_LU) : 1;
+    // ⚡ звезда: предупреждающий фейд в последние STAR.fadeMs жизни («окно закрывается»)
+    if (f.starT != null) fadeA *= Math.min(1, (f.starT * 1000) / STAR.fadeMs);
     if (fadeA <= 0) continue;
     const variant = f.sp.variant;
     const ph = t + f.phase;
@@ -530,7 +654,7 @@ export function drawPrey(ctx, world, surf = null) {
     // rotate(pitch) reproduces the heading direction with the belly always down — combining
     // "look where you swim" with "never flip upside-down". Squid & starfish aren't +x-facing
     // (vertical mantle / radial body), so they stay upright — only their parts move.
-    const orient = variant !== 'squid' && variant !== 'star';
+    const orient = variant !== 'squid' && variant !== 'star' && variant !== 'lightning';
 
     // swim animation (off under reduced-motion): tail sway for fin-fish, tentacle wave for squid,
     // scaled by how hard the creature is swimming so idle prey only drift gently.

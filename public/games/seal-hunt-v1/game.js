@@ -1,9 +1,9 @@
 // game.js (ESM entrypoint)
-import { BAL, recomputeBalance, computeWorld } from './core/balance.js';
+import { BAL, STAR, recomputeBalance, computeWorld } from './core/balance.js';
 import { ROUND_MS, stepSeal, spawnTick } from './core/sim.js';
 import { attachPointer, attachKeyboard } from './core/input.js';
 import { initScenery, drawBackground, initBorder, drawDeepBackdrop, drawBorderBack, drawBorderFront, initBackdrop, isBackdropActive, drawBackdropFullscreen, drawWaterGradient } from './render/scenery.js';
-import { PREY, updatePrey, drawPrey } from './entities/prey.js';
+import { PREY, updatePrey, drawPrey, scheduleStar } from './entities/prey.js';
 import { makeSeal } from './entities/seal.js';
 import { mountAfterPlay, startRound, relocalizeBoard } from './core/leaderboard.js';
 import { getAlias } from './core/alias.js';
@@ -136,6 +136,47 @@ function pop() {
     o.frequency.exponentialRampToValueAtTime(120, t0 + 0.12);
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.12);
     o.stop(t0 + 0.13);
+  } catch {}
+}
+
+// ⚡ «Вуаля» — магический звук поимки молниевой звезды (SH-13). Пикап-практика: у редкого
+// баффа СВОЙ звук, не обычный pop, — сигнал «произошло волшебство». Рецепт: быстрое
+// восходящее арпеджио (пентатоника — «взмах палочки») + высокий колокольчик-шиммер сверху.
+// Детерминирован (без Math.random) и короткий (~0.6 с), чтобы не перекрывать игру.
+function magic() {
+  if (!FX.enabled) return;
+  if (!audioReady) { initAudio().then(() => setTimeout(magic, 0)); return; }
+  try {
+    const ctx = audioCtx;
+    const t0 = ctx.currentTime;
+    const out = ctx.createGain();
+    out.gain.value = 0.16;
+    out.connect(ctx.destination);
+    // 1) взмах: четыре ноты вверх (C6 E6 G6 C7), треугольник — мягкое «фейри»-звучание
+    const notes = [1046.5, 1318.5, 1568.0, 2093.0];
+    notes.forEach((freq, i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      const at = t0 + i * 0.07;
+      g.gain.setValueAtTime(0.0001, at);
+      g.gain.exponentialRampToValueAtTime(0.5, at + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, at + 0.28);
+      o.connect(g); g.connect(out);
+      o.start(at); o.stop(at + 0.3);
+    });
+    // 2) шиммер: высокий «колокольчик» с лёгким глиссандо вверх — послевкусие волшебства
+    const s = ctx.createOscillator();
+    const sg = ctx.createGain();
+    s.type = 'sine';
+    s.frequency.setValueAtTime(2637, t0 + 0.16); // E7
+    s.frequency.exponentialRampToValueAtTime(4186, t0 + 0.5); // → C8
+    sg.gain.setValueAtTime(0.0001, t0 + 0.16);
+    sg.gain.exponentialRampToValueAtTime(0.22, t0 + 0.2);
+    sg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.62);
+    s.connect(sg); sg.connect(out);
+    s.start(t0 + 0.16); s.stop(t0 + 0.65);
   } catch {}
 }
 
@@ -292,11 +333,13 @@ function startGame(){
   UI.btnPause.textContent=t('btnPause');
   SCORE.now=0; UI.score.textContent='0';
   timeLeft=GAME_DURATION; spawnTimer=0; PREY.length=0;
+  scheduleStar(WORLD); // ⚡ SH-13: раундовое расписание молниевой звезды (ровно 4 RNG-броска)
 
   // apply balance
   recomputeBalance(WORLD.w,WORLD.h);
   seal.maxSpeed = BAL.sealSpeed;
   seal.accel    = BAL.sealAccel;
+  seal.buffT    = 0; // сброс баффа звезды между раундами
 
   // place seal
   seal.x = WORLD.w*0.3; seal.y = WORLD.h*0.5;
@@ -393,8 +436,12 @@ function update(dt){
   stepSeal(seal, { px: POINTER.x, py: POINTER.y, active: POINTER.active, kx, ky }, dt, WORLD);
 
   // ——— prey update + collision
-  updatePrey(dt, seal, WORLD, ()=>{
-    SCORE.now++; UI.score.textContent=SCORE.now; pop();
+  updatePrey(dt, seal, WORLD, (f)=>{
+    // ⚡ SH-13: молниевая звезда = 5 очков + магический «вуаля» вместо обычного pop;
+    // бафф скорости применяет сим (updatePrey → seal.buffT), тут только счёт и фидбэк.
+    SCORE.now += (f && f.sp.points) || 1;
+    UI.score.textContent=SCORE.now;
+    if (f && f.sp.lightning) magic(); else pop();
   });
 }
 
@@ -426,6 +473,31 @@ function drawFrame(dt){
   const surf = VIEW.oy > 0.5 ? { ripples: true } : null;
   drawPrey(CTX, WORLD, surf);
   seal.draw(CTX);
+
+  // ⚡ SH-13: аура баффа — видимая длительность эффекта (пикап-практика: игрок должен ВИДЕТЬ,
+  // что бафф активен и когда кончится). Золотое кольцо тает вместе с остатком баффа;
+  // при reduced-motion — статичное кольцо без вращения искр.
+  if (seal.buffT > 0) {
+    const k = Math.min(1, seal.buffT / STAR.buffSec); // 1 → 0 к концу баффа
+    const rr = seal.r * 1.45;
+    CTX.save();
+    CTX.translate(seal.x, seal.y);
+    CTX.strokeStyle = 'rgba(255,232,122,' + (0.55 * k).toFixed(3) + ')';
+    CTX.lineWidth = 3;
+    CTX.beginPath(); CTX.arc(0, 0, rr, 0, PI * 2); CTX.stroke();
+    CTX.strokeStyle = 'rgba(207,240,255,' + (0.7 * k).toFixed(3) + ')';
+    CTX.lineWidth = 2;
+    CTX.lineCap = 'round';
+    const spin = reduced ? 0 : t * 7;
+    for (let i = 0; i < 4; i++) { // четыре искровые чёрточки по кольцу
+      const a = spin + i * (PI / 2);
+      CTX.beginPath();
+      CTX.moveTo(cos(a) * rr * 0.92, sin(a) * rr * 0.92);
+      CTX.lineTo(cos(a) * rr * 1.14, sin(a) * rr * 1.14);
+      CTX.stroke();
+    }
+    CTX.restore();
+  }
 
   // Border layers IN FRONT of the field: side kelp walls, the wavy sea surface + vignette.
   if (hasBorder) {

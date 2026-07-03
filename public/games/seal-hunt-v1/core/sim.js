@@ -4,8 +4,8 @@
 // drive the EXACT same code through these functions, so what the bot measures is what
 // players actually get. Pure logic only: no canvas, no document, no rendering.
 
-import { BAL, BASE } from './balance.js';
-import { PREY, spawnPrey } from '../entities/prey.js';
+import { BAL, BASE, STAR } from './balance.js';
+import { PREY, spawnPrey, starTick } from '../entities/prey.js';
 
 export const ROUND_MS = 60_000; // a round is always 60s
 
@@ -16,10 +16,17 @@ const { hypot, min, max, sin, exp } = Math;
  *   { px, py, active }  — pointer/touch target (world coords) + whether it's held
  *   { kx, ky }          — keyboard axis in [-1,1] (right−left, down−up)
  * Mutates `seal` (vx/vy/x/y/px/py). Identical to the original game.js seal physics.
+ * ⚡ SH-13: пока `seal.buffT` > 0 (поимка молниевой звезды) скорость И разгон ×STAR.buffMult —
+ * бафф живёт здесь, в общем ядре, чтобы игра и харнесс мерили одно и то же.
  */
 export function stepSeal(seal, ctrl, dt, world) {
   seal.px = seal.x; seal.py = seal.y;
   const kx = ctrl.kx | 0, ky = ctrl.ky | 0;
+
+  if (seal.buffT > 0) seal.buffT = max(0, seal.buffT - dt);
+  const boost = seal.buffT > 0 ? STAR.buffMult : 1;
+  const vMax = seal.maxSpeed * boost;
+  const acc = seal.accel * boost;
 
   // 1) Pointer/touch ARRIVE steering
   if (ctrl.active) {
@@ -29,12 +36,12 @@ export function stepSeal(seal, ctrl, dt, world) {
     const slowR = max(stopR + 60, min(BAL.diag * 0.13, 180));
     let desiredSpeed;
     if (dist <= stopR) desiredSpeed = 0;
-    else if (dist < slowR) desiredSpeed = seal.maxSpeed * ((dist - stopR) / (slowR - stopR));
-    else desiredSpeed = seal.maxSpeed;
+    else if (dist < slowR) desiredSpeed = vMax * ((dist - stopR) / (slowR - stopR));
+    else desiredSpeed = vMax;
 
     const nx = dx / dist, ny = dy / dist;
     const dvx = nx * desiredSpeed - seal.vx, dvy = ny * desiredSpeed - seal.vy;
-    const maxDeltaV = seal.accel * dt;
+    const maxDeltaV = acc * dt;
     const dLen = hypot(dvx, dvy);
     if (dLen > 1e-4) { const k = min(1, maxDeltaV / dLen); seal.vx += dvx * k; seal.vy += dvy * k; }
 
@@ -48,13 +55,13 @@ export function stepSeal(seal, ctrl, dt, world) {
   // 2) Keyboard thrust (Arrow/WASD)
   if (kx || ky) {
     const len = hypot(kx, ky) || 1;
-    const thrust = seal.accel * 0.70; // KB_THRUST — keep feel as-is
+    const thrust = acc * 0.70; // KB_THRUST — keep feel as-is
     seal.vx += (kx / len) * thrust * dt;
     seal.vy += (ky / len) * thrust * dt;
   }
 
-  // Clamp overall speed to seal.maxSpeed
-  { const sp = hypot(seal.vx, seal.vy); if (sp > seal.maxSpeed) { const k = seal.maxSpeed / sp; seal.vx *= k; seal.vy *= k; } }
+  // Clamp overall speed (×boost во время баффа)
+  { const sp = hypot(seal.vx, seal.vy); if (sp > vMax) { const k = vMax / sp; seal.vx *= k; seal.vy *= k; } }
 
   // 3) Free-drift damping only when no input is active
   if (!ctrl.active && !(kx || ky)) { seal.vx *= 0.985; seal.vy *= 0.985; }
@@ -71,6 +78,9 @@ export function stepSeal(seal, ctrl, dt, world) {
  */
 export function spawnTick(spawnTimer, dt, timeLeft, world) {
   spawnTimer -= dt;
+  // ⚡ SH-13: спавн молниевой звезды по раундовому расписанию (scheduleStar) — внутри
+  // spawnTick, чтобы игра и харнесс шли ОДНИМ путём. RNG здесь не потребляется.
+  starTick(ROUND_MS - max(0, timeLeft));
   const progress = 1 - max(0, timeLeft) / ROUND_MS; // 0..1
   const targetPop = min(BAL.maxPreyCap, Math.round(BAL.maxPreyCap * 0.6 + progress * BAL.maxPreyCap * 0.4));
   if (PREY.length < targetPop && spawnTimer <= 0) {
