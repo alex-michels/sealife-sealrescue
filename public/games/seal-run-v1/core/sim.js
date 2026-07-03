@@ -7,9 +7,11 @@
 //
 // Детерминизм (спека §1.3): фиксированный шаг SIM_DT (accumulator — в рендер-слое), НОЛЬ
 // RNG в рантайме — движение хищников суть чистые функции мировой X. Чарджеры (акулы)
-// выражены дистанционным отношением CHARGE_REL/SPEED_MAX, а не wall-clock: замедленный
+// выражены дистанционным отношением CHARGE_REL/BAL.SPEED_MAX, а не wall-clock: замедленный
 // игрок встречает ТОТ ЖЕ мир в тех же мировых координатах.
 
+// Тюнинги — через мутируемый BAL (читается В МОМЕНТ обращения — так compare-variants
+// может подменять значения между прогонами без пере-импорта модулей).
 import {
   WORLD_H,
   FIELD_W,
@@ -21,37 +23,8 @@ import {
   OBSTACLE_DIMS,
   bandY,
   SIM_DT,
-  SURFACE,
-  KEY_TARGET_SPEED,
-  SPEED_MAX,
+  BAL,
   baseSpeed,
-  STARTING_LIVES,
-  STAMINA_MAX,
-  STAMINA_DRAIN_PER_SEC,
-  GRACE_WINDOW_MS,
-  STAMINA_EMPTY_SLOW_MULT,
-  STAMINA_REFILL_AFTER_LIFE,
-  FISH_STAMINA_RESTORE,
-  FISH_SPEED_BUFF_MULT,
-  FISH_SPEED_BUFF_MS,
-  BUFF_STACK_MAX_MS,
-  FISH_PICKUP_R,
-  PREDATOR_LIFE_COST,
-  PREDATOR_HITSTUN_MS,
-  PREDATOR_KNOCKBACK_LU,
-  INVULN_MS,
-  ORCA_PERIOD_LU,
-  SHARK_BIG_BOB_PERIOD_LU,
-  SHARK_CHARGE_REL,
-  SHARK_BIG_CHARGE_REL,
-  DEBRIS_SLOW_MULT,
-  DEBRIS_SLOW_MS,
-  DEBRIS_STAMINA_DRAIN_MULT,
-  ROCK_BOUNCE_PX,
-  ROCK_RESTITUTION,
-  ROCK_STAMINA_TAX,
-  ROCK_TAX_COOLDOWN_MS,
-  MAX_COURSE_MS,
   computeScore,
 } from './balance.js';
 
@@ -72,18 +45,18 @@ export function predatorPos(o, d) {
     case 'orca':
       return {
         x: o.atLu,
-        y: yc + o.ampBands * BAND_STEP * sin((2 * PI * (d - o.atLu)) / ORCA_PERIOD_LU),
+        y: yc + o.ampBands * BAND_STEP * sin((2 * PI * (d - o.atLu)) / BAL.ORCA_PERIOD_LU),
         r: OBSTACLE_DIMS.orca.r,
       };
     case 'shark_white': {
       const adv = max(0, d - (o.atLu - HORIZON_LU)); // активируется, войдя в горизонт
-      return { x: o.atLu - (SHARK_CHARGE_REL / SPEED_MAX) * adv, y: yc, r: OBSTACLE_DIMS.shark_white.r };
+      return { x: o.atLu - (BAL.SHARK_CHARGE_REL / BAL.SPEED_MAX) * adv, y: yc, r: OBSTACLE_DIMS.shark_white.r };
     }
     case 'shark_big': {
       const adv = max(0, d - (o.atLu - HORIZON_LU));
       return {
-        x: o.atLu - (SHARK_BIG_CHARGE_REL / SPEED_MAX) * adv,
-        y: yc + 0.5 * BAND_STEP * sin((2 * PI * (d - o.atLu)) / SHARK_BIG_BOB_PERIOD_LU),
+        x: o.atLu - (BAL.SHARK_BIG_CHARGE_REL / BAL.SPEED_MAX) * adv,
+        y: yc + 0.5 * BAND_STEP * sin((2 * PI * (d - o.atLu)) / BAL.SHARK_BIG_BOB_PERIOD_LU),
         r: OBSTACLE_DIMS.shark_big.r,
       };
     }
@@ -128,8 +101,8 @@ export function createSim(course) {
     effSpeed: 0, // скорость последнего тика (для HUD/рендера)
     // — ресурсы и статусы (спека §5.2): status — ресурсный автомат; хит-стан/i-frames —
     // независимые таймеры (множители §4.2 ортогональны); phase — жизненный цикл раунда.
-    lives: STARTING_LIVES,
-    stamina: STAMINA_MAX,
+    lives: BAL.STARTING_LIVES,
+    stamina: BAL.STAMINA_MAX,
     status: 'normal', // 'normal' | 'exhausted'
     phase: 'running', // 'running' | 'dead' | 'finished'
     finishedByTimeout: false,
@@ -157,7 +130,7 @@ export function createSim(course) {
  * Разрешить ввод в targetY (спека §2.1, «последний выигрывает» — решает вызывающий,
  * передавая актуальный источник). ctrl: { targetY? } прямое задание (тач/бот) ИЛИ
  * { pointerY? } указатель ИЛИ { keyDir?: -1|0|1 } клавиши (двигают target со скоростью
- * KEY_TARGET_SPEED). Зовётся раз на sim-тик до step().
+ * BAL.KEY_TARGET_SPEED). Зовётся раз на sim-тик до step().
  */
 export function applyInput(state, ctrl, dt = SIM_DT) {
   if (state.phase !== 'running') return;
@@ -165,7 +138,7 @@ export function applyInput(state, ctrl, dt = SIM_DT) {
   if (typeof ctrl.targetY === 'number') state.targetY = clampY(ctrl.targetY);
   else if (typeof ctrl.pointerY === 'number') state.targetY = clampY(ctrl.pointerY);
   else if (ctrl.keyDir === -1 || ctrl.keyDir === 1)
-    state.targetY = clampY(state.targetY + ctrl.keyDir * KEY_TARGET_SPEED * dt);
+    state.targetY = clampY(state.targetY + ctrl.keyDir * BAL.KEY_TARGET_SPEED * dt);
 }
 
 function emit(state, type, data) {
@@ -180,7 +153,7 @@ export function takeEvents(state) {
 }
 
 function loseLife(state, cause) {
-  state.lives -= PREDATOR_LIFE_COST;
+  state.lives -= BAL.PREDATOR_LIFE_COST;
   emit(state, 'life-lost', { cause, lives: state.lives });
   if (state.lives <= 0) {
     state.phase = 'dead';
@@ -193,7 +166,7 @@ export function step(state, dt = SIM_DT) {
   if (state.phase !== 'running') return;
   state.tMs += dt * 1000;
   const inHitstun = state.tMs < state.hitstunUntilMs;
-  const S = SURFACE.water; // v1: единственная среда (спека §1.6)
+  const S = BAL.SURFACE.water; // v1: единственная среда (спека §1.6)
 
   // 1) Физика Y — 1D ARRIVE (спека §2.2); в хит-стане ввод игнорируется, действует отброс.
   if (inHitstun) {
@@ -211,9 +184,9 @@ export function step(state, dt = SIM_DT) {
   const effSpeed = inHitstun
     ? 0
     : baseSpeed(state.d) *
-      (buffed ? FISH_SPEED_BUFF_MULT : 1) *
-      (slowed ? DEBRIS_SLOW_MULT : 1) *
-      (state.status === 'exhausted' ? STAMINA_EMPTY_SLOW_MULT : 1);
+      (buffed ? BAL.FISH_SPEED_BUFF_MULT : 1) *
+      (slowed ? BAL.DEBRIS_SLOW_MULT : 1) *
+      (state.status === 'exhausted' ? BAL.STAMINA_EMPTY_SLOW_MULT : 1);
   state.effSpeed = effSpeed;
   state.d += effSpeed * dt;
   if (buffed) state.buffLeftMs = max(0, state.buffLeftMs - dt * 1000);
@@ -227,7 +200,7 @@ export function step(state, dt = SIM_DT) {
   const C = state.cur;
 
   // — камни: твёрдая геометрия, вертикальное разрешение (x тюленя = дистанция, назад не двигаем)
-  while (C.rock < state.rocks.length && state.rocks[C.rock].x + state.rocks[C.rock].halfW < d - SEAL_R - ROCK_BOUNCE_PX) C.rock++;
+  while (C.rock < state.rocks.length && state.rocks[C.rock].x + state.rocks[C.rock].halfW < d - SEAL_R - BAL.ROCK_BOUNCE_PX) C.rock++;
   for (let i = C.rock; i < state.rocks.length; i++) {
     const r = state.rocks[i];
     if (r.x - r.halfW > d + SEAL_R) break;
@@ -238,16 +211,16 @@ export function step(state, dt = SIM_DT) {
     // (камень у поверхности/дна) — в противоположную (лint гарантирует коридор §9.4-2).
     const rockCy = (r.yTop + r.yBot) / 2;
     let dir = state.y <= rockCy ? -1 : 1;
-    let ny = dir < 0 ? r.yTop - SEAL_R - ROCK_BOUNCE_PX : r.yBot + SEAL_R + ROCK_BOUNCE_PX;
+    let ny = dir < 0 ? r.yTop - SEAL_R - BAL.ROCK_BOUNCE_PX : r.yBot + SEAL_R + BAL.ROCK_BOUNCE_PX;
     if (ny < Y_MIN || ny > Y_MAX) {
       dir = -dir;
-      ny = dir < 0 ? r.yTop - SEAL_R - ROCK_BOUNCE_PX : r.yBot + SEAL_R + ROCK_BOUNCE_PX;
+      ny = dir < 0 ? r.yTop - SEAL_R - BAL.ROCK_BOUNCE_PX : r.yBot + SEAL_R + BAL.ROCK_BOUNCE_PX;
     }
     state.y = clampY(ny);
-    state.vy = dir * abs(state.vy) * ROCK_RESTITUTION;
-    if (state.tMs - r.lastTaxMs >= ROCK_TAX_COOLDOWN_MS) {
+    state.vy = dir * abs(state.vy) * BAL.ROCK_RESTITUTION;
+    if (state.tMs - r.lastTaxMs >= BAL.ROCK_TAX_COOLDOWN_MS) {
       r.lastTaxMs = state.tMs;
-      state.stamina = max(0, state.stamina - ROCK_STAMINA_TAX);
+      state.stamina = max(0, state.stamina - BAL.ROCK_STAMINA_TAX);
       emit(state, 'rock-bounce', { dir });
     }
   }
@@ -267,10 +240,10 @@ export function step(state, dt = SIM_DT) {
       if (hypot(d - p.x, state.y - p.y) >= p.r + SEAL_R) continue;
       loseLife(state, o.type);
       if (state.phase !== 'running') return;
-      state.hitstunUntilMs = state.tMs + PREDATOR_HITSTUN_MS;
-      state.invulnUntilMs = state.tMs + INVULN_MS;
+      state.hitstunUntilMs = state.tMs + BAL.PREDATOR_HITSTUN_MS;
+      state.invulnUntilMs = state.tMs + BAL.INVULN_MS;
       const dir = state.y <= p.y ? -1 : 1; // отброс от центра хищника
-      state.knockVy = (dir * PREDATOR_KNOCKBACK_LU) / (PREDATOR_HITSTUN_MS / 1000);
+      state.knockVy = (dir * BAL.PREDATOR_KNOCKBACK_LU) / (BAL.PREDATOR_HITSTUN_MS / 1000);
       emit(state, 'predator-hit', { predator: o.type });
       break; // один удар за тик
     }
@@ -283,22 +256,22 @@ export function step(state, dt = SIM_DT) {
     if (z.x - z.halfW > d) break;
     if (abs(state.y - z.yc) <= z.halfH) {
       const wasSlowed = state.tMs < state.debrisUntilMs;
-      state.debrisUntilMs = state.tMs + DEBRIS_SLOW_MS;
+      state.debrisUntilMs = state.tMs + BAL.DEBRIS_SLOW_MS;
       if (!wasSlowed) emit(state, 'debris-enter');
     }
   }
 
   // — рыба: подбор (спека §7)
-  while (C.fish < state.fish.length && state.fish[C.fish].x < d - (SEAL_R + FISH_PICKUP_R)) C.fish++;
+  while (C.fish < state.fish.length && state.fish[C.fish].x < d - (SEAL_R + BAL.FISH_PICKUP_R)) C.fish++;
   for (let i = C.fish; i < state.fish.length; i++) {
     const f = state.fish[i];
-    if (f.x > d + SEAL_R + FISH_PICKUP_R) break;
-    if (f.taken || hypot(d - f.x, state.y - f.y) > SEAL_R + FISH_PICKUP_R) continue;
+    if (f.x > d + SEAL_R + BAL.FISH_PICKUP_R) break;
+    if (f.taken || hypot(d - f.x, state.y - f.y) > SEAL_R + BAL.FISH_PICKUP_R) continue;
     f.taken = true;
     state.fishCollected++;
     state.fishPoints += f.points;
-    state.stamina = min(STAMINA_MAX, state.stamina + FISH_STAMINA_RESTORE);
-    state.buffLeftMs = min(state.buffLeftMs + FISH_SPEED_BUFF_MS, BUFF_STACK_MAX_MS);
+    state.stamina = min(BAL.STAMINA_MAX, state.stamina + BAL.FISH_STAMINA_RESTORE);
+    state.buffLeftMs = min(state.buffLeftMs + BAL.FISH_SPEED_BUFF_MS, BAL.BUFF_STACK_MAX_MS);
     emit(state, 'fish', { fishType: f.type, points: f.points });
     if (state.status === 'exhausted' && state.stamina > 0) {
       state.status = 'normal';
@@ -307,16 +280,16 @@ export function step(state, dt = SIM_DT) {
   }
 
   // 4) Ресурсы: пассивный расход дыхания (в хит-стане продолжается — мир стоит, дыхание нет).
-  const drain = STAMINA_DRAIN_PER_SEC * (state.tMs < state.debrisUntilMs ? DEBRIS_STAMINA_DRAIN_MULT : 1) * dt;
+  const drain = BAL.STAMINA_DRAIN_PER_SEC * (state.tMs < state.debrisUntilMs ? BAL.DEBRIS_STAMINA_DRAIN_MULT : 1) * dt;
   state.stamina = max(0, state.stamina - drain);
   if (state.status === 'normal' && state.stamina <= 0) {
     state.status = 'exhausted';
-    state.graceDeadlineMs = state.tMs + GRACE_WINDOW_MS;
+    state.graceDeadlineMs = state.tMs + BAL.GRACE_WINDOW_MS;
     emit(state, 'exhausted');
   } else if (state.status === 'exhausted' && state.tMs >= state.graceDeadlineMs) {
     loseLife(state, 'exhaustion'); // без i-frames/хит-стана — хищника не было (спека §5.2)
     if (state.phase !== 'running') return;
-    state.stamina = STAMINA_REFILL_AFTER_LIFE;
+    state.stamina = BAL.STAMINA_REFILL_AFTER_LIFE;
     state.status = 'normal';
   }
 
@@ -325,7 +298,7 @@ export function step(state, dt = SIM_DT) {
     state.d = state.lengthLu;
     state.phase = 'finished';
     emit(state, 'finished');
-  } else if (state.tMs >= MAX_COURSE_MS) {
+  } else if (state.tMs >= BAL.MAX_COURSE_MS) {
     state.phase = 'finished';
     state.finishedByTimeout = true;
     emit(state, 'finished', { timeout: true });
