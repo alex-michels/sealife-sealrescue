@@ -49,16 +49,19 @@ type SimLib = {
 }
 type BalanceLib = {
   SIM_DT: number
-  STAMINA_MAX: number
-  STAMINA_DRAIN_PER_SEC: number
-  GRACE_WINDOW_MS: number
-  STAMINA_REFILL_AFTER_LIFE: number
-  BUFF_STACK_MAX_MS: number
-  FISH_SPEED_BUFF_MULT: number
-  DEBRIS_SLOW_MULT: number
-  MAX_COURSE_MS: number
-  SCORE_PER_M: number
-  SCORE_PER_LIFE: number
+  // тюнинги — мутируемый BAL (SR-04: compare-variants подменяет значения для A/B)
+  BAL: {
+    STAMINA_MAX: number
+    STAMINA_DRAIN_PER_SEC: number
+    GRACE_WINDOW_MS: number
+    STAMINA_REFILL_AFTER_LIFE: number
+    BUFF_STACK_MAX_MS: number
+    FISH_SPEED_BUFF_MULT: number
+    DEBRIS_SLOW_MULT: number
+    MAX_COURSE_MS: number
+    SCORE_PER_M: number
+    SCORE_PER_LIFE: number
+  }
   baseSpeed: (d: number) => number
   bandY: (k: number) => number
   computeScore: (m: number, fp: number, l: number) => number
@@ -132,7 +135,7 @@ describe('SR-03: стамина/кислород + жизни (§5.2)', () => {
     expect(ev.filter((e) => e.type === 'dead').length).toBe(1)
     // очки мёртвого забега: только дистанция (0 рыбы, 0 жизней)
     const r = sim.getResult(s)
-    expect(r.score).toBe(bal.SCORE_PER_M * r.distanceM)
+    expect(r.score).toBe(bal.BAL.SCORE_PER_M * r.distanceM)
     expect(r.livesRemaining).toBe(0)
   })
 
@@ -158,10 +161,10 @@ describe('SR-03: рыба — очки, стамина, бафф длитель�
     runUntil(s, 120 * 8, (st) => st.d > 1200)
     // restore перекрывает пассивный расход (после последней рыбы ~0.8 c дрейфа)
     expect(s.stamina).toBeGreaterThan(90)
-    expect(s.stamina).toBeLessThanOrEqual(bal.STAMINA_MAX)
+    expect(s.stamina).toBeLessThanOrEqual(bal.BAL.STAMINA_MAX)
     expect(s.buffLeftMs).toBeGreaterThan(0)
-    expect(s.buffLeftMs).toBeLessThanOrEqual(bal.BUFF_STACK_MAX_MS)
-    expect(s.effSpeed / bal.baseSpeed(s.d)).toBeCloseTo(bal.FISH_SPEED_BUFF_MULT, 3)
+    expect(s.buffLeftMs).toBeLessThanOrEqual(bal.BAL.BUFF_STACK_MAX_MS)
+    expect(s.effSpeed / bal.baseSpeed(s.d)).toBeCloseTo(bal.BAL.FISH_SPEED_BUFF_MULT, 3)
     const r = sim.getResult(s)
     expect(r.fishCollected).toBe(7)
     expect(r.fishPoints).toBe(6 + 4)
@@ -202,8 +205,8 @@ describe('SR-03: ярусы препятствий (§6)', () => {
     const bounces = sim.takeEvents(s).filter((e) => e.type === 'rock-bounce')
     expect(bounces.length).toBeGreaterThanOrEqual(1)
     // налог списан за каждый bounce-event (кулдаун ROCK_TAX_COOLDOWN_MS учтён эмиссией)
-    const expectedDrainMax = (s.tMs / 1000) * bal.STAMINA_DRAIN_PER_SEC + bounces.length * 5 + 1
-    expect(s.stamina).toBeGreaterThanOrEqual(bal.STAMINA_MAX - expectedDrainMax)
+    const expectedDrainMax = (s.tMs / 1000) * bal.BAL.STAMINA_DRAIN_PER_SEC + bounces.length * 5 + 1
+    expect(s.stamina).toBeGreaterThanOrEqual(bal.BAL.STAMINA_MAX - expectedDrainMax)
   })
 
   it('мусор: slow ×0.4 + удвоенный расход, без потери жизни', () => {
@@ -211,13 +214,13 @@ describe('SR-03: ярусы препятствий (§6)', () => {
     const enterTick = runUntil(s, 120 * 5, (st) => st.debrisUntilMs > st.tMs)
     expect(enterTick).toBeGreaterThan(0)
     sim.step(s)
-    expect(s.effSpeed / bal.baseSpeed(s.d)).toBeCloseTo(bal.DEBRIS_SLOW_MULT, 3)
+    expect(s.effSpeed / bal.baseSpeed(s.d)).toBeCloseTo(bal.BAL.DEBRIS_SLOW_MULT, 3)
     expect(s.lives).toBe(3)
     const stBefore = s.stamina
     const t0 = s.tMs
     for (let i = 0; i < 60; i++) sim.step(s) // 0.5 c внутри зоны
     const drained = stBefore - s.stamina
-    const expected = ((s.tMs - t0) / 1000) * bal.STAMINA_DRAIN_PER_SEC * 2
+    const expected = ((s.tMs - t0) / 1000) * bal.BAL.STAMINA_DRAIN_PER_SEC * 2
     expect(drained).toBeCloseTo(expected, 1)
   })
 })
@@ -231,12 +234,12 @@ describe('SR-03: завершение и очки (§10)', () => {
     expect(r.distanceM).toBe(75) // 3000 / 40
     expect(r.livesRemaining).toBe(3)
     expect(r.score).toBe(bal.computeScore(75, 0, 3))
-    expect(r.score).toBe(75 * bal.SCORE_PER_M + 3 * bal.SCORE_PER_LIFE)
+    expect(r.score).toBe(75 * bal.BAL.SCORE_PER_M + 3 * bal.BAL.SCORE_PER_LIFE)
   })
 
   it('таймаут MAX_COURSE_MS: раунд фиксируется, finishedByTimeout', () => {
     const s = sim.createSim(empty())
-    s.tMs = bal.MAX_COURSE_MS - 1
+    s.tMs = bal.BAL.MAX_COURSE_MS - 1
     sim.step(s)
     expect(s.phase).toBe('finished')
     expect(s.finishedByTimeout).toBe(true)

@@ -11,15 +11,7 @@
 
 import { generateCourse } from './core/course.js';
 import { createSim, applyInput, step, takeEvents, getResult, predatorPos } from './core/sim.js';
-import {
-  SIM_DT,
-  FIELD_W,
-  WORLD_H,
-  SEAL_X,
-  OBSTACLE_DIMS,
-  STAMINA_MAX,
-  STARTING_LIVES,
-} from './core/balance.js';
+import { SIM_DT, FIELD_W, WORLD_H, SEAL_X, OBSTACLE_DIMS, BAL } from './core/balance.js';
 
 const STEP_MS = SIM_DT * 1000;
 const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -109,8 +101,8 @@ function currentCtrl() {
 
 // — HUD (HTML, вне canvas)
 function updateHud(state) {
-  ui.lives.textContent = '❤'.repeat(Math.max(0, state.lives)) + '·'.repeat(STARTING_LIVES - Math.max(0, state.lives));
-  const pct = Math.round((state.stamina / STAMINA_MAX) * 100);
+  ui.lives.textContent = '❤'.repeat(Math.max(0, state.lives)) + '·'.repeat(BAL.STARTING_LIVES - Math.max(0, state.lives));
+  const pct = Math.round((state.stamina / BAL.STAMINA_MAX) * 100);
   ui.stamFill.style.width = pct + '%';
   ui.stamFill.classList.toggle('low', pct <= 30 || state.status === 'exhausted');
   ui.stam.setAttribute('aria-valuenow', String(pct));

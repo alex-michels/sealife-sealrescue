@@ -234,10 +234,16 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     NORMAL/EXHAUSTED/grace + хит-стан/i-frames независимыми таймерами, кинематика хищников —
     чистые функции мировой X, `SURFACE`-задел v2) + `tests/unit/seal-run-sim.unit.spec.ts`
     (11 контрактов: тайминг перехода полосы, каскад стамины, все три яруса, детерминизм-трейс)
-  * [ ] **SR-04** `tools/fairness-sim.mjs` + `tools/compare-variants.mjs`: headless-бот (фикс.
+  * [x] **SR-04** `tools/fairness-sim.mjs` + `tools/compare-variants.mjs`: headless-бот (фикс.
     политика **непрерывного Y-контроля**: держаться безопасной полосы, заходить за рыбой, если путь
     чист) по матрице устройств (как у Seal Hunter) × N сидов трассы; отчёт по разбросу дистанции/
-    жизней/улова — и по девайсам, и по сидам. Гейт перед тюнингом баланса. *[M]*
+    жизней/улова — и по девайсам, и по сидам. Гейт перед тюнингом баланса. *[M]* — сделано:
+    `tools/{bot-lib,fairness-sim,compare-variants}.mjs` + `tests/unit/seal-run-bot.unit.spec.ts`.
+    **Девайс-ось → профили каденса ввода** (80/160/240 мс): equal horizon убрал экранную
+    геометрию из sim по построению, экранная матрица Seal Hunter здесь измеряла бы ноль —
+    решение и базлайн задокументированы в `game-seal-run.md` §2.8. Для A/B тюнинги переехали
+    в мутируемый `BAL` (`core/balance.js`, прецедент BAL Seal Hunter; мутирует ТОЛЬКО
+    compare-variants). Базлайн: финиш-рейт 80–85%, ~82 с, каденс-разброс ср. 12.5 м.
 * **Фаза 2 — Core-механика + Phaser-интеграция**
   * [x] **SR-05** Vendored **Phaser 4** (≥4.1.0 «Salusa», ESM-билд; `public/games/seal-run-v1/vendor/
     phaser.esm.js`, статический файл, БЕЗ нового бандлера) + сцены Boot→Preload→MainMenu→Play→
