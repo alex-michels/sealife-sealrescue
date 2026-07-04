@@ -210,6 +210,27 @@ export const gamesSeed: GameSeed[] = [
     showCover: false,
     order: 0,
   },
+  {
+    slug: 'seal-run',
+    title: {
+      ru: 'Seal Run — заплыв тюленя',
+      en: 'Seal Run',
+      de: 'Seal Run — Robbenschwimmen',
+    },
+    excerpt: {
+      ru: 'Раннер: проплыви 900 метров прибрежной воды, уворачиваясь от хищников, сетей и камней.',
+      en: 'A runner: swim 900 metres of coastal water, dodging predators, nets and rocks.',
+      de: 'Ein Runner: Schwimme 900 Meter Küstengewässer und weiche Räubern, Netzen und Felsen aus.',
+    },
+    how: {
+      ru: 'Веди тюленя по глубине: палец или мышь задают цель, ↑/↓ или W/S — с клавиатуры. Рыба даёт очки и дыхание (метр падает сам — ешь, чтобы плыть). Хищники отнимают жизнь, сети и пластик замедляют и душат, камни отбрасывают. Трасса недели одна на всех — дистанция решает.',
+      en: 'Steer the seal by depth: finger or mouse sets the target, ↑/↓ or W/S on the keyboard. Fish give points and breath (the meter drains on its own — eat to keep swimming). Predators cost a life, nets and plastic slow and choke you, rocks knock you back. One weekly course for everyone — distance decides.',
+      de: 'Steuere die Robbe über die Tiefe: Finger oder Maus setzen das Ziel, ↑/↓ oder W/S auf der Tastatur. Fische geben Punkte und Atem (die Anzeige sinkt von selbst — friss, um weiterzuschwimmen). Räuber kosten ein Leben, Netze und Plastik bremsen und würgen, Felsen stoßen zurück. Eine Wochenstrecke für alle — die Distanz entscheidet.',
+    },
+    embed: '/games/seal-run-v1/index.html',
+    showCover: false,
+    order: 1,
+  },
 ]
 
 export const speciesSeed: SpeciesSeed[] = [

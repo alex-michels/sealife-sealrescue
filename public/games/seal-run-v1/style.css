@@ -17,6 +17,9 @@ body {
 #stage { position: absolute; inset: 0; }
 
 /* — HUD (HTML вне canvas; полноценный HUD/safe-area — SR-07) */
+/* display:flex перебивает UA-правило атрибута hidden — возвращаем его явно,
+   иначе пустой HUD просвечивает поверх меню (как у .overlay[hidden]) */
+#hud[hidden] { display: none; }
 #hud {
   position: absolute; top: .6rem; left: 50%; transform: translateX(-50%);
   display: flex; gap: 1rem; align-items: center;
