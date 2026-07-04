@@ -286,7 +286,13 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     ВНЕ canvas (доступность), WCAG 2.2 AA (focus/target≥24px/`prefers-reduced-motion` глушит
     параллакс/вспышки), ярусы препятствий различимы НЕ только цветом (силуэт). *[M]* → DESIGN/EU
 * **Фаза 3 — Лидерборд/бэкенд**
-  * [ ] **SR-08** Документ `games` (`slug: seal-run`, `embed`, `how`) — без изменений схемы. *[S]*
+  * [x] **SR-08** Документ `games` (`slug: seal-run`, `embed`, `how`) — без изменений схемы. *[S]*
+    — сделано: запись в `gamesSeed` (RU/EN/DE, `order: 1`, `embed: /games/seal-run-v1/index.html`);
+    карточка на `/[locale]/games` и detail-iframe заработали из generic-роута без правок кода;
+    инварианты сидов — существующий `seeds.int.spec.ts` (итерируется по `gamesSeed`). Попутный фикс
+    оболочки: `#hud[hidden]{display:none}` — безусловный `display:flex` перебивал атрибут `hidden`,
+    пустой HUD просвечивал поверх меню. Standalone-формат: прямой URL `/games/seal-run-v1/` работает
+    уже сейчас; vanity-домен `sealrun.sealife.info` — отдельно SR-12 (после прода sealife.info).
   * [ ] **SR-09** Расширить `game-scores`: опциональные поля `distance`/`livesRemaining`/
     `fishCollected`/`courseSeed` (обратная совместимость с Seal Hunter — все null/omitted для
     существующих строк; `courseSeed` выводится сервером из токена SR-10, не от клиента); `score`

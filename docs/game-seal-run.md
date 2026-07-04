@@ -295,7 +295,11 @@ vs sealthehunter.online), а не «путь против поддомена» �
 
 ### 2.6 Схема Payload
 `games`: без изменений схемы — один новый документ (`slug: seal-run`, `embed:
-/games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). `game-scores`: добавить НЕОБЯЗАТЕЛЬНЫЕ
+/games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). **Сделано (SR-08):** запись в
+`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN/DE, `order: 1`) — сеется baseline- и m1-сидом,
+идемпотентность/инварианты локалей закрывает `tests/int/seeds.int.spec.ts` (итерируется по
+`gamesSeed`); карточка на `/[locale]/games` и detail-страница с iframe работают из коробки
+(generic-роут `games/[slug]`). `game-scores`: добавить НЕОБЯЗАТЕЛЬНЫЕ
 поля, годные для любой будущей не-Hunter игры (не Seal-Run-специфичные имена): `distance` (number,
 opt — null у существующих строк Seal Hunter, обратная совместимость), `livesRemaining` (number,
 opt), `fishCollected` (number, opt), `courseSeed` (text, opt — в v1 равен `season`, **выводится
