@@ -66,6 +66,20 @@ function drawSeal(ctx, w, h, frame) {
   lobe(14, 7);
   ctx.restore();
 
+  // Хвостик: крошечный плоский, МЕЖДУ задними ластами и НАД ними (у настоящих тюленей
+  // хвост отдельно от ласт, чуть выше оси); поверх ласт по z, корень прячется под телом
+  ctx.save();
+  ctx.translate(14, h * 0.5 - 3);
+  ctx.rotate(flip * 0.1);
+  ctx.fillStyle = mix(SEAL.body, SEAL.back, 0.3);
+  ctx.beginPath();
+  ctx.moveTo(0, -2.6);
+  ctx.quadraticCurveTo(-7.5, -2.2, -9.5, 0);
+  ctx.quadraticCurveTo(-7.5, 2.2, 0, 2.6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
   // Тело-торпеда: нос справа, самая толстая точка — за головой, к хвосту длинный конус
   const body = new Path2D();
   body.moveTo(8, h * 0.5);
