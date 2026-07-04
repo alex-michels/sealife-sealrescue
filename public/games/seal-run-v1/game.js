@@ -7,11 +7,14 @@
 //     (predatorPos — та же чистая функция, что считает коллизии; второй физики нет),
 //   • ввод (палец/мышь/клавиши → targetY) + guard от «залипшего тача» при уходе в фон.
 //
-// Плейсхолдер-арт — процедурные текстуры (SR-06 заменит); лидерборд/i18n/SW — SR-09..SR-11.
+// Арт (SR-06) — процедурные Canvas2D-текстуры render/art.js, палитра/контракт — core/theme.js
+// (бренд-токены Foggy Coastal Utility); лидерборд/i18n/SW — SR-09..SR-11.
 
 import { generateCourse } from './core/course.js';
 import { createSim, applyInput, step, takeEvents, getResult, predatorPos } from './core/sim.js';
-import { SIM_DT, FIELD_W, WORLD_H, SEAL_X, OBSTACLE_DIMS, BAL } from './core/balance.js';
+import { SIM_DT, FIELD_W, WORLD_H, SEAL_X, BAL } from './core/balance.js';
+import { TEXTURES, PARALLAX, WATER, WATERLINE_Y } from './core/theme.js';
+import { buildTextures } from './render/art.js';
 
 const STEP_MS = SIM_DT * 1000;
 const REDUCED_MOTION = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -131,99 +134,32 @@ window.SealRun = {
   seedStr,
 };
 
-const COLORS = {
-  water: 0x0e3340,
-  seal: 0xb8d9e6,
-  sealBelly: 0xe6f2f7,
-  fish_small: 0x59c1a0,
-  fish_rare: 0xe8b64a,
-  orca: 0x14181c,
-  orcaPatch: 0xe8eef1,
-  shark_white: 0x7b8fa0,
-  shark_big: 0x5a6d7d,
-  rock: 0x4a5560,
-  ghost_net: 0x9fd0a8,
-  plastic_cluster: 0xd9a0c7,
-};
-
-function makeTextures(scene) {
-  if (scene.textures.exists('seal')) return; // scene.restart() не перегенерирует
-  const g = scene.make.graphics({ x: 0, y: 0 }, false);
-  const tex = (key, w, h, draw) => {
-    g.clear();
-    draw(g, w, h);
-    g.generateTexture(key, w, h);
-  };
-  // Тюлень — торпедообразный силуэт (профиль сбоку, спека §1.1)
-  tex('seal', 96, 48, (gg, w, h) => {
-    gg.fillStyle(COLORS.seal).fillEllipse(w / 2, h / 2, w, h * 0.82);
-    gg.fillStyle(COLORS.sealBelly).fillEllipse(w / 2, h * 0.66, w * 0.8, h * 0.4);
-    gg.fillStyle(COLORS.seal).fillTriangle(4, h / 2, 20, h * 0.2, 20, h * 0.8); // хвост слева
-    gg.fillStyle(0x22303a).fillCircle(w * 0.82, h * 0.38, 3); // глаз
-  });
-  // Рыба: силуэт-капля с хвостом; редкая — крупнее и с «кольцом»
-  tex('fish_small', 28, 18, (gg, w, h) => {
-    gg.fillStyle(COLORS.fish_small).fillEllipse(w * 0.58, h / 2, w * 0.7, h * 0.85);
-    gg.fillTriangle(2, h / 2, w * 0.3, h * 0.15, w * 0.3, h * 0.85);
-  });
-  tex('fish_rare', 36, 24, (gg, w, h) => {
-    gg.lineStyle(2, COLORS.fish_rare, 0.6).strokeCircle(w * 0.58, h / 2, h * 0.48);
-    gg.fillStyle(COLORS.fish_rare).fillEllipse(w * 0.58, h / 2, w * 0.66, h * 0.7);
-    gg.fillTriangle(2, h / 2, w * 0.28, h * 0.2, w * 0.28, h * 0.8);
-  });
-  // Хищники — РАЗНЫЕ силуэты (различимость не только цветом, спека §6/§11-5)
-  tex('orca', 100, 60, (gg, w, h) => {
-    gg.fillStyle(COLORS.orca).fillEllipse(w / 2, h / 2, w * 0.95, h * 0.75);
-    gg.fillTriangle(w * 0.42, h * 0.28, w * 0.58, h * 0.28, w * 0.5, 0); // спинной плавник вверх
-    gg.fillStyle(COLORS.orcaPatch).fillEllipse(w * 0.68, h * 0.42, 14, 8); // «очко» орки
-    gg.fillStyle(COLORS.orcaPatch).fillEllipse(w * 0.45, h * 0.72, w * 0.4, h * 0.2);
-  });
-  // Чарджеры плывут ВЛЕВО (навстречу тюленю) — нос-клин слева, хвост справа.
-  tex('shark_white', 68, 36, (gg, w, h) => {
-    gg.fillStyle(COLORS.shark_white).fillEllipse(w * 0.55, h * 0.58, w * 0.8, h * 0.62);
-    gg.fillTriangle(w * 0.44, h * 0.34, w * 0.66, h * 0.34, w * 0.55, 2); // спинной плавник
-    gg.fillTriangle(2, h * 0.58, w * 0.3, h * 0.34, w * 0.3, h * 0.82); // нос
-    gg.fillTriangle(w - 2, h * 0.3, w - 2, h * 0.86, w * 0.78, h * 0.58); // хвост
-  });
-  tex('shark_big', 92, 50, (gg, w, h) => {
-    gg.fillStyle(COLORS.shark_big).fillEllipse(w * 0.55, h * 0.58, w * 0.8, h * 0.66);
-    gg.fillTriangle(w * 0.42, h * 0.3, w * 0.68, h * 0.3, w * 0.55, 0);
-    gg.fillTriangle(2, h * 0.58, w * 0.3, h * 0.3, w * 0.3, h * 0.86);
-    gg.fillTriangle(w - 2, h * 0.26, w - 2, h * 0.9, w * 0.76, h * 0.58);
-  });
-  // Камень/мусор — статичные формы
-  tex('rock', 100, 100, (gg, w, h) => {
-    gg.fillStyle(COLORS.rock);
-    gg.fillPoints([
-      { x: w * 0.1, y: h }, { x: 0, y: h * 0.45 }, { x: w * 0.3, y: h * 0.08 },
-      { x: w * 0.72, y: 0 }, { x: w, y: h * 0.5 }, { x: w * 0.9, y: h },
-    ], true);
-  });
-  tex('ghost_net', 80, 100, (gg, w, h) => {
-    gg.lineStyle(2, COLORS.ghost_net, 0.55);
-    for (let x = 0; x <= w; x += 16) gg.lineBetween(x, 0, x, h);
-    for (let y = 0; y <= h; y += 16) gg.lineBetween(0, y, w, y);
-  });
-  tex('plastic_cluster', 70, 60, (gg, w, h) => {
-    gg.fillStyle(COLORS.plastic_cluster, 0.5).fillRoundedRect(0, 0, w * 0.55, h * 0.5, 6);
-    gg.fillStyle(COLORS.plastic_cluster, 0.4).fillRoundedRect(w * 0.35, h * 0.4, w * 0.6, h * 0.55, 6);
-  });
-  g.destroy();
+// Логические габариты спрайта (lu) — из арт-контракта core/theme.js. Тело хищника
+// накрывает круглый хитбокс целиком (визуал ≥ хитбокса, спека §8; инвариант — unit-тест темы).
+function texSize(kind) {
+  const t = TEXTURES[kind];
+  return { w: t.w, h: t.h };
 }
 
-// Габариты отображения сущностей (визуал ≥ хитбокса — хитбокс прощающий, спека §8)
-function displaySize(kind, e) {
-  switch (kind) {
-    case 'rock': return { w: e.halfW * 2, h: e.yBot - e.yTop };
-    case 'ghost_net': return { w: OBSTACLE_DIMS.ghost_net.w, h: OBSTACLE_DIMS.ghost_net.h };
-    case 'plastic_cluster': return { w: OBSTACLE_DIMS.plastic_cluster.w, h: OBSTACLE_DIMS.plastic_cluster.h };
-    case 'orca': return { w: 100, h: 60 };
-    case 'shark_white': return { w: 68, h: 36 };
-    case 'shark_big': return { w: 92, h: 50 };
-    case 'fish_small': return { w: 28, h: 18 };
-    case 'fish_rare': return { w: 36, h: 24 };
-    default: return { w: 32, h: 32 };
+// Скролл-слой фона: TileSprite (1 draw call), фолбэк — два image встык, если сборка
+// Phaser 4 не включает TileSprite. factor = доля скорости мира (0 = статичный слой).
+function addScrollLayer(scene, key, factor, depth, opts = {}) {
+  const y = opts.y ?? 0;
+  const h = opts.h ?? WORLD_H;
+  if (typeof scene.add.tileSprite === 'function') {
+    const ts = scene.add.tileSprite(0, y, FIELD_W, h, key).setOrigin(0, 0).setDepth(depth);
+    return { scroll(d) { ts.tilePositionX = d * factor; } };
   }
+  const texW = scene.textures.get(key).getSourceImage().width;
+  const a = scene.add.image(0, y, key).setOrigin(0, 0).setDepth(depth);
+  const b = scene.add.image(texW, y, key).setOrigin(0, 0).setDepth(depth);
+  return {
+    scroll(d) {
+      const off = -((d * factor) % texW);
+      a.x = off;
+      b.x = off + texW;
+    },
+  };
 }
 
 function createPlayScene(Phaser) {
@@ -231,25 +167,38 @@ function createPlayScene(Phaser) {
     constructor() { super('play'); }
 
     create() {
-      makeTextures(this);
+      buildTextures(this);
       // Пул спрайтов на тип + карта «сущность → спрайт» (object pooling, Roadmap SR-05)
       this.pools = new Map();
       this.bound = new Map();
       this.acc = 0;
       this.prev = { y: state.y, d: state.d };
-      this.seal = this.add.image(SEAL_X, state.y, 'seal').setDepth(10);
-      // фон-полосы: слабая сетка глубин, чтобы движение читалось до арта SR-06
-      const bg = this.add.graphics().setDepth(0);
-      bg.lineStyle(1, 0x1b4a5c, 0.5);
-      for (let k = 0; k < 6; k++) bg.lineBetween(0, k * 108, FIELD_W, k * 108);
-      this.waterline = this.add.graphics().setDepth(1);
-      this.waterline.lineStyle(3, 0x9fd0e0, 0.7).lineBetween(0, 2, FIELD_W, 2);
+      this.sealFrame = 0;
+      this.seal = this.add.image(SEAL_X, state.y, 'seal_0').setDepth(10);
+      this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h);
+
+      // Многослойный фон (SR-06): статичная толща воды → дальний/средний параллакс →
+      // геймплей (спрайты, depth 5..10) → пена ватерлинии. При prefers-reduced-motion
+      // параллакс глушится (factor 0); пена — НЕ параллакс (поверхность живёт в плане
+      // геймплея, камни band 0 её пробивают), она скроллится со скоростью мира всегда.
+      this.add.image(0, 0, 'bg_water').setOrigin(0, 0).setDepth(-10);
+      this.layers = [
+        addScrollLayer(this, 'bg_far', REDUCED_MOTION ? 0 : PARALLAX.far.factor, -8),
+        addScrollLayer(this, 'bg_mid', REDUCED_MOTION ? 0 : PARALLAX.mid.factor, -6),
+        addScrollLayer(this, 'foam', 1, 6, { y: 0, h: 20 }),
+      ];
     }
 
     acquire(kind) {
       let pool = this.pools.get(kind);
       if (!pool) { pool = []; this.pools.set(kind, pool); }
-      const spr = pool.pop() || this.add.image(0, 0, kind).setDepth(5);
+      let spr = pool.pop();
+      if (!spr) {
+        // Декор-оверлеи (макушки кекуров) — НАД пеной (7 > 6), геймплей-спрайты — под ней.
+        spr = this.add.image(0, 0, kind).setDepth(kind === 'skerry_cap' ? 7 : 5);
+        const t = TEXTURES[kind];
+        if (t && t.originY) spr.setOrigin(0.5, t.originY); // центр ТЕЛА = сим-координата
+      }
       spr.setVisible(true);
       return spr;
     }
@@ -264,13 +213,13 @@ function createPlayScene(Phaser) {
       const right = renderD + (FIELD_W - SEAL_X) + 120;
       const sx = (worldX) => SEAL_X + (worldX - renderD);
       const seen = new Set();
-      const place = (key, kind, x, y, e) => {
+      const place = (key, kind, x, y, dsz, flipX = false) => {
         seen.add(key);
         let rec = this.bound.get(key);
         if (!rec) {
           rec = { kind, spr: this.acquire(kind) };
-          const dsz = displaySize(kind, e);
           rec.spr.setDisplaySize(dsz.w, dsz.h);
+          rec.spr.setFlipX(flipX);
           this.bound.set(key, rec);
         }
         rec.spr.setPosition(sx(x), y);
@@ -280,20 +229,29 @@ function createPlayScene(Phaser) {
         const r = state.rocks[i];
         if (r.x + r.halfW < left) continue;
         if (r.x - r.halfW > right) break;
-        place('r' + i, 'rock', r.x, (r.yTop + r.yBot) / 2, r);
+        // flipX через один — бесплатная вариативность одной текстуры
+        place('r' + i, 'rock', r.x, (r.yTop + r.yBot) / 2,
+          { w: r.halfW * 2, h: r.yBot - r.yTop }, i % 2 === 1);
+        if (r.yTop < WATERLINE_Y - 4) {
+          // «Квази-суша»: кекур пробивает линию воды — сухая макушка + пенная юбка
+          const capH = Math.min(26, WATERLINE_Y - r.yTop + 10);
+          place('rc' + i, 'skerry_cap', r.x, WATERLINE_Y + 8 - capH / 2,
+            { w: r.halfW * 2 * 0.98, h: capH });
+        }
       }
       for (let i = 0; i < state.debris.length; i++) {
         const z = state.debris[i];
         if (z.x + z.halfW < left) continue;
         if (z.x - z.halfW > right) break;
-        place('z' + i, z.halfH > 70 ? 'ghost_net' : 'plastic_cluster', z.x, z.yc, z);
+        const kind = z.halfH > 70 ? 'ghost_net' : 'plastic_cluster';
+        place('z' + i, kind, z.x, z.yc, texSize(kind));
       }
       for (let i = 0; i < state.fish.length; i++) {
         const f = state.fish[i];
         if (f.x < left) continue;
         if (f.x > right) break;
         if (f.taken) continue;
-        place('f' + i, f.type, f.x, f.y, f);
+        place('f' + i, f.type, f.x, f.y, texSize(f.type));
       }
       for (let i = 0; i < state.predators.length; i++) {
         const o = state.predators[i];
@@ -301,7 +259,7 @@ function createPlayScene(Phaser) {
         if (o.atLu > right) break;
         const p = predatorPos(o, state.d);
         if (p.x < left || p.x > right) continue;
-        place('p' + i, o.type, p.x, p.y, o);
+        place('p' + i, o.type, p.x, p.y, texSize(o.type));
       }
       for (const [key, rec] of this.bound) {
         if (seen.has(key)) continue;
@@ -334,6 +292,15 @@ function createPlayScene(Phaser) {
       const invuln = state.tMs < state.invulnUntilMs;
       this.seal.setAlpha(invuln ? (REDUCED_MOTION ? 0.55 : 0.35 + 0.4 * Math.abs(Math.sin(state.tMs / 90))) : 1);
       this.seal.setRotation(Math.atan2(state.vy, 300) * 0.5); // лёгкий наклон по курсу
+      // Кадры гребка (render-only, функция от sim-времени/скорости — детерминизм не трогаем)
+      const strokeMs = 300 - 140 * Math.min(1.2, state.effSpeed / BAL.SPEED_MAX);
+      const frame = Math.floor(state.tMs / strokeMs) % 2;
+      if (frame !== this.sealFrame) {
+        this.sealFrame = frame;
+        this.seal.setTexture('seal_' + frame);
+        this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h);
+      }
+      for (const l of this.layers) l.scroll(renderD);
       this.syncWorld(renderD);
       updateHud(state);
 
@@ -366,10 +333,10 @@ async function boot() {
     parent: ui.stage,
     width: FIELD_W,
     height: WORLD_H,
-    backgroundColor: '#0e3340',
+    backgroundColor: WATER.floor, // виден только до create(); поле красит bg_water
     scale: {
       // Равный горизонт (спека §1.2): поле ровно 960×540 у ВСЕХ, contain-fit; бордюры
-      // вокруг canvas — декоративная «глубокая вода» (style.css), арт-бордюр — SR-06.
+      // вокруг canvas — «глубокая вода» градиентом (style.css, SR-06).
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },

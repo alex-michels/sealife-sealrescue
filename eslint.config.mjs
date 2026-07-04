@@ -50,6 +50,8 @@ const eslintConfig = [
       'src/payload-generated-schema.ts',
       // vendored минифицированный бандл (Phaser) — не наш код, не линтится
       'public/games/*/vendor/',
+      // служебные каталоги Claude Code: worktree-копии репо ловили полный релинт
+      '.claude/',
     ],
   },
 ]
