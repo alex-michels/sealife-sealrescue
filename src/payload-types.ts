@@ -482,6 +482,10 @@ export interface Game {
    * Порядок в списке игр: меньше — выше.
    */
   order?: number | null;
+  /**
+   * Standalone-заглушка «Coming soon»: ВКЛ — прямой URL/домен игры (напр. sealthehunter.online) показывает атмосферный фон без игры и надпись «Coming soon». ВЫКЛ (по умолчанию) — игра доступна как обычно. НЕ влияет на iframe-встраивание на sealife.info. Игра перечитывает флаг при загрузке страницы (кэш до 60 с).
+   */
+  standaloneComingSoon?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -978,6 +982,7 @@ export interface GamesSelect<T extends boolean = true> {
   showCover?: T;
   coverSeed?: T;
   order?: T;
+  standaloneComingSoon?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

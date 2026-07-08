@@ -43,6 +43,12 @@
 
   <canvas id="game" data-i18n-aria="canvasAriaLabel" aria-label="Игровое поле: тюлень охотится за рыбой"></canvas>
 
+  <!-- Standalone-заглушка (SH-14, тумблер games.standaloneComingSoon в админке): фон с плавающей
+       рыбой рисует canvas (attract-режим game.js), тут только надпись. Во фрейме не бывает. -->
+  <div id="comingSoon" hidden aria-live="polite">
+    <span class="coming-soon-text">Coming&nbsp;soon</span>
+  </div>
+
   <div id="overlay" hidden>
     <!-- Переключатель языка — только standalone (sealthehunter.online); во фрейме скрыт. -->
     <div id="langSwitch" class="lang-switch" role="group" data-i18n-aria="langSwitchLabel" hidden>

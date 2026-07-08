@@ -202,6 +202,19 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     **0.4%** (звезда orientation-fair под CRN); серверные капы не задеты (+4 очка ≪ потолка).
     Контракты: `tests/unit/seal-hunt-star.unit.spec.ts` (8) +
     `tests/e2e/game-lightning-star.e2e.spec.ts` (ореол/яркость/фейд). SW CACHE v17→v18.
+  * [x] **SH-14** **Kill-switch standalone-версий (обе игры)** — запрос владельца 2026-07-08
+    («альфа sealthehunter.online окончена»): тумблер on/off в коде и админке. ON (по умолчанию) —
+    игра как обычно; OFF — standalone-страница (прямой URL/домен) показывает заглушку «Coming
+    soon»: Seal Hunter — attract-фон с плавающей рыбой (сим spawnTick/updatePrey, «ловца»
+    подменяет точка за полем) БЕЗ тюленя/таймера/очков/имён; Seal Run — статичный подводный фон
+    (render/art.js без Phaser) БЕЗ сущностей; надпись — cartoon-CSS (обводка+«наклейка»-тень,
+    боб глушится reduced-motion). iframe на sealife.info флаг НЕ читает. Реализация: поле
+    `games.standaloneComingSoon` (null у старых строк = игра доступна — пуш схемы ничего не
+    гасит) + публичный `GET /api/game-config?game=` (кэш 60 с, draft-тумблер не влияет до
+    Publish) + ветка в game.js обеих игр (fail-open при недоступном API; вуаль от вспышки меню).
+    Тесты: `tests/int/game-config.int.spec.ts` (6) + `tests/e2e/game-placeholder.e2e.spec.ts`
+    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Закрыть альфу: админка → Games →
+    Тюль-Охотник → флаг ✓ → Publish (доезжает ≤ 60 с). *[M]*
 
 #### 🕹 Phaser — «Seal Run» (референс: когда и как подключать Phaser)
 

@@ -45,6 +45,9 @@ const UI = {
 };
 
 const GAME_DURATION = ROUND_MS;
+// SH-14: standalone-заглушка «Coming soon» (админ-тумблер games.standaloneComingSoon).
+// active выставляется ТОЛЬКО в enterPlaceholder() до возможности старта игры.
+const PLACEHOLDER = { active: false };
 const WORLD = { w:0, h:0 };
 // Viewport mapping: logical world → display (CSS px). Letterboxed on extreme aspects.
 const VIEW = { scale:1, ox:0, oy:0, dispW:0, dispH:0 };
@@ -306,6 +309,56 @@ window.SealI18n.onLangChange(() => {
   if (STANDALONE && UI.board && !UI.board.hidden) relocalizeBoard(UI.board, t);
 });
 
+// ——— SH-14: kill-switch standalone-версии. Только standalone (sealthehunter.online и прямой
+// URL): во фрейме sealife.* игра живёт всегда. Сигнал заглушки — ТОЛЬКО явный
+// `standalone:false` от /api/game-config; сетевые ошибки/таймаут → fail-open (игра).
+async function fetchStandaloneAllowed(){
+  try{
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch('/api/game-config?game=' + encodeURIComponent(GAME_SLUG), { signal: ctl.signal });
+    clearTimeout(to);
+    if(!r.ok) return true;
+    const j = await r.json();
+    return !(j && j.standalone === false);
+  }catch{ return true; }
+}
+
+// Attract-режим заглушки: фон и добыча живут (spawnTick+updatePrey — тот же сим, что в игре),
+// тюленя нет — «ловца» подменяет точка далеко за полем, так что рыба не пугается и не ловится.
+// Ни таймера, ни очков, ни имён: update() не зовётся, HUD/оверлей погашены CSS.
+function enterPlaceholder(){
+  PLACEHOLDER.active = true;
+  window.__placeholder = true; // e2e-ручка (game-placeholder.e2e.spec.ts)
+  document.body.classList.add('placeholder');
+  UI.overlay.hidden = true;
+  document.getElementById('comingSoon').hidden = false;
+  recomputeBalance(WORLD.w, WORLD.h);
+  const ghost = { x: -1e6, y: -1e6, r: 0.001, vx: 0, vy: 0, buffT: 0 };
+  let last = performance.now(), spawnT = 0;
+  const tick = () => {
+    const now = performance.now();
+    const dt = Math.min((now - last) / 1000, 0.033);
+    last = now;
+    // Плотность середины раунда; расписание звезды не заводим — только обычная рыба.
+    spawnT = spawnTick(spawnT, dt, GAME_DURATION * 0.5, WORLD);
+    updatePrey(dt, ghost, WORLD, () => {});
+    window.__preyCount = PREY.length; // e2e-ручка
+    drawFrame(dt);
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+if (STANDALONE) {
+  // Вуаль до решения (тот же тик, что показ оверлея, — меню не мигает перед заглушкой).
+  document.body.classList.add('cfg-pending');
+  fetchStandaloneAllowed().then((allowed) => {
+    document.body.classList.remove('cfg-pending');
+    if (!allowed) enterPlaceholder();
+  });
+}
+
 // Старт/Играть: один обработчик (initAudio + startGame), чтобы раунд и play-token не брались дважды.
 const onStartClick = () => { initAudio(); startGame(); };
 UI.btnStart.addEventListener('click', onStartClick);
@@ -325,6 +378,7 @@ UI.btnShareEnd.addEventListener('click', shareScore);
 let lastTime=0, timeLeft=GAME_DURATION, spawnTimer=0;
 
 function startGame(){
+  if (PLACEHOLDER.active) return; // заглушка SH-14: кнопки скрыты, страховка от прямого вызова
   STATE.running=true; STATE.over=false; STATE.paused=false;
   UI.overlay.hidden=true; UI.btnShareEnd.hidden=true;
   UI.overlay.classList.remove('is-waiting'); // clear any leftover transition state
@@ -472,7 +526,7 @@ function drawFrame(dt){
   // и не рисуется ловимым фантомом под водой. Рендер-only: физика/спавн/кулл/поимка не меняются.
   const surf = VIEW.oy > 0.5 ? { ripples: true } : null;
   drawPrey(CTX, WORLD, surf);
-  seal.draw(CTX);
+  if (!PLACEHOLDER.active) seal.draw(CTX); // заглушка SH-14: рыба плавает, тюленя нет
 
   // ⚡ SH-13: аура баффа — видимая длительность эффекта (пикап-практика: игрок должен ВИДЕТЬ,
   // что бафф активен и когда кончится). Золотое кольцо тает вместе с остатком баффа;
@@ -507,7 +561,7 @@ function drawFrame(dt){
     CTX.restore();
   }
 
-  if(!STATE.running){
+  if(!STATE.running && !PLACEHOLDER.active){
     CTX.save(); CTX.fillStyle='rgba(0,0,0,0.2)'; CTX.fillRect(0,0,WORLD.w,WORLD.h); CTX.restore();
   }
 

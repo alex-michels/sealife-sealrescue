@@ -725,3 +725,16 @@ export function buildTextures(scene) {
   addTile('bg_mid', PARALLAX.mid.tileW, WORLD_H, drawMidLayer);
   addTile('foam', 240, 20, drawFoamTile);
 }
+
+/**
+ * Статичный фон для standalone-заглушки «Coming soon» (SH-14): толща воды + дальние
+ * силуэты скал/ламинарии. Без тюленя, хищников и рыбы, без Phaser и без анимации
+ * (RM-safe). Рисует прямо в переданный canvas (game.js растягивает его CSS'ом).
+ */
+export function paintPlaceholderBackdrop(canvas) {
+  canvas.width = FIELD_W;
+  canvas.height = WORLD_H;
+  const ctx = canvas.getContext('2d');
+  drawWaterBackdrop(ctx, FIELD_W, WORLD_H);
+  drawFarLayer(ctx, FIELD_W, WORLD_H);
+}

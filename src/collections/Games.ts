@@ -96,5 +96,20 @@ export const Games: CollectionConfig = {
       defaultValue: 0,
       admin: { description: 'Порядок в списке игр: меньше — выше.' },
     },
+    {
+      // Kill-switch standalone-версии (SH-14). Семантика «выключено по умолчанию» намеренная:
+      // у строк, созданных ДО появления поля, значение null == false == игра показывается —
+      // пуш схемы ничего внезапно не гасит ни на альфе, ни в CI.
+      name: 'standaloneComingSoon',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        description:
+          'Standalone-заглушка «Coming soon»: ВКЛ — прямой URL/домен игры (напр. sealthehunter.online) ' +
+          'показывает атмосферный фон без игры и надпись «Coming soon». ВЫКЛ (по умолчанию) — игра ' +
+          'доступна как обычно. НЕ влияет на iframe-встраивание на sealife.info. ' +
+          'Игра перечитывает флаг при загрузке страницы (кэш до 60 с).',
+      },
+    },
   ],
 }

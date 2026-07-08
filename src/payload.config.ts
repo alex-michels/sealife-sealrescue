@@ -19,6 +19,7 @@ import { UserSubmissions, Reactions } from './collections/Community'
 import { SectionContent } from './globals/SectionContent'
 import { isEditor } from './access/roles'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
+import { gameConfigRead } from './endpoints/gameConfig'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
 import { en } from '@payloadcms/translations/languages/en'
 import { ru } from '@payloadcms/translations/languages/ru'
@@ -66,7 +67,7 @@ export default buildConfig({
     Media,
   ],
   globals: [SectionContent],
-  endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead],
+  endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead, gameConfigRead],
   localization: {
     // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en/de.
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),

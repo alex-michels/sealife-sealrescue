@@ -1,5 +1,23 @@
 *{box-sizing:border-box}html,body{height:100%;margin:0}
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:#0B2832;color:#EDF1F3;overflow:hidden}
+
+/* — Standalone-заглушка «Coming soon» (SH-14). Canvas остаётся (attract-фон с рыбой),
+   весь игровой UI гасится. Пока решение по конфигу не пришло (standalone), UI под вуалью —
+   без вспышки меню перед заглушкой; fail-open по таймауту снимает класс. */
+body.cfg-pending #overlay,body.cfg-pending #hud{visibility:hidden}
+body.placeholder #hud,body.placeholder #overlay{display:none}
+#comingSoon{position:fixed;inset:0;z-index:8;display:grid;place-items:center;pointer-events:none}
+#comingSoon[hidden]{display:none}
+.coming-soon-text{
+  font-weight:900;font-size:clamp(2.4rem,10vw,5.5rem);letter-spacing:.02em;
+  color:#EDF1F3;transform:rotate(-4deg);
+  /* cartoon: белая заливка + толстый тёмный контур + «наклейка»-тень */
+  -webkit-text-stroke:2px #15303A;paint-order:stroke fill;
+  text-shadow:0 .09em 0 #15303A,0 .18em .5em rgba(2,22,34,.55);
+  animation:comingSoonBob 3.2s ease-in-out infinite;
+}
+@keyframes comingSoonBob{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(-4deg) translateY(-.35em)}}
+@media (prefers-reduced-motion:reduce){.coming-soon-text{animation:none}}
 #game{display:block;width:100vw;height:100vh;touch-action:none;outline:none}
 #hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;gap:.5rem;padding:env(safe-area-inset-top) max(.75rem,env(safe-area-inset-right)) .5rem max(.75rem,env(safe-area-inset-left));z-index:5;background:linear-gradient(180deg,rgba(11,40,50,.78),rgba(11,40,50,0));backdrop-filter:saturate(1.2) blur(2px)}
 #hud .left span{margin-right:1rem;font-weight:600}

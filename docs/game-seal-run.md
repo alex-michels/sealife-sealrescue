@@ -293,6 +293,12 @@ vs sealthehunter.online), а не «путь против поддомена» �
 `sealrun.sealife.info` в полноценный standalone-origin** (своя игра + свой legal-shell) — пересмотр
 ПОСЛЕ прод-запуска `sealife.info` И ПОСЛЕ закрытия SH-10.
 
+**Standalone kill-switch (SH-14, общий с Seal Hunter):** прямой URL `/games/seal-run-v1/` (и
+будущий vanity-домен) уважает админ-тумблер `games.standaloneComingSoon` — при включённом флаге
+standalone-страница показывает заглушку «Coming soon» (статичный подводный фон из `render/art.js`
+без Phaser и без сущностей); iframe-встраивание на sealife.info флаг не читает. Клиентская ветка —
+в `game.js` (fail-open при недоступном `/api/game-config`).
+
 ### 2.6 Схема Payload
 `games`: без изменений схемы — один новый документ (`slug: seal-run`, `embed:
 /games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). **Сделано (SR-08):** запись в
