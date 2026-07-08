@@ -10,6 +10,7 @@
     "devsafe": "node -e \"require('fs').rmSync('.next',{recursive:true,force:true})\" && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "game:standalone": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/toggleStandalone.ts",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "seed:baseline": "cross-env NODE_OPTIONS=--no-deprecation payload run src/seed/seedBaseline.ts",

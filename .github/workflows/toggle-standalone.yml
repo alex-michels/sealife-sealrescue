@@ -1,0 +1,53 @@
+name: Toggle game standalone
+
+# SH-14: включить/выключить standalone-версию игры («Coming soon»-заглушка) в БД, на которую
+# указывает секрет DATABASE_URI. Нужен, потому что админка НЕ доступна с alpha-домена
+# (allowlist в deploy/Caddyfile пропускает только игровые endpoints) — это админ-операция
+# «с кнопки» в Actions, тот же паттерн, что Seed database.
+#
+# coming_soon → standalone показывает заглушку; live → игра доступна.
+# iframe-встраивание на sealife.info флаг не читает. Кэш конфига — до 60 секунд.
+#
+# Node 22 намеренно: `payload run` использует tsx (см. seed.yml).
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Что показывать на standalone
+        type: choice
+        default: coming_soon
+        options:
+          - coming_soon # заглушка «Coming soon»
+          - live        # игра доступна
+      game:
+        description: Какую игру переключить
+        type: choice
+        default: seal-the-hunter
+        options:
+          - seal-the-hunter
+          - seal-run
+          - all # обе игры
+
+concurrency:
+  group: toggle-standalone
+  cancel-in-progress: false
+
+jobs:
+  toggle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Toggle (${{ inputs.game }} → ${{ inputs.mode }})
+        run: npm run game:standalone -- ${{ inputs.mode }} ${{ inputs.game == 'all' && '' || inputs.game }}
+        env:
+          DATABASE_URI: ${{ secrets.DATABASE_URI }}
+          PAYLOAD_SECRET: ${{ secrets.PAYLOAD_SECRET }}

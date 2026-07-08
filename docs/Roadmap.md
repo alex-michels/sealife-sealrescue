@@ -212,9 +212,13 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
     `games.standaloneComingSoon` (null у старых строк = игра доступна — пуш схемы ничего не
     гасит) + публичный `GET /api/game-config?game=` (кэш 60 с, draft-тумблер не влияет до
     Publish) + ветка в game.js обеих игр (fail-open при недоступном API; вуаль от вспышки меню).
-    Тесты: `tests/int/game-config.int.spec.ts` (6) + `tests/e2e/game-placeholder.e2e.spec.ts`
-    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Закрыть альфу: админка → Games →
-    Тюль-Охотник → флаг ✓ → Publish (доезжает ≤ 60 с). *[M]*
+    Тесты: `tests/int/game-config.int.spec.ts` (7) + `tests/e2e/game-placeholder.e2e.spec.ts`
+    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Alpha-прокси: `/api/game-config`
+    добавлен в allowlist `deploy/Caddyfile` (иначе 404 → fail-open, тумблер не доехал бы).
+    Закрыть альфу (админка с alpha-домена недоступна): Actions → **Toggle game standalone** →
+    `coming_soon` (workflow пишет флаг в БД `DATABASE_URI`; локально —
+    `npm run game:standalone -- coming_soon seal-the-hunter`); где админка доступна — тот же
+    флаг в Games → Publish. Доезжает ≤ 60 с. *[M]*
 
 #### 🕹 Phaser — «Seal Run» (референс: когда и как подключать Phaser)
 

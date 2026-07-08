@@ -2,6 +2,7 @@ import { getPayload, type Payload, type PayloadRequest } from 'payload'
 import config from '@/payload.config'
 import { describe, it, beforeAll, afterAll, expect } from 'vitest'
 import { gameConfigRead } from '@/endpoints/gameConfig'
+import { setGameStandaloneComingSoon } from '@/seed/lib'
 
 /**
  * SH-14: контракт /api/game-config — kill-switch standalone-версий игр.
@@ -96,6 +97,20 @@ describe('SH-14: /api/game-config', () => {
   it('неизвестный slug → standalone: false', async () => {
     const r = await readCfg(`?game=${GHOST}`)
     expect(r.json).toEqual({ standalone: false })
+  })
+
+  it('setGameStandaloneComingSoon (скрипт/workflow вместо недоступной админки) переключает published-флаг', async () => {
+    const slug = `${RUN}-toggle`
+    await payload.create({
+      collection: 'games',
+      data: { title: `${RUN} toggle`, slug, _status: 'published' },
+    })
+    expect(await setGameStandaloneComingSoon(payload, slug, true)).toBe(true)
+    expect((await readCfg(`?game=${slug}`)).json).toEqual({ standalone: false })
+    expect(await setGameStandaloneComingSoon(payload, slug, false)).toBe(true)
+    expect((await readCfg(`?game=${slug}`)).json).toEqual({ standalone: true })
+    // Неизвестная игра — честный false, без создания записи.
+    expect(await setGameStandaloneComingSoon(payload, `${RUN}-nope`, true)).toBe(false)
   })
 
   it('ЧЕРНОВОЙ тумблер не влияет до Publish; после Publish — влияет', async () => {

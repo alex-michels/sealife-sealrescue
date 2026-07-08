@@ -9,7 +9,10 @@
 > показывает заглушку «Coming soon» (attract-фон: рыба плавает через штатный сим
 > spawnTick/updatePrey, тюленя/HUD/таймера/имён нет; `PLACEHOLDER` в game.js). iframe на
 > sealife.info не затронут; при недоступном API — fail-open. Детали/тесты — Roadmap SH-14.
-> Закрыть альфу: админка → Games → Тюль-Охотник → флаг ✓ → Publish (доезжает ≤ 60 c).
+> `/api/game-config` добавлен в allowlist `deploy/Caddyfile` (alpha-прокси блочит прочий
+> `/api/*`). Закрыть альфу (админка с alpha-домена недоступна): Actions → **Toggle game
+> standalone** → `coming_soon` (пишет флаг в БД из `DATABASE_URI`; локально —
+> `npm run game:standalone -- coming_soon seal-the-hunter`). Доезжает ≤ 60 c.
 
 ---
 
