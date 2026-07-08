@@ -9,10 +9,11 @@ import type { Endpoint } from 'payload'
  * iframe-встраивание на sealife.info флаг НЕ читает — оно живёт за страницей сайта.
  *
  * Контракт с клиентами (game.js обеих игр):
- *  - `standalone: false` — ЕДИНСТВЕННЫЙ сигнал «показать заглушку»;
+ *  - `standalone: false` — ЕДИНСТВЕННЫЙ сигнал «показать заглушку», и он требует
+ *    ЯВНОГО действия: опубликованная строка games с включённым флагом;
  *  - сетевая ошибка/недоступный API → клиент fail-open (показывает игру);
- *  - неизвестный slug → { standalone: false } (незасеянная игра не должна быть
- *    публично играбельной по прямому URL).
+ *  - неизвестный slug → { standalone: true } — «нет строки» = «нет сигнала», тот же
+ *    fail-open (иначе любое окружение без сида — CI e2e, свежая БД — глушит игры).
  *
  * Источник правды — поле `standaloneComingSoon` коллекции `games` (тумблер в админке);
  * null у строк, созданных до появления поля, читается как «игра доступна».
@@ -34,7 +35,7 @@ export const gameConfigRead: Endpoint = {
       draft: false,
     })
     const doc = res.docs[0]
-    const standalone = doc ? doc.standaloneComingSoon !== true : false
+    const standalone = doc ? doc.standaloneComingSoon !== true : true
 
     return Response.json(
       { standalone },

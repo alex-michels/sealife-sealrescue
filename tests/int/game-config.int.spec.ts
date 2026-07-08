@@ -11,7 +11,9 @@ import { setGameStandaloneComingSoon } from '@/seed/lib'
  *  - false/НЕ ЗАДАНО (null у строк, созданных до появления поля) → standalone: true —
  *    пуш схемы не гасит игру ни на альфе, ни в CI;
  *  - true → standalone: false (клиенты показывают заглушку «Coming soon»);
- *  - неизвестный slug → standalone: false (незасеянная игра не должна быть играбельной);
+ *  - неизвестный slug → standalone: true — «нет строки» = «нет сигнала», fail-open
+ *    (иначе окружение без сида — CI e2e, свежая БД — глушит игры; заглушка требует
+ *    ЯВНОЙ опубликованной строки с флагом);
  *  - черновик тумблера НЕ влияет до Publish (эндпоинт читает draft: false).
  *
  * Техника — как в leaderboard.int.spec.ts: хендлер вызывается напрямую
@@ -94,9 +96,9 @@ describe('SH-14: /api/game-config', () => {
     expect(r.json).toEqual({ standalone: true })
   })
 
-  it('неизвестный slug → standalone: false', async () => {
+  it('неизвестный slug → standalone: true (fail-open: «нет строки» = «нет сигнала»)', async () => {
     const r = await readCfg(`?game=${GHOST}`)
-    expect(r.json).toEqual({ standalone: false })
+    expect(r.json).toEqual({ standalone: true })
   })
 
   it('setGameStandaloneComingSoon (скрипт/workflow вместо недоступной админки) переключает published-флаг', async () => {
