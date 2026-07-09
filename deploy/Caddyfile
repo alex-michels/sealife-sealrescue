@@ -7,15 +7,17 @@
 # The Next standalone server listens on 127.0.0.1:3000 (systemd unit deploy/sealife.service).
 # Caddy provisions + renews HTTPS automatically once DNS points the domain at this box.
 #
-# handle blocks are first-match + mutually exclusive, so ORDER matters: leaderboard first (allowed),
+# handle blocks are first-match + mutually exclusive, so ORDER matters: game APIs first (allowed),
 # then the blocklist (404), then the catch-all that maps the root to the game.
 
 sealthehunter.online, www.sealthehunter.online {
 	encode zstd gzip
 
-	# 1) Leaderboard API — ALLOWED. Proxied as-is (must NOT be rewritten into the game dir).
-	@leaderboard path /api/leaderboard /api/leaderboard/*
-	handle @leaderboard {
+	# 1) Game APIs — ALLOWED, proxied as-is (must NOT be rewritten into the game dir):
+	#    leaderboard + the standalone kill-switch config (SH-14; without it the game.js fetch
+	#    would 404 here and fail-open — the «Coming soon» toggle would never reach this domain).
+	@gameApi path /api/leaderboard /api/leaderboard/* /api/game-config
+	handle @gameApi {
 		reverse_proxy 127.0.0.1:3000
 	}
 

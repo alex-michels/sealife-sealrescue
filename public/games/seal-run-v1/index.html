@@ -14,6 +14,13 @@
     <div id="stage-wrap">
       <div id="stage" aria-hidden="true"></div>
 
+      <!-- Standalone-заглушка (SH-14, тумблер games.standaloneComingSoon в админке):
+           статичный подводный фон (render/art.js, без Phaser) + надпись. Во фрейме не бывает. -->
+      <div id="coming-soon" hidden aria-live="polite">
+        <canvas id="coming-soon-bg" aria-hidden="true"></canvas>
+        <span class="coming-soon-text">Coming&nbsp;soon</span>
+      </div>
+
       <div id="hud" hidden>
         <span id="hud-lives" aria-label="Жизни"></span>
         <div id="hud-stamina" role="meter" aria-label="Дыхание" aria-valuemin="0" aria-valuemax="100">

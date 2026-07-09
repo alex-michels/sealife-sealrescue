@@ -37,6 +37,33 @@ function rich(paragraphs: string[]) {
   }
 }
 
+/**
+ * SH-14: выставить standalone-заглушку «Coming soon» для игры (kill-switch альфы).
+ * НЕ сид (сиды это поле сознательно не трогают — админ-выбор не перетирается);
+ * используется entry-скриптом `toggleStandalone.ts` / workflow «Toggle game standalone»,
+ * когда админка недоступна (alpha-прокси пропускает только игровые endpoints).
+ * Пишет published-версию: эндпоинт /api/game-config читает draft: false.
+ */
+export async function setGameStandaloneComingSoon(
+  payload: Payload,
+  slug: string,
+  comingSoon: boolean,
+): Promise<boolean> {
+  const res = await payload.find({
+    collection: 'games',
+    where: { slug: { equals: slug } },
+    limit: 1,
+  })
+  const doc = res.docs[0]
+  if (!doc) return false
+  await payload.update({
+    collection: 'games',
+    id: doc.id,
+    data: { standaloneComingSoon: comingSoon, _status: 'published' },
+  })
+  return true
+}
+
 /** Games — общий для baseline и m1 (единственный MUST-HAVE лидерборда: unknown_game без него). */
 export async function seedGames(payload: Payload): Promise<SeedCounts> {
   let created = 0

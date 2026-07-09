@@ -40,7 +40,10 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`ma
 язык передаётся через `?lang=<locale>`), `coverImage` (upload → `media`: обложка карточки в списке
 игр и заставки страницы) + `showCardCover` (выкл — на карточке плейсхолдер, картинка сохраняется),
 `showCover`/`coverSeed` (заставка на странице игры: загруженная обложка либо плейсхолдер по seed),
-`order` (сортировка в списке). Чистая логика обложки карточки — `cardCover()` в `getGames.ts`
+`order` (сортировка в списке), `standaloneComingSoon` (checkbox, SH-14 — kill-switch standalone-
+версии: ВКЛ → прямой URL/домен игры показывает заглушку «Coming soon»; iframe на sealife.info не
+затрагивается; читается публичным `GET /api/game-config?game=<slug>`, null у старых строк = игра
+доступна). Чистая логика обложки карточки — `cardCover()` в `getGames.ts`
 (unit-тест). Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
 Отдача картинок через CDN/geo — **M0-T04**. См. [game-seal-hunter.md](game-seal-hunter.md).
 

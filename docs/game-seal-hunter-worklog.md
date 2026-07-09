@@ -2,7 +2,17 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-07-03.**
+> Last updated: **2026-07-08.**
+
+> **2026-07-08 — SH-14 standalone kill-switch.** Альфа sealthehunter.online окончена (решение
+> владельца): админ-тумблер `games.standaloneComingSoon` + `GET /api/game-config` → standalone
+> показывает заглушку «Coming soon» (attract-фон: рыба плавает через штатный сим
+> spawnTick/updatePrey, тюленя/HUD/таймера/имён нет; `PLACEHOLDER` в game.js). iframe на
+> sealife.info не затронут; при недоступном API — fail-open. Детали/тесты — Roadmap SH-14.
+> `/api/game-config` добавлен в allowlist `deploy/Caddyfile` (alpha-прокси блочит прочий
+> `/api/*`). Закрыть альфу (админка с alpha-домена недоступна): Actions → **Toggle game
+> standalone** → `coming_soon` (пишет флаг в БД из `DATABASE_URI`; локально —
+> `npm run game:standalone -- coming_soon seal-the-hunter`). Доезжает ≤ 60 c.
 
 ---
 

@@ -363,3 +363,44 @@ ui.fs.addEventListener('pointerup', () => {
   if (document.fullscreenElement) document.exitFullscreen();
   else el.requestFullscreen?.().catch(() => {});
 });
+
+// ——— SH-14: kill-switch standalone-версии (админ-тумблер games.standaloneComingSoon).
+// Только standalone (прямой URL / будущий vanity-домен SR-12): во фрейме sealife.*
+// игра живёт всегда. Сигнал заглушки — ТОЛЬКО явный `standalone:false` от
+// /api/game-config; сетевые ошибки/таймаут → fail-open (игра). Слаг тот же, что
+// подставляет страница-обёртка (?game=), дефолт — canonical slug игры.
+const STANDALONE = (() => {
+  try { return window.self === window.top; } catch { return false; }
+})();
+const CONFIG_SLUG = new URLSearchParams(location.search).get('game') || 'seal-run';
+
+async function fetchStandaloneAllowed() {
+  try {
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 2500);
+    const r = await fetch('/api/game-config?game=' + encodeURIComponent(CONFIG_SLUG), { signal: ctl.signal });
+    clearTimeout(to);
+    if (!r.ok) return true;
+    const j = await r.json();
+    return !(j && j.standalone === false);
+  } catch { return true; }
+}
+
+async function enterPlaceholder() {
+  window.__placeholder = true; // e2e-ручка (game-placeholder.e2e.spec.ts)
+  document.body.classList.add('placeholder'); // гасит меню/HUD/бар (style.css)
+  const holder = document.getElementById('coming-soon');
+  // Статичный подводный фон без Phaser и без сущностей (render/art.js, SR-06).
+  const { paintPlaceholderBackdrop } = await import('./render/art.js');
+  paintPlaceholderBackdrop(document.getElementById('coming-soon-bg'));
+  holder.hidden = false;
+}
+
+if (STANDALONE) {
+  // Вуаль до решения (в том же тике, что парс страницы) — меню не мигает перед заглушкой.
+  document.body.classList.add('cfg-pending');
+  fetchStandaloneAllowed().then((allowed) => {
+    document.body.classList.remove('cfg-pending');
+    if (!allowed) enterPlaceholder();
+  });
+}

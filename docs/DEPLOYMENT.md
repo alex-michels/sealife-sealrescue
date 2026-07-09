@@ -96,7 +96,8 @@
 Payload REST (`/api/[...slug]`) — недоступны с публичного теста.
 
 * **Механизм:** allowlist в `deploy/Caddyfile` (handle-блоки, first-match):
-  * ✅ `/api/leaderboard*` (вкл. `/start`) — проксируется как есть.
+  * ✅ `/api/leaderboard*` (вкл. `/start`) и `/api/game-config` (kill-switch SH-14) —
+    проксируются как есть.
   * ❌ 404: `/admin*`, `/api/*` (прочее), `/graphql*`.
   * 🎮 всё остальное → **rewrite** `/* → /games/seal-hunt-v1/*` → игра отдаётся **с корня домена**
     на весь экран, с чистыми URL (`sealthehunter.online/`). Относительные ассеты и `./sw.js`
@@ -194,6 +195,12 @@ Payload REST (`/api/[...slug]`) — недоступны с публичного
 5. **DNS:** A `@`/`www` на Namecheap BasicDNS.
 6. **Seed:** Actions → **Seed database → `baseline`** (или локально `fnm use 22 && npm run seed:baseline`).
 7. **Deploy:** Actions → **Deploy (main → VPS)** (или push в `main`).
+8. **Закрыть/открыть standalone-игру («Coming soon», SH-14):** Actions → **Toggle game
+   standalone** → mode `coming_soon`/`live` + игра (админка с alpha-домена недоступна —
+   allowlist; workflow пишет флаг `games.standaloneComingSoon` прямо в БД из
+   `DATABASE_URI`, тот же паттерн, что Seed). Локальный эквивалент против нужной БД:
+   `npm run game:standalone -- coming_soon seal-the-hunter`. Кэш конфига — до 60 с.
+   iframe на sealife.info не затрагивается. Сиды флаг НЕ трогают и выбор не перетирают.
 
 Остаётся (гейты на будущее): отправка почты «как `feedback@`»; **перед prod-сайтами/PII** —
 self-hosted Postgres + off-box бэкапы (§7), Environment-секреты + staging, пересмотр build-vs-DB (§6),

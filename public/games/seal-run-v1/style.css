@@ -33,6 +33,30 @@ body {
 #hud-stamina-fill.low { background: #e0a03c; }
 #hud-dist { min-width: 4.5em; text-align: right; }
 
+/* — Standalone-заглушка «Coming soon» (SH-14). Вуаль на время запроса конфига (standalone) —
+   без вспышки меню перед заглушкой; fail-open по таймауту снимает класс. */
+body.cfg-pending .overlay, body.cfg-pending .bar { visibility: hidden; }
+body.placeholder .overlay, body.placeholder .bar, body.placeholder #hud { display: none; }
+#coming-soon { position: absolute; inset: 0; display: grid; place-items: center; }
+#coming-soon[hidden] { display: none; }
+#coming-soon-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; /* фон 960×540 кроет всю сцену без искажений */
+}
+.coming-soon-text {
+  position: relative; z-index: 1; pointer-events: none;
+  font-weight: 900; font-size: clamp(2.4rem, 10vw, 5.5rem); letter-spacing: .02em;
+  color: #edf1f3; transform: rotate(-4deg);
+  /* cartoon: белая заливка + толстый тёмный контур + «наклейка»-тень */
+  -webkit-text-stroke: 2px #15303a; paint-order: stroke fill;
+  text-shadow: 0 .09em 0 #15303a, 0 .18em .5em rgba(2, 22, 34, .55);
+  animation: comingSoonBob 3.2s ease-in-out infinite;
+}
+@keyframes comingSoonBob {
+  0%, 100% { transform: rotate(-4deg) translateY(0); }
+  50% { transform: rotate(-4deg) translateY(-.35em); }
+}
+
 /* — Оверлеи (меню/результат) */
 .overlay {
   position: absolute; inset: 0; display: flex; flex-direction: column;
@@ -72,4 +96,5 @@ button[disabled] { opacity: .6; cursor: progress; }
 
 @media (prefers-reduced-motion: reduce) {
   #hud-stamina-fill { transition: none; }
+  .coming-soon-text { animation: none; }
 }
