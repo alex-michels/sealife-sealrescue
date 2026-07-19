@@ -1,7 +1,13 @@
 name: Deploy (main → VPS)
 
-# Single source of truth = main. Push to main → build a lean Next standalone artifact in CI →
-# rsync it to the VPS → repoint the `current` symlink → restart systemd. See docs/DEPLOYMENT.md.
+# Single source of truth = main. Build a lean Next standalone artifact in CI → rsync it to the
+# VPS → repoint the `current` symlink → restart systemd. See docs/DEPLOYMENT.md.
+#
+# ── 2026-07-12: альфа sealthehunter.online выведена из эксплуатации (сервисы на боксе
+# остановлены, см. shutdown-alpha.yml) — АВТО-деплой по push в main ВЫКЛЮЧЕН на время
+# локальной разработки. Workflow остаётся для будущего QA/prod (ручной запуск); health check
+# внизу до сих пор целится в альфа-домен — перед реюзом перенацелить. Auto-push вернуть =
+# раскомментировать блок `push:` ниже.
 #
 # Why build in CI: the box is 8 GB and `next build` runs with --max-old-space-size=8000; building
 # on-box next to Postgres risks OOM. CI builds; the box just runs `node server.js`.
@@ -15,8 +21,8 @@ name: Deploy (main → VPS)
 #   PAYLOAD_SECRET  any non-empty build-time value (real prod secret lives in /etc/sealife/.env)
 
 on:
-  push:
-    branches: [main]
+  # push:
+  #   branches: [main]
   workflow_dispatch:
 
 concurrency:

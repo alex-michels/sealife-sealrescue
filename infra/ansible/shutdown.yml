@@ -1,0 +1,23 @@
+# Decommission публичной альфы (sealthehunter.online): остановить и выключить app + Caddy.
+#
+# БОКС СОХРАНЯЕТСЯ (Node, каталоги /opt/sealife, /etc/sealife/.env, firewall, hardening) —
+# будущее QA/prod-окружение поднимается обратно обычным путём: Configure (site.yml) → Deploy.
+# Этот плейбук лишь глушит публичную поверхность; идемпотентен, безопасен для повторного
+# запуска. Запуск — workflow «Shutdown alpha (VPS)» (.github/workflows/shutdown-alpha.yml).
+# Раннбук воскрешения — docs/DEPLOYMENT.md §5.
+---
+- name: Shut down public alpha services
+  hosts: sealife
+  become: true
+  tasks:
+    - name: Stop + disable the app service (sealife)
+      ansible.builtin.systemd:
+        name: sealife
+        state: stopped
+        enabled: false
+
+    - name: Stop + disable Caddy (публично ничего больше не отдаём)
+      ansible.builtin.systemd:
+        name: caddy
+        state: stopped
+        enabled: false

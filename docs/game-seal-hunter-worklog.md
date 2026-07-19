@@ -2,7 +2,13 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-07-08.**
+> Last updated: **2026-07-12.**
+
+> **2026-07-12 — альфа sealthehunter.online decommissioned.** Владелец завершил альфа-тест:
+> сервисы `sealife`+`caddy` на VPS остановлены и выключены (workflow **Shutdown alpha (VPS)** →
+> `infra/ansible/shutdown.yml`), сайт-блок убран из `deploy/Caddyfile`, авто-деплой по push
+> в `main` выключен. Игра остаётся играбельной в DEV и через iframe sealife (локально).
+> Воскрешение — `DEPLOYMENT.md` §8.
 
 > **2026-07-08 — SH-14 standalone kill-switch.** Альфа sealthehunter.online окончена (решение
 > владельца): админ-тумблер `games.standaloneComingSoon` + `GET /api/game-config` → standalone
