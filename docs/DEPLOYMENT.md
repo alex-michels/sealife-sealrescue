@@ -11,7 +11,12 @@
 > (`infra/ansible/shutdown.yml` через workflow **Shutdown alpha (VPS)**); сайт-блок альфы
 > удалён из `deploy/Caddyfile`; **авто-деплой по push в `main` выключен** (deploy.yml —
 > только ручной запуск). Бокс, Node, каталоги и `/etc/sealife/.env` сохранены — воскрешение
-> см. §8. ⚠️ Побочки: Neon-ветка альфы без активности **авто-удалится через ~30
+> см. §8.
+>
+> ⚠️ **VPS — ОБЩИЙ:** на боксе работают два бота владельца (сервисы вне этого репозитория).
+> НЕ выключать/не переустанавливать инстанс; box-wide изменения (Reinstall+cloud-init,
+> ufw/sshd-hardening, apt-апгрейды Ansible-роли base) затрагивают и ботов. Путь
+> «Reinstall с cloud-init» из §8 — ТОЛЬКО для свежего отдельного бокса. ⚠️ Побочки: Neon-ветка альфы без активности **авто-удалится через ~30
 > дней** (данные лидерборда исчезнут — экспортировать заранее, если нужны); A-записи DNS на
 > Namecheap остаются и могут быть удалены вручную; TLS-сертификаты не продлеваются (Caddy
 > выключен) — не важно, пока домен не отдаётся.
@@ -203,6 +208,9 @@ git-истории (последняя живая версия — merge PR #73,
    `SSH_KEY`; публичный → в `deploy/cloud-init.yaml`.
 2. **Provision:** Contabo → Reinstall с Ubuntu + `deploy/cloud-init.yaml` (создаёт `deploy` + ключ +
    passwordless sudo, ufw/fail2ban, python). Никакого ручного SSH для базовой настройки.
+   ⚠️ Только для СВЕЖЕГО/выделенного бокса: Reinstall стирает ВСЁ на инстансе — на текущем
+   общем VPS живут боты владельца (см. статус-блок в шапке), для него этот шаг пропускается
+   (бокс уже настроен), дальше сразу шаги 3–4.
 3. **Секреты GitHub (Repository):** `SSH_HOST`, `SSH_USER`, `SSH_KEY`, `DATABASE_URI` (ветка Neon),
    `PAYLOAD_SECRET`.
 4. **Configure:** Actions → **Configure VPS (Ansible)** — Node 24, Caddy + Caddyfile, systemd-юнит,
