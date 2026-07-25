@@ -18,10 +18,16 @@
 
 * [x] Контент-схема Payload (коллекции, RBAC, drafts, очередь `agent-proposals`, хуки).
 * [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md`, `INFRA.md` + тех-доки) в `docs/`.
-* [x] **Публичный alpha игры — live:** https://sealthehunter.online (Contabo VPS, Caddy, авто-деплой из `main`, Neon EU). Инфра-as-code: `deploy/` (cloud-init, Caddyfile, systemd), `infra/ansible/`, `.github/workflows/` (deploy/configure/seed). Последовательность go-live + troubleshooting — `DEPLOYMENT.md` §8–9; стратегия — `INFRA.md`.
+* [x] ~~**Публичный alpha игры — live:** https://sealthehunter.online~~ → **ВЫВЕДЕН ИЗ ЭКСПЛУАТАЦИИ
+  2026-07-19/20 (PR #74).** Сервисы `sealife`+`caddy` на VPS остановлены и выключены, сайт-блок убран
+  из `deploy/Caddyfile`, авто-деплой по push в `main` отключён. Инфра-as-code остаётся и переиспользуется
+  под будущий QA-stage: `deploy/`, `infra/ansible/`, `.github/workflows/` (deploy/configure/seed/
+  toggle-standalone/shutdown-alpha). Раннбук выключения и воскрешения — `DEPLOYMENT.md` §8;
+  **фактическая инвентаризация бокса — `DEPLOYMENT.md` §1a** (бокс общий с сервисами владельца).
 
-**Следующее:** наполнение контентом (M1); перед запуском prod-сайтов/PII — self-hosted Postgres +
-off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md` §6–9).
+**Следующее:** контент силами агентов (M1-T06 переформулирован — импорта из VK/TG не будет);
+перед публичным запуском — QA-stage (Environment-секреты, миграции вместо push, бэкапы),
+заполненный legal-shell и юрпроверка. См. `DEPLOYMENT.md` §6–9.
 
 > **Аудит документации 2026-07-01:** полный проход по всей кодовой базе против всех доков в `docs/` +
 > корневых `.md`. Найденные расхождения исправлены прямо в тех-доках (`data-model.md`, `agents.md`,
@@ -100,8 +106,20 @@ off-box бэкапы, Environment-секреты + staging (см. `DEPLOYMENT.md
 
 ### Наполнение
 
-* [ ] **M1-T06** Перенести лучший контент из VK/TG в CMS (RU). *[L]*
-* [ ] **M1-T07** ~20 evergreen-статей (RU). *[L]*
+* [~] **M1-T06** ~~Перенести лучший контент из VK/TG в CMS (RU)~~ → **ОТМЕНЕНО, заменено:
+  контент пишется сразу на сайтах силами агентов.** Решение владельца 2026-07-26: в TG/VK-канале
+  нет собственного контента — там репосты из чужих соцсетей (техничеcки это делает отдельный бот
+  `sealgram`, см. ниже), поэтому переносить нечего и юридически нельзя (чужие авторские права).
+  **Новая формулировка задачи:** конвейер авторского контента «агент пишет черновик → человек
+  ревьюит → публикация», без импорта извне. Это НЕ снимает инвариант №1 (агент не публикует) и
+  инвариант №5 (provenance-маркировка) — наоборот, делает их критическим путём.
+  *[M]* → зависит от **M2-T06/M2-T09** (контракт вывода агента + запись в очередь) и **M1-T08/EU-11**
+  (provenance-поля). Пока их нет — статьи пишутся вручную через админку.
+  > **NB о `sealgram`:** отдельный репозиторий/сервис владельца (Docker на том же VPS, см.
+  > `DEPLOYMENT.md` §1a), репостит чужой тюлений контент Instagram/VK → Telegram-канал. Он **не
+  > является** источником для CMS и не связан с этим репо: канал ≠ сайт, чужой контент в CMS не идёт.
+* [ ] **M1-T07** ~20 evergreen-статей (RU) — **собственные**, авторские (агент-черновик + human
+  review, см. M1-T06). *[L]*
 * [ ] **M1-T08** Перевод **RU→EN → human review → publish.** Хранить provenance: `aiTranslated`, `humanReviewed`, `reviewedBy`, `reviewedAt`, `sourceContentHash`; показывать user-facing метку. (+ поля в Content/Translation.) См. **EU-11**. *[M]* → EU
   — по пути учесть: хук `markTranslationsStale` (`src/hooks/contentHooks.ts`) сейчас подключён
   ТОЛЬКО к `Content`, но не к `Species`/`Quizzes`/`Games` (у них тоже локализованные поля + drafts);

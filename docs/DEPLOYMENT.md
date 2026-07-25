@@ -46,6 +46,58 @@
   желании собирать прямо на боксе. Floor — 4 GB (только если сборка в CI).
 * **Выбранный бокс:** **Contabo Cloud VPS 10 SSD** (4 vCPU / 8 GB / 150 GB, EU). Ровно floor по RAM,
   поэтому сборка — в CI (§ «Деплой» и §6), не на боксе.
+
+### 1a. Фактическое состояние бокса (инвентаризация 2026-07-26, `ssh vps`)
+
+> Снято живьём с бокса, а не из планов. Перепроверять при каждом изменении инфраструктуры;
+> расхождение с этим разделом — баг (правило доков в `docs/README.md`).
+
+| | Факт |
+| --- | --- |
+| Хост | `vmd200294`, KVM, Contabo EU |
+| ОС / ядро | **Ubuntu 26.04 LTS**, kernel 7.0.0-27-generic |
+| Ресурсы | 4 vCPU · **7.8 GB RAM** · 145 GB диск (занято ~5%) · **swap = 0** |
+| Рантаймы | Node **v24.18.0** (npm 11.16), Python **3.14.4**, **Docker 29.1.3 + containerd** (enabled) |
+| Postgres | **на боксе НЕТ** (подтверждает Neon-only, §2) |
+| SSH | root-логин off, парольная аутентификация off, только ключи; fail2ban (единственный jail — `sshd`) |
+| UFW | active, default deny incoming; открыты 22/80/443 (80/443 сейчас вхолостую) |
+| Обновления | unattended-upgrades включён, **`Automatic-Reboot` выключен** |
+
+**⚠️ Бокс НЕ одноарендный.** Кроме (выключенной) альфы на нём постоянно работают сервисы владельца,
+не относящиеся к этому репозиторию. Их нельзя ронять; любые box-wide операции (Reinstall,
+`base`-роль Ansible с apt-upgrade/ufw/sshd, ребут) затрагивают и их:
+
+| Сервис | Как запущен | Что это |
+| --- | --- | --- |
+| `sealgram` | Docker, `restart: unless-stopped`, `/home/deploy/sealgram` | Репостер тюленьего контента Instagram/VK → Telegram-канал (перевод через Gemini, водяные знаки). **Отдельный репозиторий** `alex-michels/sealgram`, свой CLAUDE.md. Проектно-смежный, но НЕ часть этого репо |
+| `weekly-move-bot` | **user**-systemd (`deploy`), `Linger=yes` | Личный Forex-информер в Telegram. Вне скоупа проекта |
+| `hl-move-bot` | **user**-systemd (`deploy`), `Linger=yes` | Личный Hyperliquid-информер в Telegram. Вне скоупа проекта |
+
+> `Linger=yes` у `deploy` означает, что user-юниты живут без активной сессии и **поднимаются сами
+> после ребута** — как и Docker-контейнер с `unless-stopped`. Ребут для ботов безопасен.
+
+**Расхождения, найденные инвентаризацией (todo, не сделано):**
+
+1. **`/etc/caddy/Caddyfile` на боксе устарел** — это версия ДО decommission, с полным сайт-блоком
+   `sealthehunter.online`. Configure VPS последний раз шёл 2026-07-12, PR #74 смёржен 07-20. Caddy
+   сейчас `inactive`+`disabled`, наружу ничего не идёт, но **любой старт Caddy воскресит альфу**.
+   Лечится прогоном **Configure VPS (Ansible)** (раскатает пустой канонический Caddyfile) — но см.
+   риск `base`-роли ниже.
+2. **Узкий sudo — фикция.** `/etc/sudoers.d/sealife` разрешает `deploy` только
+   `systemctl restart sealife`, НО cloud-init оставил `/etc/sudoers.d/90-cloud-init-users` с
+   `deploy ALL=(ALL) NOPASSWD:ALL`. Итог: SSH-ключ CI фактически имеет полный root. Комментарий
+   Ansible-роли `base` («Narrow passwordless sudo for the CI restart only») вводит в заблуждение.
+   Решение принимать осознанно: либо убрать cloud-init-правило (тогда Ansible понадобится
+   `become_password`), либо честно задокументировать, что деплой-ключ = root.
+3. **Ansible `base`-роль опасна на общем боксе** — делает box-wide apt dist-upgrade, ufw default-deny
+   и sshd-hardening, т.е. заденет ботов. До первого прогона нужны теги ролей (`--skip-tags base`).
+   Плюс handler `caddy` со `state: reloaded` упадёт на остановленном юните.
+4. **Висит `*** System restart required ***`**, а авто-ребут отключён. Ребут безопасен (боты
+   поднимутся сами), но требует решения владельца.
+5. **445 МБ в `/opt/sealife`** — 5 старых релизов, `current` → `91979bd` (мёрдж PR #73). Диск занят
+   на 5%, так что не срочно; штатная прунилка деплоя оставляет 5 последних.
+6. **Нет swap** на 7.8 GB. Сборка на боксе (`--max-old-space-size=8000`) гарантированно уйдёт в OOM —
+   ещё один аргумент за сборку в CI (уже так и есть).
 * **Почему не shared cPanel (reg.am):** сборка Next 16 + Payload требует много RAM (build-скрипт
   `--max-old-space-size=8000`), 3 GB диска мало, нет Postgres (только MySQL), Passenger хрупок с
   Next 16 App Router. Маломощный shared-план не тянет полноценный SSR-стек.
