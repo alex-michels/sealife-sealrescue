@@ -7,6 +7,9 @@ import { test, expect } from '@playwright/test'
  * window.top` (public/games/seal-hunt-v1/i18n.js). These tests lock in the *differences* so the
  * embedded experience can't silently inherit the alpha-landing UI (and vice-versa).
  *
+ * The game speaks the site's languages and no others: the dictionary is RU/EN only since German
+ * was dropped as a site language, so `?lang=de` is invalid input and a German browser gets EN.
+ *
  * No DB / no game round needed — only the start overlay is exercised.
  */
 
@@ -25,11 +28,14 @@ test.describe('Seal The Hunter — standalone (opened directly, not framed)', ()
       await page.evaluate(() => (window as unknown as SealGlobal).SealI18n.standalone),
     ).toBe(true)
 
-    // RU/EN/DE switcher visible.
+    // RU/EN switcher visible — exactly the site's languages, nothing else.
     await expect(page.locator('#langSwitch')).toBeVisible()
-    for (const l of ['ru', 'en', 'de']) {
+    for (const l of ['ru', 'en']) {
       await expect(page.locator(`.lang-btn[data-lang="${l}"]`)).toBeVisible()
     }
+    await expect(page.locator('#langSwitch .lang-btn')).toHaveCount(2)
+    // German is gone from the game dictionary — no dead DE button may survive in the markup.
+    await expect(page.locator('.lang-btn[data-lang="de"]')).toHaveCount(0)
     await expect(page.locator('.lang-btn[data-lang="en"]')).toHaveAttribute('aria-pressed', 'true')
 
     // Alpha notice + displayed feedback contact (mailto, not a form).
@@ -44,9 +50,29 @@ test.describe('Seal The Hunter — standalone (opened directly, not framed)', ()
   })
 
   test('initial language follows ?lang= and marks the active button', async ({ page }) => {
+    await page.goto(`${GAME}&lang=ru`)
+    await expect(page.locator('.lang-btn[data-lang="ru"]')).toHaveAttribute('aria-pressed', 'true')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
+  })
+
+  test('unsupported ?lang=de falls back to the browser language, never German', async ({
+    page,
+  }) => {
+    // `validLang` accepts ru/en only; a leftover German link must not render a half-translated UI.
     await page.goto(`${GAME}&lang=de`)
-    await expect(page.locator('.lang-btn[data-lang="de"]')).toHaveAttribute('aria-pressed', 'true')
-    await expect(page.locator('html')).toHaveAttribute('lang', 'de')
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+    await expect(page.locator('.lang-btn[data-lang="en"]')).toHaveAttribute('aria-pressed', 'true')
+    expect(await page.evaluate(() => (window as unknown as SealGlobal).SealI18n.lang)).toEqual('en')
+  })
+
+  test.describe('German browser', () => {
+    test.use({ locale: 'de-DE' })
+
+    test('gets EN, same policy as the site (pickLocale: non-Russian → en)', async ({ page }) => {
+      await page.goto(GAME)
+      await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+      await expect(page.locator('#alphaNotice')).toContainText(/alpha/i)
+    })
   })
 
   test('switching language updates UI, persists only on explicit choice, and survives reload', async ({

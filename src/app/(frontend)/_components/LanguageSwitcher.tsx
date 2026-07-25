@@ -3,7 +3,14 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { locales, localeLabels, type Locale } from '@/i18n/config'
+import {
+  locales,
+  routeLocales,
+  localeLabels,
+  chromeLocale,
+  type Locale,
+  type RouteLocale,
+} from '@/i18n/config'
 import { t } from '@/i18n/ui'
 import { cx } from './ui/cx'
 
@@ -12,14 +19,17 @@ import { cx } from './ui/cx'
  * виден в header + footer; доступен с клавиатуры и скринридера.
  *
  * Раскрывающийся список (disclosure): кнопка показывает текущий язык, по клику —
- * меню из трёх локалей. Закрытие: выбор, клик вне, Esc, уход фокуса. В футере
+ * меню контент-локалей (RU/EN). Закрытие: выбор, клик вне, Esc, уход фокуса. В футере
  * меню открывается вверх (`placement="up"`), чтобы не уезжать за нижний край.
  *
  * Язык хранится ТОЛЬКО после явного выбора (клик) — ставим cookie `NEXT_LOCALE`
  * здесь, а не автоматически в proxy (COMPLIANCE §3 / CLAUDE.md). slug канонический,
  * поэтому переключение = тот же путь с другим префиксом локали.
+ *
+ * На legal-only локали (de — немецкий Impressum) переключаться НЕ на что: в меню всё
+ * так же RU/EN, ни один пункт не активен, а кнопка показывает подпись фолбэка.
  */
-const LOCALE_RE = new RegExp(`^/(${locales.join('|')})(?=/|$)`)
+const LOCALE_RE = new RegExp(`^/(${routeLocales.join('|')})(?=/|$)`)
 const ONE_YEAR = 60 * 60 * 24 * 365
 
 /** Cookie ставится ТОЛЬКО при явном клике (TDDDG). Модульная функция, не компонентная:
@@ -32,9 +42,11 @@ export function LanguageSwitcher({
   current,
   placement = 'down',
 }: {
-  current: Locale
+  current: RouteLocale
   placement?: 'up' | 'down'
 }) {
+  // Подписи/строки есть только у контент-локалей; на /de берём фолбэк (en).
+  const ui = chromeLocale(current)
   const pathname = usePathname() || `/${current}`
   const rest = pathname.replace(LOCALE_RE, '') // '' для главной, '/slug' для страницы
   const [open, setOpen] = useState(false)
@@ -68,14 +80,14 @@ export function LanguageSwitcher({
     >
       <button
         type="button"
-        aria-label={t(current, 'language')}
+        aria-label={t(ui, 'language')}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
         className="inline-flex min-h-9 items-center gap-1.5 rounded-btn border border-border px-3 py-1.5 text-sm text-text transition-colors hover:border-border-cool"
       >
-        {localeLabels[current]}
+        {localeLabels[ui]}
         <svg
           aria-hidden="true"
           width="12"
@@ -95,7 +107,7 @@ export function LanguageSwitcher({
       </button>
       <nav
         id={menuId}
-        aria-label={t(current, 'language')}
+        aria-label={t(ui, 'language')}
         hidden={!open}
         // Меню: умеренный card-радиус + внутренний паддинг, пункты — отдельные «чипы»
         // со своим радиусом и отступом от краёв (паттерн GitHub/Linear), поэтому выделение

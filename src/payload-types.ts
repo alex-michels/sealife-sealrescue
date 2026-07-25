@@ -110,14 +110,14 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'de') | ('ru' | 'en' | 'de')[];
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en') | ('ru' | 'en')[];
   globals: {
     'section-content': SectionContent;
   };
   globalsSelect: {
     'section-content': SectionContentSelect<false> | SectionContentSelect<true>;
   };
-  locale: 'ru' | 'en' | 'de';
+  locale: 'ru' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };

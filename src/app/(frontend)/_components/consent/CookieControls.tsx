@@ -1,15 +1,18 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { LegalLang } from '@/site/legal'
+import type { Locale } from '@/i18n/config'
 import { buttonClasses } from '../ui/Button'
 import { CONSENT_EVENT, getConsent, setConsent, type ConsentValue } from './consent'
 
 /**
  * Управление согласием на странице cookies (M0-T11): просмотр и отзыв в любой момент
- * (GDPR — отзыв так же прост, как дача согласия). Работает на всех локалях (RU/EN/DE).
+ * (GDPR — отзыв так же прост, как дача согласия). Работает на всех контент-локалях (RU/EN).
  */
-const LABELS: Record<LegalLang, Record<'status' | 'granted' | 'denied' | 'none' | 'enable' | 'disable', string>> = {
+const LABELS: Record<
+  Locale,
+  Record<'status' | 'granted' | 'denied' | 'none' | 'enable' | 'disable', string>
+> = {
   ru: {
     status: 'Текущий выбор:',
     granted: 'аналитика включена',
@@ -26,17 +29,9 @@ const LABELS: Record<LegalLang, Record<'status' | 'granted' | 'denied' | 'none' 
     enable: 'Enable analytics',
     disable: 'Disable analytics',
   },
-  de: {
-    status: 'Aktuelle Auswahl:',
-    granted: 'Analyse aktiviert',
-    denied: 'Analyse deaktiviert',
-    none: 'nicht gesetzt',
-    enable: 'Analyse aktivieren',
-    disable: 'Analyse deaktivieren',
-  },
 }
 
-export function CookieControls({ lang }: { lang: LegalLang }) {
+export function CookieControls({ lang }: { lang: Locale }) {
   const [value, setValue] = useState<ConsentValue | null>(null)
   const L = LABELS[lang]
 

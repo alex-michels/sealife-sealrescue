@@ -1,34 +1,85 @@
 # Локализация и маршрутизация
 
-## Локали
+## Локали: два уровня
 
-- **Контент-локали Payload — `['ru','en','de']`** (`src/i18n/config.ts` — единый источник).
-  `ru` — исходная (`defaultLocale`), `en` и `de` — публичные переводы. **Все три равноправны.**
+С 2026-07 у проекта **две контент-локали** (`ru`, `en`) и **одна legal-only route-локаль** (`de`).
+Это разные сущности, и их важно не путать.
+
+- **Контент-локали Payload — `['ru','en']`** (`src/i18n/config.ts` — единый источник).
+  `ru` — исходная (`defaultLocale`), `en` — публичный перевод. Обе равноправны и полноценны:
+  статьи/виды/квизы/новости/мемы/центры, UI-строки, переключатель языка, админка.
 - **`fallbackLocale = 'en'`** — для посетителей, чей язык мы НЕ поддерживаем, и запросов
   без `Accept-Language`. **НЕ** путать с `defaultLocale`. Политика: русскоязычные → `ru`,
-  немецкоязычные → `de`, остальные → `en`.
-- **DE — полноценная контент-локаль** наравне с RU/EN: статьи/виды/квизы/новости/мемы/центры
-  переводятся на `de` заранее, в хранилище, с hreflang (как и `en`). Переключатель языка
-  предлагает RU/EN/DE на всех публичных поверхностях (sealife, sealrescue, игры) и в админке.
+  **все остальные (включая немецкоязычных) → `en`**.
+- **`legalOnlyLocales = ['de']`** — немецкий больше **не язык сайта**. Он остаётся исключительно
+  как префикс URL для немецкоязычных legal-документов: оператор находится в Германии, и
+  обязанности по **§5 DDG (Impressum)** и **§18 MStV** не зависят от того, на каких языках сайт
+  (см. [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md)). Немецкого контента и немецких UI-строк нет.
 
-`src/i18n/config.ts` — единственное место, где объявлены локали. Добавить/убрать локаль = одна
-строка там; это автоматически обновит локали Payload, целевые локали перевода (хуки), редирект
-proxy, статические параметры маршрутов и hreflang. Модуль намеренно без тяжёлых зависимостей —
-его импортируют `payload.config`, хуки, `proxy.ts` (edge) и серверные компоненты.
+| Локаль | Контент | UI-строки | Префикс в URL | Контентные роуты | Legal-роуты |
+| --- | --- | --- | --- | --- | --- |
+| `ru` | да | да | `/ru/…` | 200 | 200 (рус. тексты) |
+| `en` | да | да | `/en/…` | 200 | 200 (англ. тексты) |
+| `de` | **нет** | **нет** | `/de/…` только legal | **404** | 200 (нем. тексты: Impressum / Datenschutz) |
+
+> ⚠️ **TODO (Roadmap EU-06).** Останутся ли немецкие legal-страницы вообще — решает юридическая
+> консультация. Возможны оба исхода: убрать `de` из `legalOnlyLocales` совсем (и тогда
+> `routeLocales === locales`) либо зафиксировать текущее состояние как постоянное. До EU-06
+> считать `de` временной, но обязательной страховкой, а не архитектурным решением.
+
+`src/i18n/config.ts` — единственное место, где объявлены локали. Добавить/убрать контент-локаль =
+одна строка там (+ подпись в `localeLabels`); это автоматически обновит локали Payload, целевые
+локали перевода (хуки), редирект proxy, статические параметры маршрутов и hreflang. Модуль
+намеренно без тяжёлых зависимостей — его импортируют `payload.config`, хуки, `proxy.ts` (edge)
+и серверные компоненты.
 
 ```ts
-export const locales = ['ru', 'en', 'de'] as const
+export const locales = ['ru', 'en'] as const
 export const defaultLocale: Locale = 'ru'        // контент пишется на ru
 export const fallbackLocale: Locale = 'en'       // неподдерживаемые языки → en
-export const targetLocales = locales.filter((l) => l !== defaultLocale) // что переводить (en, de)
+export const targetLocales = locales.filter((l) => l !== defaultLocale) // что переводить (en)
+
+/** Не контент-локаль: только legal-страницы (немецкий Impressum, §5 DDG / §18 MStV). */
+export const legalOnlyLocales = ['de'] as const
+/** Всё, что вообще может стоять префиксом в URL. */
+export const routeLocales = [...locales, ...legalOnlyLocales] as const
 ```
+
+Отсюда **два предиката**, и выбор между ними определяет, какие страницы вообще существуют:
+
+- `isLocale(v)` — контент-локаль (`ru`/`en`). Им валидируются **все контентные страницы**,
+  поэтому `/de/articles`, `/de/species/…`, `/de/<slug>` и т. п. отдают **404**.
+- `isRouteLocale(v)` — любой допустимый префикс (`ru`/`en`/`de`). Им валидируются
+  `[site]/[locale]/layout.tsx` и **четыре legal-страницы** — только они и живут под `/de`.
+
+### `chromeLocale()` — язык обвязки
+
+Немецких UI-строк больше нет, поэтому на `/de/*` интерфейс рендерится на фолбэке:
+
+```ts
+export const chromeLocale = (value: RouteLocale): Locale => (isLocale(value) ? value : fallbackLocale)
+```
+
+Практически это значит:
+
+- **Сам документ** (Impressum, Datenschutz, Cookies, Terms) на `/de` — **по-немецки**, тексты
+  в `src/site/legal.ts` не тронуты.
+- **Обвязка** (вордмарк, навигация по разделам, ссылка «домой», подписи переключателя языка,
+  баннер согласия) — **по-английски**. Ссылка «домой» ведёт на `/en`, а не на несуществующую
+  `/de`-главную.
+- **Ссылки в футере** берутся из `legalNav[lang]`, т. е. на `/de` они немецкие
+  («Impressum», «Datenschutz») и ведут внутри `/de`.
+- **Переключатель языка** везде предлагает **RU/EN**; на `/de` ни один пункт не активен,
+  а кнопка показывает подпись фолбэка. Свитчер не прячем ни на одной локали.
+- `<html lang>` = локаль маршрута, т.е. на legal-only роутах `lang="de"` — под немецкий текст
+  документа (WCAG/EAA + SEO).
 
 ## Перевод — заранее, в хранилище
 
 Никакого перевода «на лету» на запрос. Перевод статей/видов хранится в самих коллекциях (localized-поля)
 и делается заранее, с hreflang. `glossary` — translation memory (справочник), а не движок перевода.
 Хук `markTranslationsStale` (см. [agents.md](agents.md)) помечает перевод устаревшим при изменении `ru`-исходника
-(для всех целевых локалей — en и de).
+(целевая локаль теперь одна — `en`).
 
 Не переводятся: имена центров, телефоны, адреса, URL, научные названия видов (`latin`) — правило глоссария
 (`doNotTranslate`).
@@ -45,21 +96,28 @@ Next 16 `proxy` (бывш. middleware) делает две вещи на пуб�
 ### 2. Локаль (без forced-редиректа)
 - **Нет локали в пути** → `pickLocale(req)` и **redirect** на `/<locale>/…`. Приоритет:
   1. явный выбор — cookie `NEXT_LOCALE` (ставит `LanguageSwitcher`, не proxy);
-  2. `Accept-Language` с учётом q-весов (совпадает с любой из `ru`/`en`/`de`);
+  2. `Accept-Language` с учётом q-весов (совпадает с `ru` или `en`);
   3. `fallbackLocale` (`en`).
   Ответ помечается `Vary: Accept-Language, Cookie` (подсказка кэшам/CDN).
-  > Механизм — **общий** best-match по списку `locales` (нет отдельных ru-/de-веток в коде);
-  > результат «ru-браузер→ru, de-браузер→de, иначе→en» получается сам собой, т.к. только эти три
-  > языка входят в `locales`.
+  > Механизм — **общий** best-match по списку `locales` (нет отдельных ru-/en-веток в коде);
+  > результат «ru-браузер→ru, иначе→en» получается сам собой, т.к. только эти два языка входят
+  > в `locales`. **Немецкоязычный посетитель попадает на `/en`** — автовыбор идёт по
+  > контент-локалям, `de` в нём не участвует.
 - **Есть локаль** (`/ru`, `/en` или `/de`) → `rewrite` на `/[site]/[locale]/…`. Язык здесь НЕ запоминается
   (cookie ставится только при явном выборе в свитчере — требование TDDDG: хранить выбор языка только
   после явного действия). При rewrite proxy добавляет запросу заголовки **`x-site`/`x-locale`** — их
   читают места, куда не приходят params (например `not-found.tsx`).
 
+> ⚠️ Распознавание префикса в пути идёт по **`routeLocales`** (`ru`/`en`/`de`), а автовыбор языка —
+> по **`locales`** (`ru`/`en`). Это не рассинхрон, а необходимость: если бы префиксы матчились по
+> `locales`, `/de/privacy` считался бы путём «без локали» и улетел бы в редирект на `/en/de/privacy`.
+
 ### Legal-роуты
-Slug общий для всех локалей (`legal-notice`/`privacy`/`cookies`/`terms`); заголовок и подпись в футере
-локализованы. На DE страницы отображаются как **«Impressum»** (`/de/legal-notice`) и **«Datenschutz»**
-(`/de/privacy`). German/EU legal pages обязательны независимо от набора включённых языков.
+Slug общий для всех route-локалей (`legal-notice`/`privacy`/`cookies`/`terms`); заголовок и подпись
+в футере локализованы. Под `/de` живут все четыре: `/de/legal-notice` показывается как **«Impressum»**,
+`/de/privacy` — как **«Datenschutz»**, плюс `/de/cookies` и `/de/terms`. Тексты документов немецкие,
+обвязка страницы — английская (см. `chromeLocale` выше). German/EU legal pages обязательны независимо
+от набора языков сайта — именно поэтому `de` пережил удаление немецкого как языка сайта.
 
 ### Matcher
 ```ts
@@ -70,7 +128,7 @@ Admin, API (Payload), внутренние пути Next и файлы с рас
 ## Структура маршрутов (App Router)
 
 ```
-app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
+app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en} для контента; {ru, en, de} для legal
   page.tsx                 # главная (sealife / sealrescue); лента Payload — в <Suspense>
   not-found.tsx            # локализованная 404 (site/locale — из x-site/x-locale proxy)
   articles, news, memes/   # медиа sealife (у списков — свой loading.tsx)
@@ -80,13 +138,16 @@ app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en, de}
   rescue-centers/[slug]    # центры (sealrescue) — сейчас на dev-моках, не на Payload (см. M2-T02)
   what-to-do, report       # emergency / нотис
   rescue-news, rescue-quest
-  legal-notice, privacy, cookies, terms   # legal (локализованы, вкл. DE: Impressum/Datenschutz)
+  legal-notice, privacy, cookies, terms   # legal — единственные роуты, живые под /de
   styleguide               # dev-only витрина компонентов, НЕ в sitemap
   [slug]                   # контентная страница по slug
 ```
 
-> Все локали (вкл. `de`) обслуживаются одним сегментом `[locale]`; отдельного статического `de`-шелла
-> больше нет. `[locale]/layout.tsx` выставляет `<html lang>` и `data-site` динамически.
+> Один сегмент `[locale]` обслуживает и контент, и legal; отдельного статического `de`-шелла нет.
+> `[locale]/layout.tsx` валидирует `isRouteLocale` (поэтому шелл существует и для `/de`),
+> выставляет `<html lang>` и `data-site` динамически, а `generateStaticParams` перечисляет
+> site × **routeLocales**. Контентные страницы валидируют `isLocale` — из-за этого любой
+> контентный путь под `/de` отдаёт 404, хотя layout для него и собирается.
 
 ### 404 и loading-границы (M0-T19)
 
@@ -101,13 +162,21 @@ e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
 
 ## hreflang / canonical / sitemap
 
-- Альтернаты и canonical считаются из `src/i18n/` (`alternates`); `ru`/`en`/`de` ссылаются друг на друга,
-  `x-default` — по политике.
-- `app/sitemap.xml/route.ts` отдаёт карту по локалям с hreflang/x-default, но **пока только для
-  `content`+`species` на sealife**; `rescue-centers` сознательно исключён до M2 (см. [api.md](api.md)).
+- Альтернаты и canonical считаются из `src/i18n/alternates.ts`, и функций там **две** —
+  ровно по двум уровням локалей:
+  - `buildAlternates(pathSuffix, current, site)` — для **контентных** страниц: перечисляет
+    `locales` (`ru`, `en`) + `x-default` → `en`.
+  - `buildLegalAlternates(pathSuffix, current, site)` — для **legal**-страниц: перечисляет
+    `routeLocales` (`ru`, `en`, `de`) + `x-default` → `en`. Немецкую версию честно объявляем
+    в hreflang, потому что она реально отдаётся.
+  Не подставлять `de` в hreflang контентных страниц: такого URL не существует (404), и это
+  прямая SEO-ошибка.
+- `app/sitemap.xml/route.ts` отдаёт карту по **контент-локалям** (`locales` = ru/en) с hreflang/x-default,
+  но **пока только для `content`+`species` на sealife**; `rescue-centers` сознательно исключён до M2
+  (см. [api.md](api.md)). Legal-страницы (и, соответственно, `/de`) в sitemap не попадают вообще.
   `robots.txt` не реализован.
 - ⚠️ **Статическая генерация — пока не факт, а цель.** Только layout-шелл `[site]/[locale]/layout.tsx`
-  использует `generateStaticParams` (перечисляет site×locale). Все страницы с данными (articles, memes,
+  использует `generateStaticParams` (перечисляет site×routeLocale). Все страницы с данными (articles, memes,
   species, `[slug]`, rescue-centers, quizzes, games, главная) — динамические server components: каждый
   запрос делает живой `getPayload(...)`-запрос, без `generateStaticParams`/`force-static`/`revalidate`.
   ISR/статика для контентных страниц — задача на будущее, не текущее поведение.
@@ -115,3 +184,4 @@ e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
 ## Связанные доки
 - [architecture.md](architecture.md) — жизненный цикл запроса
 - [api.md](api.md) — route guards и 404 (неизвестные локали / несуществующие slug)
+- [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md) — почему немецкие legal-страницы обязательны

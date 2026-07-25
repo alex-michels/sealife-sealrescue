@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { locales, fallbackLocale } from '@/i18n/config'
+import { locales, routeLocales, fallbackLocale } from '@/i18n/config'
 import { resolveSiteId } from '@/site/config'
 
 /**
@@ -11,6 +11,10 @@ import { resolveSiteId } from '@/site/config'
  * остальные (вкл. неподдерживаемые языки и запросы без заголовка) → en.
  * Приоритет: явный выбор (cookie NEXT_LOCALE) > Accept-Language (q-веса) > fallbackLocale (en).
  * Язык запоминается ТОЛЬКО при явном выборе в LanguageSwitcher (cookie ставит он, не proxy).
+ *
+ * ⚠️ Автовыбор идёт по КОНТЕНТ-локалям (`locales` = ru/en): немецкоязычный посетитель попадает
+ * на /en. Распознавание префикса в пути — по `routeLocales` (ru/en/de), иначе `/de/privacy`
+ * (немецкий Impressum, legal-only локаль) улетел бы в редирект на `/en/de/privacy`.
  *
  * Payload (admin/api) и служебные пути исключены matcher'ом ниже.
  */
@@ -48,7 +52,7 @@ export function proxy(req: NextRequest) {
   const siteOverride = searchParams.get('site') ?? req.cookies.get('site')?.value
   const siteId = resolveSiteId(req.headers.get('host'), siteOverride)
 
-  const pathLocale = locales.find(
+  const pathLocale = routeLocales.find(
     (locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`),
   )
 

@@ -75,7 +75,7 @@ describe('access', () => {
 })
 
 describe('локали и fallback на код', () => {
-  it('ru-override применяется на ru и НЕ протекает в en/de (там значения из кода)', async () => {
+  it('ru-override применяется на ru и НЕ протекает в en (там значения из кода)', async () => {
     const def = getSection('sealife', 'games')!
 
     await payload.updateGlobal({
@@ -95,8 +95,6 @@ describe('локали и fallback на код', () => {
     expect(en.title.en).toBe(def.title.en)
     expect(en.intro.en).toBe(def.intro.en)
 
-    const de = await resolvedSection(def, 'de')
-    expect(de.title.de).toBe(def.title.de)
   })
 
   it('en-перевод override живёт независимо от ru', async () => {

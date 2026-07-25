@@ -1,8 +1,11 @@
 # Модель данных (коллекции Payload)
 
 Все коллекции собираются в [`src/payload.config.ts`](../src/payload.config.ts). Локализация — нативная
-Payload: поля с `localized: true` хранят значение по локали (`ru` исходная, `en` перевод). `slug`
-канонический — **общий для локалей** и не локализуется. Типы генерируются в `src/payload-types.ts`
+Payload: поля с `localized: true` хранят значение по локали (`ru` исходная, `en` перевод). Контентных
+локалей **две** — `ru`/`en` (источник правды — `src/i18n/config.ts`); `de` — не контентная локаль,
+а legal-only роут (немецкие тексты Impressum/Datenschutz живут в `src/site/legal.ts`, не в Payload),
+см. [localization.md](localization.md). `slug` канонический — **общий для локалей** и не
+локализуется. Типы генерируются в `src/payload-types.ts`
 (`npm run generate:types` после изменения схемы).
 
 Доступ (RBAC) задаётся в `access` каждой коллекции через хелперы из [`src/access/roles.ts`](../src/access/roles.ts).
@@ -56,7 +59,7 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`ma
 
 ### `section-content` — редактируемый контент разделов (M1-T27)
 Payload **global** (не коллекция): массив `overrides` — `section` (select из `sectionDefs`, не
-свободный ввод), `title`/`intro` (localized: ru/en/de), `cover` (upload → `media`, обложка карточки
+свободный ввод), `title`/`intro` (localized: ru/en), `cover` (upload → `media`, обложка карточки
 раздела в хабе на главной). **Структура разделов (slug/site/nav/hasDetail) живёт ТОЛЬКО в коде**
 (`src/site/sections.ts`); рендер накладывает overrides по slug с fallback'ом на код при пустом
 значении (`src/site/sectionContent.ts`, чтение с `fallbackLocale: false` — пустой en НЕ подменяется
@@ -71,7 +74,8 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 Публичный справочник. `name` (**не** локализуется — имя центра не переводим, правило глоссария),
 `slug` (unique), `country`*/`region`, `website`, `email`/`phone`, `address`, `location` (point
 `[lng,lat]`, для карты), `socialLinks[]` (`platform` select + `url`), `operatingLanguages`
-(hasMany `ru`/`en`/`de`/`other`), `description` (localized richText), `status` (select:
+(hasMany `ru`/`en`/`de`/`other` — **языки работы центра**, справочные данные, с локалями сайта не
+связаны), `description` (localized richText), `status` (select:
 `active`/`unconfirmed`/`link_broken`/`needs_check` — код использует `unconfirmed`, а не `unverified`
 из CLAUDE.md §7; терминология не 1:1, свериться при следующей правке схемы), `verificationScore`
 (0–1), `lastCheckedAt`/`verifiedByAgentAt`/`verifiedByHumanAt` (даты, рендерятся в «штампе проверки»),

@@ -1,7 +1,7 @@
 import React from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { locales, isLocale, type Locale } from '@/i18n/config'
+import { routeLocales, isRouteLocale, chromeLocale } from '@/i18n/config'
 import { siteIds, isSite, sites } from '@/site/config'
 import { fontDisplay, fontBody, fontMono } from '@/app/(frontend)/fonts'
 import { SiteHeader } from '@/app/(frontend)/_components/SiteHeader'
@@ -14,8 +14,10 @@ import '@/app/(frontend)/globals.css'
 const PLAUSIBLE_SRC = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC
 
 // Пререндерим все комбинации сайт × локаль (главная, styleguide статичны).
+// routeLocales, а не locales: под /de живут только legal-страницы (немецкий Impressum),
+// но layout обслуживает и их.
 export function generateStaticParams() {
-  return siteIds.flatMap((site) => locales.map((locale) => ({ site, locale })))
+  return siteIds.flatMap((site) => routeLocales.map((locale) => ({ site, locale })))
 }
 
 export async function generateMetadata({
@@ -24,8 +26,8 @@ export async function generateMetadata({
   params: Promise<{ site: string; locale: string }>
 }): Promise<Metadata> {
   const { site, locale } = await params
-  if (!isSite(site) || !isLocale(locale)) return {}
-  const brand = sites[site].brand[locale as Locale]
+  if (!isSite(site) || !isRouteLocale(locale)) return {}
+  const brand = sites[site].brand[chromeLocale(locale)]
   return { title: { default: brand, template: `%s · ${brand}` } }
 }
 
@@ -37,7 +39,11 @@ export default async function SiteLocaleLayout({
   params: Promise<{ site: string; locale: string }>
 }) {
   const { site, locale } = await params
-  if (!isSite(site) || !isLocale(locale)) notFound()
+  if (!isSite(site) || !isRouteLocale(locale)) notFound()
+
+  // На legal-only локали (de — немецкий Impressum) контента и UI-строк нет: сам текст страницы
+  // немецкий, а обвязка сайта рендерится на фолбэке (en).
+  const chrome = chromeLocale(locale)
 
   // lang — по локали (WCAG/EAA + SEO). data-site — режим дизайна по сайту (DESIGN_BRIEF §2c, M0-T08).
   const fontVars = `${fontDisplay.variable} ${fontBody.variable} ${fontMono.variable}`
@@ -51,7 +57,7 @@ export default async function SiteLocaleLayout({
           <>
             {/* Plausible грузится только после согласия (M0-T11/T12). */}
             <Analytics domain={sites[site].domain} src={PLAUSIBLE_SRC} />
-            <ConsentBanner locale={locale} />
+            <ConsentBanner locale={chrome} />
           </>
         )}
       </body>

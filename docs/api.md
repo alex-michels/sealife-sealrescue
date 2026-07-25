@@ -87,19 +87,31 @@ Payload генерирует REST и GraphQL из коллекций (catch-all 
 
 `GET /sitemap.xml` (`src/app/sitemap.xml/route.ts`) — не Payload-endpoint и не авто-REST; отдельный Next
 route handler, который сам делает неаутентифицированные `payload.find()` по `content`/`species`
-(только `published`, только для `site.id === 'sealife'`) и строит multi-locale URL с hreflang по хосту
-запроса (`resolveSiteId`). ⚠️ `rescue-centers` пока сознательно исключён (см. комментарий в файле:
-«появится в M2») — sitemap НЕ покрывает sealrescue. `robots.txt`-роута в проекте пока нет вообще.
+(только `published`, только для `site.id === 'sealife'`) и строит URL по **контент-локалям** (`ru`/`en`)
+с hreflang и `x-default` по хосту запроса (`resolveSiteId`). Legal-страницы — и, соответственно,
+legal-only локаль `/de` — в карту сайта не попадают. ⚠️ `rescue-centers` пока сознательно исключён
+(см. комментарий в файле: «появится в M2») — sitemap НЕ покрывает sealrescue. `robots.txt`-роута
+в проекте пока нет вообще.
 
 ## 4. Route guards (фронтенд)
 
 Жёсткие гарантии маршрутизации (инвариант, зашит в `proxy.ts` + `[locale]/layout.tsx`):
 
-- **Контент-локали — `/ru`, `/en`, `/de`** (равноправны). Нет локали в пути → авто-redirect (без forced по языку).
-- **Legal-роуты локализованы:** slug общий, заголовок зависит от локали — `/de/legal-notice` рендерится как «Impressum», `/de/privacy` — как «Datenschutz».
-- **404:** неизвестная локаль (не `ru`/`en`/`de`) или несуществующий slug → настоящий HTTP 404
-  с локализованной `[locale]/not-found.tsx` (микрокопия различается по сайту). Достигается тем,
-  что у детальных роутов нет loading-границы — подробности в
+- **Контент-локали — `/ru`, `/en`** (равноправны). Нет локали в пути → авто-redirect (без forced по языку):
+  русскоязычные → `ru`, все остальные (включая немецкоязычных) → `en`.
+- **`/de` — legal-only route-локаль, не язык сайта.** Под ней существуют ровно четыре страницы:
+  `/de/legal-notice` («Impressum»), `/de/privacy` («Datenschutz»), `/de/cookies`, `/de/terms` —
+  обязанность оператора в Германии (§5 DDG / §18 MStV) не зависит от языков сайта. **Любой контентный
+  путь под `/de`** (`/de/articles`, `/de/species/…`, `/de/<slug>`, главная `/de`) → **404**: layout
+  валидирует `isRouteLocale`, а контентные страницы — `isLocale`. UI-строк на немецком нет, поэтому
+  обвязка `/de`-страниц рендерится на английском, а сами документы остаются немецкими.
+  ⚠️ **TODO (Roadmap EU-06):** нужны ли немецкие legal-страницы вообще — решает юрист-ревью.
+- **Legal-роуты локализованы:** slug общий (`legal-notice`/`privacy`/`cookies`/`terms`), заголовок
+  зависит от локали. hreflang у них строится отдельной функцией `buildLegalAlternates` (ru/en/de),
+  а не контентной `buildAlternates` (ru/en) — см. [localization.md](localization.md).
+- **404:** неизвестная локаль (не `ru`/`en`/`de`), контент под `/de` или несуществующий slug →
+  настоящий HTTP 404 с локализованной `[locale]/not-found.tsx` (микрокопия различается по сайту).
+  Достигается тем, что у детальных роутов нет loading-границы — подробности в
   [localization.md](localization.md) («404 и loading-границы»).
 - **`/admin`** — админка Payload (staff, аутентификация по email).
 

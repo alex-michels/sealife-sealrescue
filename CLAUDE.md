@@ -2,19 +2,22 @@
 
 Соло-разработка + AI. Два сайта на одном бэкенде Payload v3 (внутри Next.js) + Postgres.
 
-* **sealife.info** — медиа-хаб: статьи, новости, мемы, квизы, игры. Тон игривый/умиляющийся, с тюль-сленгом. Вордмарк: «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN) / «Robben.Info» (DE).
-* **sealrescue.info** — справочник центров + «нашёл тюленя — что делать». Тон серьёзный, emergency-first. Вордмарк: «Спасение тюленей» (RU) / «Seal Rescue» (EN) / «Robbenrettung» (DE).
+* **sealife.info** — медиа-хаб: статьи, новости, мемы, квизы, игры. Тон игривый/умиляющийся, с тюль-сленгом. Вордмарк: «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN).
+* **sealrescue.info** — справочник центров + «нашёл тюленя — что делать». Тон серьёзный, emergency-first. Вордмарк: «Спасение тюленей» (RU) / «Seal Rescue» (EN).
 * Перелинковка sealife ↔ sealrescue в обе стороны.
 
 ## Локали и роутинг
 
-* **Content locales (Payload localization): `['ru','en','de']`.** `ru` — исходный, `en` и `de` — публичные переводы. **Все три — полноценные контент-локали** (статьи/новости/мемы/квизы/виды/центры локализуются на en и de — заранее, в хранилище, с hreflang).
-* **DE — полноценный третий язык, равный EN и RU.** Контентные роуты работают для всех трёх: `/de/articles…` · `/de/news…` · `/de/memes…` · `/de/quizzes…` · `/de/species…` · `/de/rescue-centers…`. Переключатель языка предлагает RU/EN/DE везде (sealife, sealrescue, игры, интерфейсы, админка).
+* **Content locales (Payload localization): `['ru','en']`.** `ru` — исходный, `en` — публичный перевод. **Обе — полноценные контент-локали** (статьи/новости/мемы/квизы/виды/центры локализуются на en — заранее, в хранилище, с hreflang).
+* **DE — НЕ язык сайта.** Немецкий убран как контент- и UI-локаль: любой контентный роут под `/de` (`/de/articles`, `/de/news`, `/de/memes`, `/de/quizzes`, `/de/species`, `/de/rescue-centers`, `/de/<slug>`, …) отдаёт **404**. Переключатель языка предлагает только RU/EN везде (sealife, sealrescue, игры, интерфейсы, админка). Автодетект языка выбирает только ru/en (немецкие браузеры → en).
+* **`de` живёт только как legal-only route-локаль.** Оператор в Германии, поэтому §5 DDG (Impressum) и §18 MStV не исчезают вместе с языком сайта: четыре legal-страницы под `/de` продолжают резолвиться, а немецкие тексты в `src/site/legal.ts` сохраняются без изменений. Немецкого UI-словаря больше нет, поэтому обвязка страницы (навигация, футер, cookie-настройки) на `/de` рендерится по-английски, а сами обязательные документы (Impressum / Datenschutz / Terms) остаются на немецком.
+* **TODO (EU-06):** оставлять ли немецкие legal-страницы вообще — вопрос юридического ревью, решение отложено. До ревью они остаются как есть; это не окончательное решение.
+* **Источник правды по локалям — `src/i18n/config.ts`:** `locales` (контент: `ru`/`en`), `legalOnlyLocales` (`de`), `routeLocales` (`ru`/`en`/`de`) + хелперы `isRouteLocale()` / `chromeLocale()`. Матчинг префикса пути в `src/proxy.ts` идёт по `routeLocales`, поэтому `/de/privacy` не редиректится. Hreflang: `buildAlternates` (ru/en) для контента, `buildLegalAlternates` (ru/en/de) для legal-страниц.
 * **Legal-роуты** — slug общий для локалей, заголовок/подпись локализованы (DE показывает «Impressum» / «Datenschutz»):
 
   * RU: `/ru/legal-notice` · `/ru/privacy` · `/ru/cookies` · `/ru/terms`
   * EN: `/en/legal-notice` · `/en/privacy` · `/en/cookies` · `/en/terms`
-  * DE: `/de/legal-notice` (Impressum) · `/de/privacy` (Datenschutz) · `/de/cookies` · `/de/terms`
+  * DE (**только** эти четыре, никакого другого контента под `/de`): `/de/legal-notice` (Impressum) · `/de/privacy` (Datenschutz) · `/de/cookies` · `/de/terms`
 
 > **Бренд:** «Тюлента» — сообщества VK/TG (источник аудитории), а НЕ имя сайта.
 
@@ -41,7 +44,7 @@
 
 ## Compliance (оператор в Германии, см. `docs/COMPLIANCE_EU_DE.md`)
 
-* **Legal-shell на всех локалях (RU/EN/DE):** Impressum / Anbieterkennzeichnung, Datenschutzerklärung, Cookie-Settings, Terms. Legal-страницы **линкуются из футера каждой публичной страницы** (не встраиваются в каждую). DE — полноценная локаль, поэтому DE-контент и DE legal-страницы доступны наравне с RU/EN.
+* **Legal-shell на всех route-локалях (RU/EN + legal-only DE):** Impressum / Anbieterkennzeichnung, Datenschutzerklärung, Cookie-Settings, Terms. Legal-страницы **линкуются из футера каждой публичной страницы** (не встраиваются в каждую). Немецкий больше не язык сайта, но оператор остаётся в Германии — поэтому четыре legal-страницы под `/de` доступны, тогда как контент под `/de` отдаёт 404. **TODO (EU-06):** сохранять ли немецкие legal-страницы вообще — решает юридическое ревью.
 * **§18 MStV:** для journalistisch-redaktionelle Inhalte указывать в Impressum «Verantwortlich i.S.d. §18 Abs. 2 MStV». Считать новости/статьи/образовательный и редакционный rescue-контент потенциально подпадающими — до юридической проверки.
 * **Terms** обязательны перед донатами, платными цифровыми товарами, мерчем, аккаунтами, лидербордами или публичным UGC. Для MVP достаточно minimal terms/disclaimer.
 * **Cookie-consent (§25 TDDDG):** non-essential storage только после opt-in; «Reject all» так же доступен, как «Accept all»; отзыв так же прост, как согласие. Выбор языка можно хранить только после явного выбора пользователя и задокументировать. Аналитика — no-cookie, no-localStorage, no-fingerprinting, задокументирована. Если конфигурация меняется в сторону non-essential tracking/storage — грузить только после opt-in.
@@ -54,7 +57,7 @@
 ## Стек и структура
 
 * Payload v3 в Next.js (App Router), Postgres (EU/EEA — там персональные данные).
-* **Payload `localization.locales = ['ru','en','de']`** (см. «Локали и роутинг»). Источник правды о локалях — `src/i18n/config.ts`.
+* **Payload `localization.locales = ['ru','en']`** (см. «Локали и роутинг»); `de` — legal-only route-локаль, в Payload её нет. Источник правды о локалях — `src/i18n/config.ts`.
 * `src/collections/` · `src/access/roles.ts` · `src/hooks/` · стилизация Tailwind + CSS-переменные (токены из `docs/DESIGN_BRIEF.md`).
 * Rich text: lexical. Локализация: нативная Payload (`localized: true`).
 * Роли: admin / editor / translator / viewer / **agent** (служебный, по API-ключу).
@@ -85,7 +88,7 @@
 * В компонентах — только **semantic-токены** (не raw `--baltic`). Строить компоненты, не «страницы».
 * Шрифты self-host (`next/font`); статическая генерация/ISR для контентных страниц — целевое
   состояние, сейчас они рендерятся SSR per-request (см. `docs/localization.md`).
-* **Route guards/tests:** контент- и legal-роуты работают для всех трёх локалей (`/ru`, `/en`, `/de`); неизвестные локали и несуществующие slug → **404**.
+* **Route guards/tests:** контент-роуты работают для обеих контент-локалей (`/ru`, `/en`); legal-роуты — ещё и для `/de` (legal-only). Контент под `/de`, неизвестные локали и несуществующие slug → **404**.
 * **Хостинг/деплой — см. [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md):** один EU-VPS на оба сайта + игры; БД по окружениям (Neon — dev/test, self-hosted Postgres + бэкапы — prod); публичный alpha игры с allowlist маршрутов. Data-residency (PII только EU/EEA) — инвариант.
 
 **Состояние и хранение (source of truth)**
@@ -110,7 +113,7 @@
 * **Сделано:** схема контента (коллекции, RBAC, drafts, очередь `agent-proposals`); `docs/Roadmap.md`, `docs/DESIGN_BRIEF.md`, `docs/COMPLIANCE_EU_DE.md` в `docs/`.
 * **Дальше (детали — в `docs/Roadmap.md`):**
 
-  1. **M0** — Foundation: хостинг EU, i18n без forced-редиректа, дизайн-токены/шрифты, legal-shell RU/EN/DE, cookie-consent, no-cookie аналитика.
+  1. **M0** — Foundation: хостинг EU, i18n без forced-редиректа, дизайн-токены/шрифты, legal-shell RU/EN + legal-only DE, cookie-consent, no-cookie аналитика.
   2. **M1** — sealife с контентом, уникальный дизайн, квизы/мини-игры, реакции.
   3. **M2** — sealrescue + Агент-1 (контракт вывода → `agent-proposals`) + «Применить предложение».
 * **NB (provenance ≠ только перевод):** для всего публикуемого контента и rescue-данных модель provenance должна поддерживать `aiAssisted` / `aiTranslated` / `aiChecked` / `humanReviewed` / `reviewedBy` / `reviewedAt` / `sourceVerified` / `sourceContentHash` / `lastAgentCheckedAt` / `lastHumanVerifiedAt`. Это изменение схемы `Content`/`Translation`/`RescueCenter`; не всё сразу, но охват держать в голове (M1-T08 + EU-11).
@@ -120,7 +123,7 @@
 
 * Не давать агентам publish/delete.
 * Не называть сайт «Тюлента».
-* DE — полноценная контент-локаль (RU/EN/DE); German/EU legal pages обязательны независимо от набора языков.
+* Не возвращать DE как язык сайта: контент-локали ровно две (RU/EN), `de` — только четыре legal-роута. При этом German/EU legal pages обязательны независимо от набора языков (оператор в Германии) — не удалять их и не выпиливать немецкие тексты из `src/site/legal.ts` без юридического ревью (EU-06).
 * Не собирать email с публичных пользователей (нигде, даже для ответа); staff-аутентификация — исключение.
 * Не выдавать неподтверждённые rescue-данные за verified; не перетирать офиц. контакты слабым источником без ревью.
 * Не использовать Baloo 2 / шрифты без кириллицы.

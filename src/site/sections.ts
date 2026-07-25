@@ -28,12 +28,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Статьи', en: 'Articles', de: 'Artikel' },
-    title: { ru: 'Статьи', en: 'Articles', de: 'Artikel' },
+    label: { ru: 'Статьи', en: 'Articles' },
+    title: { ru: 'Статьи', en: 'Articles' },
     intro: {
       ru: 'Лонгриды и факты о тюленях — без занудства.',
       en: 'Long reads and facts about seals — without the boredom.',
-      de: 'Lange Texte und Fakten über Robben — ohne Langeweile.',
     },
   },
   {
@@ -41,12 +40,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Новости', en: 'News', de: 'News' },
-    title: { ru: 'Новости', en: 'News', de: 'News' },
+    label: { ru: 'Новости', en: 'News' },
+    title: { ru: 'Новости', en: 'News' },
     intro: {
       ru: 'Что происходит у ластоногих и тех, кто их спасает.',
       en: 'What’s happening with pinnipeds and the people who rescue them.',
-      de: 'Was bei den Robben passiert und bei denen, die sie retten.',
     },
   },
   {
@@ -54,12 +52,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: false,
-    label: { ru: 'Мемы', en: 'Memes', de: 'Memes' },
-    title: { ru: 'Мемы', en: 'Memes', de: 'Memes' },
+    label: { ru: 'Мемы', en: 'Memes' },
+    title: { ru: 'Мемы', en: 'Memes' },
     intro: {
       ru: 'Галерея тюленьего юмора.',
       en: 'A gallery of seal humour.',
-      de: 'Eine Galerie mit Robben-Humor.',
     },
   },
   {
@@ -67,12 +64,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Квизы', en: 'Quizzes', de: 'Quizze' },
-    title: { ru: 'Квизы', en: 'Quizzes', de: 'Quizze' },
+    label: { ru: 'Квизы', en: 'Quizzes' },
+    title: { ru: 'Квизы', en: 'Quizzes' },
     intro: {
       ru: 'Проверь, насколько ты тюлень.',
       en: 'Find out how much of a seal you are.',
-      de: 'Finde heraus, wie sehr du eine Robbe bist.',
     },
   },
   {
@@ -80,12 +76,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Игры', en: 'Games', de: 'Spiele' },
-    title: { ru: 'Мини-игры', en: 'Mini-games', de: 'Mini-Spiele' },
+    label: { ru: 'Игры', en: 'Games' },
+    title: { ru: 'Мини-игры', en: 'Mini-games' },
     intro: {
       ru: 'Маленькие игры про тюленей и море.',
       en: 'Small games about seals and the sea.',
-      de: 'Kleine Spiele über Robben und das Meer.',
     },
   },
   {
@@ -93,12 +88,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealife',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Тюленепедия', en: 'Species', de: 'Robbenpedia' },
-    title: { ru: 'Тюленепедия', en: 'Seal species', de: 'Robbenarten' },
+    label: { ru: 'Тюленепедия', en: 'Species' },
+    title: { ru: 'Тюленепедия', en: 'Seal species' },
     intro: {
       ru: 'Виды ластоногих: кто есть кто.',
       en: 'Pinniped species: who’s who.',
-      de: 'Robbenarten: wer ist wer.',
     },
   },
 
@@ -108,16 +102,14 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealrescue',
     nav: true,
     hasDetail: false,
-    label: { ru: 'Что делать', en: 'What to do', de: 'Was tun' },
+    label: { ru: 'Что делать', en: 'What to do' },
     title: {
       ru: 'Нашёл тюленя — что делать',
       en: 'Found a seal — what to do',
-      de: 'Eine Robbe gefunden — was tun',
     },
     intro: {
       ru: 'Спокойно. Несколько простых шагов.',
       en: 'Stay calm. A few simple steps.',
-      de: 'Ruhig bleiben. Ein paar einfache Schritte.',
     },
   },
   {
@@ -125,12 +117,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealrescue',
     nav: true,
     hasDetail: true,
-    label: { ru: 'Центры', en: 'Centers', de: 'Zentren' },
-    title: { ru: 'Центры реабилитации', en: 'Rehabilitation centers', de: 'Rehabilitationszentren' },
+    label: { ru: 'Центры', en: 'Centers' },
+    title: { ru: 'Центры реабилитации', en: 'Rehabilitation centers' },
     intro: {
       ru: 'Список центров рядом. Карта — переключателем.',
       en: 'A list of nearby centers. Map as a toggle.',
-      de: 'Eine Liste von Zentren in der Nähe. Karte per Umschalter.',
     },
   },
   {
@@ -138,12 +129,11 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealrescue',
     nav: true,
     hasDetail: false,
-    label: { ru: 'Новости', en: 'News', de: 'News' },
-    title: { ru: 'Новости спасения', en: 'Rescue news', de: 'Rettungs-News' },
+    label: { ru: 'Новости', en: 'News' },
+    title: { ru: 'Новости спасения', en: 'Rescue news' },
     intro: {
       ru: 'Обновления центров и спасательных операций.',
       en: 'Updates from centers and rescue operations.',
-      de: 'Updates von Zentren und Rettungseinsätzen.',
     },
   },
   {
@@ -151,16 +141,14 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealrescue',
     nav: true,
     hasDetail: false,
-    label: { ru: 'Сообщить', en: 'Report', de: 'Melden' },
+    label: { ru: 'Сообщить', en: 'Report' },
     title: {
       ru: 'Сообщить об ошибке или предложить центр',
       en: 'Report an error or suggest a center',
-      de: 'Fehler melden oder ein Zentrum vorschlagen',
     },
     intro: {
       ru: 'Без email. Нужен ответ — контакт оператора в правовой информации.',
       en: 'No email. If you need a reply, use the operator contact in the legal notice.',
-      de: 'Ohne E-Mail. Wenn Sie eine Antwort brauchen, nutzen Sie den Betreiberkontakt im Impressum.',
     },
   },
   {
@@ -168,16 +156,14 @@ export const sectionDefs: SectionDef[] = [
     site: 'sealrescue',
     nav: false, // достижим из «Что делать» и с главной, не грузим основную навигацию
     hasDetail: false,
-    label: { ru: 'Квест', en: 'Quest', de: 'Quest' },
+    label: { ru: 'Квест', en: 'Quest' },
     title: {
       ru: 'Что делать, если нашёл тюленя?',
       en: 'What to do if you found a seal?',
-      de: 'Was tun, wenn du eine Robbe gefunden hast?',
     },
     intro: {
       ru: 'Интерактивный сценарий: пройди шаги и попади в каталог.',
       en: 'An interactive scenario: walk the steps and reach the directory.',
-      de: 'Ein interaktives Szenario: geh die Schritte durch und lande im Verzeichnis.',
     },
   },
 ]

@@ -2,7 +2,7 @@
 
 Мини-игра про тюленя: лови рыбу за 60 секунд. Vanilla **HTML/CSS/Canvas2D**, без фреймворка и сборки —
 файлы лежат как есть в `public/games/seal-hunt-v1/` и отдаются статикой. Встраивается на странице
-`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en|de`.
+`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en`.
 
 ## Структура файлов
 ```
@@ -10,7 +10,7 @@ public/games/seal-hunt-v1/
   index.html                # разметка: HUD, canvas, overlay, board
   style.css
   game.js                   # игровой цикл, состояние, ввод-вывод
-  i18n.js                   # словарь ru/en/de; язык из ?lang=, window.SealI18n.{lang,t,dict}
+  i18n.js                   # словарь ru/en; язык из ?lang=, window.SealI18n.{lang,t,dict}
   manifest.webmanifest      # PWA-манифест
   sw.js                     # service worker (network-first)
   favicon.svg
@@ -182,10 +182,10 @@ Server-authoritative. Поток раунда:
 
 > **Устойчивость:** `startRound` ретраит запрос токена один раз; если сабмит всё же не прошёл (потерянный
 > play-token), `mountAfterPlay` показывает доску в **режиме чтения**, а не «доска недоступна». Имена строк
-> рендерятся на языке зрителя (`ru`/`en`/`de`) из частей — сервер хранит индексы + canonical EN-alias.
-> Грамматика — по локали: DE и RU склоняют прилагательное по роду существительного (поля `gde`/`gru`
-> у NOUN в `core/alias.js`; DE — суффикс-голова, RU — ведущее сущ.). Добавляя NOUN, добавь EN-строку в
-> `NOUN_EN` (`endpoints/leaderboard.ts`) на ту же позицию — длина/порядок списков обязаны совпадать.
+> рендерятся на языке зрителя (`ru`/`en`) из частей — сервер хранит индексы + canonical EN-alias.
+> Грамматика — по локали: RU склоняет прилагательное по роду ведущего существительного (поле `gru`
+> у NOUN в `core/alias.js`). Добавляя NOUN, добавь EN-строку в `NOUN_EN`
+> (`endpoints/leaderboard.ts`) на ту же позицию — длина/порядок списков обязаны совпадать.
 
 > **Согласованность ранга:** строка «Вы: #N из M» берётся из РЕАЛЬНОЙ строки игрока в показанной доске
 > (единый источник правды в `mountAfterPlay`), поэтому не расходится с подсвеченной строкой. Раньше
@@ -225,11 +225,11 @@ Server-authoritative. Поток раунда:
 (`STANDALONE = window.self === window.top`, в `i18n.js`). Во фрейме (встраивание на sealife.*) поведение
 прежнее. В standalone дополнительно:
 
-* **Переключатель языка RU/EN/DE** на стартовом/финальном экране (`#langSwitch`). `window.SealI18n.setLang(l, persist)`
+* **Переключатель языка RU/EN** на стартовом/финальном экране (`#langSwitch`). `window.SealI18n.setLang(l, persist)`
   меняет язык на лету: `applyStatic()` + колбэк `onLangChange` (его ставит `game.js`) перерисовывает
   приветствие, интро, заметку и доску (`relocalizeBoard` в `core/leaderboard.js` — без повторного сабмита).
 * **Стартовый язык:** `?lang=` → сохранённый выбор (`localStorage` `seal_hunt_lang`) → язык браузера
-  (ru→ru, de→de, иначе en — как `pickLocale` в `src/proxy.ts`) → `ru`. Запись в `localStorage` —
+  (ru→ru, иначе en, в т.ч. немецкий браузер — как `pickLocale` в `src/proxy.ts`) → `ru`. Запись в `localStorage` —
   **только после явного клика** по переключателю (COMPLIANCE: язык хранить лишь после явного выбора).
 * **Заметка про альфа-тест** (`#alphaNotice`, ключ `alphaNotice`) + **контакт** `feedback@sealthehunter.online`
   (`#feedbackInvite`, ключ `feedbackInvite`) — на стартовом И финальном (с лидербордом) экране. Email —

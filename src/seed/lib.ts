@@ -8,8 +8,8 @@ import { glossaryTerms } from './glossaryTerms'
  * int-тестом `tests/int/seeds.int.spec.ts`, который вызывает эти функции напрямую.
  *
  * Все сиды — upsert по каноническому ключу (slug/source): повторный прогон не создаёт
- * дублей. Локализация: пишем исходную локаль ru, затем дописываем en и de (de ?? en —
- * непереведённое поле деградирует на en, а не теряется).
+ * дублей. Локализация: пишем исходную локаль ru, затем дописываем перевод en
+ * (непереведённые поля просто отсутствуют в en).
  */
 
 export type SeedCounts = { created: number; updated: number }
@@ -99,22 +99,12 @@ export async function seedGames(payload: Payload): Promise<SeedCounts> {
       created++
     }
 
-    // en/de translations (localized fields), без перезаписи ru.
+    // en-перевод (локализованные поля), без перезаписи ru.
     await payload.update({
       collection: 'games',
       id,
       locale: 'en',
       data: { title: g.title.en, excerpt: g.excerpt?.en, how: g.how?.en },
-    })
-    await payload.update({
-      collection: 'games',
-      id,
-      locale: 'de',
-      data: {
-        title: g.title.de ?? g.title.en,
-        excerpt: g.excerpt?.de ?? g.excerpt?.en,
-        how: g.how?.de ?? g.how?.en,
-      },
     })
   }
 
@@ -126,7 +116,7 @@ export async function seedBaseline(payload: Payload): Promise<{ games: SeedCount
   return { games: await seedGames(payload) }
 }
 
-/** Глоссарий / translation memory. source — общий ключ; ru+en (DE — вместе с агентом-переводчиком). */
+/** Глоссарий / translation memory. source — общий ключ; ru+en. */
 export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
   let created = 0
   let updated = 0
@@ -139,8 +129,14 @@ export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
       doNotTranslate: term.doNotTranslate ?? false,
     }
     // Варианты локализованы — свой список на каждую локаль.
-    const ruVariants = (term.variants?.ru ?? []).map((v) => ({ value: v.value, category: v.category }))
-    const enVariants = (term.variants?.en ?? []).map((v) => ({ value: v.value, category: v.category }))
+    const ruVariants = (term.variants?.ru ?? []).map((v) => ({
+      value: v.value,
+      category: v.category,
+    }))
+    const enVariants = (term.variants?.en ?? []).map((v) => ({
+      value: v.value,
+      category: v.category,
+    }))
 
     const existing = await payload.find({
       collection: 'glossary',
@@ -185,7 +181,7 @@ export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
   return { created, updated }
 }
 
-/** Демо-контент M1: Content + Species + Games, RU/EN/DE. */
+/** Демо-контент M1: Content + Species + Games, RU/EN. */
 export async function seedM1(
   payload: Payload,
 ): Promise<{ content: SeedCounts; species: SeedCounts; games: SeedCounts }> {
@@ -231,16 +227,6 @@ export async function seedM1(
       },
     })
 
-    await payload.update({
-      collection: 'content',
-      id,
-      locale: 'de',
-      data: {
-        title: item.title.de ?? item.title.en,
-        excerpt: item.excerpt?.de ?? item.excerpt?.en,
-        body: item.body ? rich(item.body.de ?? item.body.en) : undefined,
-      },
-    })
   }
 
   const species: SeedCounts = { created: 0, updated: 0 }
@@ -280,7 +266,7 @@ export async function seedM1(
       species.created++
     }
 
-    // Дописываем en/de: сопоставляем факты по id, созданному при записи ru —
+    // Дописываем en: сопоставляем факты по id, созданному при записи ru —
     // иначе обновление en пересоздаёт строки массива и теряет ru.
     const factIds = (ruDoc.facts ?? []).map((f) => f.id)
     await payload.update({
@@ -297,19 +283,6 @@ export async function seedM1(
       },
     })
 
-    await payload.update({
-      collection: 'species',
-      id: ruDoc.id as number,
-      locale: 'de',
-      data: {
-        name: sp.name.de ?? sp.name.en,
-        region: sp.region?.de ?? sp.region?.en,
-        size: sp.size?.de ?? sp.size?.en,
-        excerpt: sp.excerpt?.de ?? sp.excerpt?.en,
-        body: sp.body ? rich(sp.body.de ?? sp.body.en) : undefined,
-        facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f.de ?? f.en })),
-      },
-    })
   }
 
   const games = await seedGames(payload)

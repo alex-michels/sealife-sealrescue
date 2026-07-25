@@ -271,8 +271,9 @@ fullscreen на `pointerup` (не `pointerdown`) на iOS; guard против «
 (отключить visibility-change-паузу игры). Все три подтверждены багрепортами Phaser.
 
 ### 2.4 i18n / SW / анонимная личность — подтверждённое переиспользование, без новых паттернов
-Собственный `i18n.js` (IIFE, `window.SealI18n` с идентичной формой lang/t/dict/standalone/setLang/
-onLangChange, приоритет `?lang=` → сохранённый выбор → язык браузера → `ru`); собственный `sw.js`
+Собственный `i18n.js` (IIFE, словарь `ru`/`en`, `window.SealI18n` с идентичной формой lang/t/dict/
+standalone/setLang/onLangChange, приоритет `?lang=` → сохранённый выбор → язык браузера
+(ru→ru, иначе en) → `ru`); собственный `sw.js`
 (network-first, свой `CACHE`, свой ASSETS-список, `/api/*` не кэшируется); собственный
 `core/alias.js` — копия структуры Seal Hunter (word lists/mulberry32/PATTERNS БАЙТ-В-БАЙТ синхронно
 с сервером — тот же общий `leaderboard.ts`, только новый `game`-слаг), свой ключ `localStorage`
@@ -302,7 +303,7 @@ standalone-страница показывает заглушку «Coming soon�
 ### 2.6 Схема Payload
 `games`: без изменений схемы — один новый документ (`slug: seal-run`, `embed:
 /games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). **Сделано (SR-08):** запись в
-`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN/DE, `order: 1`) — сеется baseline- и m1-сидом,
+`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN, `order: 1`) — сеется baseline- и m1-сидом,
 идемпотентность/инварианты локалей закрывает `tests/int/seeds.int.spec.ts` (итерируется по
 `gamesSeed`); карточка на `/[locale]/games` и detail-страница с iframe работают из коробки
 (generic-роут `games/[slug]`). `game-scores`: добавить НЕОБЯЗАТЕЛЬНЫЕ

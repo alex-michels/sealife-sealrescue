@@ -20,19 +20,19 @@ const client = (await import(
 /**
  * Golden-вектора: зафиксированы 2026-07-02. Меняются ТОЛЬКО осознанно (правка списков
  * имён меняет идентичность существующих игроков; сервер освежит строки — см. QA-15
- * «смена name-списков»). RU/DE заодно фиксируют правила рода: Русалочка (ж.р.) →
- * «Брызгучая»; DE-род задаёт суффикс: Klops (m) → «Spritziger», Brötchen (n) → «Glitschiges».
+ * «смена name-списков»). RU заодно фиксирует правило рода: Русалочка (ж.р.) →
+ * «Брызгучая» (согласование с ведущим существительным).
  */
 const GOLDEN = [
-  { seed: 1, game: 'seal-the-hunter', en: 'Selkie Narwhal', ru: 'Селки-Нарвал', de: 'Selkie-Narwal' },
-  { seed: 42, game: 'seal-the-hunter', en: 'Splashy Nixie Blob', ru: 'Брызгучая Русалочка-Пельмень', de: 'Spritziger Nixe-Klops' },
-  { seed: 123456789, game: 'seal-the-hunter', en: 'Mighty Dumplet Blob', ru: 'Могучий Колобок-Пельмень', de: 'Mächtiger Teigkugel-Klops' },
-  { seed: 42, game: 'seal-run', en: 'Slippery Nixie Bun', ru: 'Скользкая Русалочка-Булочка', de: 'Glitschiges Nixe-Brötchen' },
-  { seed: 4294967295, game: 'seal-the-hunter', en: 'Pebbly Chonky Serpent', ru: 'Галечный Толстый Змей', de: 'Kieselige Pummelige Schlange' },
-  { seed: 0, game: 'seal-the-hunter', en: 'Walrus Penguin', ru: 'Морж-Пингвин', de: 'Walross-Pinguin' },
+  { seed: 1, game: 'seal-the-hunter', en: 'Selkie Narwhal', ru: 'Селки-Нарвал' },
+  { seed: 42, game: 'seal-the-hunter', en: 'Splashy Nixie Blob', ru: 'Брызгучая Русалочка-Пельмень' },
+  { seed: 123456789, game: 'seal-the-hunter', en: 'Mighty Dumplet Blob', ru: 'Могучий Колобок-Пельмень' },
+  { seed: 42, game: 'seal-run', en: 'Slippery Nixie Bun', ru: 'Скользкая Русалочка-Булочка' },
+  { seed: 4294967295, game: 'seal-the-hunter', en: 'Pebbly Chonky Serpent', ru: 'Галечный Толстый Змей' },
+  { seed: 0, game: 'seal-the-hunter', en: 'Walrus Penguin', ru: 'Морж-Пингвин' },
 ] as const
 
-describe('golden-вектора (server EN + client RU/EN/DE)', () => {
+describe('golden-вектора (server EN + client RU/EN)', () => {
   for (const g of GOLDEN) {
     it(`(${g.seed}, ${g.game}) → «${g.en}»`, () => {
       const sp = serverParts(g.seed, g.game)
@@ -40,7 +40,6 @@ describe('golden-вектора (server EN + client RU/EN/DE)', () => {
       expect(renderEn(sp)).toBe(g.en)
       expect(client.renderName(cp, 'en')).toBe(g.en)
       expect(client.renderName(cp, 'ru')).toBe(g.ru)
-      expect(client.renderName(cp, 'de')).toBe(g.de)
     })
   }
 })
@@ -64,7 +63,7 @@ describe('sweep: оба движка идентичны на широком ди
   it('клиентский рендер всех локалей всегда непуст и без undefined', () => {
     for (let i = 0; i < 40; i++) {
       const parts = client.makeParts((i * 48271) >>> 0, 'seal-the-hunter')
-      for (const lang of ['ru', 'en', 'de']) {
+      for (const lang of ['ru', 'en']) {
         const name = client.renderName(parts, lang)
         expect(name.length, `${i}/${lang}`).toBeGreaterThan(0)
         expect(name).not.toContain('undefined')
