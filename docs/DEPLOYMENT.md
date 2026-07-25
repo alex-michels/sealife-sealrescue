@@ -70,7 +70,7 @@
 
 | Сервис | Как запущен | Что это |
 | --- | --- | --- |
-| `sealgram` | Docker, `restart: unless-stopped`, `/home/deploy/sealgram` | Репостер тюленьего контента Instagram/VK → Telegram-канал (перевод через Gemini, водяные знаки). **Отдельный репозиторий** `alex-michels/sealgram`, свой CLAUDE.md. Проектно-смежный, но НЕ часть этого репо |
+| `sealgram` | Docker, `restart: unless-stopped`, `/home/deploy/sealgram` | Репостер тюленьего контента Instagram/VK → Telegram-канал. **Отдельный репозиторий** `alex-michels/sealgram`, свой CLAUDE.md, свой стек. Соседствует по железу — и только: **к этому проекту отношения не имеет и подключаться к нему не будет** (в т.ч. его AI-провайдер — не AI-стек этого репо). Источником контента для CMS не является: канал ≠ сайт |
 | `weekly-move-bot` | **user**-systemd (`deploy`), `Linger=yes` | Личный Forex-информер в Telegram. Вне скоупа проекта |
 | `hl-move-bot` | **user**-systemd (`deploy`), `Linger=yes` | Личный Hyperliquid-информер в Telegram. Вне скоупа проекта |
 
