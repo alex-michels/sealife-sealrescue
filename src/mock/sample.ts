@@ -231,15 +231,27 @@ export const sampleSpecies: SampleSpecies[] = [
   },
 ]
 
+/**
+ * ⚠️ ВСЕ центры здесь ВЫДУМАНЫ, и это обязательное свойство, а не небрежность.
+ *
+ * Раньше первой карточкой стояла НАСТОЯЩАЯ немецкая станция — с её реальным названием, рабочим
+ * телефоном и сайтом — да ещё и под «штампом проверки» с выдуманными датами сверки агентом и
+ * человеком. Это нарушение инварианта №7 (`CLAUDE.md`) с последствиями в физическом мире: карточка
+ * стоит на аварийном пути, а в аварии фальшивый и настоящий контакт визуально неразличимы. Плюс
+ * организация не давала согласия изображать её проверенной нами (аудит 2026-07-26, BIO-07).
+ *
+ * Правила для этого файла: только вымышленные названия с пометкой «sample», только домен
+ * example.org, только заведомо нерабочие номера. Настоящие центры появятся из Payload в M2-T02.
+ */
 export const sampleCenters: SampleCenter[] = [
   {
     slug: 'sample-center',
-    name: 'Seehundstation Friedrichskoog',
-    city: 'Friedrichskoog',
+    name: 'North Sea Seal Station (sample)',
+    city: 'Samplehaven',
     country: 'DE',
     status: 'active',
-    phone: '+49 4854 1372',
-    website: 'https://www.seehundstation-friedrichskoog.de',
+    phone: '+49 30 000000',
+    website: 'https://example.org/north-sea-seal-station',
     agentCheckedAt: '2026-06-12',
     humanReviewedAt: '2026-06-14',
     summary: lorem(

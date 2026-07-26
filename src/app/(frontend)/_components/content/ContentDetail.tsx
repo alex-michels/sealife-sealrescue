@@ -54,7 +54,7 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
       <article className="mx-auto max-w-2xl px-5 py-10">
         <Cover image={doc.coverImage} seed={1} label="MEME" className="rounded-card" />
         <h1 className="mt-6 text-3xl">{doc.title}</h1>
-        {doc.aiGenerated && <AiBadge locale={locale} />}
+        <AiBadge locale={locale} provenance={doc.provenance} aiGenerated={doc.aiGenerated} />
         <TopicChips doc={doc} locale={locale} basePath={`/${locale}/memes`} />
       </article>
     )
@@ -65,7 +65,7 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
     return (
       <article className="mx-auto max-w-3xl px-5 py-10">
         <h1 className="text-4xl">{doc.title}</h1>
-        {doc.aiGenerated && <AiBadge locale={locale} />}
+        <AiBadge locale={locale} provenance={doc.provenance} aiGenerated={doc.aiGenerated} />
         {doc.body && (
           <div className="article-body mt-8">
             <RichText data={doc.body} />
@@ -82,7 +82,7 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
       <span className="font-mono text-xs uppercase tracking-wide text-muted">{typeLabel}</span>
       <h1 className="mt-2 text-4xl">{doc.title}</h1>
       <p className="mt-2 font-mono text-xs text-muted">{date}</p>
-      {doc.aiGenerated && <AiBadge locale={locale} />}
+      <AiBadge locale={locale} provenance={doc.provenance} aiGenerated={doc.aiGenerated} />
       <Cover
         image={doc.coverImage}
         seed={doc.type === 'news' ? 2 : 1}

@@ -79,7 +79,7 @@ describe('идемпотентность (второй прогон ничего
 })
 
 describe('инварианты после сида', () => {
-  it('games: все 3 локали заполнены, published, slug канонический', async () => {
+  it('games: обе локали заполнены, published, slug канонический', async () => {
     for (const g of gamesSeed) {
       for (const locale of ['ru', 'en'] as const) {
         const res = await payload.find({
@@ -97,7 +97,9 @@ describe('инварианты после сида', () => {
     }
   })
 
-  it('content: title во всех 3 локалях, published', async () => {
+  // BIO-16: сид — AI-черновик. Непроверенная биология не должна оказаться опубликованной,
+  // поэтому content/species сеются как draft (в отличие от games — там published обязателен).
+  it('content: title в обеих локалях; статус draft; провенанс по локалям', async () => {
     for (const item of contentSeed) {
       for (const locale of ['ru', 'en'] as const) {
         const res = await payload.find({
@@ -107,12 +109,31 @@ describe('инварианты после сида', () => {
           limit: 1,
         })
         expect(res.docs[0]?.title, `${item.slug} (${locale})`).toBeTruthy()
-        expect(res.docs[0]?._status).toBe('published')
+        expect(res.docs[0]?._status, `${item.slug} (${locale})`).toBe('draft')
       }
+
+      // Флаги провенанса локализованы: ru — AI-черновик, en — машинный перевод.
+      const ru = await payload.find({
+        collection: 'content',
+        where: { slug: { equals: item.slug } },
+        locale: 'ru',
+        limit: 1,
+      })
+      const en = await payload.find({
+        collection: 'content',
+        where: { slug: { equals: item.slug } },
+        locale: 'en',
+        limit: 1,
+      })
+      expect(ru.docs[0]?.provenance?.aiAssisted, `${item.slug} ru aiAssisted`).toBe(true)
+      expect(ru.docs[0]?.provenance?.aiTranslated, `${item.slug} ru aiTranslated`).toBeFalsy()
+      expect(en.docs[0]?.provenance?.aiTranslated, `${item.slug} en aiTranslated`).toBe(true)
+      // Никто из сида не вычитан человеком — иначе бейдж соврёт (EU-11 / AI Act Art. 50).
+      expect(ru.docs[0]?.provenance?.humanReviewed, `${item.slug} ru humanReviewed`).toBeFalsy()
     }
   })
 
-  it('species: name в 3 локалях; факты не размножаются и переведены (id-matching)', async () => {
+  it('species: name в обеих локалях; факты не размножаются и переведены (id-matching)', async () => {
     for (const sp of speciesSeed) {
       const perLocale: Record<string, { name?: string | null; facts?: Array<{ id?: string | null; text?: string | null }> | null }> = {}
       for (const locale of ['ru', 'en'] as const) {
@@ -139,6 +160,47 @@ describe('инварианты после сида', () => {
         for (const f of facts) expect(f.text, `${sp.slug} fact text (${locale})`).toBeTruthy()
       }
     }
+  })
+
+  it('species: draft + провенанс; контекст оценки статуса записан (BIO-09/BIO-16)', async () => {
+    for (const sp of speciesSeed) {
+      const ru = await payload.find({
+        collection: 'species',
+        where: { slug: { equals: sp.slug } },
+        locale: 'ru',
+        limit: 1,
+      })
+      const doc = ru.docs[0]
+      expect(doc?._status, `${sp.slug} status`).toBe('draft')
+      expect(doc?.provenance?.aiAssisted, `${sp.slug} ru aiAssisted`).toBe(true)
+
+      const en = await payload.find({
+        collection: 'species',
+        where: { slug: { equals: sp.slug } },
+        locale: 'en',
+        limit: 1,
+      })
+      expect(en.docs[0]?.provenance?.aiTranslated, `${sp.slug} en aiTranslated`).toBe(true)
+
+      if (sp.conservationAssessment) {
+        // Нелокализованная группа: «оценён подвид» верно на любом языке.
+        for (const d of [doc, en.docs[0]]) {
+          expect(d?.conservationAssessment?.scope, `${sp.slug} scope`).toBe(
+            sp.conservationAssessment.scope,
+          )
+          expect(d?.conservationAssessment?.assessmentYear, `${sp.slug} year`).toBe(
+            sp.conservationAssessment.assessmentYear,
+          )
+        }
+      }
+    }
+
+    // BIO-09 предметно: VU у балтийской нерпы — оценка ПОДВИДА, а не вида
+    // (глоссарий утверждает, что Pusa hispida = LC, и оба утверждения верны).
+    const ringed = speciesSeed.find((s) => s.slug === 'baltic-ringed-seal')
+    expect(ringed?.conservationStatus).toBe('VU')
+    expect(ringed?.conservationAssessment?.scope).toBe('subspecies')
+    expect(ringed?.conservationAssessment?.assessedEntity).toBe('Pusa hispida botnica')
   })
 
   it('glossary: translation заполнен в ru (сам термин) и en (перевод)', async () => {
