@@ -6,9 +6,9 @@
 2. **Авто REST + GraphQL Payload** — генерируются из коллекций. `app/(payload)/api/[...slug]`.
 3. **Публичные страницы фронтенда** — App Router, см. [localization.md](localization.md).
 
-> ⚠️ **Для публичного alpha-теста игры (sealthehunter.online) наружу открываются ТОЛЬКО игра и
-> лидерборд.** Авто-REST Payload, GraphQL и `/admin` должны быть недоступны — allowlist на reverse
-> proxy. См. [DEPLOYMENT.md](DEPLOYMENT.md) §4.
+> ⚠️ **В game-only окружении (публичный тест одной игры) наружу открываются ТОЛЬКО игра,
+> лидерборд и `/api/game-config`.** Авто-REST Payload, GraphQL и `/admin` должны быть недоступны —
+> allowlist на reverse proxy. Паттерн и его ограничения — [DEPLOYMENT.md](DEPLOYMENT.md) §4.
 
 ## 1. Лидерборд (кастомные endpoints)
 

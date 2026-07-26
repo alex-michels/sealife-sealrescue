@@ -23,12 +23,16 @@
 
 * [x] Контент-схема Payload (коллекции, RBAC, drafts, очередь `agent-proposals`, хуки).
 * [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md`, `INFRA.md` + тех-доки) в `docs/`.
-* [x] ~~**Публичный alpha игры — live:** https://sealthehunter.online~~ → **ВЫВЕДЕН ИЗ ЭКСПЛУАТАЦИИ
+* [x] ~~**Публичный alpha игры — live**~~ → **ВЫВЕДЕН ИЗ ЭКСПЛУАТАЦИИ
   2026-07-19/20 (PR #74).** Сервисы `sealife`+`caddy` на VPS остановлены и выключены, сайт-блок убран
   из `deploy/Caddyfile`, авто-деплой по push в `main` отключён. Инфра-as-code остаётся и переиспользуется
   под будущий QA-stage: `deploy/`, `infra/ansible/`, `.github/workflows/` (deploy/configure/seed/
   toggle-standalone/shutdown-alpha). Раннбук выключения и воскрешения — `DEPLOYMENT.md` §8;
   **фактическая инвентаризация бокса — `DEPLOYMENT.md` §1a** (бокс общий с сервисами владельца).
+* [x] **Доменная политика (решение владельца 2026-07-26):** у проекта ровно **два** публичных корневых
+  домена — `sealife.info` и `sealrescue.info` (+ любые их поддомены, напр. vanity `sealrun.sealife.info`).
+  Игры живут роутами/поддоменами под ними; отдельные игровые домены больше не заводятся, домен
+  выведенной альфы не используется и не возвращается.
 * [x] **Немецкий убран как язык сайта (решение владельца 2026-07-26).** Контент-локалей теперь ровно
   две — `ru` и `en` (`src/i18n/config.ts`: `locales`), автоопределение языка выбирает только их
   (немецкий браузер → EN). `de` живёт как **legal-only route-локаль** (`legalOnlyLocales`/
@@ -65,8 +69,10 @@
   — попутно решить судьбу корневого `Dockerfile`: неиспользуемый Vercel-example boilerplate, реальный
   деплой (standalone + systemd) его не задействует нигде; либо пометить как reference-only, либо убрать
   (см. пометку в `DEPLOYMENT.md` §1, добавленную аудитом 2026-07-01).
-* [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — `sealthehunter.online` (alpha): DNS + авто-HTTPS Caddy.
-  Остальные домены (sealife/sealrescue) + DDoS/кэш — позже.
+* [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — на альфе отработаны DNS + авто-HTTPS Caddy
+  (домен альфы выведен из эксплуатации, см. «Состояние на сейчас»). Осталось: `sealife.info` и
+  `sealrescue.info` (+ их поддомены, напр. `sealrun.sealife.info` — SR-12) + DDoS/кэш. Других
+  корневых доменов проект не заводит.
 * [ ] **M0-T04** Media delivery: **Contabo Object Storage** (переплан с 2026-06-30, см. `INFRA.md` §4; было Hetzner+Bunny) + CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
 * [~] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC — `.env`/`.env*.local` уже в `.gitignore` (готово); секрет-менеджер (Vault/SOPS/облачный) — не подключён, секреты сейчас в GitHub Repository secrets + `/etc/sealife/.env` на боксе (см. `INFRA.md` §6).
 * [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — на alpha БД =
@@ -174,30 +180,33 @@
     Формулировка задачи выше упрощена относительно исходной (убран несуществующий пункт).
   * [x] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
   * [x] **SH-08** Анти-чит-харднинг и подстройка баланса по анонимизированным распределениям очков (итеративно). *[S]* → SEC
-* **Фаза 4 — Публичный alpha (sealthehunter.online)**
+* **Фаза 4 — Публичный alpha игры** *(выведен из эксплуатации 2026-07-19/20 — история)*
   * [x] **SH-09** Standalone-лендинг игры: определение «не во фрейме», переключатель языка RU/EN на
     стартовом экране (стартовый язык: `?lang=`→сохранённый→браузер; запись в `localStorage` только после
-    явного выбора), пометка альфа-теста + контакт `feedback@sealthehunter.online` на старте и финале;
-    встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md §4–7. *[M]* → EU/DESIGN
+    явного выбора), пометка альфа-теста + контакт для фидбэка на старте и финале;
+    встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md. *[M]* → EU/DESIGN
+    — ⚠️ **NB (домен, 2026-07-26):** заметка про альфа-тест и контакт для фидбэка **удалены из игры**
+    вместе с выведенным доменом (`#alphaNotice`/`#feedbackInvite` в `index.html`, ключи в `i18n.js`,
+    ветка в `game.js`); в standalone остался только переключатель языка. Понадобится контакт снова —
+    только точка контакта оператора из Impressum; новых адресов и доменов не заводим.
     — ⚠️ **NB (2026-07-26):** словарь игры (`public/games/seal-hunt-v1/i18n.js`, `core/alias.js`)
     самодостаточен и НЕ связан с локалями сайта, поэтому DE в самой игре остался после снятия
     немецкого как языка сайта. Убирать ли его — отдельное решение владельца (см. также QA-16).
-  * [ ] **SH-10** Legal-доступность alpha-домена (sealthehunter.online). Сейчас Caddy-allowlist отдаёт
-    только игру + `/api/leaderboard`, поэтому Impressum/Datenschutz **недостижимы**, а на стартовом
-    экране нет legal-ссылок (только `feedback@`). Сделать:
-    1. **Футер в игре** (стартовый + финальный экран) со ссылками «Impressum · Datenschutz».
-    2. **Расширить allowlist** в `deploy/Caddyfile` на legal-роуты (`/[locale]/legal-notice`, `/privacy`,
-       `/cookies`, `/terms`) — чтобы страницы открывались с alpha-домена.
-    3. **Impressum** — реальные имя + почтовый адрес + email (§5 DDG; `feedback@` недостаточно).
+  * [ ] **SH-10** ~~Legal-доступность standalone-домена альфы~~ — **исходная постановка закрыта
+    выводом альфы (2026-07-19/20) и доменной политикой 2026-07-26** (только `sealife.info` /
+    `sealrescue.info` + поддомены). Отдельного игрового origin'а больше нет и не будет: игра
+    открывается роутом/iframe'ом сайта и наследует его футер с Impressum/Datenschutz, поэтому
+    пункты «футер со ссылками внутри игры» и «расширить Caddy-allowlist на legal-роуты» **отпали**.
+    Остаётся общесайтовый legal-долг (поэтому чекбокс не закрыт):
+    1. **Impressum** — реальные имя + почтовый адрес + email (§5 DDG; служебный ящик недостаточен).
        Обновить `§5 TMG`→`§5 DDG`, если встречается.
-    4. **Datenschutz** — секция про игру: `localStorage` (`seal_hunt_seed/best/sound/lang`), transient
+    2. **Datenschutz** — секция про игру: `localStorage` (`seal_hunt_seed/best/sound/lang`), transient
        IP-rate-limit лидерборда (**не хранится**, legitimate interest), EU-хостинг (Contabo/Neon),
        серверные логи + ретеншн, аналитики нет.
     Cookie-баннер пока **НЕ нужен** (storage strictly-necessary/functional, аналитика выключена) —
     включить вместе с Plausible. Основание: §5 DDG + GDPR (IP = перс. данные); см. `COMPLIANCE_EU_DE.md`. *[M]* → EU
-    — подтверждено аудитом (2026-07-01): ни один из 4 пунктов не реализован (нет footer/legal-ссылок
-    в `index.html`, `deploy/Caddyfile` legal-роуты не аллоулистит, `src/site/legal.ts` — плейсхолдеры,
-    Datenschutz не описывает `localStorage`/rate-limit игры). Статус `[ ]` верен.
+    — подтверждено аудитом (2026-07-01): оставшиеся пункты не реализованы (`src/site/legal.ts` —
+    плейсхолдеры, Datenschutz не описывает `localStorage`/rate-limit игры). Статус `[ ]` верен.
   * [x] **SH-11** **Единая доска**: убрать деление лидерборда `desktop`/`mobile` везде (endpoint:
     Zod/токен/дедуп/ранг; коллекция `game-scores`: поле `board` удалено; клиент: без `detectBoard`
     и без табов; тесты/моки/доки). Причина — консистентность с Seal Run («равный горизонт»,
@@ -239,7 +248,7 @@
     Контракты: `tests/unit/seal-hunt-star.unit.spec.ts` (8) +
     `tests/e2e/game-lightning-star.e2e.spec.ts` (ореол/яркость/фейд). SW CACHE v17→v18.
   * [x] **SH-14** **Kill-switch standalone-версий (обе игры)** — запрос владельца 2026-07-08
-    («альфа sealthehunter.online окончена»): тумблер on/off в коде и админке. ON (по умолчанию) —
+    («альфа игры окончена»): тумблер on/off в коде и админке. ON (по умолчанию) —
     игра как обычно; OFF — standalone-страница (прямой URL/домен) показывает заглушку «Coming
     soon»: Seal Hunter — attract-фон с плавающей рыбой (сим spawnTick/updatePrey, «ловца»
     подменяет точка за полем) БЕЗ тюленя/таймера/очков/имён; Seal Run — статичный подводный фон
@@ -249,9 +258,9 @@
     гасит) + публичный `GET /api/game-config?game=` (кэш 60 с, draft-тумблер не влияет до
     Publish) + ветка в game.js обеих игр (fail-open при недоступном API; вуаль от вспышки меню).
     Тесты: `tests/int/game-config.int.spec.ts` (7) + `tests/e2e/game-placeholder.e2e.spec.ts`
-    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Alpha-прокси: `/api/game-config`
-    добавлен в allowlist `deploy/Caddyfile` (иначе 404 → fail-open, тумблер не доехал бы).
-    Закрыть альфу (админка с alpha-домена недоступна): Actions → **Toggle game standalone** →
+    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Пока альфа была жива, `/api/game-config`
+    держался в allowlist её прокси (иначе 404 → fail-open, тумблер не доехал бы).
+    Переключить флаг без доступа к админке: Actions → **Toggle game standalone** →
     `coming_soon` (workflow пишет флаг в БД `DATABASE_URI`; локально —
     `npm run game:standalone -- coming_soon seal-the-hunter`); где админка доступна — тот же
     флаг в Games → Publish. Доезжает ≤ 60 с. *[M]*
@@ -545,7 +554,8 @@
 > играть (SH-05…07). Память: [[accounts-contract-vs-consent]].
 
 **Кросс-доменный SSO (почему так):** cookie не шарится между разными корневыми доменами
-(`sealife.info` ↔ `sealthehunter.online`), поэтому «один username везде» = центральный IdP.
+(`sealife.info` ↔ `sealrescue.info` — а их у проекта ровно два, см. доменную политику выше),
+поэтому «один username везде» = центральный IdP.
 
 ```
                        ┌──────────────────────────────────────────────┐
@@ -556,16 +566,19 @@
                        └───────────────┬──────────────────┬────────────┘
         cookie  .sealife.info          │                  │   OIDC (Auth Code + PKCE)
    (общая для всех поддоменов)         │                  │   redirect-login + токен
-        ┌──────────────┬──────────────┘                  └────────┬───────────────┐
-        ▼              ▼                                           ▼               ▼
-  sealife.info   game.sealife.info                        sealrescue.info   sealthehunter.online
-  (тот же root —  quizzes.sealife.info                    (другой root —    (другой root —
-  cookie работает) (заводить игры сюда →                  OIDC redirect)    OIDC redirect)
+        ┌──────────────┬──────────────┘                   │
+        ▼              ▼                                  ▼
+  sealife.info   game.sealife.info               sealrescue.info
+  (тот же root —  quizzes.sealife.info           (другой root —
+  cookie работает) sealrun.sealife.info           OIDC redirect)
+                   (все игры/квизы — сюда,
                     cookie бесплатно)
 ```
 
-> Правило: что можно — заводим как `*.sealife.info` (cookie бесплатно). Отдельные бренд-/игровые домены
-> — через redirect-SSO. Username уникален глобально через `UNIQUE` на `players`.
+> Правило: что можно — заводим как `*.sealife.info` (cookie бесплатно); отдельных игровых/бренд-доменов
+> проект не заводит (доменная политика: только `sealife.info` и `sealrescue.info` + их поддомены).
+> Второй корень, `sealrescue.info`, — через redirect-SSO. Username уникален глобально через `UNIQUE`
+> на `players`.
 
 ### Фаза 0 — сейчас (без аккаунтов)
 

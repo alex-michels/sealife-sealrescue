@@ -1,11 +1,12 @@
 import type { Endpoint } from 'payload'
 
 /**
- * Публичная конфигурация игры для её standalone-оболочки (SH-14, kill-switch альфы).
+ * Публичная конфигурация игры для её standalone-оболочки (SH-14, kill-switch standalone-страниц).
  *
  * Статические игры в /public не рендерятся сервером, поэтому standalone-страница
- * (sealthehunter.online, прямой /games/<...>/index.html) сама спрашивает этот эндпоинт
- * и при `standalone: false` показывает заглушку «Coming soon» вместо игры.
+ * (прямой URL игры: /games/<...>/index.html либо её vanity-поддомен вида *.sealife.info)
+ * сама спрашивает этот эндпоинт и при `standalone: false` показывает заглушку
+ * «Coming soon» вместо игры.
  * iframe-встраивание на sealife.info флаг НЕ читает — оно живёт за страницей сайта.
  *
  * Контракт с клиентами (game.js обеих игр):

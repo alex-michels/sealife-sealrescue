@@ -1,8 +1,9 @@
 name: Shutdown alpha (VPS)
 
-# Decommission публичной альфы sealthehunter.online: останавливает и выключает systemd-сервисы
-# `sealife` (приложение) и `caddy` (reverse proxy) на VPS через infra/ansible/shutdown.yml.
-# Бокс, Node, каталоги и /etc/sealife/.env остаются — воскрешение = Configure → Deploy
+# Гасит публичную поверхность VPS: останавливает и выключает systemd-сервисы `sealife`
+# (приложение) и `caddy` (reverse proxy) через infra/ansible/shutdown.yml. Так была выведена
+# из эксплуатации публичная альфа игры; тот же выключатель годится для будущих QA/stage.
+# Бокс, Node, каталоги и /etc/sealife/.env остаются — поднять обратно = Configure → Deploy
 # (раннбук в docs/DEPLOYMENT.md §5). Идемпотентно.
 #
 # Защита от случайного клика: в поле confirm надо вписать ровно `shutdown-alpha`.
@@ -13,7 +14,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: Впишите `shutdown-alpha`, чтобы подтвердить остановку публичной альфы
+        description: Впишите `shutdown-alpha`, чтобы подтвердить остановку публичных сервисов на боксе
         type: string
         required: true
 

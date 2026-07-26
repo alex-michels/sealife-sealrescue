@@ -38,10 +38,8 @@ const UI = {
   btnShareEnd: document.getElementById('btnShareEnd'),
   btnSound: document.getElementById('btnSound'),
   board: document.getElementById('board'),
-  // — standalone-альфа (sealthehunter.online): переключатель языка, заметка, контакт
+  // — standalone (игра открыта прямым URL): переключатель языка
   langSwitch: document.getElementById('langSwitch'),
-  alphaNotice: document.getElementById('alphaNotice'),
-  feedbackInvite: document.getElementById('feedbackInvite'),
 };
 
 const GAME_DURATION = ROUND_MS;
@@ -61,9 +59,8 @@ const POINTER = { x:0, y:0, active:false };
 const SHOW_FPS = new URLSearchParams(location.search).get('fps') === '1';
 const FPS = { frames: 0, acc: 0, value: 0, workAcc: 0, workMs: 0 };
 
-// ——— Standalone-альфа (sealthehunter.online): язык переключается на стартовом/финальном экране,
-// показываем заметку про альфа-тест и отображаемый контакт для фидбэка. Во фрейме (встраивание на
-// sealife.*) ничего этого нет — поведение прежнее (язык из ?lang=, переключателя нет).
+// ——— Standalone (игра открыта прямым URL): язык переключается на стартовом/финальном экране.
+// Во фрейме (встраивание на sealife.*) переключателя нет — язык приходит из ?lang=.
 const STANDALONE = !!(window.SealI18n && window.SealI18n.standalone);
 const FRIEND = (() => {
   const p = new URLSearchParams(location.search);
@@ -81,10 +78,6 @@ function renderOverlayText() {
   UI.message.innerHTML = overlayMsg();
   UI.btnAgain.textContent = overlayBtn();
   refreshSoundButton();
-  if (STANDALONE) {
-    if (UI.alphaNotice) UI.alphaNotice.innerHTML = t('alphaNotice');
-    if (UI.feedbackInvite) UI.feedbackInvite.innerHTML = t('feedbackInvite');
-  }
 }
 
 function syncLangButtons() {
@@ -287,16 +280,12 @@ if (FRIEND) overlayMsg = () => t('friendChallenge', { score: FRIEND.score, best:
 UI.overlay.hidden = false;
 UI.btnShareEnd.hidden = true;
 
-if (STANDALONE) {
-  if (UI.langSwitch) {
-    UI.langSwitch.hidden = false;
-    UI.langSwitch.querySelectorAll('.lang-btn').forEach((b) => {
-      // persist=true: запоминаем язык ТОЛЬКО после явного выбора пользователя (COMPLIANCE).
-      b.addEventListener('click', () => window.SealI18n.setLang(b.getAttribute('data-lang'), true));
-    });
-  }
-  if (UI.alphaNotice) UI.alphaNotice.hidden = false;
-  if (UI.feedbackInvite) UI.feedbackInvite.hidden = false;
+if (STANDALONE && UI.langSwitch) {
+  UI.langSwitch.hidden = false;
+  UI.langSwitch.querySelectorAll('.lang-btn').forEach((b) => {
+    // persist=true: запоминаем язык ТОЛЬКО после явного выбора пользователя (COMPLIANCE).
+    b.addEventListener('click', () => window.SealI18n.setLang(b.getAttribute('data-lang'), true));
+  });
 }
 
 renderOverlayText();
@@ -309,8 +298,8 @@ window.SealI18n.onLangChange(() => {
   if (STANDALONE && UI.board && !UI.board.hidden) relocalizeBoard(UI.board, t);
 });
 
-// ——— SH-14: kill-switch standalone-версии. Только standalone (sealthehunter.online и прямой
-// URL): во фрейме sealife.* игра живёт всегда. Сигнал заглушки — ТОЛЬКО явный
+// ——— SH-14: kill-switch standalone-версии. Только standalone (игра открыта прямым URL):
+// во фрейме sealife.* игра живёт всегда. Сигнал заглушки — ТОЛЬКО явный
 // `standalone:false` от /api/game-config; сетевые ошибки/таймаут → fail-open (игра).
 async function fetchStandaloneAllowed(){
   try{

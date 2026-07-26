@@ -8,9 +8,7 @@
 ;(function () {
   'use strict'
 
-  // Контакт оператора для standalone-альфы (sealthehunter.online). Это ОТОБРАЖАЕМЫЙ контакт
-  // (как в Impressum), а не форма сбора email — соответствует COMPLIANCE.
-  var FEEDBACK_EMAIL = 'feedback@sealthehunter.online'
+  // Контактной точки в игре нет: по COMPLIANCE контакт оператора живёт в Impressum сайта.
 
   var DICT = {
     ru: {
@@ -78,17 +76,7 @@
       helloLine: function (v) {
         return 'Привет, ' + v.alias + '!'
       },
-      // — standalone-альфа (только на sealthehunter.online)
-      alphaNotice: 'Это ограниченный альфа-тест игры. Спасибо, что играете!',
-      feedbackInvite: function () {
-        return (
-          'Нашли баг или есть идея? Пишите: <a href="mailto:' +
-          FEEDBACK_EMAIL +
-          '">' +
-          FEEDBACK_EMAIL +
-          '</a>'
-        )
-      },
+      // — standalone (игра открыта прямым URL): переключатель языка
       langSwitchLabel: 'Язык игры',
     },
     en: {
@@ -156,22 +144,12 @@
       helloLine: function (v) {
         return 'Hello, ' + v.alias + '!'
       },
-      // — standalone alpha (sealthehunter.online only)
-      alphaNotice: 'This is a limited alpha test run of the game. Thanks for playing!',
-      feedbackInvite: function () {
-        return (
-          'Found a bug or have an idea? Email <a href="mailto:' +
-          FEEDBACK_EMAIL +
-          '">' +
-          FEEDBACK_EMAIL +
-          '</a>'
-        )
-      },
+      // — standalone (game opened by direct URL): language switcher
       langSwitchLabel: 'Game language',
     },
   }
 
-  // STANDALONE = игра открыта самостоятельной страницей (sealthehunter.online), не во фрейме.
+  // STANDALONE = игра открыта самостоятельной страницей (прямой URL), не во фрейме.
   // Во фрейме (встраивание на sealife.*) язык приходит из ?lang= и переключателя нет.
   var STANDALONE = (function () {
     try {

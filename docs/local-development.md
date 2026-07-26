@@ -139,7 +139,7 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
     `not-found.tsx` (QA-04/05 — done, PR #39/#40).
   - `admin.e2e.spec.ts` — логин в админку, dashboard, списки/создание пользователя.
-  - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка, alpha-notice,
+  - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка,
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
     авто-скролла к строке игрока (в CI с QA-09; расширение обвязки — Roadmap **QA-32**).

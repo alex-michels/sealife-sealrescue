@@ -186,12 +186,12 @@ Argon2id; TLS везде; httpOnly/Secure/SameSite cookie; CSRF; rate-limit на
 
 ### 9.11. Кросс-доменная идентичность (SSO)
 
-Один username на sealife.info + sealrescue.info + игры (вкл. отдельные домены вроде sealthehunter.online). Cookie **не шарится** между разными корневыми доменами → нужен центральный IdP:
+Один username на sealife.info + sealrescue.info и все игры. Публичных поверхностей у проекта ровно два корня: **`sealife.info` и `sealrescue.info` с их поддоменами** (домен-политика — `DEPLOYMENT.md`). Игры живут маршрутами или поддоменами `*.sealife.info`; отдельных корневых доменов под игры больше нет и не заводим — заодно это снимает разрыв SH-10 (standalone-origin игры, с которого не был достижим футер с Impressum/Datenschutz): такого origin больше не существует, а на обоих апексах legal-shell доступен из футера каждой страницы. Cookie **не шарится** между двумя разными корневыми доменами → нужен центральный IdP:
 
 * **Единая таблица `players` = source of truth** → уникальность username глобальна через `UNIQUE`.
 * **Центральный auth-хост** (`accounts.sealife.info`) выдаёт сессии/токены.
-* **Поддомены `*.sealife.info`** шарят cookie `.sealife.info` (по возможности заводить игры сюда — максимально упрощает).
-* **Отдельные корневые домены** (sealrescue.info, sealthehunter.online) → **redirect-SSO (OIDC Authorization Code + PKCE)**, свой «Sign in with SeaLife».
+* **Поддомены `*.sealife.info`** шарят cookie `.sealife.info` — сюда и заводим игры, тогда для них SSO сводится к общей cookie.
+* **Второй корень** (sealrescue.info) → **redirect-SSO (OIDC Authorization Code + PKCE)**, свой «Sign in with SeaLife». Это единственный кросс-доменный кейс.
 * **Миграция анонимов:** при первом логине с устройства — «забрать очки этого устройства» (merge anon-id ТЕКУЩЕГО устройства, с подтверждением; никогда не авто-merge между устройствами).
 
 Диаграмма архитектуры — `Roadmap.md` эпик **ACC**.

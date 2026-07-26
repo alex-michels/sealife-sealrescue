@@ -5,8 +5,8 @@ Idempotent, convergent configuration you can **re-run safely on a live box** (th
 [`DEPLOYMENT.md`](../../docs/DEPLOYMENT.md) §5 and is where the future `postgres` / `backups` roles
 plug in — adding Postgres later is a new role + re-run, **never a reinstall**.
 
-> ℹ️ Has been run successfully against the live alpha box (`sealthehunter.online`) as part of go-live —
-> see `docs/DEPLOYMENT.md` §8 step 4. Still review with `just configure-check` (`--check --diff`) before
+> ℹ️ Has been run successfully against the live box during the public game alpha go-live — see
+> `docs/DEPLOYMENT.md` §8 step 4. Still review with `just configure-check` (`--check --diff`) before
 > any change that touches roles/vars, since it's idempotent but not exhaustively tested against every
 > possible prior state.
 
@@ -17,6 +17,19 @@ plug in — adding Postgres later is a new role + re-run, **never a reinstall**.
 | `node` | Node `{{ node_major }}` via NodeSource at `/usr/bin/node` |
 | `caddy` | install Caddy + deploy the canonical `deploy/Caddyfile` |
 | `app`  | `/opt/sealife` dirs, `/etc/sealife/.env` scaffold (created once), the `deploy/sealife.service` unit |
+
+## Playbooks
+| Playbook | Does |
+|---|---|
+| `site.yml` | full day-2 convergence — all roles above |
+| `shutdown.yml` | stops + disables `sealife` and `caddy`, i.e. kills the public surface without touching the box. Used to decommission the public game alpha; also the kill-switch for a future QA/stage. Run it from the [`Shutdown alpha (VPS)`](../../.github/workflows/shutdown-alpha.yml) workflow. |
+
+## Variables worth knowing
+`group_vars/all.yml` → **`server_url`** is templated into `/etc/sealife/.env` as `SERVER_URL`, so it
+must match the environment being configured — `https://sealife.info`, `https://sealrescue.info`, or a
+subdomain of one of them. The project uses no other domains. A wrong value silently corrupts
+canonical / hreflang / sitemap URLs, so override it per environment via `--extra-vars` or `host_vars`
+instead of relying on the default.
 
 ## Control node (where you run Ansible)
 Ansible's control node must be **Linux/macOS/WSL — not native Windows**. Options:
