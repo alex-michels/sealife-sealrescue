@@ -38,7 +38,23 @@ export const AgentProposals: CollectionConfig = {
     { name: 'targetId', type: 'text', admin: { description: 'id целевого документа (если обновление)' } },
     { name: 'diff', type: 'json', admin: { description: 'Что меняется: { field: { from, to } }' } },
     { name: 'evidence', type: 'json', admin: { description: 'Доказательства: URL, снапшот HTML, цитаты' } },
-    { name: 'sources', type: 'relationship', relationTo: 'sources', hasMany: true },
+    {
+      // M2-T06 + требование владельца 2026-07-26: агент ходит в интернет и ОБЯЗАН
+      // перепроверять факты. Инвариант «непустой sources[]» жил только в прозе — предложение
+      // без источников было валидным. Теперь это отклоняет схема (CLAUDE.md инвариант №6:
+      // жёсткие ограничения — в коде, а не в доке).
+      name: 'sources',
+      type: 'relationship',
+      relationTo: 'sources',
+      hasMany: true,
+      required: true,
+      minRows: 1,
+      admin: {
+        description:
+          'Чем подтверждено предложение. Минимум один источник — предложение без источников ' +
+          'схемой не принимается.',
+      },
+    },
     { name: 'confidence', type: 'number', min: 0, max: 1 },
     {
       name: 'status',
