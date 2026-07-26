@@ -1,21 +1,26 @@
 # Caddyfile — canonical reverse-proxy config (deployed to the box by the Ansible caddy role).
 #
-# ── 2026-07-12: публичная альфа sealthehunter.online ВЫВЕДЕНА ИЗ ЭКСПЛУАТАЦИИ (решение
-# владельца: разработка продолжается локально, перед prod будет QA-stage). Сайт-блок альфы
-# удалён; Caddy и приложение на боксе остановлены и выключены (infra/ansible/shutdown.yml,
-# workflow «Shutdown alpha (VPS)»). Конфиг из одних комментариев валиден: даже если Caddy
-# запустить, публично он ничего не слушает.
+# ── ДОМЕННАЯ ПОЛИТИКА (решение владельца, 2026-07-26)
+# Проект обслуживает ТОЛЬКО два апекс-домена и их поддомены:
+#   • sealife.info     (+ *.sealife.info — сюда же уходят игры, напр. sealrun.sealife.info, SR-12)
+#   • sealrescue.info  (+ *.sealrescue.info)
+# Других доменов у проекта нет. Оба сайта и игры отдаёт ОДНО приложение на 127.0.0.1:3000:
+# маршрутизация по хосту живёт внутри Next, Caddy лишь терминирует TLS и проксирует.
 #
-# Воскрешение альфы: вернуть сайт-блок из git-истории (последняя живая версия — merge
-# PR #73, commit 91979bd) → Actions «Configure VPS (Ansible)» → «Deploy (main → VPS)» →
-# при необходимости «Seed database» / «Toggle game standalone». Раннбук — DEPLOYMENT.md §5.
+# Сейчас публичная поверхность выключена: сайт-блоков нет, Caddy и приложение на боксе
+# остановлены и выключены (infra/ansible/shutdown.yml, workflow «Shutdown alpha (VPS)»).
+# Конфиг из одних комментариев валиден: даже если Caddy запустить, публично он ничего не слушает.
 #
-# ── Later: the prod sites reuse THIS app + deploy. Add separate blocks (full proxy, no allowlist):
-#
+# Включить публичное окружение = раскомментировать нужный блок ниже (A/AAAA-запись домена
+# должна указывать на бокс — сертификат Let's Encrypt Caddy получит сам) → Actions
+# «Configure VPS (Ansible)» → «Deploy (main → VPS)» → при необходимости «Seed database» /
+# «Toggle game standalone». Раннбук — docs/DEPLOYMENT.md §5.
+
 # sealife.info, www.sealife.info {
 # 	encode zstd gzip
 # 	reverse_proxy 127.0.0.1:3000
 # }
+
 # sealrescue.info, www.sealrescue.info {
 # 	encode zstd gzip
 # 	reverse_proxy 127.0.0.1:3000

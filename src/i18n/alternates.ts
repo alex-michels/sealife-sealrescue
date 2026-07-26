@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { locales, fallbackLocale, type Locale } from './config'
+import { locales, routeLocales, fallbackLocale, type Locale, type RouteLocale } from './config'
 import { siteBaseUrl, type SiteConfig } from '@/site/config'
 
 /**
@@ -26,6 +26,29 @@ export function buildAlternates(
     languages[locale] = `${base}/${locale}${pathSuffix}`
   }
   // x-default = международный фолбэк (en): для посетителей, чей язык не ru/en.
+  languages['x-default'] = `${base}/${fallbackLocale}${pathSuffix}`
+
+  return {
+    canonical: `${base}/${current}${pathSuffix}`,
+    languages,
+  }
+}
+
+/**
+ * То же для legal-страниц, у которых набор языков шире контентного: кроме ru/en существует
+ * немецкая версия (Impressum/Datenschutz — обязанность оператора в Германии, см.
+ * `legalOnlyLocales` в ./config). hreflang перечисляет все три честно: все три реально отдаются.
+ */
+export function buildLegalAlternates(
+  pathSuffix: string,
+  current: RouteLocale,
+  site: SiteConfig,
+): Metadata['alternates'] {
+  const base = siteBaseUrl(site)
+  const languages: Record<string, string> = {}
+  for (const locale of routeLocales) {
+    languages[locale] = `${base}/${locale}${pathSuffix}`
+  }
   languages['x-default'] = `${base}/${fallbackLocale}${pathSuffix}`
 
   return {

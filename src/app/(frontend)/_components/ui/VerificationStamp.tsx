@@ -11,7 +11,10 @@ import type { Locale } from '@/i18n/config'
  * Provenance-поля (agentCheckedAt / humanReviewedAt) лягут на схему Content/RescueCenter
  * (EU-11, M1-T08). Здесь — переиспользуемый примитив; реальные данные — в M2 (карточки центров).
  */
-const copy: Record<Locale, Record<'both' | 'agent' | 'human' | 'none' | 'agentLabel' | 'humanLabel', string>> = {
+const copy: Record<
+  Locale,
+  Record<'both' | 'agent' | 'human' | 'none' | 'agentLabel' | 'humanLabel', string>
+> = {
   ru: {
     both: 'Проверено агентом и человеком',
     agent: 'Проверено агентом · ожидает человека',
@@ -27,14 +30,6 @@ const copy: Record<Locale, Record<'both' | 'agent' | 'human' | 'none' | 'agentLa
     none: 'Not verified',
     agentLabel: 'agent',
     humanLabel: 'human',
-  },
-  de: {
-    both: 'Von Agent und Mensch geprüft',
-    agent: 'Vom Agent geprüft · wartet auf Mensch',
-    human: 'Von Mensch geprüft',
-    none: 'Nicht geprüft',
-    agentLabel: 'Agent',
-    humanLabel: 'Mensch',
   },
 }
 
@@ -67,7 +62,12 @@ function StampIcon({ verified }: { verified: boolean }) {
           strokeLinejoin="round"
         />
       ) : (
-        <path d="M8 4.8v3.6M8 10.8h.01" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+        <path
+          d="M8 4.8v3.6M8 10.8h.01"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
       )}
     </svg>
   )

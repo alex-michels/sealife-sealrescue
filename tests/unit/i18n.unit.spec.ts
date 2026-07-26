@@ -1,29 +1,32 @@
 import { describe, it, expect } from 'vitest'
 import {
   locales,
+  routeLocales,
+  legalOnlyLocales,
   defaultLocale,
   fallbackLocale,
   targetLocales,
   isLocale,
+  isRouteLocale,
+  chromeLocale,
   localeLabels,
 } from '@/i18n/config'
 import { t } from '@/i18n/ui'
-import { buildAlternates } from '@/i18n/alternates'
+import { buildAlternates, buildLegalAlternates } from '@/i18n/alternates'
 import { sites } from '@/site/config'
 
-/** Инварианты локалей (CLAUDE.md «Локали и роутинг»): ru исходная, en/de — полноценные. */
+/** Инварианты локалей (CLAUDE.md «Локали и роутинг»): ru исходная, en — перевод. */
 describe('i18n config invariants', () => {
-  it('exactly ru/en/de, ru is source, en is international fallback', () => {
-    expect([...locales]).toEqual(['ru', 'en', 'de'])
+  it('exactly ru/en, ru is source, en is international fallback', () => {
+    expect([...locales]).toEqual(['ru', 'en'])
     expect(defaultLocale).toBe('ru')
     expect(fallbackLocale).toBe('en')
-    expect(targetLocales).toEqual(['en', 'de'])
+    expect(targetLocales).toEqual(['en'])
   })
 
   it('isLocale guards', () => {
     expect(isLocale('ru')).toBe(true)
     expect(isLocale('en')).toBe(true)
-    expect(isLocale('de')).toBe(true)
     expect(isLocale('xx')).toBe(false)
     expect(isLocale('')).toBe(false)
     expect(isLocale('RU')).toBe(false)
@@ -36,11 +39,36 @@ describe('i18n config invariants', () => {
   })
 })
 
+/**
+ * DE удалён как язык сайта 2026-07-26 и остался ТОЛЬКО legal-роутом: оператор в Германии,
+ * §5 DDG / §18 MStV не зависят от языков сайта. Контракт: `de` — не контент-локаль,
+ * но валидный префикс URL; обвязка страницы на нём деградирует на en.
+ * Судьба немецких legal-страниц решается на юрпроверке (EU-06).
+ */
+describe('legal-only locale (de)', () => {
+  it('de is NOT a content locale but IS a route locale', () => {
+    expect([...legalOnlyLocales]).toEqual(['de'])
+    expect([...routeLocales]).toEqual(['ru', 'en', 'de'])
+    expect(isLocale('de')).toBe(false) // ← контентные роуты /de отдают 404
+    expect(isRouteLocale('de')).toBe(true) // ← /de/legal-notice и /de/privacy живут
+    expect(isRouteLocale('xx')).toBe(false)
+  })
+
+  it('chromeLocale falls back to en on de, identity on content locales', () => {
+    expect(chromeLocale('de')).toBe('en')
+    expect(chromeLocale('ru')).toBe('ru')
+    expect(chromeLocale('en')).toBe('en')
+  })
+
+  it('de has no UI label (свитчер предлагает только RU/EN)', () => {
+    expect(Object.keys(localeLabels)).toEqual(['ru', 'en'])
+  })
+})
+
 describe('t()', () => {
   it('returns per-locale UI strings', () => {
     expect(t('ru', 'language')).toBe('Язык')
     expect(t('en', 'language')).toBe('Language')
-    expect(t('de', 'language')).toBe('Sprache')
   })
 
   it('404 microcopy differs by site tone (бриф §7)', () => {
@@ -52,14 +80,25 @@ describe('t()', () => {
 
 /** hreflang/canonical (M0-T10): абсолютные URL от прод-домена сайта, x-default → en. */
 describe('buildAlternates', () => {
-  it('builds canonical for the current locale and hreflang for all locales', () => {
-    const alt = buildAlternates('/articles', 'de', sites.sealife)
-    expect(alt?.canonical).toBe('https://sealife.info/de/articles')
+  it('builds canonical for the current locale and hreflang for content locales only', () => {
+    const alt = buildAlternates('/articles', 'en', sites.sealife)
+    expect(alt?.canonical).toBe('https://sealife.info/en/articles')
     expect(alt?.languages).toEqual({
       ru: 'https://sealife.info/ru/articles',
       en: 'https://sealife.info/en/articles',
-      de: 'https://sealife.info/de/articles',
       'x-default': 'https://sealife.info/en/articles',
+    })
+  })
+
+  /** Legal-страницы шире контентных: у них есть немецкая версия (Impressum/Datenschutz). */
+  it('buildLegalAlternates includes the legal-only de version', () => {
+    const alt = buildLegalAlternates('/privacy', 'de', sites.sealife)
+    expect(alt?.canonical).toBe('https://sealife.info/de/privacy')
+    expect(alt?.languages).toEqual({
+      ru: 'https://sealife.info/ru/privacy',
+      en: 'https://sealife.info/en/privacy',
+      de: 'https://sealife.info/de/privacy',
+      'x-default': 'https://sealife.info/en/privacy',
     })
   })
 

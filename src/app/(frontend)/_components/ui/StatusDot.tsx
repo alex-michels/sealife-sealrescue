@@ -11,19 +11,19 @@ export type CenterStatus = 'active' | 'unconfirmed' | 'link_broken' | 'needs_che
 const meta: Record<CenterStatus, { color: string; label: Record<Locale, string> }> = {
   active: {
     color: 'var(--color-status-active)',
-    label: { ru: 'Активен', en: 'Active', de: 'Aktiv' },
+    label: { ru: 'Активен', en: 'Active' },
   },
   needs_check: {
     color: 'var(--color-status-check)',
-    label: { ru: 'Требует проверки', en: 'Needs check', de: 'Prüfung nötig' },
+    label: { ru: 'Требует проверки', en: 'Needs check' },
   },
   link_broken: {
     color: 'var(--color-status-broken)',
-    label: { ru: 'Ссылка сломана', en: 'Link broken', de: 'Link defekt' },
+    label: { ru: 'Ссылка сломана', en: 'Link broken' },
   },
   unconfirmed: {
     color: 'var(--color-status-unverified)',
-    label: { ru: 'Не подтверждён', en: 'Unconfirmed', de: 'Unbestätigt' },
+    label: { ru: 'Не подтверждён', en: 'Unconfirmed' },
   },
 }
 

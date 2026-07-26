@@ -3,10 +3,11 @@ name: Deploy (main → VPS)
 # Single source of truth = main. Build a lean Next standalone artifact in CI → rsync it to the
 # VPS → repoint the `current` symlink → restart systemd. See docs/DEPLOYMENT.md.
 #
-# ── 2026-07-12: альфа sealthehunter.online выведена из эксплуатации (сервисы на боксе
-# остановлены, см. shutdown-alpha.yml) — АВТО-деплой по push в main ВЫКЛЮЧЕН на время
-# локальной разработки. Workflow остаётся для будущего QA/prod (ручной запуск); health check
-# внизу до сих пор целится в альфа-домен — перед реюзом перенацелить. Auto-push вернуть =
+# ── 2026-07-12: публичная альфа игры выведена из эксплуатации (сервисы на боксе остановлены,
+# см. shutdown-alpha.yml) — АВТО-деплой по push в main ВЫКЛЮЧЕН на время локальной разработки.
+# Workflow остаётся для будущего QA/prod (ручной запуск). Проект живёт только на sealife.info
+# и sealrescue.info (плюс их поддомены), поэтому цель финального health-check задаётся входом
+# `health_url` — указывайте URL того окружения, куда деплоите. Auto-push вернуть =
 # раскомментировать блок `push:` ниже.
 #
 # Why build in CI: the box is 8 GB and `next build` runs with --max-old-space-size=8000; building
@@ -24,6 +25,12 @@ on:
   # push:
   #   branches: [main]
   workflow_dispatch:
+    inputs:
+      health_url:
+        description: Базовый URL окружения для финального health-check (sealife.info / sealrescue.info или их поддомен)
+        type: string
+        required: false
+        default: https://sealife.info
 
 concurrency:
   group: deploy-main
@@ -54,10 +61,10 @@ jobs:
       # Схема пока push-based (миграций нет): `next build` (NODE_ENV=production) push НЕ делает,
       # а пререндер читает БД живьём — новая коллекция/global без этого шага валит сборку
       # («relation … does not exist», инцидент PR #53). Идемпотентно; тот же скрипт, что в CI e2e.
-      # Заодно актуализирует схему alpha-БД ДО рестарта рантайма (он смотрит в ту же Neon-ветку).
+      # Заодно актуализирует схему БД окружения ДО рестарта рантайма (он смотрит в ту же ветку).
       # `echo y |` авто-подтверждает data-loss prompt drizzle (интерактивный TTY-вопрос в CI иначе
       # виснет; первый случай — удаление колонки `board` в SH-11). Осознанный трейдофф push-фазы:
-      # данные alpha-лидерборда анонимны и еженедельно прунятся; перед prod — миграции (Roadmap).
+      # данные лидерборда в не-prod окружениях анонимны и прунятся; перед prod — миграции (Roadmap).
       - name: Sync DB schema (drizzle push)
         run: echo y | npx tsx scripts/push-dev-schema.mts
         env:
@@ -123,12 +130,16 @@ jobs:
              ls -1dt /opt/sealife/releases/*/ | tail -n +6 | xargs -r rm -rf"
 
       - name: Health check (game + leaderboard reachable)
+        env:
+          # Fallback дублирует default инпута — нужен, если вернут триггер `push:` (там inputs пуст).
+          HEALTH_URL: ${{ inputs.health_url || 'https://sealife.info' }}
         run: |
           set -e
+          BASE="${HEALTH_URL%/}"
           for i in $(seq 1 10); do
-            if curl -fsS "https://sealthehunter.online/api/leaderboard?game=seal-the-hunter" >/dev/null; then
+            if curl -fsS "$BASE/api/leaderboard?game=seal-the-hunter" >/dev/null; then
               echo "healthy"; exit 0
             fi
             echo "waiting for app… ($i)"; sleep 3
           done
-          echo "health check failed"; exit 1
+          echo "health check failed: $BASE"; exit 1

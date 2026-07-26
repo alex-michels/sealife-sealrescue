@@ -6,7 +6,11 @@ node_major: 24
 app_user: deploy
 app_dir: /opt/sealife
 env_file: /etc/sealife/.env
-server_url: https://sealthehunter.online
+
+# Templated into {{ env_file }} as SERVER_URL. ПЕРЕОПРЕДЕЛЯТЬ ПОД ОКРУЖЕНИЕ (stage vs prod,
+# sealife.info vs sealrescue.info) через --extra-vars или host_vars: неверный SERVER_URL
+# молча ломает canonical/hreflang/sitemap-URL — страницы отдадут чужой домен.
+server_url: https://sealife.info
 
 # Public keys allowed to log in as `deploy` (same keypair as the CI SSH_KEY secret).
 # Paste one or more "ssh-ed25519 AAAA... comment" lines.

@@ -29,16 +29,21 @@ self-host шрифты (`next/font`) · аналитика Plausible (cookieless
 
 1. **Хост → сайт.** `resolveSiteId(host, override)` определяет `sealife` | `sealrescue` по домену
    (локально — `?site=` / cookie). Внутренний `rewrite` на сегмент `/[site]`; URL пользователя не меняется.
-2. **Локаль.** Нет локали в пути → redirect на `ru`/`en`/`de` (авто-выбор без forced-редиректа: русскоязычные → `ru`,
-   немецкоязычные → `de`, остальные → `en`; явный выбор в cookie `NEXT_LOCALE` важнее). Есть локаль → rewrite на `/[site]/[locale]/…`.
-3. **Legal-роуты.** Локализованы под каждую локаль (DE: Impressum/Datenschutz/Cookies/Terms); slug общий
-   (`legal-notice`/`privacy`/`cookies`/`terms`), заголовок и подпись зависят от локали.
+2. **Локаль.** Нет локали в пути → redirect на `ru`/`en` (авто-выбор без forced-редиректа: русскоязычные → `ru`,
+   все остальные, включая немецкоязычных, → `en`; явный выбор в cookie `NEXT_LOCALE` важнее). Есть локаль → rewrite на `/[site]/[locale]/…`.
+   Префикс в пути распознаётся по `routeLocales` (`ru`/`en`/`de`), иначе `/de/privacy` улетел бы в редирект.
+3. **Legal-роуты.** Slug общий (`legal-notice`/`privacy`/`cookies`/`terms`), заголовок и подпись зависят от локали.
+   Единственное место, где живёт `de`: немецкие Impressum/Datenschutz обязательны, потому что оператор в Германии
+   (§5 DDG / §18 MStV), независимо от языков сайта. Контентных страниц под `/de` нет — они отдают 404.
 4. **Admin/API исключены** из proxy matcher — Payload обслуживает их сам.
+
+> ⚠️ **TODO (Roadmap EU-06):** сохранять ли немецкие legal-страницы вообще — вопрос к юридической
+> консультации. До неё `de` в `legalOnlyLocales` — временная страховка, а не окончательное решение.
 
 Публичные страницы — **server components по умолчанию**; client-JS только где нужна интерактивность
 (переключатель языка, consent-баннер, mock-свитчеры, игры). ⚠️ Статическая генерация — пока цель,
 не текущее поведение: только `[site]/[locale]/layout.tsx` использует `generateStaticParams`
-(site×locale-шелл); все страницы с данными делают живой `getPayload`-запрос на каждый рендер (SSR
+(site×routeLocale-шелл, включая `/de` ради legal); все страницы с данными делают живой `getPayload`-запрос на каждый рендер (SSR
 per-request), без ISR/`force-static`. См. [localization.md](localization.md).
 
 ## Слои кода
@@ -68,9 +73,10 @@ src/
 | Агент не публикует/не удаляет (human-in-the-loop) | access control коллекций + хук `forceAgentDrafts` |
 | Агент пишет только в `agent-proposals` | access (`update: isEditor` на статусе) + коллекция-очередь |
 | Исходная локаль `ru`, перевод заранее | `i18n/config.ts` + `markTranslationsStale` + localized-поля |
+| Контент-локали — только `ru`/`en`; `de` — legal-only | `i18n/config.ts` (`locales` vs `legalOnlyLocales`/`routeLocales`): страницы контента валидируют `isLocale`, legal-страницы — `isRouteLocale` |
 | Email с публичных пользователей не собираем | схема коллекций (нет email-полей в UGC; только `contactHandle`) |
 | Лидерборд анонимный (без PII) | `game-scores`: хэш `playerKey`, без IP/email/аккаунтов |
-| Неизвестная локаль / несуществующий slug → 404 | `proxy.ts` + `[locale]` route guard |
+| Неизвестная локаль / несуществующий slug / контент под `/de` → 404 | `proxy.ts` + `[locale]` route guard |
 | Provenance AI-контента виден пользователю | provenance-поля в `Content`/`Species`/… (расширяется, M1-T08) |
 
 ## Провенанс (модель доверия к контенту)

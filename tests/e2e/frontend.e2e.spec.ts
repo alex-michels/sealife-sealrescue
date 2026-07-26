@@ -5,9 +5,10 @@ import { sites } from '@/site/config'
 /**
  * Homepage smoke: branding + locale-routing invariants (CLAUDE.md «Локали и роутинг»).
  *
- * - Каждая локаль (ru/en/de) — полноценная: главная отдаёт локализованный
- *   title/вордмарк и правильный <html lang>.
- * - `/` без локали → redirect по Accept-Language (ru → /ru, прочие → /en);
+ * - Каждая контент-локаль (ru/en) — полноценная: главная отдаёт локализованный
+ *   title/вордмарк и правильный <html lang>. DE больше не язык сайта: под /de живут
+ *   только legal-роуты (контракт — в legal.e2e.spec.ts).
+ * - `/` без локали → redirect по Accept-Language (ru → /ru, прочие, включая de → /en);
  *   это авто-выбор ТОЛЬКО на путях без локали, не forced-редирект.
  * - Свитчер языка виден (инвариант «не прятать свитчер»).
  * - Сайт выбирается по хосту; на localhost — через ?site= override (proxy.ts).
@@ -50,6 +51,18 @@ test.describe('Frontend', () => {
     test.use({ locale: 'fr-FR' })
 
     test(`/ falls back to /${fallbackLocale}`, async ({ page }) => {
+      await page.goto(`${BASE}/`)
+      await expect(page).toHaveURL(`${BASE}/${fallbackLocale}`)
+      await expect(page).toHaveTitle(sealife.brand[fallbackLocale])
+    })
+  })
+
+  // Немецкий больше не язык сайта: автовыбор идёт по контент-локалям (ru/en), поэтому
+  // немецкоязычный посетитель получает /en. /de остаётся адресом немецкого Impressum.
+  test.describe('root redirect for German browsers', () => {
+    test.use({ locale: 'de-DE' })
+
+    test('/ falls back to /en (de is legal-only, not a content locale)', async ({ page }) => {
       await page.goto(`${BASE}/`)
       await expect(page).toHaveURL(`${BASE}/${fallbackLocale}`)
       await expect(page).toHaveTitle(sealife.brand[fallbackLocale])

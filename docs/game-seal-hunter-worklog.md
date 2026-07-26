@@ -2,15 +2,17 @@
 
 > **Cross-session handoff.** Read this + [`game-seal-hunter.md`](game-seal-hunter.md) (technical
 > reference) to get full context with no re-explanation. Game code: `public/games/seal-hunt-v1/`.
-> Last updated: **2026-07-12.**
+> Last updated: **2026-07-26.**
 
-> **2026-07-12 — альфа sealthehunter.online decommissioned.** Владелец завершил альфа-тест:
+> **2026-07-12 — публичная альфа игры decommissioned.** Владелец завершил альфа-тест:
 > сервисы `sealife`+`caddy` на VPS остановлены и выключены (workflow **Shutdown alpha (VPS)** →
 > `infra/ansible/shutdown.yml`), сайт-блок убран из `deploy/Caddyfile`, авто-деплой по push
 > в `main` выключен. Игра остаётся играбельной в DEV и через iframe sealife (локально).
-> Воскрешение — `DEPLOYMENT.md` §8.
+> Раннбук — `DEPLOYMENT.md`. **Домен альфы не используется и не возвращается:** у проекта ровно
+> два публичных корня — `sealife.info` и `sealrescue.info` (+ их поддомены), решение владельца
+> 2026-07-26.
 
-> **2026-07-08 — SH-14 standalone kill-switch.** Альфа sealthehunter.online окончена (решение
+> **2026-07-08 — SH-14 standalone kill-switch.** Альфа игры окончена (решение
 > владельца): админ-тумблер `games.standaloneComingSoon` + `GET /api/game-config` → standalone
 > показывает заглушку «Coming soon» (attract-фон: рыба плавает через штатный сим
 > spawnTick/updatePrey, тюленя/HUD/таймера/имён нет; `PLACEHOLDER` в game.js). iframe на
@@ -36,7 +38,10 @@
   fair — see §4b).
 - **Restore point** — tag **`seal-hunt-v1-original`** (`fcf14d7`) = the original game before any of
   this. Restore the game alone: `git checkout seal-hunt-v1-original -- public/games/seal-hunt-v1`.
-- **Alpha** — sealthehunter.online auto-deploys from `main` (see `DEPLOYMENT.md`); reflects PR #26.
+- **Alpha** — the public game alpha (auto-deploy from `main`, last state = PR #26) was
+  **decommissioned 2026-07-19/20**; there is no public game origin right now. Games will only ever
+  live under `sealife.info` / `sealrescue.info` and their subdomains (owner decision 2026-07-26).
+  See `DEPLOYMENT.md`.
 
 ---
 
@@ -404,12 +409,15 @@ fairness N=80 re-measured: 94.0 / 94.2, spread **0.2%**. `sw.js` v18→**v19**.
 ## Next steps / open items
 1. ✅ **Prey decision — DONE.** Straight-in hybrid shipped (PR #26, merged `566f673`), deployed to
    the alpha. `main`'s old random-edge prey (the least-fair model) is replaced.
-2. ✅ **Alpha — DONE.** sealthehunter.online auto-deployed from `main` (PR #26) and is live.
+2. ✅ **Alpha — DONE, then retired.** The public alpha auto-deployed from `main` (PR #26) and ran
+   until it was decommissioned on 2026-07-19/20.
 3. ✅ **Backdrop (PR #32), prey-icon redesign (PR #33), leaderboard-scroll fix (PR #34), cover
    rebuild (PR #35) — all DONE**, merged and deployed to the alpha as of 2026-07-01.
-4. **Open — SH-10 (Roadmap):** legal-page accessibility on the alpha domain (footer Impressum/
-   Datenschutz links in-game, Caddyfile allowlist, real Impressum contact info, Datenschutz section
-   about the game's `localStorage`/rate-limiting) — confirmed still not started by the 2026-07-01
+4. **SH-10 (Roadmap) — moot as originally written.** It was about legal-page accessibility on the
+   standalone alpha origin (in-game Impressum/Datenschutz footer + proxy allowlist). That origin is
+   gone and no separate game origin will replace it, so games inherit the site footer. What still
+   stands is site-wide, not game-specific: real Impressum contact info and a Datenschutz section
+   about the game's `localStorage`/rate-limiting — both confirmed not started by the 2026-07-01
    documentation audit.
 5. *(Optional, future)* tighten the residual aspect spread further (tighter clamp — 16:9 is ~2 pts
    fairer but borders tall phones more; or a calibrated per-aspect difficulty compensation) — the

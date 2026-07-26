@@ -271,8 +271,9 @@ fullscreen на `pointerup` (не `pointerdown`) на iOS; guard против «
 (отключить visibility-change-паузу игры). Все три подтверждены багрепортами Phaser.
 
 ### 2.4 i18n / SW / анонимная личность — подтверждённое переиспользование, без новых паттернов
-Собственный `i18n.js` (IIFE, `window.SealI18n` с идентичной формой lang/t/dict/standalone/setLang/
-onLangChange, приоритет `?lang=` → сохранённый выбор → язык браузера → `ru`); собственный `sw.js`
+Собственный `i18n.js` (IIFE, словарь `ru`/`en`, `window.SealI18n` с идентичной формой lang/t/dict/
+standalone/setLang/onLangChange, приоритет `?lang=` → сохранённый выбор → язык браузера
+(ru→ru, иначе en) → `ru`); собственный `sw.js`
 (network-first, свой `CACHE`, свой ASSETS-список, `/api/*` не кэшируется); собственный
 `core/alias.js` — копия структуры Seal Hunter (word lists/mulberry32/PATTERNS БАЙТ-В-БАЙТ синхронно
 с сервером — тот же общий `leaderboard.ts`, только новый `game`-слаг), свой ключ `localStorage`
@@ -280,18 +281,24 @@ onLangChange, приоритет `?lang=` → сохранённый выбор 
 `playerKey` солится слагом игры).
 
 ### 2.5 Домен — роут на sealife.info + vanity-редирект (подтверждено)
+**Доменная политика проекта (решение владельца 2026-07-26):** публичных корневых домена ровно два —
+`sealife.info` и `sealrescue.info`; всё остальное живёт роутами или **поддоменами** под ними, новых
+корневых доменов проект не заводит. Seal Run в эту политику укладывается без исключений.
+
 Канонический origin — `sealife.info/[locale]/games/seal-run` через существующую `Games.embed`
 iframe-конвенцию (как Seal Hunter сегодня). **Плюс vanity-редирект `sealrun.sealife.info` → этот
-путь** (301 на уровне Caddy/хоста, ~5 строк; операционно легко — подтверждено аудитом). Пользователь
-получает запоминаемый URL СЕЙЧАС, но публичный origin остаётся ОДИН: Impressum/Datenschutz достижимы
-через обычный футер сайта → **разрыв SH-10 не повторяется** (в отличие от standalone-домена, которому
-пришлось бы нести свою legal-достижимость с первого дня). Почему канонический путь, а не
-standalone-поддомен в v1: `sealife.info` ещё не в проде (жив только `sealthehunter.online`, см.
-Roadmap M0-T03); выигрыш ACC от `*.sealife.info` (общий cookie с будущим IdP) одинаково доступен и
-роуту, и редиректу, и поддомену — различие в ACC-доке касается РАЗНЫХ корневых доменов (sealife.info
-vs sealthehunter.online), а не «путь против поддомена» внутри одного корня. **Промоушен
-`sealrun.sealife.info` в полноценный standalone-origin** (своя игра + свой legal-shell) — пересмотр
-ПОСЛЕ прод-запуска `sealife.info` И ПОСЛЕ закрытия SH-10.
+путь** (301 на уровне Caddy/хоста, ~5 строк; операционно легко — подтверждено аудитом; поддомен
+`*.sealife.info` — политике соответствует). Пользователь получает запоминаемый URL СЕЙЧАС, но
+публичный origin остаётся ОДИН: Impressum/Datenschutz достижимы через обычный футер сайта →
+**разрыв SH-10 не повторяется** (у выведенной альфы был свой standalone-origin, которому пришлось бы
+нести собственную legal-достижимость с первого дня, — и он её так и не получил). Почему канонический
+путь, а не standalone-поддомен в v1: `sealife.info` ещё не в проде (см. Roadmap M0-T03), публичных
+площадок у проекта сейчас нет вовсе; выигрыш ACC от `*.sealife.info` (общий cookie с будущим IdP)
+одинаково доступен и роуту, и редиректу, и поддомену — различие в ACC-доке касается РАЗНЫХ корневых
+доменов (`sealife.info` vs `sealrescue.info`), а не «путь против поддомена» внутри одного корня.
+**Промоушен `sealrun.sealife.info` в полноценный standalone-origin** (своя игра + свой legal-shell,
+по-прежнему внутри `*.sealife.info`) — пересмотр ПОСЛЕ прод-запуска `sealife.info` И ПОСЛЕ закрытия
+legal-долга SH-10 (реальный Impressum + секция Datenschutz про игру).
 
 **Standalone kill-switch (SH-14, общий с Seal Hunter):** прямой URL `/games/seal-run-v1/` (и
 будущий vanity-домен) уважает админ-тумблер `games.standaloneComingSoon` — при включённом флаге
@@ -302,7 +309,7 @@ standalone-страница показывает заглушку «Coming soon�
 ### 2.6 Схема Payload
 `games`: без изменений схемы — один новый документ (`slug: seal-run`, `embed:
 /games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). **Сделано (SR-08):** запись в
-`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN/DE, `order: 1`) — сеется baseline- и m1-сидом,
+`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN, `order: 1`) — сеется baseline- и m1-сидом,
 идемпотентность/инварианты локалей закрывает `tests/int/seeds.int.spec.ts` (итерируется по
 `gamesSeed`); карточка на `/[locale]/games` и detail-страница с iframe работают из коробки
 (generic-роут `games/[slug]`). `game-scores`: добавить НЕОБЯЗАТЕЛЬНЫЕ

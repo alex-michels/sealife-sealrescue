@@ -81,7 +81,7 @@ describe('идемпотентность (второй прогон ничего
 describe('инварианты после сида', () => {
   it('games: все 3 локали заполнены, published, slug канонический', async () => {
     for (const g of gamesSeed) {
-      for (const locale of ['ru', 'en', 'de'] as const) {
+      for (const locale of ['ru', 'en'] as const) {
         const res = await payload.find({
           collection: 'games',
           where: { slug: { equals: g.slug } },
@@ -99,7 +99,7 @@ describe('инварианты после сида', () => {
 
   it('content: title во всех 3 локалях, published', async () => {
     for (const item of contentSeed) {
-      for (const locale of ['ru', 'en', 'de'] as const) {
+      for (const locale of ['ru', 'en'] as const) {
         const res = await payload.find({
           collection: 'content',
           where: { slug: { equals: item.slug } },
@@ -115,7 +115,7 @@ describe('инварианты после сида', () => {
   it('species: name в 3 локалях; факты не размножаются и переведены (id-matching)', async () => {
     for (const sp of speciesSeed) {
       const perLocale: Record<string, { name?: string | null; facts?: Array<{ id?: string | null; text?: string | null }> | null }> = {}
-      for (const locale of ['ru', 'en', 'de'] as const) {
+      for (const locale of ['ru', 'en'] as const) {
         const res = await payload.find({
           collection: 'species',
           where: { slug: { equals: sp.slug } },
@@ -126,10 +126,10 @@ describe('инварианты после сида', () => {
         expect(res.docs[0]?.name, `${sp.slug} name (${locale})`).toBeTruthy()
       }
       // Регресс id-matching: без сопоставления строк по id локализованный массив
-      // пересоздаётся при записи en/de — строки дублируются либо теряют ru.
+      // пересоздаётся при записи en — строки дублируются либо теряют ru.
       const ruFacts = perLocale.ru.facts ?? []
       expect(ruFacts.length, `${sp.slug} facts count`).toBe(sp.facts.length)
-      for (const locale of ['en', 'de'] as const) {
+      for (const locale of ['en'] as const) {
         const facts = perLocale[locale].facts ?? []
         expect(facts.length, `${sp.slug} facts (${locale})`).toBe(sp.facts.length)
         expect(
@@ -142,7 +142,7 @@ describe('инварианты после сида', () => {
   })
 
   it('glossary: translation заполнен в ru (сам термин) и en (перевод)', async () => {
-    // DE для глоссария — вместе с агентом-переводчиком (это translation memory, не публичный контент).
+    
     for (const term of glossaryTerms.slice(0, 10)) {
       const ru = await payload.find({
         collection: 'glossary',
