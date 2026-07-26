@@ -1,6 +1,8 @@
 import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
 import { forceAgentDrafts } from '../hooks/contentHooks'
+import { provenanceField, sourcesField } from '../fields/provenance'
+import { conservationAssessmentField } from '../fields/conservation'
 
 /**
  * «Тюленепедия» (M1-T03): карточки видов ластоногих для sealife.info.
@@ -59,6 +61,7 @@ export const Species: CollectionConfig = {
         { label: 'DD — недостаточно данных', value: 'DD' },
       ],
     },
+    conservationAssessmentField(),
     {
       type: 'row',
       fields: [
@@ -80,7 +83,16 @@ export const Species: CollectionConfig = {
       name: 'aiGenerated',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'EU AI Act: маркировать AI-сгенерированный/переведённый контент.' },
+      admin: {
+        description:
+          'Устаревший одиночный флаг: не различает язык. Заполняйте группу «provenance» ' +
+          '(M1-T08/EU-11).',
+      },
     },
+    provenanceField(),
+    sourcesField(
+      'Источники по виду (Red List, справочники, публикации). Обязательны для утверждений ' +
+        'о статусе и биологии — см. BIO-13/BIO-14.',
+    ),
   ],
 }

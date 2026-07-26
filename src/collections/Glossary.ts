@@ -1,5 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { isStaff, isEditor } from '../access/roles'
+import { sourcesField } from '../fields/provenance'
 
 // Категории/теги глоссария — общий список для записи и для отдельных вариантов.
 const categoryOptions = [
@@ -87,5 +88,9 @@ export const Glossary: CollectionConfig = {
           'Не переводить (имена/бренды/телефоны). Подсказка для integrity-проверки Агента 3.',
       },
     },
+    sourcesField(
+      'Источник термина/статуса. Охранные статусы в заметках непроверяемы — при переносе ' +
+        'в структурные поля указывайте ссылку (BIO-10/BIO-13).',
+    ),
   ],
 }

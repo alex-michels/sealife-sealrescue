@@ -2,6 +2,7 @@ import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
 import { forceAgentDrafts, markTranslationsStale } from '../hooks/contentHooks'
 import { topicSelectOptions } from '../content/topics'
+import { provenanceField, sourcesField } from '../fields/provenance'
 
 export const Content: CollectionConfig = {
   slug: 'content',
@@ -75,8 +76,18 @@ export const Content: CollectionConfig = {
       name: 'aiGenerated',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'EU AI Act: маркировать AI-сгенерированный/переведённый контент.' },
+      admin: {
+        description:
+          'Устаревший одиночный флаг: не различает язык, поэтому машинный перевод человеческого ' +
+          'текста им не описывается. Оставлен для совместимости — заполняйте группу «provenance» ' +
+          '(M1-T08/EU-11).',
+      },
     },
+    provenanceField(),
+    sourcesField(
+      'Источники, на которых основан материал. Агент, перепроверяющий факты в интернете, ' +
+        'обязан их проставлять (см. docs/agents.md).',
+    ),
     {
       name: 'localeStatus',
       type: 'array',
