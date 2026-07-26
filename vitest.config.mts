@@ -44,13 +44,13 @@ export default defineConfig({
         'src/seed/**', // данные сидов + payload-run обёртки; логика (lib.ts) закрыта tests/int/seeds.int.spec.ts (QA-18), но данные раздували бы метрику
         'src/mock/**', // сэмпл-данные dev-моков
       ],
-      // Порог — QA-10: ratchet, только растёт (актуалы после QA-15: lines 88 / stmts 87 /
-      // funcs 88 / branches 74). Запас ~8 п.п. под новый ещё-не-покрытый код.
+      // Порог — QA-10: ratchet, только растёт (актуалы после EU-11: lines 98 / stmts 96 /
+      // funcs 95 / branches 87). Запас ~8 п.п. под новый ещё-не-покрытый код.
       thresholds: {
-        lines: 80,
-        functions: 80,
-        statements: 80,
-        branches: 65,
+        lines: 90,
+        functions: 87,
+        statements: 88,
+        branches: 79,
       },
     },
   },

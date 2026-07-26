@@ -14,6 +14,44 @@ import { glossaryTerms } from './glossaryTerms'
 
 export type SeedCounts = { created: number; updated: number }
 
+/**
+ * BIO-16: сид — это AI-черновик, а не публикация.
+ *
+ * `content` и `species` сеются со статусом `draft`. Раньше они писались как `published`, то
+ * есть непроверенная биология сразу становилась опубликованным контентом (и заодно
+ * few-shot-образцом для агента M2-T06) — ровно то, что запрещает инвариант №7. Публичные
+ * запросы фильтруют `_status: 'published'`, поэтому после этой правки демо-записи видны в
+ * админке и не видны на сайте, пока человек их не опубликует.
+ *
+ * ⚠️ `games` остаются `published` СОЗНАТЕЛЬНО: лидерборд резолвит игру по slug, и черновик
+ * вернул бы `unknown_game`. `seedBaseline` — bootstrap-минимум любой свежей БД.
+ */
+const SEED_STATUS_CONTENT = 'draft' as const
+
+/**
+ * Провенанс сида (BIO-16b/c, EU AI Act Art. 50). Флаги локализованы, поэтому у исходного
+ * русского текста и его английского перевода они РАЗНЫЕ: ru — черновик писал AI, en —
+ * машинный перевод. До этой правки флаг стоял ровно у одной статьи из трёх, из-за чего
+ * бейдж AI висел на корректном тексте и отсутствовал у двух ошибочных.
+ *
+ * Пишем и `false` тоже: сид перезаписывает сам текст, значит прежняя вычитка к нему больше
+ * не относится — оставить `humanReviewed` от предыдущей версии означало бы соврать читателю.
+ * `sources` и `sourceVerified` не трогаем: коллекция источников пуста, а пустая связь честнее
+ * выдуманной ссылки.
+ */
+const provenanceSource = {
+  aiAssisted: true,
+  aiTranslated: false,
+  aiChecked: false,
+  humanReviewed: false,
+}
+const provenanceTranslation = {
+  aiAssisted: false,
+  aiTranslated: true,
+  aiChecked: false,
+  humanReviewed: false,
+}
+
 /** Минимальный lexical-документ из абзацев. */
 function rich(paragraphs: string[]) {
   return {
@@ -181,7 +219,10 @@ export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
   return { created, updated }
 }
 
-/** Демо-контент M1: Content + Species + Games, RU/EN. */
+/**
+ * Демо-контент M1: Content + Species + Games, RU/EN.
+ * Content и Species — ЧЕРНОВИКИ (BIO-16), games — published (иначе лидерборд не резолвит slug).
+ */
 export async function seedM1(
   payload: Payload,
 ): Promise<{ content: SeedCounts; species: SeedCounts; games: SeedCounts }> {
@@ -200,9 +241,11 @@ export async function seedM1(
       title: item.title.ru,
       excerpt: item.excerpt?.ru,
       topics: item.topics,
-      aiGenerated: item.aiGenerated ?? false,
+      // Устаревший одиночный флаг — зеркалим, пока UI не переехал на группу provenance.
+      aiGenerated: true,
+      provenance: provenanceSource,
       body: item.body ? rich(item.body.ru) : undefined,
-      _status: 'published' as const,
+      _status: SEED_STATUS_CONTENT,
     }
 
     let id: number
@@ -224,6 +267,7 @@ export async function seedM1(
         title: item.title.en,
         excerpt: item.excerpt?.en,
         body: item.body ? rich(item.body.en) : undefined,
+        provenance: provenanceTranslation,
       },
     })
 
@@ -243,13 +287,16 @@ export async function seedM1(
       slug: sp.slug,
       latin: sp.latin,
       conservationStatus: sp.conservationStatus,
+      // BIO-09/BIO-13: контекст оценки не локализуется — «оценён подвид» верно на любом языке.
+      conservationAssessment: sp.conservationAssessment,
       region: sp.region?.ru,
       size: sp.size?.ru,
       excerpt: sp.excerpt?.ru,
       body: sp.body ? rich(sp.body.ru) : undefined,
       facts: sp.facts.map((f) => ({ text: f.ru })),
-      aiGenerated: sp.aiGenerated ?? false,
-      _status: 'published' as const,
+      aiGenerated: true,
+      provenance: provenanceSource,
+      _status: SEED_STATUS_CONTENT,
     }
 
     let ruDoc
@@ -280,6 +327,7 @@ export async function seedM1(
         excerpt: sp.excerpt?.en,
         body: sp.body ? rich(sp.body.en) : undefined,
         facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f.en })),
+        provenance: provenanceTranslation,
       },
     })
 

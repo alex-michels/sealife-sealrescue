@@ -124,7 +124,9 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
   ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
   alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
-  хуки контента, **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
+  хуки контента, **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
+  EU-11), **биология сида** (`seed-biology.unit.spec.ts` — коды IUCN и факты, трек BIO),
+  **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
   **fairness** (пороги честности по профилям экранов, QA-31). Coverage-гейт: пороги в
   `vitest.config.mts` (ratchet — только вверх).
 - **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup; файлы бегут
@@ -133,7 +135,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
-  (QA-18); `api.int.spec.ts` — smoke.
+  (QA-18); `provenance.int.spec.ts` — поля шкалы провенанса на живом Payload, включая локализацию
+  флагов и `isEditorField` на «человек проверил» (EU-11); `api.int.spec.ts` — smoke.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные обеих локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
@@ -153,6 +156,10 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     DE-заголовки (Impressum/…), draft-плашка, футер-ссылки на 6 типах страниц (QA-22).
   - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение
     пути, `NEXT_LOCALE` только по явному клику (QA-24).
+  - `rescue-advice.e2e.spec.ts` — **контракт безопасности** страницы «нашёл тюленя» (трек BIO):
+    «одинокий детёныш обычно НЕ брошен», запрет возвращать в воду, укусы/зоонозы, наблюдаемые
+    признаки, порог дистанции — и **порядок блоков** (норма выше запретов). Не про вёрстку: если
+    копирайт сократят, тест обязан покраснеть.
   - `report-form.e2e.spec.ts` — форма «сообщить»: нет email-полей, error/success-состояния (QA-25;
     форма пока демо — DB-ассерты придут с M2-T04, серверный контракт премодерации —
     `tests/int/user-submissions.int.spec.ts`).

@@ -8,8 +8,17 @@ import type { Locale } from '@/i18n/config'
  * Моно-стиль: заголовок-«штамп» + строка provenance (агент/человек/статус). Цвет — не
  * единственный носитель смысла: состояние всегда продублировано текстом (WCAG 2.2 AA).
  *
- * Provenance-поля (agentCheckedAt / humanReviewedAt) лягут на схему Content/RescueCenter
- * (EU-11, M1-T08). Здесь — переиспользуемый примитив; реальные данные — в M2 (карточки центров).
+ * ## Откуда брать даты (поля уже в схеме, EU-11 / M1-T08)
+ * Примитив принимает даты как есть, ничего не знает о коллекциях и не ходит в БД:
+ *  - `rescue-centers` → `verifiedByAgentAt` / `verifiedByHumanAt` (`src/collections/RescueCenters.ts`);
+ *  - `content` / `species` / `quizzes` → `provenance.lastAgentCheckedAt` /
+ *    `provenance.lastHumanVerifiedAt` (`src/fields/provenance.ts`; там же локализованный
+ *    `provenance.humanReviewed` — авторство текста, его показывает `AiBadge`, а не штамп).
+ *
+ * Страницы центров пока на моках (`src/mock/sample.ts`); подключение реальных документов —
+ * **M2-T02**. Инвариант №7 при этом на компоненте: без дат заголовок честно говорит «Не
+ * проверено», а неразбираемая дата приравнивается к её отсутствию — «проверено» без даты
+ * выглядит как подтверждение, которого не было.
  */
 const copy: Record<
   Locale,
@@ -33,16 +42,22 @@ const copy: Record<
   },
 }
 
-/** DD.MM.YYYY (как в брифе). UTC-части — детерминированно на сервере, без сдвига по таймзоне. */
-function fmtDate(value: string | Date): string {
+/**
+ * DD.MM.YYYY (как в брифе). UTC-части — детерминированно на сервере, без сдвига по таймзоне.
+ * `null` на неразбираемом значении: вызывающий код обязан считать такую дату отсутствующей,
+ * иначе штамп заявит проверку, подтвердить которую нечем.
+ */
+function fmtDate(value: string | Date): string | null {
   const d = typeof value === 'string' ? new Date(value) : value
-  if (Number.isNaN(d.getTime())) return ''
+  if (Number.isNaN(d.getTime())) return null
   const dd = String(d.getUTCDate()).padStart(2, '0')
   const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
   return `${dd}.${mm}.${d.getUTCFullYear()}`
 }
 
-function StampIcon({ verified }: { verified: boolean }) {
+/** Иконка штампа: сплошной круг с галкой = проверено, пунктир с «!» = нет. Переиспользуется
+ *  в `AiBadge` для метки «Проверено человеком» — сильнейшее утверждение шкалы provenance. */
+export function StampIcon({ verified }: { verified: boolean }) {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <circle
@@ -87,14 +102,18 @@ export function VerificationStamp({
   className?: string
 }) {
   const c = copy[locale]
-  const hasAgent = Boolean(agentCheckedAt)
-  const hasHuman = Boolean(humanReviewedAt)
+  // Дата, которую не удалось разобрать, = проверки не было (инвариант №7: не выдавать
+  // неподтверждённое за verified).
+  const agentAt = agentCheckedAt ? fmtDate(agentCheckedAt) : null
+  const humanAt = humanReviewedAt ? fmtDate(humanReviewedAt) : null
+  const hasAgent = agentAt !== null
+  const hasHuman = humanAt !== null
   const verified = hasAgent || hasHuman
   const headline = hasAgent && hasHuman ? c.both : hasHuman ? c.human : hasAgent ? c.agent : c.none
 
   const details: ReactNode[] = []
-  if (agentCheckedAt) details.push(`${c.agentLabel}: ${fmtDate(agentCheckedAt)}`)
-  if (humanReviewedAt) details.push(`${c.humanLabel}: ${fmtDate(humanReviewedAt)}`)
+  if (agentAt) details.push(`${c.agentLabel}: ${agentAt}`)
+  if (humanAt) details.push(`${c.humanLabel}: ${humanAt}`)
   if (status) details.push(<StatusDot status={status} locale={locale} showLabel />)
 
   return (

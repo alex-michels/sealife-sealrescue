@@ -56,7 +56,7 @@ export default async function SpeciesDetail({ params }: { params: SlugParams }) 
       <article>
         <span className="mt-3 block font-mono text-xs italic text-muted">{sp.latin}</span>
         <h1 className="mt-1 text-4xl">{sp.name}</h1>
-        {sp.aiGenerated && <AiBadge locale={locale} />}
+        <AiBadge locale={locale} provenance={sp.provenance} aiGenerated={sp.aiGenerated} />
         <Cover image={sp.coverImage} seed={5} className="mt-6 rounded-card" />
 
         {sp.excerpt && <p className="mt-6 text-xl text-muted">{sp.excerpt}</p>}

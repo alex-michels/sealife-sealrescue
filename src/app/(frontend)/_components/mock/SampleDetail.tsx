@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import type { Locale } from '@/i18n/config'
-import { t } from '@/i18n/ui'
+import { AiBadge } from '../content/AiBadge'
 import { MockBanner } from './MockBanner'
 import { PlaceholderMedia } from './PlaceholderMedia'
 
@@ -39,11 +39,9 @@ export function SampleDetail({
         {meta && <span className="font-mono text-xs uppercase tracking-wide text-muted">{meta}</span>}
         <h1 className="mt-2 text-4xl">{title}</h1>
         {date && <p className="mt-2 font-mono text-xs text-muted">{date}</p>}
-        {aiAssisted && (
-          <p className="mt-4 inline-block rounded-btn bg-surface px-3 py-1 font-mono text-xs text-muted">
-            ⚙ {t(locale, 'aiGenerated')}
-          </p>
-        )}
+        {/* Один источник правды для provenance-меток: свой инлайновый бейдж здесь означал бы,
+            что мок и реальные страницы обещают читателю разное (EU-11). */}
+        <AiBadge locale={locale} provenance={{ aiAssisted }} />
         <PlaceholderMedia seed={seed} className="mt-6 rounded-card" />
         {body && (
           <div className="article-body mt-8">

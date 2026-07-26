@@ -9,6 +9,16 @@ import { buttonClasses } from '../ui/Button'
 /**
  * Интерактивный rescue-квест (M2-T15 preview): обучение через сценарий, ведёт в каталог.
  * Образовательный, не наказывающий — на неверном выборе объясняем и идём дальше.
+ *
+ * ⚠️ Сценарии переписаны по предметному аудиту 2026-07-26 (Roadmap, трек BIO). Прежняя версия
+ * учила ровно наоборот в двух местах:
+ *  - шаг «тюлень выглядит вялым» помечал ВЕРНЫМ ответом «наблюдать издалека», хотя вялость и
+ *    отсутствие реакции стоят в любом списке признаков как повод ЗВОНИТЬ. Спутаны «отдыхает»
+ *    (часами лежит неподвижно — норма) и «вялый» (клинический признак). Теперь это два разных
+ *    сценария (BIO-05).
+ *  - нигде не проговаривалось, что одинокий детёныш обычно НЕ брошен, — а именно ложная
+ *    «спасательная» реакция и вредит тюленям чаще всего (BIO-01).
+ * Порядок сценариев повторяет страницу /what-to-do: норма → запреты → признаки → звонок.
  */
 type Loc = Record<Locale, string>
 type Step = { q: Loc; options: Array<{ label: Loc; ok: boolean; feedback: Loc }> }
@@ -42,52 +52,125 @@ const steps: Step[] = [
     ],
   },
   {
-    q: { ru: 'Тюлень выглядит вялым.', en: 'The seal looks sluggish.' },
+    // Норма, которую чаще всего принимают за беду.
+    q: {
+      ru: 'Это детёныш, и он один. Матери рядом нет уже час.',
+      en: 'It is a pup, and it is alone. No mother in sight for an hour.',
+    },
+    options: [
+      {
+        label: { ru: 'Забрать — он брошен', en: 'Pick it up — it is abandoned' },
+        ok: false,
+        feedback: {
+          ru:
+            'Нет, и это самая частая ошибка. Мать кормится в море и возвращается, иногда через ' +
+            'несколько часов. Забранный «спасённый» детёныш чаще всего был здоров и с матерью.',
+          en:
+            'No — and this is the most common mistake. The mother is feeding at sea and comes ' +
+            'back, sometimes hours later. A “rescued” pup was usually healthy and not alone.',
+        },
+      },
+      {
+        label: { ru: 'Оставить и наблюдать издалека', en: 'Leave it and watch from a distance' },
+        ok: true,
+        feedback: {
+          ru: 'Верно. Одинокий детёныш обычно НЕ брошен. Отойдите и просто смотрите.',
+          en: 'Right. A lone pup is usually NOT abandoned. Step back and just watch.',
+        },
+      },
+    ],
+  },
+  {
+    // Отдельный сценарий: тюлень лежит неподвижно, но это ещё не клиника.
+    q: {
+      ru: 'Тюлень лежит неподвижно и, кажется, спит.',
+      en: 'The seal lies still and seems to be sleeping.',
+    },
     options: [
       {
         label: {
-          ru: 'Столкнуть обратно в воду',
-          en: 'Push it back into the water',
+          ru: 'Столкнуть в воду — там ему лучше',
+          en: 'Push it into the water — it belongs there',
         },
         ok: false,
         feedback: {
-          ru: 'Нет: отдых на берегу — это нормально, возвращать в воду нельзя.',
-          en: 'No: resting ashore is normal; don’t return it to the water.',
+          ru:
+            'Никогда. Он вышел на берег намеренно: отдохнуть, согреться или потому что болен. ' +
+            'В воде ослабевшее животное тонет.',
+          en:
+            'Never. It hauled out on purpose — to rest, to warm up, or because it is ill. ' +
+            'A weakened animal drowns in the water.',
         },
       },
       {
         label: {
-          ru: 'Оценить состояние с расстояния',
-          en: 'Assess from a distance',
+          ru: 'Не мешать: сон на берегу — норма',
+          en: 'Leave it be: sleeping ashore is normal',
         },
         ok: true,
         feedback: {
-          ru: 'Верно. Наблюдаем издалека, не кормим.',
-          en: 'Right. Observe from afar, don’t feed it.',
+          ru: 'Верно. Тюлени часами лежат почти без движения — это отдых, а не беда.',
+          en: 'Right. Seals lie nearly motionless for hours — that is rest, not trouble.',
+        },
+      },
+    ],
+  },
+  {
+    // А вот это уже клинические признаки — здесь наблюдать НЕДОСТАТОЧНО.
+    q: {
+      ru: 'У животного видна рана, дыхание тяжёлое, на шум оно не реагирует.',
+      en: 'There is a visible wound, breathing is laboured, and it ignores noise.',
+    },
+    options: [
+      {
+        label: { ru: 'Наблюдать издалека и подождать', en: 'Watch from afar and wait' },
+        ok: false,
+        feedback: {
+          ru:
+            'Здесь наблюдения мало. Рана, тяжёлое дыхание и отсутствие реакции — это признаки ' +
+            'беды, а не отдыха: нужно звонить. Не приближайтесь и не трогайте.',
+          en:
+            'Watching is not enough here. A wound, laboured breathing and no reaction are signs ' +
+            'of trouble, not rest: call. Do not approach and do not touch.',
+        },
+      },
+      {
+        label: { ru: 'Позвонить в центр, не подходя', en: 'Call a centre without approaching' },
+        ok: true,
+        feedback: {
+          ru: 'Верно. Решение принимают специалисты — ваше дело сообщить и держать дистанцию.',
+          en: 'Right. Specialists make the call — your job is to report it and keep your distance.',
         },
       },
     ],
   },
   {
     q: {
-      ru: 'Похоже, нужна помощь специалистов.',
-      en: 'It looks like it needs expert help.',
+      ru: 'Специалисты едут. Что делать до их приезда?',
+      en: 'The centre is on the way. What do you do until they arrive?',
     },
     options: [
       {
-        label: { ru: 'Уйти, разберётся сам', en: 'Leave — it’ll sort itself out' },
+        label: { ru: 'Полить водой и накрыть', en: 'Pour water on it and cover it' },
         ok: false,
         feedback: {
-          ru: 'Лучше сообщить специалистам — они решат, нужна ли помощь.',
-          en: 'Better to alert specialists — they’ll decide if help is needed.',
+          ru:
+            'Нет: так животное перегреется или запаникует. Не поливать, не накрывать, ' +
+            'не кормить и не перевозить самому.',
+          en:
+            'No: it will overheat or panic. Do not pour water, do not cover it, do not feed ' +
+            'it and do not transport it yourself.',
         },
       },
       {
-        label: { ru: 'Найти ближайший центр', en: 'Find the nearest center' },
+        label: {
+          ru: 'Держать дистанцию и увести людей и собак',
+          en: 'Keep your distance and move people and dogs away',
+        },
         ok: true,
         feedback: {
-          ru: 'Верно. Открываем каталог центров.',
-          en: 'Right. Let’s open the centers directory.',
+          ru: 'Верно. Тишина и пустой пляж вокруг — лучшее, что можно сделать до приезда.',
+          en: 'Right. Quiet and an empty stretch of beach is the best thing you can give it.',
         },
       },
     ],

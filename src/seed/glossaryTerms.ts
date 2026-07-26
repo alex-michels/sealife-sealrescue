@@ -4,6 +4,19 @@
  *
  * `variants` — локализованные: отдельные списки для ru и en (поле variants в схеме
  * стало localized). У варианта может быть свой тег `category`; пусто = тег записи.
+ *
+ * ## Коды IUCN здесь — фактура, а не украшение (BIO-10)
+ * Аудит 2026-07-26 нашёл четыре неверных кода. Правило на будущее: код в заметке — это
+ * ГЛОБАЛЬНАЯ оценка ВИДА по IUCN. Национальные красные книги и US ESA — другие инструменты
+ * с другими словами («Threatened» у морского зайца — именно ESA), и в код IUCN они не
+ * подставляются. Оценка подвида/субпопуляции живёт не здесь, а в структурном поле
+ * `conservationAssessment` у `species` (BIO-13). Занижать статус нельзя ни в какую сторону,
+ * но для природоохранного сайта занижение опаснее завышения.
+ *
+ * ## Терминология haul-out (BIO-12)
+ * «Лежбище»/«rookery» — про ушастых тюленей и птиц. У настоящих тюленей место выхода на
+ * берег по-английски haul-out, по-русски «залёжка». Правило нужно агенту-переводчику
+ * (M3-T02), поэтому оно живёт в заметках терминов, а не только в ревью.
  */
 type Category = 'term' | 'slang' | 'meme'
 
@@ -32,9 +45,17 @@ export const glossaryTerms: GlossarySeed[] = [
   { source: 'ластоногие', en: 'pinnipeds', category: 'term' },
   {
     source: 'лежбище',
-    en: 'haul-out / rookery',
+    en: 'haul-out',
     category: 'term',
-    note: 'По контексту: haul-out (место отдыха на берегу) или rookery (лежбище для размножения).',
+    variants: { en: [{ value: 'pupping beach' }] },
+    note: 'Ловушка перевода: rookery в английском — про УШАСТЫХ тюленей (котики, сивучи) и птичьи колонии, для фоцид так писать нельзя. Настоящие тюлени: haul-out, а если речь именно о размножении — pupping beach. По-русски о фоцидах точнее «залёжка».',
+  },
+  {
+    source: 'залёжка',
+    en: 'haul-out',
+    category: 'term',
+    variants: { en: [{ value: 'haul-out site' }, { value: 'hauling-out site' }] },
+    note: 'Место, где настоящие тюлени выходят из воды отдыхать и линять. Правильное слово для фоцид (в отличие от «лежбища»/rookery, которые про ушастых и птиц).',
   },
   {
     source: 'детёныш тюленя',
@@ -231,28 +252,28 @@ export const glossaryTerms: GlossarySeed[] = [
       ru: [{ value: 'длинномордый тюлень' }, { value: 'тевяк' }],
       en: [{ value: 'gray seal' }],
     },
-    note: 'Halichoerus grypus, сем. Phocidae. IUCN: LC.',
+    note: 'Halichoerus grypus, сем. Phocidae. IUCN: LC. Имя — греческое: hali- «море» + choiros «свинья» + grypos «крючконосый», т.е. «морская свинья с крючковатым носом». «Тевяк» и «лошадиная морда» — народные прозвища, не перевод.',
   },
   {
     source: 'морской заяц',
     en: 'bearded seal',
     category: 'term',
     variants: { ru: [{ value: 'лахтак' }] },
-    note: 'Erignathus barbatus, сем. Phocidae. IUCN: NT.',
+    note: 'Erignathus barbatus, сем. Phocidae. IUCN: LC. Запомнившийся «Threatened» — это US ESA (берингийская и охотская DPS), другой инструмент, а не код IUCN.',
   },
   {
     source: 'хохлач',
     en: 'hooded seal',
     category: 'term',
     variants: { ru: [{ value: 'тюлень-хохлач' }] },
-    note: 'Cystophora cristata, сем. Phocidae. IUCN: EN (вымирающий).',
+    note: 'Cystophora cristata, сем. Phocidae. IUCN: VU (уязвимый).',
   },
   {
     source: 'гренландский тюлень',
     en: 'harp seal',
     category: 'term',
     variants: { ru: [{ value: 'лысун' }] },
-    note: 'Pagophilus groenlandicus, сем. Phocidae. IUCN: NT. Детёныш-белёк — символ кампаний против промысла.',
+    note: 'Pagophilus groenlandicus, сем. Phocidae. IUCN: LC — один из самых многочисленных тюленей (миллионы особей). Детёныш-белёк — символ кампаний против промысла.',
   },
   {
     source: 'крылатка',
@@ -310,7 +331,7 @@ export const glossaryTerms: GlossarySeed[] = [
     source: 'гавайский тюлень-монах',
     en: 'Hawaiian monk seal',
     category: 'term',
-    note: 'Neomonachus schauinslandi, сем. Phocidae. IUCN: VU.',
+    note: 'Neomonachus schauinslandi, сем. Phocidae. IUCN: EN (вымирающий) — в природе около 1600 особей.',
   },
 
   // — Анатомия и биология —
@@ -364,6 +385,26 @@ export const glossaryTerms: GlossarySeed[] = [
     en: 'harem',
     category: 'term',
     note: 'Группа самок вокруг одного самца-секача в сезон размножения (у полигамных видов).',
+  },
+  {
+    source: 'зависание столбиком',
+    en: 'bottling',
+    category: 'term',
+    variants: { ru: [{ value: 'столбик' }] },
+    note: 'Сон или отдых тюленя вертикально у поверхности: над водой только нос. «Бутылкование» — сырая калька с bottling, в русском тексте её не использовать. Для очевидца это норма, а не тонущее животное.',
+  },
+  {
+    source: 'однополушарный сон',
+    en: 'unihemispheric sleep',
+    category: 'term',
+    variants: { ru: [{ value: 'сон одним полушарием' }] },
+    note: 'Признак УШАСТЫХ (Otariidae): котик спит в воде на боку, гребя одним ластом, половина мозга бодрствует. Настоящие тюлени (Phocidae) спят двуполушарно — на дне, в дрейфовом погружении, на задержке дыхания. Не приписывать фоцидам (BIO-08).',
+  },
+  {
+    source: 'дрейфовое погружение',
+    en: 'drift dive',
+    category: 'term',
+    note: 'Погружение, в котором тюлень перестаёт грести и пассивно опускается, — во время него фоциды спят. У северных морских слонов на глубине зарегистрированы обе фазы сна.',
   },
   {
     source: 'реабилитация тюленей',
