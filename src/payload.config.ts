@@ -44,6 +44,9 @@ const dirname = path.dirname(filename)
  */
 const mediaDir = mediaStaticDir(path.resolve(dirname, '..'))
 
+/** Один формат на оригинал и на все производные — повторяется, потому что не наследуется. */
+const WEBP = { formatOptions: { format: 'webp' as const, options: { quality: 82 } } }
+
 // Предупреждение о потере загрузок — только на РАБОТАЮЩЕМ сервере. При `next build` конфиг
 // грузится каждым воркером, и MEDIA_DIR там законно пуст (каталог существует на боксе, не в CI):
 // warning на сборке был бы шумом ×N, который приучают игнорировать. Не бросаем исключение
@@ -68,12 +71,16 @@ const Media: CollectionConfig = {
     // Пережимаем оригинал: ограничивает вес и убирает EXIF (в т.ч. GPS) — sharp не переносит
     // метаданные в вывод. `withoutEnlargement` не даёт растянуть маленькую картинку.
     resizeOptions: { width: 2400, height: undefined, withoutEnlargement: true },
-    formatOptions: { format: 'webp', options: { quality: 82 } },
+    ...WEBP,
     // Производные под реальные точки рендера: карточка в сетке, тело статьи, hero.
+    // ⚠️ `formatOptions` НЕ наследуется от верхнего уровня — его надо повторить на каждом размере.
+    // Без этого оригинал сохранялся в webp, а все производные (то есть ровно те файлы, которые и
+    // отдаются в карточках) оставались в исходном формате: обнаружено по именам на диске
+    // `…-800x533.jpg` рядом с `….webp`.
     imageSizes: [
-      { name: 'thumbnail', width: 400, withoutEnlargement: true },
-      { name: 'card', width: 800, withoutEnlargement: true },
-      { name: 'hero', width: 1600, withoutEnlargement: true },
+      { name: 'thumbnail', width: 400, withoutEnlargement: true, ...WEBP },
+      { name: 'card', width: 800, withoutEnlargement: true, ...WEBP },
+      { name: 'hero', width: 1600, withoutEnlargement: true, ...WEBP },
     ],
     focalPoint: true,
     crop: true,
