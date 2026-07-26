@@ -9,10 +9,10 @@ import { AiBadge } from './AiBadge'
 import { CrossLink } from './CrossLink'
 
 const typeLabels: Record<Content['type'], Record<Locale, string>> = {
-  article: { ru: 'Статья', en: 'Article', de: 'Artikel' },
-  news: { ru: 'Новость', en: 'News', de: 'News' },
-  meme: { ru: 'Мем', en: 'Meme', de: 'Meme' },
-  page: { ru: 'Страница', en: 'Page', de: 'Seite' },
+  article: { ru: 'Статья', en: 'Article' },
+  news: { ru: 'Новость', en: 'News' },
+  meme: { ru: 'Мем', en: 'Meme' },
+  page: { ru: 'Страница', en: 'Page' },
 }
 
 /** Темы как ссылки на отфильтрованный каталог соответствующего типа. */
@@ -83,7 +83,11 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
       <h1 className="mt-2 text-4xl">{doc.title}</h1>
       <p className="mt-2 font-mono text-xs text-muted">{date}</p>
       {doc.aiGenerated && <AiBadge locale={locale} />}
-      <Cover image={doc.coverImage} seed={doc.type === 'news' ? 2 : 1} className="mt-6 rounded-card" />
+      <Cover
+        image={doc.coverImage}
+        seed={doc.type === 'news' ? 2 : 1}
+        className="mt-6 rounded-card"
+      />
       {doc.excerpt && <p className="mt-6 text-xl text-muted">{doc.excerpt}</p>}
       {doc.body && (
         <div className="article-body mt-8">

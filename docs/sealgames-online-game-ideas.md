@@ -16,9 +16,14 @@ thing, bring one friend/pod back tomorrow."
 - UGC, including memes/captions, stays premoderated. No public auto-publish.
 - Real rescue information is not a toy mechanic. Rescue-themed games can teach general safe behavior
   and link to sealrescue, but must not present unverified contacts or emergency data as game facts.
-- If `sealgames.online` is a separate root domain, it needs its own footer/legal accessibility from day
+- Current domain policy (owner decision, 2026-07-26): the project runs exactly two public root domains,
+  `sealife.info` and `sealrescue.info`, plus their subdomains. A portal on its own root domain stays an
+  idea here — shipping it would need an explicit policy change; the friction-free version is a
+  `games.sealife.info` subdomain.
+- If a portal ever does get a separate root domain, it needs its own footer/legal accessibility from day
   one: Impressum/legal notice, privacy, cookies/settings, terms, language switcher, and account/SSO
-  handling if accounts exist. The current `sealthehunter.online` SH-10 gap is the cautionary tale.
+  handling if accounts exist. The retired public game alpha is the cautionary tale: it shipped as a
+  standalone origin whose Impressum/Datenschutz stayed unreachable for its whole life (SH-10).
 - "Seal points" must not become gambling value: no cash-out, no real-money spins, no purchasable power,
   no paid loot boxes, no prize with economic value.
 

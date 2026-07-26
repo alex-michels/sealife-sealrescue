@@ -25,8 +25,7 @@ describe('applySectionOverride', () => {
     const out = applySectionOverride(games, rows, 'ru')
     expect(out.title.ru).toBe('Игротека')
     expect(out.intro.ru).toBe('Новый лид')
-    expect(out.title.en).toBe(games.title.en) // en/de не тронуты
-    expect(out.title.de).toBe(games.title.de)
+    expect(out.title.en).toBe(games.title.en) // en не тронут
   })
 
   it('пустое/пробельное значение → fallback на код', () => {

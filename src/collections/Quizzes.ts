@@ -1,6 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
 import { forceAgentDrafts } from '../hooks/contentHooks'
+import { provenanceField } from '../fields/provenance'
 
 export const Quizzes: CollectionConfig = {
   slug: 'quizzes',
@@ -41,7 +42,12 @@ export const Quizzes: CollectionConfig = {
       name: 'aiGenerated',
       type: 'checkbox',
       defaultValue: false,
-      admin: { description: 'EU AI Act: маркировать, если вопросы сгенерированы AI.' },
+      admin: {
+        description:
+          'Устаревший одиночный флаг: не различает язык. Заполняйте группу «provenance» ' +
+          '(M1-T08/EU-11).',
+      },
     },
+    provenanceField(),
   ],
 }

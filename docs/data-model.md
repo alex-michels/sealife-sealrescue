@@ -1,8 +1,11 @@
 # Модель данных (коллекции Payload)
 
 Все коллекции собираются в [`src/payload.config.ts`](../src/payload.config.ts). Локализация — нативная
-Payload: поля с `localized: true` хранят значение по локали (`ru` исходная, `en` перевод). `slug`
-канонический — **общий для локалей** и не локализуется. Типы генерируются в `src/payload-types.ts`
+Payload: поля с `localized: true` хранят значение по локали (`ru` исходная, `en` перевод). Контентных
+локалей **две** — `ru`/`en` (источник правды — `src/i18n/config.ts`); `de` — не контентная локаль,
+а legal-only роут (немецкие тексты Impressum/Datenschutz живут в `src/site/legal.ts`, не в Payload),
+см. [localization.md](localization.md). `slug` канонический — **общий для локалей** и не
+локализуется. Типы генерируются в `src/payload-types.ts`
 (`npm run generate:types` после изменения схемы).
 
 Доступ (RBAC) задаётся в `access` каждой коллекции через хелперы из [`src/access/roles.ts`](../src/access/roles.ts).
@@ -16,7 +19,7 @@ Payload: поля с `localized: true` хранят значение по лок
 (→`media`); `topics` (hasMany select, фильтр ленты — подписи локализуются в коде `content/topics.ts`,
 НЕ через Payload-локализацию); `crossLink.rescueCenter` (relationship → `rescue-centers` — механизм
 перелинковки sealife↔sealrescue, см. CLAUDE.md); `seo.metaTitle`/`seo.metaDescription` (локализованные);
-`aiGenerated` (checkbox, AI Act); `localeStatus[]` (`locale`/`status`/`sourceHash`/`translatedAt` —
+`aiGenerated` (checkbox, **устаревший** — не различает язык; заменён группой `provenance`), **`provenance`** (группа из `src/fields/provenance.ts`: локализованные `aiAssisted`/`aiTranslated`/`aiChecked`/`humanReviewed`/`reviewedBy`/`reviewedAt` + нелокализованные `sourceVerified`/`lastAgentCheckedAt`/`lastHumanVerifiedAt`; поля «человек проверил» закрыты `isEditorField`), **`sources`** (→`sources`, BIO-14); `localeStatus[]` (`locale`/`status`/`sourceHash`/`translatedAt` —
 заполняется хуком `markTranslationsStale`, см. [agents.md](agents.md)). Drafts включены. **Доступ:**
 read `readPublishedOrStaff` (публично — только `published`, staff видит черновики), create
 `canCreateContent` (вкл. агентов → черновик), update `canUpdateContent` (admin/editor/**translator**/agent),
@@ -26,13 +29,13 @@ read `readPublishedOrStaff` (публично — только `published`, staf
 Карточки видов ластоногих для sealife. Отдельная коллекция: `name`*/`slug` (локализованы, `slug`
 canonical), `latin` (**не** локализуется — научное имя одинаково), `conservationStatus` (select IUCN:
 `LC`/`NT`/`VU`/`EN`/`CR`/`DD`), `region`/`size` (локализованные), `excerpt`/`body` (локализованные),
-`facts[]` (локализованный array, используется и в «Факте дня»), `coverImage`, `aiGenerated`.
+`facts[]` (локализованный array, используется и в «Факте дня»), `coverImage`, `aiGenerated` (устаревший), **`provenance`** и **`sources`** (как у `content`), **`conservationAssessment`** (группа из `src/fields/conservation.ts`: `scope` вид/подвид/субпопуляция/региональная, `assessedEntity`, `assessmentYear`, `sourceUrl`, `listingSystem`) — без неё «VU у подвида» неотличимо от «LC у вида», и агент не может перепроверить статус (BIO-13).
 Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`markTranslationsStale` сюда НЕ подключён**
 (в отличие от `content`) — integrity перевода для видов пока не трекается автоматически (M1-T08).
 
 ### `quizzes` — квизы
 `title`*/`slug`/`description`, `questions[]` → `options[]` (`text`, `isCorrect`), `explanation`,
-`aiGenerated`. Тексты локализованы. Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
+`aiGenerated` (устаревший) + **`provenance`**. Тексты локализованы. Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
 
 ### `games` — мини-игры (метаданные)
 Метаданные игры, не сам код: `title`*/`slug` (канонический), `excerpt`, `how` (локализованное «как
@@ -56,7 +59,7 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`ma
 
 ### `section-content` — редактируемый контент разделов (M1-T27)
 Payload **global** (не коллекция): массив `overrides` — `section` (select из `sectionDefs`, не
-свободный ввод), `title`/`intro` (localized: ru/en/de), `cover` (upload → `media`, обложка карточки
+свободный ввод), `title`/`intro` (localized: ru/en), `cover` (upload → `media`, обложка карточки
 раздела в хабе на главной). **Структура разделов (slug/site/nav/hasDetail) живёт ТОЛЬКО в коде**
 (`src/site/sections.ts`); рендер накладывает overrides по slug с fallback'ом на код при пустом
 значении (`src/site/sectionContent.ts`, чтение с `fallbackLocale: false` — пустой en НЕ подменяется
@@ -71,7 +74,8 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 Публичный справочник. `name` (**не** локализуется — имя центра не переводим, правило глоссария),
 `slug` (unique), `country`*/`region`, `website`, `email`/`phone`, `address`, `location` (point
 `[lng,lat]`, для карты), `socialLinks[]` (`platform` select + `url`), `operatingLanguages`
-(hasMany `ru`/`en`/`de`/`other`), `description` (localized richText), `status` (select:
+(hasMany `ru`/`en`/`de`/`other` — **языки работы центра**, справочные данные, с локалями сайта не
+связаны), `description` (localized richText), `status` (select:
 `active`/`unconfirmed`/`link_broken`/`needs_check` — код использует `unconfirmed`, а не `unverified`
 из CLAUDE.md §7; терминология не 1:1, свериться при следующей правке схемы), `verificationScore`
 (0–1), `lastCheckedAt`/`verifiedByAgentAt`/`verifiedByHumanAt` (даты, рендерятся в «штампе проверки»),

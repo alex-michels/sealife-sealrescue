@@ -7,22 +7,22 @@
   <meta name="description" data-i18n-content="metaDescription" content="Мобильная игра про тюленя — лови рыбу за 60 секунд!">
   <meta name="theme-color" content="#1E5B5B">
 
-  <!-- Link preview (Open Graph + Twitter). Static EN canonical for the standalone alpha; absolute
-       URLs are required by scrapers. /assets/cover.jpg maps to the game dir via the Caddy catch-all
-       (deploy/Caddyfile) on sealthehunter.online — must stay JPEG (some scrapers reject WebP/AVIF). -->
+  <!-- Link preview (Open Graph + Twitter). Static EN canonical: the game lives on sealife.info,
+       framed by the games page. Absolute URLs are required by scrapers; the cover must stay JPEG
+       (some scrapers reject WebP/AVIF). -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Seal The Hunter">
+  <meta property="og:site_name" content="SeaLife.Info">
   <meta property="og:title" content="Seal The Hunter — a web game">
   <meta property="og:description" content="Catch fish as a seal in 60 seconds. A quick browser game with a weekly leaderboard.">
-  <meta property="og:url" content="https://sealthehunter.online/">
-  <meta property="og:image" content="https://sealthehunter.online/assets/cover.jpg">
+  <meta property="og:url" content="https://sealife.info/en/games/seal-the-hunter">
+  <meta property="og:image" content="https://sealife.info/games/seal-hunt-v1/assets/cover.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="Seal The Hunter — a cartoon seal hunting fish underwater">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Seal The Hunter — a web game">
   <meta name="twitter:description" content="Catch fish as a seal in 60 seconds.">
-  <meta name="twitter:image" content="https://sealthehunter.online/assets/cover.jpg">
+  <meta name="twitter:image" content="https://sealife.info/games/seal-hunt-v1/assets/cover.jpg">
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="style.css">
@@ -50,24 +50,19 @@
   </div>
 
   <div id="overlay" hidden>
-    <!-- Переключатель языка — только standalone (sealthehunter.online); во фрейме скрыт. -->
+    <!-- Переключатель языка — только standalone (игра открыта прямым URL); во фрейме скрыт. -->
     <div id="langSwitch" class="lang-switch" role="group" data-i18n-aria="langSwitchLabel" hidden>
       <button type="button" class="lang-btn" data-lang="ru" lang="ru">RU</button>
       <button type="button" class="lang-btn" data-lang="en" lang="en">EN</button>
-      <button type="button" class="lang-btn" data-lang="de" lang="de">DE</button>
     </div>
     <h1 data-i18n="title">Тюль-Охотник</h1>
     <p id="hello" class="hello"></p>
     <p id="message"></p>
-    <!-- Заметка про альфа-тест — только standalone. -->
-    <p id="alphaNotice" class="alpha-notice" hidden></p>
     <div class="overlay-buttons">
       <button id="btnAgain" class="primary" data-i18n="btnAgain">Играть ещё</button>
       <button id="btnShareEnd" data-i18n="btnShareEnd" data-i18n-title="btnShareEndTitle" title="Поделиться результатом" hidden>Поделиться</button>
     </div>
     <div id="board" class="board" hidden></div>
-    <!-- Контакт оператора (отображаемый, не сбор email) — только standalone. -->
-    <p id="feedbackInvite" class="feedback-invite" hidden></p>
   </div>
 
   <noscript data-i18n="noscript">Для игры нужен JavaScript.</noscript>

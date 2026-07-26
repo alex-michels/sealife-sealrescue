@@ -19,11 +19,11 @@ const SLUG = 'rescue-centers'
 
 type FilterKey = 'all' | CenterStatus
 const FILTERS: Array<{ key: FilterKey; label: Record<Locale, string> }> = [
-  { key: 'all', label: { ru: 'Все', en: 'All', de: 'Alle' } },
-  { key: 'active', label: { ru: 'Активны', en: 'Active', de: 'Aktiv' } },
-  { key: 'needs_check', label: { ru: 'Проверить', en: 'Needs check', de: 'Prüfen' } },
-  { key: 'link_broken', label: { ru: 'Ссылка', en: 'Link broken', de: 'Link' } },
-  { key: 'unconfirmed', label: { ru: 'Не подтв.', en: 'Unconfirmed', de: 'Unbest.' } },
+  { key: 'all', label: { ru: 'Все', en: 'All' } },
+  { key: 'active', label: { ru: 'Активны', en: 'Active' } },
+  { key: 'needs_check', label: { ru: 'Проверить', en: 'Needs check' } },
+  { key: 'link_broken', label: { ru: 'Ссылка', en: 'Link broken' } },
+  { key: 'unconfirmed', label: { ru: 'Не подтв.', en: 'Unconfirmed' } },
 ]
 
 export function generateMetadata({ params }: { params: RouteParams }) {
@@ -46,7 +46,8 @@ export default async function RescueCentersPage({
   const c = m(locale)
   const countFor = (key: FilterKey) =>
     key === 'all' ? sampleCenters.length : sampleCenters.filter((x) => x.status === key).length
-  const filtered = active === 'all' ? sampleCenters : sampleCenters.filter((x) => x.status === active)
+  const filtered =
+    active === 'all' ? sampleCenters : sampleCenters.filter((x) => x.status === active)
 
   return (
     <SectionShell locale={locale} title={section.title[locale]} intro={section.intro[locale]}>
@@ -55,7 +56,8 @@ export default async function RescueCentersPage({
         <p className="mb-2 font-mono text-xs uppercase tracking-wide text-muted">{c.filters}</p>
         <div className="flex flex-wrap gap-2">
           {FILTERS.map((f) => {
-            const href = f.key === 'all' ? `/${locale}/${SLUG}` : `/${locale}/${SLUG}?status=${f.key}`
+            const href =
+              f.key === 'all' ? `/${locale}/${SLUG}` : `/${locale}/${SLUG}?status=${f.key}`
             const isActive = f.key === active
             return (
               <Link

@@ -39,10 +39,10 @@ afterAll(async () => {
 }, 120_000)
 
 describe('markTranslationsStale (live Payload)', () => {
-  it('создание RU-документа помечает en/de как stale', async () => {
+  it('создание RU-документа помечает en как stale', async () => {
     const doc = await payload.findByID({ collection: 'content', id: docId, locale: 'ru' })
     const ls = (doc.localeStatus ?? []) as LocaleStatus
-    expect(ls.map((s) => s.locale).sort()).toEqual(['de', 'en'])
+    expect(ls.map((s) => s.locale).sort()).toEqual(['en'])
     for (const s of ls) expect(s.status).toBe('stale')
   })
 

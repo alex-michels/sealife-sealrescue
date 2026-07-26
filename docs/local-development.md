@@ -32,8 +32,13 @@ npm install
 cp .env.example .env     # заполнить значения
 npm run dev              # Next + Payload; схема БД синхронизируется push-режимом (dev)
 ```
-- Публичный сайт: `http://localhost:3000/ru` (или `/en`). По умолчанию открывается **sealife**;
-  **sealrescue** — `http://localhost:3000/ru?site=sealrescue`.
+- Публичный сайт: `http://localhost:3000/ru` (или `/en` — контентных локалей две). По умолчанию
+  открывается **sealife**; **sealrescue** — `http://localhost:3000/ru?site=sealrescue`.
+- Префикс `/de` — **legal-only**: резолвятся лишь `/de/legal-notice` (Impressum), `/de/privacy`
+  (Datenschutz), `/de/cookies`, `/de/terms`; любой контентный `/de/...` отдаёт 404. Немецкого UI
+  больше нет — обвязка этих страниц рендерится по-английски, немецкими остаются сами обязательные
+  документы. **TODO (EU-06):** оставлять ли немецкие legal-страницы вообще — на юрпроверку.
+  Подробности — [localization.md](localization.md).
 - Админка: `http://localhost:3000/admin` (первый запуск предложит создать `admin`-пользователя).
 
 ## Скрипты
@@ -130,11 +135,11 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
   (QA-18); `api.int.spec.ts` — smoke.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
-  - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные 3 локалей (title/h1/`lang`/свитчер),
+  - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные обеих локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
     `not-found.tsx` (QA-04/05 — done, PR #39/#40).
   - `admin.e2e.spec.ts` — логин в админку, dashboard, списки/создание пользователя.
-  - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка, alpha-notice,
+  - `game-standalone.e2e.spec.ts` — standalone vs iframe-режим игры (свитчер языка,
     `?lang=`, запись языка в `localStorage` только после явного выбора).
   - `game-leaderboard-scroll.e2e.spec.ts` + `helpers/mock-leaderboard.ts` — регрессионный тест
     авто-скролла к строке игрока (в CI с QA-09; расширение обвязки — Roadmap **QA-32**).
@@ -142,10 +147,10 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     кнопки, consent-cookie (не localStorage), отзыв через Cookie-Settings. Бежит только при
     заданном `NEXT_PUBLIC_PLAUSIBLE_SRC` (CI ставит фиктивный `.test`-URL; локально — по желанию
     в `.env`, иначе спек пропускается).
-  - `seo.e2e.spec.ts` — hreflang/canonical на страницах ×3 локали + контракт `sitemap.xml`
-    (published-only, прод-домены, x-default; sealrescue — только главная до M2) (QA-20).
-  - `legal.e2e.spec.ts` — legal-shell: 12 роутов ×200, DE-заголовки (Impressum/…), draft-плашка,
-    футер-ссылки на 6 типах страниц (QA-22).
+  - `seo.e2e.spec.ts` — hreflang/canonical на контентных страницах ×2 локали (`ru`/`en`) + контракт
+    `sitemap.xml` (published-only, прод-домены, x-default; sealrescue — только главная до M2) (QA-20).
+  - `legal.e2e.spec.ts` — legal-shell: 12 роутов ×200 (4 legal-страницы × `ru`/`en` + legal-only `de`),
+    DE-заголовки (Impressum/…), draft-плашка, футер-ссылки на 6 типах страниц (QA-22).
   - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение
     пути, `NEXT_LOCALE` только по явному клику (QA-24).
   - `report-form.e2e.spec.ts` — форма «сообщить»: нет email-полей, error/success-состояния (QA-25;
