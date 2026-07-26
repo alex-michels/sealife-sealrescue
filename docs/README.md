@@ -29,7 +29,7 @@
 
 | Док | О чём |
 | --- | --- |
-| [Roadmap.md](Roadmap.md) | Задачи по ID (M0/M1/M2…), статусы `[ ]`/`[x]`/`[~]`/`[!]` |
+| [Roadmap.md](Roadmap.md) | Задачи по ID (M0/M1/M2…), статусы `[ ]`/`[x]`/`[~]`/`[!]`; сквозные треки SEC/EU/**BIO**/DESIGN/QA. Сверен с кодом аудитом 2026-07-26 — приписки «— **аудит 2026-07-26:**» в задачах |
 | [DESIGN_BRIEF.md](DESIGN_BRIEF.md) | Дизайн-направление (Foggy Coastal Utility), токены, типографика, компоненты |
 | [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md) | EU/DE-комплаенс: Impressum, GDPR/TDDDG, DSA, AI Act |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Хостинг (Contabo VPS), CI-деплой из `main` (Next standalone → Caddy + systemd), окружения (Neon dev / self-hosted prod), публичный alpha игры. Инфра-конфиги — [`deploy/`](../deploy/) |
