@@ -20,10 +20,15 @@ import { defaultLocale } from '@/i18n/config'
  * использует, — иначе `staticDir` мог бы оказаться правильным и проигнорированным.
  */
 
+/**
+ * Метка для уборки. Чистим по НЕЙ, а не по списку созданных id: список теряется ровно тогда, когда
+ * тест падает на полпути, — и на дев-БД от каждого такого прогона оставался осиротевший файл.
+ */
+const MARKER = 'CR-04 fixture'
+
 describe('CR-04: загрузка медиа', () => {
   let payload: Payload
   let staticDir: string
-  const createdIds: (number | string)[] = []
   let tmpFile: string
 
   beforeAll(async () => {
@@ -39,12 +44,20 @@ describe('CR-04: загрузка медиа', () => {
       .withExifMerge({ IFD0: { ImageDescription: 'cr04-exif-marker' } })
       .jpeg()
       .toFile(tmpFile)
+
+    await purge().catch(() => {}) // хвосты предыдущего прогона, если он умер жёстко
   }, 120_000)
 
+  /** Уборка по метке — переживает падение любого теста в середине. */
+  const purge = () =>
+    payload.delete({
+      collection: 'media',
+      where: { alt: { like: MARKER } },
+      locale: defaultLocale,
+    })
+
   afterAll(async () => {
-    for (const id of createdIds) {
-      await payload.delete({ collection: 'media', id }).catch(() => {})
-    }
+    await purge().catch(() => {})
     fs.rmSync(tmpFile, { force: true })
     await payload.db.destroy?.()
   }, 60_000)
@@ -61,10 +74,9 @@ describe('CR-04: загрузка медиа', () => {
     const doc = await payload.create({
       collection: 'media',
       locale: defaultLocale,
-      data: { alt: 'CR-04 test image' },
+      data: { alt: `${MARKER}: sizes` },
       filePath: tmpFile,
     })
-    createdIds.push(doc.id)
 
     expect(doc.filename, 'filename').toBeTruthy()
     expect(fs.existsSync(path.join(staticDir, doc.filename!)), 'оригинал на диске').toBe(true)
@@ -75,6 +87,13 @@ describe('CR-04: загрузка медиа', () => {
       const size = (sizes as Record<string, { filename?: string | null } | undefined>)[name]
       expect(size?.filename, `размер ${name}`).toBeTruthy()
       expect(fs.existsSync(path.join(staticDir, size!.filename!)), `${name} на диске`).toBe(true)
+
+      // Формат проверяем на КАЖДОМ размере, а не только на оригинале: `formatOptions` не
+      // наследуется производными, и первая версия конфига сохраняла оригинал в webp, а все
+      // производные — в исходном jpeg. Именно они и отдаются в карточках, то есть выигрыш в весе
+      // не доезжал до читателя, а тест этого не видел.
+      const meta = await sharp(path.join(staticDir, size!.filename!)).metadata()
+      expect(meta.format, `формат размера ${name}`).toBe('webp')
     }
   }, 120_000)
 
@@ -82,10 +101,9 @@ describe('CR-04: загрузка медиа', () => {
     const doc = await payload.create({
       collection: 'media',
       locale: defaultLocale,
-      data: { alt: 'CR-04 exif image' },
+      data: { alt: `${MARKER}: exif` },
       filePath: tmpFile,
     })
-    createdIds.push(doc.id)
 
     expect(doc.mimeType).toBe('image/webp')
 
