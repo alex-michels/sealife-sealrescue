@@ -9,8 +9,13 @@
 
 > ⚠️ Жёсткие гарантии (агент не публикует/не удаляет, минимизация данных) — в КОДЕ.
 > **Бренд:** sealife — игривый/умиляющийся с тюль-сленгом; sealrescue — серьёзный. «Тюлента» = сообщества VK/TG, НЕ имя сайта.
-> **Вордмарки:** sealife = «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN) / «Robben.Info» (DE); sealrescue = «Спасение тюленей» (RU) / «Seal Rescue» (EN) / «Robbenrettung» (DE).
-> **Локали:** публичный контент — RU/EN/DE (три равноправные контент-локали). Legal-роуты локализованы (DE: Impressum/Datenschutz/Cookies/Terms). German/EU legal pages обязательны независимо от набора языков.
+> **Вордмарки:** sealife = «Тюлень.Инфо» (RU) / «SeaLife.Info» (EN); sealrescue = «Спасение тюленей» (RU) / «Seal Rescue» (EN).
+> **Локали:** публичный контент — RU/EN (две равноправные контент-локали). `de` — **legal-only
+> route-локаль**: под `/de` открываются только Impressum · Datenschutz · Cookies · Terms (немецкие
+> тексты документов сохранены; оболочка страницы рендерится по-английски, немецкого UI-словаря нет),
+> любой контент под `/de` → 404. German/EU legal pages нужны из-за юрисдикции оператора (Германия),
+> а не из-за набора языков сайта. **TODO:** оставлять ли немецкие legal-страницы вообще — решение
+> юрпроверки **EU-06**.
 
 ---
 
@@ -18,12 +23,25 @@
 
 * [x] Контент-схема Payload (коллекции, RBAC, drafts, очередь `agent-proposals`, хуки).
 * [x] `CLAUDE.md`/`AGENTS.md` в корне; доки проекта (`Roadmap.md`, `DESIGN_BRIEF.md`, `COMPLIANCE_EU_DE.md`, `DEPLOYMENT.md`, `INFRA.md` + тех-доки) в `docs/`.
-* [x] ~~**Публичный alpha игры — live:** https://sealthehunter.online~~ → **ВЫВЕДЕН ИЗ ЭКСПЛУАТАЦИИ
+* [x] ~~**Публичный alpha игры — live**~~ → **ВЫВЕДЕН ИЗ ЭКСПЛУАТАЦИИ
   2026-07-19/20 (PR #74).** Сервисы `sealife`+`caddy` на VPS остановлены и выключены, сайт-блок убран
   из `deploy/Caddyfile`, авто-деплой по push в `main` отключён. Инфра-as-code остаётся и переиспользуется
   под будущий QA-stage: `deploy/`, `infra/ansible/`, `.github/workflows/` (deploy/configure/seed/
   toggle-standalone/shutdown-alpha). Раннбук выключения и воскрешения — `DEPLOYMENT.md` §8;
   **фактическая инвентаризация бокса — `DEPLOYMENT.md` §1a** (бокс общий с сервисами владельца).
+* [x] **Доменная политика (решение владельца 2026-07-26):** у проекта ровно **два** публичных корневых
+  домена — `sealife.info` и `sealrescue.info` (+ любые их поддомены, напр. vanity `sealrun.sealife.info`).
+  Игры живут роутами/поддоменами под ними; отдельные игровые домены больше не заводятся, домен
+  выведенной альфы не используется и не возвращается.
+* [x] **Немецкий убран как язык сайта (решение владельца 2026-07-26).** Контент-локалей теперь ровно
+  две — `ru` и `en` (`src/i18n/config.ts`: `locales`), автоопределение языка выбирает только их
+  (немецкий браузер → EN). `de` живёт как **legal-only route-локаль** (`legalOnlyLocales`/
+  `routeLocales`/`isRouteLocale`): `/de/legal-notice` · `/de/privacy` · `/de/cookies` · `/de/terms`
+  отвечают 200 с немецкими текстами `src/site/legal.ts`, все контентные роуты под `/de` → 404.
+  Немецкий UI-словарь, DE-вордмарки («Robben.Info»/«Robbenrettung»), DE-моки и DE в сидах удалены;
+  hreflang для контента — ru/en (`buildAlternates`), для legal — ru/en/de (`buildLegalAlternates`).
+  Причина сохранения `/de`-документов — юрисдикция оператора (Германия): §5 DDG и §18 MStV не зависят
+  от языка сайта. **TODO (EU-06):** оставлять ли немецкие legal-страницы вообще — на юрпроверку.
 
 **Следующее:** контент силами агентов (M1-T06 переформулирован — импорта из VK/TG не будет);
 перед публичным запуском — QA-stage (Environment-секреты, миграции вместо push, бэкапы),
@@ -40,7 +58,7 @@
 
 ## M0 — Foundation / Setup (1–2 недели)
 
-**DoD:** оба домена по HTTPS, RU/EN/DE роутинг (legal-роуты локализованы), cookie-consent + аналитика без cookies, секреты не в гите, бэкап БД, дизайн-токены подключены.
+**DoD:** оба домена по HTTPS, RU/EN роутинг + legal-only `/de` (немецкие Impressum/Datenschutz/Cookies/Terms), cookie-consent + аналитика без cookies, секреты не в гите, бэкап БД, дизайн-токены подключены.
 
 ### Инфраструктура
 
@@ -51,8 +69,10 @@
   — попутно решить судьбу корневого `Dockerfile`: неиспользуемый Vercel-example boilerplate, реальный
   деплой (standalone + systemd) его не задействует нигде; либо пометить как reference-only, либо убрать
   (см. пометку в `DEPLOYMENT.md` §1, добавленную аудитом 2026-07-01).
-* [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — `sealthehunter.online` (alpha): DNS + авто-HTTPS Caddy.
-  Остальные домены (sealife/sealrescue) + DDoS/кэш — позже.
+* [~] **M0-T03** Домены (DNS, SSL, DDoS, кэш). *[M]* — на альфе отработаны DNS + авто-HTTPS Caddy
+  (домен альфы выведен из эксплуатации, см. «Состояние на сейчас»). Осталось: `sealife.info` и
+  `sealrescue.info` (+ их поддомены, напр. `sealrun.sealife.info` — SR-12) + DDoS/кэш. Других
+  корневых доменов проект не заводит.
 * [ ] **M0-T04** Media delivery: **Contabo Object Storage** (переплан с 2026-06-30, см. `INFRA.md` §4; было Hetzner+Bunny) + CDN Pull Zone + `assets.sealife.info` / `assets.sealrescue.info`; Sharp variants on upload; no provider URLs in CMS; AVIF/WebP/JPEG fallback; widths 320/640/960/1280/1920; game assets versioned; RU reachability test. *[M]* → PERF/SEO
 * [~] **M0-T05** Секреты в secret manager; `.env` в `.gitignore`. *[S]* → SEC — `.env`/`.env*.local` уже в `.gitignore` (готово); секрет-менеджер (Vault/SOPS/облачный) — не подключён, секреты сейчас в GitHub Repository secrets + `/etc/sealife/.env` на боксе (см. `INFRA.md` §6).
 * [ ] **M0-T06** Ежедневный бэкап Postgres + проверка восстановления. *[S]* → SEC — на alpha БД =
@@ -66,21 +86,21 @@
 ### Роутинг и i18n
 
 * [x] **M0-T08** Мультидомен в одном Next: sealife и sealrescue из общей CMS. *[M]*
-* [x] **M0-T09** Локализованный роутинг `/ru/…`, `/en/…` (дефолт `ru`), БЕЗ forced-редиректа; текстовый свитчер; legal-страницы могут иметь DE-версию без `/de`-контента. *[M]* → DESIGN
-* [x] **M0-T10** `hreflang` + `x-default` + canonical + sitemap по локалям. *[S]* → SEO
+* [x] **M0-T09** Локализованный роутинг `/ru/…`, `/en/…` (дефолт `ru`), БЕЗ forced-редиректа; текстовый свитчер RU/EN; legal-страницы дополнительно имеют DE-версию (`/de/legal-notice` и т.д.) БЕЗ `/de`-контента — контентные роуты под `/de` отдают 404. *[M]* → DESIGN
+* [x] **M0-T10** `hreflang` + `x-default` + canonical + sitemap по локалям (контент — ru/en через `buildAlternates`; legal-роуты — ru/en/de через `buildLegalAlternates`). *[S]* → SEO
 
 ### Дизайн-фундамент (см. DESIGN_BRIEF.md)
 
 * [x] **M0-T16** Токены в Tailwind + CSS-переменные: primitive → **semantic-слой** (используем в компонентах только его) → два режима через data-атрибут. *[M]* → DESIGN
 * [x] **M0-T17** Шрифты через `next/font` (self-host, все с кириллицей): sealife Display = Unbounded/Rubik; sealrescue = без декор-display (заголовки тяжёлым Golos Text/Onest); Body = Onest/Golos Text; Mono = JetBrains Mono. НЕ Baloo 2. *[S]* → DESIGN
 * [x] **M0-T18** Базовые примитивы: типошкала, кнопки, карточка, «усатый» разделитель, статус-точка, штамп проверки. *[M]* → DESIGN
-* [x] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell EN/DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher; route guards (`/de` content → 404); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
+* [x] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell RU/EN + legal-only DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher RU/EN; route guards (`/de` content → 404, `/de` legal → 200); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
 
 ### EU compliance (базис) — см. сквозной трек EU
 
 * [x] **M0-T11** Cookie-consent баннер (opt-in, reject как accept, настройки из footer). См. **EU-08**. *[M]* → EU
 * [x] **M0-T12** Аналитика: **no-cookie режим**, без localStorage/fingerprinting, IP-анонимизация, без cross-site, задокументировано в Privacy; любой non-essential трекинг — только после opt-in. (Plausible/Umami; self-host сам по себе НЕ делает законным без consent.) *[S]* → EU
-* [x] **M0-T13** **Legal-страницы (DE + EN shell, контент остаётся RU/EN):** Impressum/Anbieterkennzeichnung · Privacy Policy · Cookie Policy + Cookie-Settings · Terms · AI-Transparency note · контакт для запросов субъекта данных. См. **EU-07**. *[M]* → EU
+* [x] **M0-T13** **Legal-страницы (RU/EN + legal-only DE; контент сайта — RU/EN):** Impressum/Anbieterkennzeichnung · Privacy Policy · Cookie Policy + Cookie-Settings · Terms · AI-Transparency note · контакт для запросов субъекта данных. Немецкие тексты (`src/site/legal.ts`) остаются после снятия DE как языка сайта; оболочка `/de`-страниц английская. Судьба немецких legal-страниц — **EU-06**. См. **EU-07**. *[M]* → EU
 * [ ] **M0-T14** AVV/DPA-реестр под-процессоров: хостинг, БД, email, аналитика, AI-провайдеры, платежи, CDN/хранилище. См. **EU-09**. *[S]* → EU
 * [ ] **M0-T15** MFA на админку Payload. *[S]* → SEC
 
@@ -96,7 +116,7 @@
 * [x] **M1-T02** Лента/каталог + мемная галерея с фильтрами. *[M]*
 * [x] **M1-T03** «Тюленепедия» (карточки видов) + «Факт дня». *[M]*
 * [x] **M1-T04** Блок перелинковки sealife → sealrescue (два регистра: «Как спасают тюленей?» / «Нашёл тюленя? Это не шутки»). *[S]*
-* [x] **M1-T27** Редактируемый контент разделов (global `SectionContent`): editor может переопределять `title`/`intro`/обложку карточек разделов из админки, НЕ трогая роутинг. **Структура (`slug`/`site`/`nav`/`hasDetail`) остаётся в коде (`src/site/sections.ts`) — единственный источник правды для роутинга и route-guard'ов.** Реализация: Payload **global** (не коллекция); `slug` — `select` с опциями из `sectionDefs` (не свободный ввод); рендер берёт структуру из кода и накладывает overrides по slug, fallback на код при пустом значении → БД может только дополнять, не создавать/ломать разделы (рассинхрон невозможен). ~~Локали RU/EN~~ **все контент-локали (ru/en/de, native localized)**. Access: read public; update — editor/admin (create/delete у globals нет; агенту никогда). *[M]* → DESIGN — сделано 2026-07-02: global `section-content` + резолвер `src/site/sectionContent.ts` (чтение с `fallbackLocale: false` — пустая локаль берёт код, не русский текст); подключено в `requireSection`/`sectionMetadata`/`requireDetail` (все section-страницы) и в хаб разделов на главной (обложки карточек). **Заодно: admin-обложки карточек игр** — `games.coverImage` (upload) + `showCardCover` (выкл → плейсхолдер, картинка сохраняется), список игр и заставка страницы игры используют загруженную обложку; CDN/geo-отдача — **M0-T04**. Тесты: unit (мерж/`cardCover`) + int (access глобала, независимость локалей). Проверено в браузере: override intro + обложки на ru/en/de, hide-тумблер, cleanup.
+* [x] **M1-T27** Редактируемый контент разделов (global `SectionContent`): editor может переопределять `title`/`intro`/обложку карточек разделов из админки, НЕ трогая роутинг. **Структура (`slug`/`site`/`nav`/`hasDetail`) остаётся в коде (`src/site/sections.ts`) — единственный источник правды для роутинга и route-guard'ов.** Реализация: Payload **global** (не коллекция); `slug` — `select` с опциями из `sectionDefs` (не свободный ввод); рендер берёт структуру из кода и накладывает overrides по slug, fallback на код при пустом значении → БД может только дополнять, не создавать/ломать разделы (рассинхрон невозможен). **Все контент-локали (ru/en, native localized).** Access: read public; update — editor/admin (create/delete у globals нет; агенту никогда). *[M]* → DESIGN — сделано 2026-07-02: global `section-content` + резолвер `src/site/sectionContent.ts` (чтение с `fallbackLocale: false` — пустая локаль берёт код, не русский текст); подключено в `requireSection`/`sectionMetadata`/`requireDetail` (все section-страницы) и в хаб разделов на главной (обложки карточек). **Заодно: admin-обложки карточек игр** — `games.coverImage` (upload) + `showCardCover` (выкл → плейсхолдер, картинка сохраняется), список игр и заставка страницы игры используют загруженную обложку; CDN/geo-отдача — **M0-T04**. Тесты: unit (мерж/`cardCover`) + int (access глобала, независимость локалей). Проверено в браузере: override intro + обложки на всех контент-локалях, hide-тумблер, cleanup.
 
 ### Дизайн / Фронтенд (см. DESIGN_BRIEF.md)
 
@@ -116,11 +136,12 @@
   *[M]* → зависит от **M2-T06/M2-T09** (контракт вывода агента + запись в очередь) и **M1-T08/EU-11**
   (provenance-поля). Пока их нет — статьи пишутся вручную через админку.
   > **NB о `sealgram`:** отдельный репозиторий/сервис владельца (Docker на том же VPS, см.
-  > `DEPLOYMENT.md` §1a), репостит чужой тюлений контент Instagram/VK → Telegram-канал. Он **не
-  > является** источником для CMS и не связан с этим репо: канал ≠ сайт, чужой контент в CMS не идёт.
+  > `DEPLOYMENT.md` §1a), репостит чужой тюлений контент Instagram/VK → Telegram-канал.
+  > **К этому проекту отношения не имеет и подключаться не будет** — ни как источник контента для
+  > CMS, ни как часть AI-стека (его провайдер моделей к нашим агентам не относится). Канал ≠ сайт.
 * [ ] **M1-T07** ~20 evergreen-статей (RU) — **собственные**, авторские (агент-черновик + human
   review, см. M1-T06). *[L]*
-* [ ] **M1-T08** Перевод **RU→EN → human review → publish.** Хранить provenance: `aiTranslated`, `humanReviewed`, `reviewedBy`, `reviewedAt`, `sourceContentHash`; показывать user-facing метку. (+ поля в Content/Translation.) См. **EU-11**. *[M]* → EU
+* [ ] **M1-T08** Перевод **RU→EN → human review → publish** — единственное направление перевода: контент-локалей две, DE снят как язык сайта 2026-07-26 (legal-only `/de` переводом контента не покрывается). Хранить provenance: `aiTranslated`, `humanReviewed`, `reviewedBy`, `reviewedAt`, `sourceContentHash`; показывать user-facing метку. (+ поля в Content/Translation.) См. **EU-11**. *[M]* → EU
   — по пути учесть: хук `markTranslationsStale` (`src/hooks/contentHooks.ts`) сейчас подключён
   ТОЛЬКО к `Content`, но не к `Species`/`Quizzes`/`Games` (у них тоже локализованные поля + drafts);
   расширить на все коллекции с переводимым контентом или явно задокументировать, почему не нужно.
@@ -159,27 +180,33 @@
     Формулировка задачи выше упрощена относительно исходной (убран несуществующий пункт).
   * [x] **SH-07** UI лидербордов: две грубые доски (mobile/desktop), показ **перцентиля/ранга**, недельный/сезонный сброс, прозрачные правила подсчёта; полностью анонимно. *[M]* → DESIGN
   * [x] **SH-08** Анти-чит-харднинг и подстройка баланса по анонимизированным распределениям очков (итеративно). *[S]* → SEC
-* **Фаза 4 — Публичный alpha (sealthehunter.online)**
-  * [x] **SH-09** Standalone-лендинг игры: определение «не во фрейме», переключатель языка RU/EN/DE на
+* **Фаза 4 — Публичный alpha игры** *(выведен из эксплуатации 2026-07-19/20 — история)*
+  * [x] **SH-09** Standalone-лендинг игры: определение «не во фрейме», переключатель языка RU/EN на
     стартовом экране (стартовый язык: `?lang=`→сохранённый→браузер; запись в `localStorage` только после
-    явного выбора), пометка альфа-теста + контакт `feedback@sealthehunter.online` на старте и финале;
-    встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md §4–7. *[M]* → EU/DESIGN
-  * [ ] **SH-10** Legal-доступность alpha-домена (sealthehunter.online). Сейчас Caddy-allowlist отдаёт
-    только игру + `/api/leaderboard`, поэтому Impressum/Datenschutz **недостижимы**, а на стартовом
-    экране нет legal-ссылок (только `feedback@`). Сделать:
-    1. **Футер в игре** (стартовый + финальный экран) со ссылками «Impressum · Datenschutz».
-    2. **Расширить allowlist** в `deploy/Caddyfile` на legal-роуты (`/[locale]/legal-notice`, `/privacy`,
-       `/cookies`, `/terms`) — чтобы страницы открывались с alpha-домена.
-    3. **Impressum** — реальные имя + почтовый адрес + email (§5 DDG; `feedback@` недостаточно).
+    явного выбора), пометка альфа-теста + контакт для фидбэка на старте и финале;
+    встраиваемая версия не меняется. Деплой/Caddy-allowlist — DEPLOYMENT.md. *[M]* → EU/DESIGN
+    — ⚠️ **NB (домен, 2026-07-26):** заметка про альфа-тест и контакт для фидбэка **удалены из игры**
+    вместе с выведенным доменом (`#alphaNotice`/`#feedbackInvite` в `index.html`, ключи в `i18n.js`,
+    ветка в `game.js`); в standalone остался только переключатель языка. Понадобится контакт снова —
+    только точка контакта оператора из Impressum; новых адресов и доменов не заводим.
+    — ⚠️ **NB (2026-07-26):** словарь игры (`public/games/seal-hunt-v1/i18n.js`, `core/alias.js`)
+    самодостаточен и НЕ связан с локалями сайта, поэтому DE в самой игре остался после снятия
+    немецкого как языка сайта. Убирать ли его — отдельное решение владельца (см. также QA-16).
+  * [ ] **SH-10** ~~Legal-доступность standalone-домена альфы~~ — **исходная постановка закрыта
+    выводом альфы (2026-07-19/20) и доменной политикой 2026-07-26** (только `sealife.info` /
+    `sealrescue.info` + поддомены). Отдельного игрового origin'а больше нет и не будет: игра
+    открывается роутом/iframe'ом сайта и наследует его футер с Impressum/Datenschutz, поэтому
+    пункты «футер со ссылками внутри игры» и «расширить Caddy-allowlist на legal-роуты» **отпали**.
+    Остаётся общесайтовый legal-долг (поэтому чекбокс не закрыт):
+    1. **Impressum** — реальные имя + почтовый адрес + email (§5 DDG; служебный ящик недостаточен).
        Обновить `§5 TMG`→`§5 DDG`, если встречается.
-    4. **Datenschutz** — секция про игру: `localStorage` (`seal_hunt_seed/best/sound/lang`), transient
+    2. **Datenschutz** — секция про игру: `localStorage` (`seal_hunt_seed/best/sound/lang`), transient
        IP-rate-limit лидерборда (**не хранится**, legitimate interest), EU-хостинг (Contabo/Neon),
        серверные логи + ретеншн, аналитики нет.
     Cookie-баннер пока **НЕ нужен** (storage strictly-necessary/functional, аналитика выключена) —
     включить вместе с Plausible. Основание: §5 DDG + GDPR (IP = перс. данные); см. `COMPLIANCE_EU_DE.md`. *[M]* → EU
-    — подтверждено аудитом (2026-07-01): ни один из 4 пунктов не реализован (нет footer/legal-ссылок
-    в `index.html`, `deploy/Caddyfile` legal-роуты не аллоулистит, `src/site/legal.ts` — плейсхолдеры,
-    Datenschutz не описывает `localStorage`/rate-limit игры). Статус `[ ]` верен.
+    — подтверждено аудитом (2026-07-01): оставшиеся пункты не реализованы (`src/site/legal.ts` —
+    плейсхолдеры, Datenschutz не описывает `localStorage`/rate-limit игры). Статус `[ ]` верен.
   * [x] **SH-11** **Единая доска**: убрать деление лидерборда `desktop`/`mobile` везде (endpoint:
     Zod/токен/дедуп/ранг; коллекция `game-scores`: поле `board` удалено; клиент: без `detectBoard`
     и без табов; тесты/моки/доки). Причина — консистентность с Seal Run («равный горизонт»,
@@ -221,7 +248,7 @@
     Контракты: `tests/unit/seal-hunt-star.unit.spec.ts` (8) +
     `tests/e2e/game-lightning-star.e2e.spec.ts` (ореол/яркость/фейд). SW CACHE v17→v18.
   * [x] **SH-14** **Kill-switch standalone-версий (обе игры)** — запрос владельца 2026-07-08
-    («альфа sealthehunter.online окончена»): тумблер on/off в коде и админке. ON (по умолчанию) —
+    («альфа игры окончена»): тумблер on/off в коде и админке. ON (по умолчанию) —
     игра как обычно; OFF — standalone-страница (прямой URL/домен) показывает заглушку «Coming
     soon»: Seal Hunter — attract-фон с плавающей рыбой (сим spawnTick/updatePrey, «ловца»
     подменяет точка за полем) БЕЗ тюленя/таймера/очков/имён; Seal Run — статичный подводный фон
@@ -231,9 +258,9 @@
     гасит) + публичный `GET /api/game-config?game=` (кэш 60 с, draft-тумблер не влияет до
     Publish) + ветка в game.js обеих игр (fail-open при недоступном API; вуаль от вспышки меню).
     Тесты: `tests/int/game-config.int.spec.ts` (7) + `tests/e2e/game-placeholder.e2e.spec.ts`
-    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Alpha-прокси: `/api/game-config`
-    добавлен в allowlist `deploy/Caddyfile` (иначе 404 → fail-open, тумблер не доехал бы).
-    Закрыть альфу (админка с alpha-домена недоступна): Actions → **Toggle game standalone** →
+    (route-мок конфига: заглушка/fail-open/iframe-иммунитет). Пока альфа была жива, `/api/game-config`
+    держался в allowlist её прокси (иначе 404 → fail-open, тумблер не доехал бы).
+    Переключить флаг без доступа к админке: Actions → **Toggle game standalone** →
     `coming_soon` (workflow пишет флаг в БД `DATABASE_URI`; локально —
     `npm run game:standalone -- coming_soon seal-the-hunter`); где админка доступна — тот же
     флаг в Games → Publish. Доезжает ≤ 60 с. *[M]*
@@ -322,7 +349,7 @@
     параллакс/вспышки), ярусы препятствий различимы НЕ только цветом (силуэт). *[M]* → DESIGN/EU
 * **Фаза 3 — Лидерборд/бэкенд**
   * [x] **SR-08** Документ `games` (`slug: seal-run`, `embed`, `how`) — без изменений схемы. *[S]*
-    — сделано: запись в `gamesSeed` (RU/EN/DE, `order: 1`, `embed: /games/seal-run-v1/index.html`);
+    — сделано: запись в `gamesSeed` (RU/EN, `order: 1`, `embed: /games/seal-run-v1/index.html`);
     карточка на `/[locale]/games` и detail-iframe заработали из generic-роута без правок кода;
     инварианты сидов — существующий `seeds.int.spec.ts` (итерируется по `gamesSeed`). Попутный фикс
     оболочки: `#hud[hidden]{display:none}` — безусловный `display:flex` перебивал атрибут `hidden`,
@@ -359,8 +386,8 @@
     `sealife.info` ещё не в проде). Промоушен поддомена в standalone-origin — ревью ПОСЛЕ прод-запуска
     `sealife.info` и ПОСЛЕ SH-10. *[S]*
   * [ ] **SR-13** Datenschutz: добавить секцию про `localStorage`-ключи Seal Run (по аналогии с
-    SH-10 п.4 для Seal Hunter) — т.к. игра на основном домене, отдельный legal-allowlist/футер НЕ
-    нужен (страницы и так достижимы). *[S]* → EU
+    SH-10 п.4 для Seal Hunter) во все версии страницы — RU/EN и немецкую legal-only — т.к. игра на
+    основном домене, отдельный legal-allowlist/футер НЕ нужен (страницы и так достижимы). *[S]* → EU
   * [ ] **SR-14** E2E (`tests/e2e/game-seal-run.e2e.spec.ts` по конвенции `game-standalone.e2e.spec.ts`,
     без standalone-ветки) + **determinism/parity юнит-тест `generateCourse(seed)`**: golden-hash
     трассы совпадает (а) при повторе и (б) **между Node и браузерным билдом** — кросс-рантайм-свойство,
@@ -449,8 +476,20 @@
 
 ### Агент-1 (Researcher / факт-чекер)
 
-* [ ] **M2-T06** Контракт вывода Агента-1: JSON-схема предложения (diff+evidence+confidence+sources) + промпт + пример. *[M]* *(CLAUDE.md шаг 2)*
-* [ ] **M2-T07** Оркестрация (LangGraph) + поиск (Tavily/Perplexity) + парсинг (Playwright в sandbox). *[L]* → SEC
+> **Требование владельца 2026-07-26 — агенты работают С ИНТЕРНЕТОМ и перепроверяют факты.**
+> Агент не является источником истины сам по себе: любое утверждение, которое он кладёт в
+> `agent-proposals`, должно быть подтверждено **живой проверкой во внешних источниках** и нести
+> ссылки + дату проверки + confidence. Это делает обязательными (а не опциональными) M2-T07
+> (поиск + парсинг), M2-T08 (логика верификации), M2-T11 (allowlist источников по
+> `Source.trustLevel`) и SEC-02/SEC-03 (sandbox + анти-prompt-injection: внешний текст — ДАННЫЕ,
+> не инструкции). Приоритет источников для rescue-фактов — инвариант №8 `CLAUDE.md`
+> (офиц. сайт центра → офиц. соцсети → гос./муниципальные → признанные NGO → новости).
+> Провенанс проверки (`sourceVerified` / `sourceContentHash` / `lastAgentCheckedAt`) — M1-T08/EU-11.
+> ⚠️ Это относится и к **контентным** агентам (M1-T06/M3-T01), а не только к rescue-фактчекеру:
+> статьи о биологии тюленей пишутся с проверяемыми источниками, а не «из головы модели».
+
+* [ ] **M2-T06** Контракт вывода Агента-1: JSON-схема предложения (diff+evidence+confidence+sources) + промпт + пример. **`sources[]` обязателен и непустой; `evidence` цитирует источник дословно** (иначе предложение невалидно на уровне схемы). *[M]* *(CLAUDE.md шаг 2)*
+* [ ] **M2-T07** Оркестрация (LangGraph) + **интернет-доступ агента**: поиск (Tavily/Perplexity) + парсинг (Playwright в sandbox) + снапшот страницы с хэшем. Без этого агент не имеет права утверждать факты. *[L]* → SEC
 * [ ] **M2-T08** Логика проверки центров: ссылки, телефон/email/адрес, новые центры, новости; confidence + снапшот. *[L]*
 * [ ] **M2-T09** Запись в `agent-proposals`/`agent-runs` по API-ключу `agent`. Проверить: нет publish/delete. *[M]* → SEC
 * [ ] **M2-T10** Cron + бюджет-лимит AI API + лог `cost`. *[M]* → SEC
@@ -515,7 +554,8 @@
 > играть (SH-05…07). Память: [[accounts-contract-vs-consent]].
 
 **Кросс-доменный SSO (почему так):** cookie не шарится между разными корневыми доменами
-(`sealife.info` ↔ `sealthehunter.online`), поэтому «один username везде» = центральный IdP.
+(`sealife.info` ↔ `sealrescue.info` — а их у проекта ровно два, см. доменную политику выше),
+поэтому «один username везде» = центральный IdP.
 
 ```
                        ┌──────────────────────────────────────────────┐
@@ -526,16 +566,19 @@
                        └───────────────┬──────────────────┬────────────┘
         cookie  .sealife.info          │                  │   OIDC (Auth Code + PKCE)
    (общая для всех поддоменов)         │                  │   redirect-login + токен
-        ┌──────────────┬──────────────┘                  └────────┬───────────────┐
-        ▼              ▼                                           ▼               ▼
-  sealife.info   game.sealife.info                        sealrescue.info   sealthehunter.online
-  (тот же root —  quizzes.sealife.info                    (другой root —    (другой root —
-  cookie работает) (заводить игры сюда →                  OIDC redirect)    OIDC redirect)
+        ┌──────────────┬──────────────┘                   │
+        ▼              ▼                                  ▼
+  sealife.info   game.sealife.info               sealrescue.info
+  (тот же root —  quizzes.sealife.info           (другой root —
+  cookie работает) sealrun.sealife.info           OIDC redirect)
+                   (все игры/квизы — сюда,
                     cookie бесплатно)
 ```
 
-> Правило: что можно — заводим как `*.sealife.info` (cookie бесплатно). Отдельные бренд-/игровые домены
-> — через redirect-SSO. Username уникален глобально через `UNIQUE` на `players`.
+> Правило: что можно — заводим как `*.sealife.info` (cookie бесплатно); отдельных игровых/бренд-доменов
+> проект не заводит (доменная политика: только `sealife.info` и `sealrescue.info` + их поддомены).
+> Второй корень, `sealrescue.info`, — через redirect-SSO. Username уникален глобально через `UNIQUE`
+> на `players`.
 
 ### Фаза 0 — сейчас (без аккаунтов)
 
@@ -549,7 +592,7 @@
 * [ ] **ACC-T04** Self-service права субъекта: экспорт (JSON, Art. 15/20), правка username/email (Art. 16), **удаление аккаунта (Art. 17)** с анонимизацией публичного вклада (username → «удалённый тюлень»; строки лидерборда/комментариев не удаляются). *[M]* → EU
 * [ ] **ACC-T05** Миграция анонима: при первом логине с устройства — «забрать очки этого устройства» (merge anon-id **текущего** устройства, с подтверждением; без авто-merge между устройствами). *[M]* → SEC
 * [ ] **ACC-T06** Возрастной гейт: самодекларация **«16+»** (хранить boolean, не дату; Art. 8 DSGVO + §§104–113 BGB; согласуется с EU-05). *[S]* → EU
-* [ ] **ACC-T07** Обновить Datenschutz (RU/EN/DE), Terms (становятся обязательными), реестр Art. 30, DPA email-провайдера (EU: Brevo/Mailjet/Scaleway TEM/self-host Postfix). *[M]* → EU
+* [ ] **ACC-T07** Обновить Datenschutz (RU/EN + немецкая legal-only версия, если она доживёт до аккаунтов — **EU-06**), Terms (становятся обязательными), реестр Art. 30, DPA email-провайдера (EU: Brevo/Mailjet/Scaleway TEM/self-host Postfix). *[M]* → EU
 
 ### Фаза 2 — расширение
 
@@ -569,7 +612,7 @@ players (auth: true)
   emailVerified  date
   passwordHash   text     — NULL при magic-link-only
   username       text     — публичный, ГЛОБАЛЬНО уникальный (citext / UNIQUE); ЕДИНСТВЕННОЕ публичное поле
-  locale         select   — ru | en | de
+  locale         select   — ru | en
   ageConfirmed   checkbox — «16+» boolean (НЕ дата рождения)
   lastLoginAt    date
   createdAt / updatedAt
@@ -583,23 +626,22 @@ players (auth: true)
 скрыты от чужого read. Публичные джойны (лидерборд/комментарии) — только по `id` → `username`.
 **После изменения схемы:** `npm run generate:types`; отразить в `data-model.md` (`players`, `consents`).
 
-### (c) Копирайтинг регистрации + тексты согласий (RU/EN/DE)
+### (c) Копирайтинг регистрации + тексты согласий (RU/EN)
 
-> Цель: **один** обязательный контрол (Terms + Datenschutz) + **один** отдельный opt-in (newsletter).
-> Никаких преднастроенных галочек, никакого бандлинга (Art. 7(4)). Финальные формулировки — на
-> юр-сверку (EU-06).
+> Цель: **один** обязательный контрол (Terms + Политика конфиденциальности) + **один** отдельный
+> opt-in (newsletter). Никаких преднастроенных галочек, никакого бандлинга (Art. 7(4)). Финальные
+> формулировки — на юр-сверку (EU-06). Немецких формулировок нет: интерфейс существует только на
+> RU/EN, немецкими остаются лишь сами legal-документы под `/de`.
 
-* [ ] **ACC-T11** Тексты экрана регистрации и согласий, локализованные RU/EN/DE:
-  * **Обязательный чек-бокс (Terms + Datenschutz, НЕ предотмечен):**
+* [ ] **ACC-T11** Тексты экрана регистрации и согласий, локализованные RU/EN:
+  * **Обязательный чек-бокс (Terms + Политика конфиденциальности, НЕ предотмечен):**
     * RU: «Я принимаю [Условия использования] и ознакомился(-ась) с [Политикой конфиденциальности].»
     * EN: «I accept the [Terms of Use] and have read the [Privacy Policy].»
-    * DE: «Ich akzeptiere die [Nutzungsbedingungen] und habe die [Datenschutzerklärung] gelesen.»
   * **Опциональный newsletter-opt-in (отдельный, НЕ предотмечен; Double-Opt-In):**
     * RU: «Присылайте мне новости SeaLife на email. Отписаться можно в любой момент.»
     * EN: «Send me occasional SeaLife news by email. You can unsubscribe anytime.»
-    * DE: «Schickt mir gelegentlich SeaLife-News per E-Mail. Jederzeit abbestellbar.»
   * **Age-gate (16+):**
-    * RU: «Мне 16 лет или больше.» · EN: «I am 16 or older.» · DE: «Ich bin 16 Jahre oder älter.»
+    * RU: «Мне 16 лет или больше.» · EN: «I am 16 or older.»
   * **Verification email:** короткий single-use link; текст «подтвердите, что адрес ваш»; TTL в минутах.
     Логировать версию текста согласия (Art. 7(1)).
   * *[M]* → EU/DESIGN
@@ -633,8 +675,12 @@ players (auth: true)
 * [ ] **EU-03** Маркировка AI-контента видна пользователю (база; полная схема — EU-11). *[S]*
 * [ ] **EU-04** **WCAG 2.2 AA:** контраст, alt, клавиатура, семантика, видимый focus, target size, reduced motion. *[M]* → DESIGN
 * [ ] **EU-05** Детские разделы: без форм с PII; без поведенческой рекламы на детей. *[S]*
-* [ ] **EU-06** Перед EN/EU-запуском — сверка с юристом (IT-/Datenschutzrecht). *[S]*
-* [ ] **EU-07** **DDG Impressum / Anbieterkennzeichnung:** `/impressum` доступен с каждой страницы; DE+EN текст; контактный email; ответственное лицо/legal entity + адрес; для новостей — «§18 MStV»-ответственный; без скрытых legal-ссылок; OS-Plattform-ссылку не ставить. *[M]*
+* [ ] **EU-06** Перед EN/EU-запуском — сверка с юристом (IT-/Datenschutzrecht). **Отдельный вопрос
+  юристу (после снятия DE как языка сайта 2026-07-26):** нужны ли немецкоязычные legal-страницы
+  (`/de/legal-notice`, `/de/privacy`, `/de/cookies`, `/de/terms`) вообще, если сайт говорит только
+  на RU/EN, а оператор сидит в Германии — сейчас они сохранены осознанно, «на всякий случай»,
+  и это НЕ решённый вопрос. *[S]*
+* [ ] **EU-07** **DDG Impressum / Anbieterkennzeichnung:** legal-notice доступен с каждой страницы; RU/EN текст + немецкая версия под `/de` (legal-only локаль); контактный email; ответственное лицо/legal entity + адрес; для новостей — «§18 MStV»-ответственный; без скрытых legal-ссылок; OS-Plattform-ссылку не ставить. Обязанность идёт от юрисдикции оператора (Германия), а не от языков сайта; объём немецкой части — на **EU-06**. *[M]*
 * [ ] **EU-08** **§25 TDDDG consent:** non-essential cookies/storage только после opt-in; «Reject all» так же доступен, как «Accept all»; отзыв так же прост, как согласие; Cookie-Settings из footer; CMP логирует согласия. *[M]*
 * [ ] **EU-09** **AVV/DPA-реестр** (= M0-T14): hosting · БД · email · аналитика · AI-провайдеры · платежи · CDN/хранилище; трансферы в третьи страны + гарантии. *[S]*
 * [ ] **EU-10** **UGC / DSA readiness:** все submissions премодерируются; abuse/report-канал (notice-and-action); лог модерации; нет публичного UGC без ревью; appeals-процесс, если появятся публичные аккаунты/комментарии (см. эпик **ACC**). *[M]*
@@ -716,7 +762,8 @@ players (auth: true)
   (lines 45 / stmts 46 / funcs 55 / branches 25). Int-файлы сериализованы
   (`fileParallelism: false`) — параллельный boot Payload гонял drizzle push наперегонки.
 * [x] **QA-14** Хуки контента: `forceAgentDrafts` (запись от роли agent всегда `_status: draft`,
-  даже при явном `published` в data) и `markTranslationsStale` (смена RU помечает en/de stale;
+  даже при явном `published` в data) и `markTranslationsStale` (смена RU помечает перевод(ы) —
+  после снятия DE это только `en` — stale;
   partial-update не теряет `localeStatus`; hash стабилен при no-op записи). Unit + int. *[M]* —
   сделано 2026-07-02: `tests/unit/content-hooks.unit.spec.ts` (8) + `tests/int/content-hooks.int.spec.ts`
   (5, live Payload: create→stale, фиксация перевода hash'ем, no-op, partial, EN-запись не трогает).
@@ -739,7 +786,9 @@ players (auth: true)
   `tests/unit/alias-contract.unit.spec.ts` — 6 golden-векторов (EN + RU/DE с правилами рода:
   ж.р. «Брызгучая Русалочка», DE-род от суффикса «Spritziger…Klops»/«Glitschiges…Brötchen»)
   + sweep 300 (seed,game)-пар по всему uint32-диапазону: parts и EN-рендер движков идентичны.
-  Клиентский JS импортируется в vitest напрямую (node-safe).
+  Клиентский JS импортируется в vitest напрямую (node-safe). **NB:** DE-векторы здесь про
+  собственный словарь игры (`core/alias.js`), который не следует за локалями сайта и пережил
+  снятие немецкого как языка сайта (см. SH-09).
 * [x] **QA-17** Unit season-математики: `currentSeason`/`seasonEnd` на граничных датах (смена года,
   ISO-неделя 52/53, вс→пн UTC); детерминизм `mulberry32`/`hashStr`. *[S]* — сделано 2026-07-02:
   `tests/unit/season.unit.spec.ts` — вс→пн, декабрь→W01 следующего ISO-года (2025-12-29 →
@@ -747,41 +796,48 @@ players (auth: true)
   (конец всегда будущий понедельник; сезон стабилен до конца и меняется ровно в него);
   `currentSeason`/`seasonEnd` экспортированы. Детерминизм PRNG — в alias-спеках (QA-10/16).
 * [x] **QA-18** Сиды: `seed:baseline`/`seed:glossary`/`seed:m1` идемпотентны (повторный прогон не
-  дублирует записи); после сида выполняются инварианты (все 3 локали заполнены, slug каноничны). *[M]* —
+  дублирует записи); после сида выполняются инварианты (обе контент-локали заполнены, slug каноничны). *[M]* —
   сделано 2026-07-02: логика сидов вынесена в `src/seed/lib.ts` (экспортируемые функции; общий
   games-цикл baseline/m1 дедуплицирован), entry-скрипты — тонкие `payload run`-обёртки (пути/скрипты
   не менялись). `tests/int/seeds.int.spec.ts` (7, state-agnostic — работает и на свежей CI-БД, и на
-  посеянной dev): второй прогон created=0 и counts стабильны; games/content — title в 3 локалях,
-  published, slug канонический; species — факты не размножаются, id-matching en/de↔ru; glossary —
-  ровно одна строка на source, translation ru=термин/en=перевод (DE глоссария — с агентом-переводчиком).
-  **Блок QA-B закрыт целиком.**
+  посеянной dev): второй прогон created=0 и counts стабильны; games/content — title в обеих локалях,
+  published, slug канонический; species — факты не размножаются, id-matching en↔ru; glossary —
+  ровно одна строка на source, translation ru=термин/en=перевод. Сиды больше не пишут `de`
+  (снятие DE 2026-07-26). **Блок QA-B закрыт целиком.**
 
 #### QA-C — Фронтенд: роутинг, i18n, страницы, consent
 
 * [x] **QA-19** Unit `proxy.ts`: `pickLocale` (cookie > Accept-Language с q-весами > fallback `en`;
-  неподдерживаемый язык → `en`) и `resolveSiteId` (host/override); `x-site`/`x-locale` ставятся
+  неподдерживаемый язык → `en`, в т.ч. `de`-браузер после снятия немецкого как контент-локали;
+  путь `/de/privacy` не редиректится — `routeLocales`) и `resolveSiteId` (host/override); `x-site`/`x-locale` ставятся
   при rewrite. *[S]* — сделано 2026-07-02: `tests/unit/proxy.unit.spec.ts` (13 тестов на реальном
   `NextRequest`): cookie>header>fallback, q-веса против порядка, региональные теги, первый
   ПОДДЕРЖИВАЕМЫЙ из ранжированных; redirect-контракт (307 + Vary + сохранение пути/query);
   rewrite-контракт через x-middleware-заголовки (rewrite-цель /[site]/…, x-site/x-locale,
   host→sealrescue, ?site=override, «прокси не ставит NEXT_LOCALE»). `pickLocale` экспортирован;
   `resolveSiteId` был закрыт в QA-10.
-* [x] **QA-20** hreflang/canonical/sitemap: unit на `buildAlternates`; e2e-ассерты альтернатов на
-  3 локалях (перекрёстные + x-default); контракт `sitemap.xml` (только published; пока только
+* [x] **QA-20** hreflang/canonical/sitemap: unit на `buildAlternates` (контент, ru/en) и
+  `buildLegalAlternates` (legal, ru/en/de); e2e-ассерты альтернатов на обеих контент-локалях
+  (перекрёстные + x-default); контракт `sitemap.xml` (только published; пока только
   sealife — ассерт текущего поведения, обновить при M2). *[M]* — сделано 2026-07-02:
-  `tests/e2e/seo.e2e.spec.ts` (7): canonical+alternates на главных ×3 локали, странице раздела и
-  контентной странице (прод-домены, x-default→en, canonical slug общий); sitemap — главная ×3,
+  `tests/e2e/seo.e2e.spec.ts` (7): canonical+alternates на главных, странице раздела и
+  контентной странице (прод-домены, x-default→en, canonical slug общий); sitemap — главные,
   published-контент с hreflang, черновик исключён, sealrescue-вариант только с главной и своим
   доменом. Фикстуры (published+draft) сидятся Payload'ом из спека. `buildAlternates` — с QA-10.
+  Обновлено под две локали 2026-07-26 (контент `/de` больше не альтернат; legal — по-прежнему
+  ru/en/de).
 * [ ] **QA-21** Контент-страницы по seeded-данным (e2e): деталь article/news/meme/species рендерится
-  на 3 локалях; AiBadge/provenance видимы; TopicFilter фильтрует и держит URL-параметр;
-  FactOfDay детерминирован по дате (заморозить clock). *[M]*
-* [x] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 локали отвечают 200; DE рендерит «Impressum»/
-  «Datenschutz»; legal-ссылки присутствуют в футере каждой публичной страницы. *[S]* — сделано
+  на обеих локалях (`/ru`, `/en`) и отдаёт 404 под `/de`; AiBadge/provenance видимы; TopicFilter
+  фильтрует и держит URL-параметр; FactOfDay детерминирован по дате (заморозить clock). *[M]*
+* [x] **QA-22** Legal-shell (e2e): 4 legal-роута × 3 route-локали (`ru`/`en` + legal-only `de`)
+  отвечают 200; DE рендерит «Impressum»/«Datenschutz»; legal-ссылки присутствуют в футере каждой
+  публичной страницы. *[S]* — сделано
   2026-07-02: `tests/e2e/legal.e2e.spec.ts` (9): 12 роутов по 200; DE-заголовки
-  Impressum/Datenschutzerklärung/Nutzungsbedingungen; draft-плашка placeholder-контента на 3
-  локалях; футер-ссылки (slug/подписи из `src/site/legal.ts`) на 6 типах страниц — главные обоих
-  сайтов, раздел, mock-деталь, legal и 404.
+  Impressum/Datenschutzerklärung/Nutzungsbedingungen; draft-плашка placeholder-контента на всех
+  route-локалях; футер-ссылки (slug/подписи из `src/site/legal.ts`) на 6 типах страниц — главные обоих
+  сайтов, раздел, mock-деталь, legal и 404. После снятия DE как языка сайта (2026-07-26) спека
+  остаётся в силе — но `/de`-страницы теперь единственные под этим префиксом, и их chrome
+  (навигация/футер) английский, тогда как сами документы немецкие.
 * [x] **QA-23** Consent/аналитика (e2e, КРИТИЧНО — §25 TDDDG): до opt-in скрипт Plausible НЕ
   загружается (network-ассерт); Accept подгружает; Reject/отзыв отключает; выбор хранится только
   в consent-cookie (не в localStorage); кнопки Accept/Reject равнозначны; Cookie-Settings
@@ -794,9 +850,10 @@ players (auth: true)
 * [x] **QA-24** LanguageSwitcher (e2e): открытие/закрытие (клик вне, Esc, уход фокуса);
   выбор ставит `NEXT_LOCALE` ТОЛЬКО по явному клику; путь сохраняется при переключении локали;
   aria-атрибуты (haspopup/expanded/current). *[S]* — сделано 2026-07-02:
-  `tests/e2e/language-switcher.e2e.spec.ts` (5): aria-контракт (haspopup/expanded, 3 текстовых
-  пункта, aria-current+hreflang у активной); закрытие Esc/кликом вне/Tab'ом наружу; путь
-  сохраняется (/en/articles→/de/articles) и `<html lang>` меняется; cookie ТОЛЬКО по клику
+  `tests/e2e/language-switcher.e2e.spec.ts` (5): aria-контракт (haspopup/expanded, текстовые
+  пункты по числу контент-локалей — после 2026-07-26 их два, Русский/English,
+  aria-current+hreflang у активной); закрытие Esc/кликом вне/Tab'ом наружу; путь
+  сохраняется (/en/articles→/ru/articles) и `<html lang>` меняется; cookie ТОЛЬКО по клику
   (навигация/редиректы не создают) + после выбора `/` уважает cookie; свитчер и в футере
   (открывается вверх).
 * [~] **QA-25** Report/notice-форма (e2e): поля email НЕТ (ассерт отсутствия — инвариант №4);
@@ -862,8 +919,9 @@ players (auth: true)
   бюджеты на главных + деталях обоих сайтов; отчёт как артефакт PR. *[M]*
 * [ ] **QA-37** Link checker (реализует **QA-02**): обход по sitemap + навигации, включая
   hreflang-альтернаты и футер-ссылки; битые внутренние ссылки = fail; внешние — warning. *[S]*
-* [ ] **QA-38** Пост-деплой smoke в `deploy.yml`: healthcheck, критические роуты (главные ×3 локали,
-  legal, игра, `/api/leaderboard` GET) отвечают 200, security-заголовки на месте; фейл = алерт. *[S]*
+* [ ] **QA-38** Пост-деплой smoke в `deploy.yml`: healthcheck, критические роуты (главные ×2 локали,
+  legal ×3 route-локали (вкл. `/de`), игра, `/api/leaderboard` GET) отвечают 200, контент под `/de`
+  отдаёт 404, security-заголовки на месте; фейл = алерт. *[S]*
 
 #### Задел (сделано / унаследовано)
 
@@ -871,10 +929,13 @@ players (auth: true)
   (2026-07-02, `tests/int/access-matrix.int.spec.ts`)
 * [ ] **QA-02** E2E проверка ссылок (Playwright link checker). *[S]* → реализуется в **QA-37**
 * [ ] **QA-03** Lighthouse в CI. *[S]* → реализуется в **QA-36**
-* [x] **QA-04** E2E-тест мультилокальных route guards (`/ru`,`/en`,`/de` рендерятся; неизвестная
-  локаль/slug → 404). *[S]* — сделано в `tests/e2e/frontend.e2e.spec.ts` (PR #39 + real-404 fix
+* [x] **QA-04** E2E-тест мультилокальных route guards (контент рендерится на `/ru` и `/en`; `/de` —
+  только legal-роуты; неизвестная локаль/slug и любой контент под `/de` → 404). *[S]* — сделано в
+  `tests/e2e/frontend.e2e.spec.ts` (PR #39 + real-404 fix
   2026-07-02): брендинг/`<html lang>`/свитчер по локалям, redirect-политика, настоящие HTTP 404
-  для несуществующих slug и чужих разделов, локализованная `not-found.tsx`.
+  для несуществующих slug и чужих разделов, локализованная `not-found.tsx`. Гард `/de`-контента
+  ужесточён снятием DE (2026-07-26): контент-страницы валидируют `isLocale`, layout и 4 legal-роута
+  — `isRouteLocale`.
 * [x] **QA-05** Переписать или удалить `tests/e2e/frontend.e2e.spec.ts`. *[S]* — переписан (PR #39):
   boilerplate-ассерты заменены контрактными тестами брендинга/роутинга; в CI по-прежнему не
   выполняется (см. QA-06).

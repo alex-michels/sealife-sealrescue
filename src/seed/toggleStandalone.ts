@@ -1,5 +1,6 @@
 // SH-14: entry-скрипт kill-switch'а standalone-версий — для случаев, когда админка
-// недоступна (alpha-прокси sealthehunter.online пропускает только игровые endpoints).
+// недоступна (окружение, отдающее standalone-страницу игры по прямому URL, может пускать
+// через прокси только игровые endpoints; allowlist задаётся там же, где живёт эта раздача).
 // Запуск (Node 22, tsx): npm run game:standalone -- <coming_soon|live> [slug]
 // Без slug — обе игры. Логика — в lib.ts (setGameStandaloneComingSoon), тонкая обёртка
 // с ТОП-ЛЕВЕЛ await (floating promise умирает до записи в БД — см. seedBaseline.ts).

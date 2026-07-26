@@ -110,14 +110,14 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en' | 'de') | ('ru' | 'en' | 'de')[];
+  fallbackLocale: ('false' | 'none' | 'null') | false | null | ('ru' | 'en') | ('ru' | 'en')[];
   globals: {
     'section-content': SectionContent;
   };
   globalsSelect: {
     'section-content': SectionContentSelect<false> | SectionContentSelect<true>;
   };
-  locale: 'ru' | 'en' | 'de';
+  locale: 'ru' | 'en';
   widgets: {
     collections: CollectionsWidget;
   };
@@ -483,7 +483,7 @@ export interface Game {
    */
   order?: number | null;
   /**
-   * Standalone-заглушка «Coming soon»: ВКЛ — прямой URL/домен игры (напр. sealthehunter.online) показывает атмосферный фон без игры и надпись «Coming soon». ВЫКЛ (по умолчанию) — игра доступна как обычно. НЕ влияет на iframe-встраивание на sealife.info. Игра перечитывает флаг при загрузке страницы (кэш до 60 с).
+   * Standalone-заглушка «Coming soon»: ВКЛ — прямой URL игры (или её vanity-поддомен вида *.sealife.info) показывает атмосферный фон без игры и надпись «Coming soon». ВЫКЛ (по умолчанию) — игра доступна как обычно. НЕ влияет на iframe-встраивание на sealife.info. Игра перечитывает флаг при загрузке страницы (кэш до 60 с).
    */
   standaloneComingSoon?: boolean | null;
   updatedAt: string;

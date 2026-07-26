@@ -29,7 +29,7 @@ button:active{transform:translateY(1px)}
    Градиент-скрим поверх изображения; если cover.jpg нет — остаётся просто тёмный фон. */
 /* `justify-content:safe center` keeps the screen centred when it fits but falls back to
    top-aligned (never clips the top) when the content is taller than the viewport; `overflow-y:auto`
-   then lets the user reach the bottom (feedback line). The plain `center` first keeps old browsers
+   then lets the user reach the bottom. The plain `center` first keeps old browsers
    centred if they don't understand `safe`. */
 /* Cover background: browsers get the small AVIF→WebP→JPEG ladder via image-set() (same formats as
    the backdrop); the plain url("assets/cover.jpg") line before it is the fallback for browsers without
@@ -47,28 +47,18 @@ button:active{transform:translateY(1px)}
 .hello{margin:.2rem 0 .1rem;font-weight:700;color:#9fd0e0}
 .hello:empty{display:none}
 
-/* — Переключатель языка (только standalone-альфа). Активная локаль помечена не только цветом
+/* — Переключатель языка (только standalone). Активная локаль помечена не только цветом
    (aria-pressed → подчёркивание + рамка), цель ≥24×24px, виден focus (наследует button:focus-visible). */
 .lang-switch{display:flex;gap:.4rem;margin-bottom:.6rem}
 .lang-switch[hidden]{display:none}
 .lang-btn{min-width:2.6rem;min-height:2.2rem;padding:.35rem .6rem;border-radius:.5rem;background:rgba(237,241,243,.08);color:#EDF1F3;font-size:.8rem;font-weight:700;letter-spacing:.03em}
 .lang-btn[aria-pressed="true"]{background:#2C6A8F;text-decoration:underline;text-underline-offset:3px;box-shadow:inset 0 0 0 2px rgba(237,241,243,.55)}
 
-/* — Заметка про альфа-тест + отображаемый контакт оператора (только standalone) */
-.alpha-notice{margin:.4rem 0 .2rem;font-size:.82rem;line-height:1.4;opacity:.82;max-width:34rem}
-.alpha-notice[hidden]{display:none}
-.feedback-invite{margin:.85rem 0 0;font-size:.8rem;line-height:1.4;opacity:.82;max-width:34rem}
-.feedback-invite[hidden]{display:none}
-.feedback-invite a{color:#9fd0e0;text-decoration:underline;text-underline-offset:2px}
-.feedback-invite a:focus-visible{outline:3px solid rgba(255,255,255,.8);outline-offset:2px;border-radius:.2rem}
-
 /* — Переходный экран после раунда (game.js MIN_TRANSITION_MS). Пока идёт сабмит результата и
-   загрузка доски, показываем стабильный interstitial и прячем результат/кнопки/доску/заметки —
+   загрузка доски, показываем стабильный interstitial и прячем результат/кнопки/доску —
    нет «мигания» загрузки и резкого скачка к итогам. Лёгкая пульсация подсказывает «идёт работа». */
 #overlay.is-waiting .overlay-buttons,
-#overlay.is-waiting .board,
-#overlay.is-waiting .alpha-notice,
-#overlay.is-waiting .feedback-invite { display:none; }
+#overlay.is-waiting .board { display:none; }
 #overlay.is-waiting #message{ animation:sealWaitPulse 1.15s ease-in-out infinite; }
 @keyframes sealWaitPulse{ 0%,100%{opacity:.6} 50%{opacity:1} }
 @media (prefers-reduced-motion:reduce){ #overlay.is-waiting #message{ animation:none; opacity:.92 } }
@@ -93,21 +83,18 @@ button:active{transform:translateY(1px)}
 .lb-more{margin-top:.5rem;width:100%;background:rgba(237,241,243,.08);color:#EDF1F3;font-size:.82rem;padding:.4rem}
 .lb-more:disabled{opacity:.5}
 @media (max-width:480px){#hud .left span{margin-right:.6rem}button{padding:.5rem .7rem;font-size:0.95rem}}
-/* — Game-over screen must fit small / portrait phones, incl. the bottom feedback line.
+/* — Game-over screen must fit small / portrait phones.
    Compact the heading, notes and board so the whole card fits without scrolling on a normal
    phone; the overlay still scrolls (above) as a last resort on very short screens. */
 @media (orientation:portrait) and (max-width:560px){
   #overlay{padding:1.25rem;padding-bottom:max(1.25rem,env(safe-area-inset-bottom))}
   #overlay h1{font-size:1.7rem;margin-bottom:.15rem}
-  .alpha-notice{font-size:.76rem;margin:.3rem 0 .15rem}
   .board{margin-top:.55rem}
   .lb-list{max-height:28vh}
-  .feedback-invite{margin-top:.55rem}
 }
 @media (max-height:700px){
   #overlay h1{font-size:1.5rem;margin-bottom:.1rem}
   .lb-list{max-height:22vh}
-  .alpha-notice{margin:.25rem 0 .1rem}
 }
 @media (prefers-contrast:more){button{outline:2px solid #fff}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}

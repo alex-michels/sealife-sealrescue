@@ -36,7 +36,11 @@ describe('sections', () => {
   })
 })
 
-/** Legal-shell (M0-T13/EU-07): slug общий, подписи локализованы, DE — Impressum/Datenschutz. */
+/**
+ * Legal-shell (M0-T13/EU-07): slug общий, подписи локализованы.
+ * DE — legal-only локаль: немецкий как язык сайта удалён 2026-07-26, но Impressum/Datenschutz
+ * остаются (оператор в Германии, §5 DDG / §18 MStV). Судьба этих страниц — на юрпроверке (EU-06).
+ */
 describe('legal', () => {
   it('same slugs across locales; DE labels are German legal terms', () => {
     const slugs = legalNav.ru.map((l) => l.slug)
@@ -62,6 +66,5 @@ describe('formatDate', () => {
   it('renders long localized dates', () => {
     expect(formatDate('2026-07-02', 'en')).toBe('2 July 2026')
     expect(formatDate('2026-07-02', 'ru')).toContain('июля')
-    expect(formatDate('2026-07-02', 'de')).toContain('Juli')
   })
 })

@@ -38,17 +38,17 @@ describe('forceAgentDrafts', () => {
 })
 
 describe('markTranslationsStale', () => {
-  it('не-исходная локаль (en/de): data возвращается без localeStatus', () => {
+  it('не-исходная локаль (en): data возвращается без localeStatus', () => {
     const data = { title: 'Hello' }
     expect(markTranslationsStale(args({ data, locale: 'en' }))).toEqual(data)
-    expect(markTranslationsStale(args({ data, locale: 'de' }))).toEqual(data)
+    
   })
 
   it('первая RU-запись: en и de помечаются stale', () => {
     const out = markTranslationsStale(args({ data: { title: 'Тюлень' }, locale: 'ru' })) as {
       localeStatus: Array<{ locale: string; status: string; sourceHash: string | null }>
     }
-    expect(out.localeStatus.map((s) => s.locale).sort()).toEqual(['de', 'en'])
+    expect(out.localeStatus.map((s) => s.locale).sort()).toEqual(['en'])
     for (const s of out.localeStatus) {
       expect(s.status).toBe('stale')
       expect(s.sourceHash).toBeNull()
@@ -110,6 +110,6 @@ describe('markTranslationsStale', () => {
     const out = markTranslationsStale(args({ data: { title: 'Тюлень' } })) as {
       localeStatus: unknown[]
     }
-    expect(out.localeStatus).toHaveLength(2)
+    expect(out.localeStatus).toHaveLength(1) // targetLocales = [en]
   })
 })

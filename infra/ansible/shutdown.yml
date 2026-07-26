@@ -1,4 +1,5 @@
-# Decommission публичной альфы (sealthehunter.online): остановить и выключить app + Caddy.
+# Decommission публичной альфы игры: остановить и выключить app + Caddy на боксе.
+# Общий выключатель публичной поверхности VPS — годится и для будущих QA/stage-окружений.
 #
 # БОКС СОХРАНЯЕТСЯ (Node, каталоги /opt/sealife, /etc/sealife/.env, firewall, hardening) —
 # будущее QA/prod-окружение поднимается обратно обычным путём: Configure (site.yml) → Deploy.

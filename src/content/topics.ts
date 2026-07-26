@@ -20,12 +20,12 @@ export const topicSlugs = [
 export type TopicSlug = (typeof topicSlugs)[number]
 
 const topicLabels: Record<TopicSlug, Record<Locale, string>> = {
-  biology: { ru: 'Биология', en: 'Biology', de: 'Biologie' },
-  behavior: { ru: 'Поведение', en: 'Behaviour', de: 'Verhalten' },
-  conservation: { ru: 'Охрана', en: 'Conservation', de: 'Schutz' },
-  rescue: { ru: 'Спасение', en: 'Rescue', de: 'Rettung' },
-  humor: { ru: 'Юмор', en: 'Humour', de: 'Humor' },
-  science: { ru: 'Наука', en: 'Science', de: 'Wissenschaft' },
+  biology: { ru: 'Биология', en: 'Biology' },
+  behavior: { ru: 'Поведение', en: 'Behaviour' },
+  conservation: { ru: 'Охрана', en: 'Conservation' },
+  rescue: { ru: 'Спасение', en: 'Rescue' },
+  humor: { ru: 'Юмор', en: 'Humour' },
+  science: { ru: 'Наука', en: 'Science' },
 }
 
 export const isTopicSlug = (value: string): value is TopicSlug =>

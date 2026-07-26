@@ -14,8 +14,15 @@ const req = (url: string, headers: Record<string, string> = {}) =>
 describe('pickLocale', () => {
   it('cookie NEXT_LOCALE важнее языка браузера', () => {
     expect(
+      pickLocale(req('/', { cookie: 'NEXT_LOCALE=en', 'accept-language': 'ru-RU,ru;q=0.9' })),
+    ).toBe('en')
+  })
+
+  // de удалён как язык сайта (2026-07-26): в cookie он больше не валиден.
+  it('legal-only локаль de в cookie игнорируется как невалидная', () => {
+    expect(
       pickLocale(req('/', { cookie: 'NEXT_LOCALE=de', 'accept-language': 'ru-RU,ru;q=0.9' })),
-    ).toBe('de')
+    ).toBe('ru')
   })
 
   it('невалидная cookie игнорируется', () => {
@@ -25,17 +32,22 @@ describe('pickLocale', () => {
   })
 
   it('Accept-Language: учитываются q-веса, а не порядок', () => {
-    expect(pickLocale(req('/', { 'accept-language': 'de;q=0.8,ru;q=0.9' }))).toBe('ru')
-    expect(pickLocale(req('/', { 'accept-language': 'de;q=0.9,ru;q=0.8' }))).toBe('de')
+    expect(pickLocale(req('/', { 'accept-language': 'en;q=0.8,ru;q=0.9' }))).toBe('ru')
+    expect(pickLocale(req('/', { 'accept-language': 'en;q=0.9,ru;q=0.8' }))).toBe('en')
   })
 
-  it('региональные теги сводятся к языку (de-AT → de, ru-RU → ru)', () => {
-    expect(pickLocale(req('/', { 'accept-language': 'de-AT,de;q=0.9' }))).toBe('de')
+  it('региональные теги сводятся к языку (en-GB → en, ru-RU → ru)', () => {
+    expect(pickLocale(req('/', { 'accept-language': 'en-GB,en;q=0.9' }))).toBe('en')
     expect(pickLocale(req('/', { 'accept-language': 'ru-RU,en;q=0.5' }))).toBe('ru')
   })
 
-  it('первый ПОДДЕРЖИВАЕМЫЙ из ранжированных (fr выше, но не поддержан → de)', () => {
-    expect(pickLocale(req('/', { 'accept-language': 'fr-FR,fr;q=0.9,de;q=0.8' }))).toBe('de')
+  it('первый ПОДДЕРЖИВАЕМЫЙ из ранжированных (fr выше, но не поддержан → ru)', () => {
+    expect(pickLocale(req('/', { 'accept-language': 'fr-FR,fr;q=0.9,ru;q=0.8' }))).toBe('ru')
+  })
+
+  // Немецкоязычный посетитель больше не получает /de — только en (немецкого контента нет).
+  it('немецкий браузер → en (de больше не контент-локаль)', () => {
+    expect(pickLocale(req('/', { 'accept-language': 'de-DE,de;q=0.9' }))).toBe('en')
   })
 
   it('неподдерживаемый язык или пустой заголовок → en (международный фолбэк)', () => {
@@ -54,9 +66,9 @@ describe('proxy(): redirect без локали в пути', () => {
   })
 
   it('путь и query сохраняются при redirect', () => {
-    const res = proxy(req('/articles?topic=biology', { 'accept-language': 'de' }))
+    const res = proxy(req('/articles?topic=biology', { 'accept-language': 'ru' }))
     const url = new URL(res.headers.get('location')!)
-    expect(url.pathname).toBe('/de/articles')
+    expect(url.pathname).toBe('/ru/articles')
     expect(url.searchParams.get('topic')).toBe('biology')
   })
 })
@@ -67,9 +79,18 @@ describe('proxy(): rewrite с локалью в пути', () => {
   // x-middleware-override-headers. Эти заголовки — то, как Next передаёт
   // rewrite/headers из proxy в рендер (QA-19: «x-site/x-locale ставятся при rewrite»).
   it('локаль в пути → внутренний сегмент [site] БЕЗ смены URL пользователя', () => {
-    const res = proxy(req('/de/articles'))
+    const res = proxy(req('/ru/articles'))
     const rewrite = new URL(res.headers.get('x-middleware-rewrite')!)
-    expect(rewrite.pathname).toBe('/sealife/de/articles')
+    expect(rewrite.pathname).toBe('/sealife/ru/articles')
+  })
+
+  // legal-only локаль: префикс /de распознаётся (иначе Impressum улетел бы в /en/de/...),
+  // а 404 для контентных роутов даёт уже сама страница (isLocale), не proxy.
+  it('/de/privacy НЕ редиректится: legal-only локаль — валидный префикс пути', () => {
+    const res = proxy(req('/de/privacy'))
+    expect(res.headers.get('location')).toBeNull()
+    const rewrite = new URL(res.headers.get('x-middleware-rewrite')!)
+    expect(rewrite.pathname).toBe('/sealife/de/privacy')
   })
 
   it('rewrite ставит x-site/x-locale (для not-found.tsx и др. без params)', () => {

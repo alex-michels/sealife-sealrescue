@@ -22,21 +22,19 @@ export const sites: Record<SiteId, SiteConfig> = {
     id: 'sealife',
     domain: 'sealife.info',
     // Вордмарк с точкой (DESIGN_BRIEF §5 / CLAUDE.md). DE использует латинский бренд SeaLife.Info.
-    brand: { ru: 'Тюлень.Инфо', en: 'SeaLife.Info', de: 'Robben.Info' },
+    brand: { ru: 'Тюлень.Инфо', en: 'SeaLife.Info' },
     tagline: {
       ru: 'Всё о тюленях: факты, новости, мемы, квизы и тюленевая наука без занудства.',
       en: 'Everything about seals: facts, news, memes, quizzes and seal science without the boredom.',
-      de: 'Alles über Robben: Fakten, News, Memes, Quizze und Robbenkunde ohne Langeweile.',
     },
   },
   sealrescue: {
     id: 'sealrescue',
     domain: 'sealrescue.info',
-    brand: { ru: 'Спасение тюленей', en: 'Seal Rescue', de: 'Robbenrettung' },
+    brand: { ru: 'Спасение тюленей', en: 'Seal Rescue' },
     tagline: {
       ru: 'Нашёл тюленя — что делать. Справочник центров реабилитации.',
       en: 'Found a seal — what to do. Directory of rehabilitation centers.',
-      de: 'Eine Robbe gefunden — was tun. Verzeichnis der Rehabilitationszentren.',
     },
   },
 }

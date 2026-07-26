@@ -2,7 +2,7 @@
 
 Мини-игра про тюленя: лови рыбу за 60 секунд. Vanilla **HTML/CSS/Canvas2D**, без фреймворка и сборки —
 файлы лежат как есть в `public/games/seal-hunt-v1/` и отдаются статикой. Встраивается на странице
-`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en|de`.
+`app/(frontend)/[site]/[locale]/games/[slug]/page.tsx`; язык интерфейса передаётся через `?lang=ru|en`.
 
 ## Структура файлов
 ```
@@ -10,7 +10,7 @@ public/games/seal-hunt-v1/
   index.html                # разметка: HUD, canvas, overlay, board
   style.css
   game.js                   # игровой цикл, состояние, ввод-вывод
-  i18n.js                   # словарь ru/en/de; язык из ?lang=, window.SealI18n.{lang,t,dict}
+  i18n.js                   # словарь ru/en; язык из ?lang=, window.SealI18n.{lang,t,dict}
   manifest.webmanifest      # PWA-манифест
   sw.js                     # service worker (network-first)
   favicon.svg
@@ -182,10 +182,10 @@ Server-authoritative. Поток раунда:
 
 > **Устойчивость:** `startRound` ретраит запрос токена один раз; если сабмит всё же не прошёл (потерянный
 > play-token), `mountAfterPlay` показывает доску в **режиме чтения**, а не «доска недоступна». Имена строк
-> рендерятся на языке зрителя (`ru`/`en`/`de`) из частей — сервер хранит индексы + canonical EN-alias.
-> Грамматика — по локали: DE и RU склоняют прилагательное по роду существительного (поля `gde`/`gru`
-> у NOUN в `core/alias.js`; DE — суффикс-голова, RU — ведущее сущ.). Добавляя NOUN, добавь EN-строку в
-> `NOUN_EN` (`endpoints/leaderboard.ts`) на ту же позицию — длина/порядок списков обязаны совпадать.
+> рендерятся на языке зрителя (`ru`/`en`) из частей — сервер хранит индексы + canonical EN-alias.
+> Грамматика — по локали: RU склоняет прилагательное по роду ведущего существительного (поле `gru`
+> у NOUN в `core/alias.js`). Добавляя NOUN, добавь EN-строку в `NOUN_EN`
+> (`endpoints/leaderboard.ts`) на ту же позицию — длина/порядок списков обязаны совпадать.
 
 > **Согласованность ранга:** строка «Вы: #N из M» берётся из РЕАЛЬНОЙ строки игрока в показанной доске
 > (единый источник правды в `mountAfterPlay`), поэтому не расходится с подсвеченной строкой. Раньше
@@ -216,26 +216,34 @@ Server-authoritative. Поток раунда:
 коллекция (см. [data-model.md](data-model.md)). Это позволяет лидерборду работать до появления аккаунтов
 (требование COMPLIANCE: лидерборды до аккаунтов — анонимные/псевдонимные без email).
 
-## Публичный alpha-тест (sealthehunter.online) — standalone-режим
-Игра + лидерборд отдаются отдельным публичным тестом тем же деплоем из `main`, с allowlist маршрутов
-(наружу — только игра и `/api/leaderboard*`, без `/admin` и прочего API). На этом домене Caddy отдаёт
-игру **с корня** (rewrite `/* → /games/seal-hunt-v1/*`). Инфраструктура — [DEPLOYMENT.md](DEPLOYMENT.md) §4–7.
+## Standalone-режим (игра открыта не во фрейме)
+**История:** публичная альфа игры жила отдельным origin'ом (тот же деплой из `main`, allowlist
+маршрутов: наружу только игра и `/api/leaderboard*`, Caddy отдавал игру **с корня**) и **выведена из
+эксплуатации 2026-07-19/20**. Отдельных доменов у игр больше не будет: публичных площадок ровно две —
+`sealife.info` и `sealrescue.info` (+ их поддомены), игры живут роутами/поддоменами под ними
+(доменная политика владельца, 2026-07-26). Инфраструктура и раннбук — [DEPLOYMENT.md](DEPLOYMENT.md).
+
+Сам standalone-режим в коде остаётся: он включается при прямом открытии `/games/seal-hunt-v1/`
+(вне iframe) — и сработал бы так же, если игре когда-нибудь дадут vanity-поддомен под
+`*.sealife.info` (как `sealrun.sealife.info` у Seal Run, SR-12).
 
 **Standalone vs встраивание (один код, без дублирования).** Игра определяет, что открыта **не во фрейме**
 (`STANDALONE = window.self === window.top`, в `i18n.js`). Во фрейме (встраивание на sealife.*) поведение
 прежнее. В standalone дополнительно:
 
-* **Переключатель языка RU/EN/DE** на стартовом/финальном экране (`#langSwitch`). `window.SealI18n.setLang(l, persist)`
+* **Переключатель языка RU/EN** на стартовом/финальном экране (`#langSwitch`). `window.SealI18n.setLang(l, persist)`
   меняет язык на лету: `applyStatic()` + колбэк `onLangChange` (его ставит `game.js`) перерисовывает
-  приветствие, интро, заметку и доску (`relocalizeBoard` в `core/leaderboard.js` — без повторного сабмита).
+  приветствие, интро и доску (`relocalizeBoard` в `core/leaderboard.js` — без повторного сабмита).
 * **Стартовый язык:** `?lang=` → сохранённый выбор (`localStorage` `seal_hunt_lang`) → язык браузера
-  (ru→ru, de→de, иначе en — как `pickLocale` в `src/proxy.ts`) → `ru`. Запись в `localStorage` —
+  (ru→ru, иначе en, в т.ч. немецкий браузер — как `pickLocale` в `src/proxy.ts`) → `ru`. Запись в `localStorage` —
   **только после явного клика** по переключателю (COMPLIANCE: язык хранить лишь после явного выбора).
-* **Заметка про альфа-тест** (`#alphaNotice`, ключ `alphaNotice`) + **контакт** `feedback@sealthehunter.online`
-  (`#feedbackInvite`, ключ `feedbackInvite`) — на стартовом И финальном (с лидербордом) экране. Email —
-  отображаемый контакт оператора, не сбор email (COMPLIANCE).
+* ~~Заметка про альфа-тест (`#alphaNotice`) + контакт для фидбэка (`#feedbackInvite`)~~ — **удалены
+  вместе с выводом альфы**: разметка в `index.html`, ключи словаря в `i18n.js` и ветка в `game.js`
+  сняты (правила `.alpha-notice` / `.feedback-invite` в `style.css` пока остались неиспользованными).
+  Ящик обратной связи жил на выведенном домене; новых адресов и доменов не заводим — точка контакта
+  оператора живёт в **Impressum сайта** (COMPLIANCE: отображаемый контакт оператора, не сбор email).
 
-Все эти элементы скрыты во встраиваемой версии (`hidden`, снимается только при `STANDALONE`). Правки —
+Standalone-элементы скрыты во встраиваемой версии (`hidden`, снимается только при `STANDALONE`). Правки —
 в `public/games/seal-hunt-v1/` (`i18n.js`, `index.html`, `game.js`, `style.css`); после правки ассетов
 бампать `CACHE` в `sw.js` (см. текущее значение в файле — версия растёт с каждым визуальным изменением;
 SW также не кэширует `/api/`).
@@ -261,9 +269,12 @@ SW также не кэширует `/api/`).
      `<h1>`; тюлень и рыбы в центральной зоне). **Портретная обложка — только фон в браузере, в OG не
      используется** → формат свободный (AVIF/WebP выгоднее JPEG). Затемнение — те же alpha в градиенте
      медиа-запроса. Нет файла → останется тёмный градиент. (OG-превью всегда берёт landscape `cover.jpg`.)
-2. **Превью при шаринге ссылки** (Open Graph + Twitter) — мета в `<head>` `index.html`: абсолютные URL
-   на `https://sealthehunter.online/assets/cover.jpg` (→ `/games/seal-hunt-v1/assets/cover.jpg` через
-   catch-all в `deploy/Caddyfile`), `summary_large_image`.
+2. **Превью при шаринге ссылки** (Open Graph + Twitter) — мета в `<head>` `index.html`. Скрейперам
+   нужен **абсолютный** URL, поэтому мета указывают на канонический публичный origin игры:
+   `og:url` = `https://sealife.info/en/games/seal-the-hunter` (страница игры),
+   `og:image`/`twitter:image` = `https://sealife.info/games/seal-hunt-v1/assets/cover.jpg`,
+   `summary_large_image`. Меняется площадка (напр. добавили vanity-поддомен) — абсолютные URL
+   правятся вручную здесь же.
 
 **Требования к OG-файлу (`cover.jpg`):** идеально **1200×630** (1.91:1), **JPG/PNG** (не WebP/AVIF —
 часть скрейперов не берёт их для OG; это ограничение **только для OG-картинки** — фон оверлея в браузере
@@ -371,4 +382,4 @@ Screen-координаты: `drawBackdropFullscreen` (или `drawDeepBackdrop`
 - [game-seal-hunter-worklog.md](game-seal-hunter-worklog.md) — журнал работ (fairness/prey + визуал-цикл)
 - [api.md](api.md) — контракт endpoints лидерборда
 - [data-model.md](data-model.md) — коллекции `games` / `game-scores`
-- [DEPLOYMENT.md](DEPLOYMENT.md) — публичный тест и деплой
+- [DEPLOYMENT.md](DEPLOYMENT.md) — деплой и инфраструктура

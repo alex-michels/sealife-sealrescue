@@ -18,60 +18,52 @@ const steps: Step[] = [
     q: {
       ru: 'Тюлень один на берегу. Что делаешь?',
       en: 'A seal is alone on the beach. What do you do?',
-      de: 'Eine Robbe ist allein am Strand. Was tust du?',
     },
     options: [
       {
-        label: { ru: 'Подойти и погладить', en: 'Walk up and pet it', de: 'Hingehen und streicheln' },
+        label: { ru: 'Подойти и погладить', en: 'Walk up and pet it' },
         ok: false,
         feedback: {
           ru: 'Нет: не трогать. Дикое животное, риск для него и для вас.',
           en: 'No: don’t touch it. It’s wild — a risk for it and for you.',
-          de: 'Nein: nicht anfassen. Ein Wildtier — ein Risiko für es und für dich.',
         },
       },
       {
         label: {
           ru: 'Держать дистанцию, убрать собак',
           en: 'Keep distance, move dogs away',
-          de: 'Abstand halten, Hunde wegbringen',
         },
         ok: true,
         feedback: {
           ru: 'Верно. Дистанция и отсутствие собак — это уже половина помощи.',
           en: 'Right. Distance and no dogs is already half the help.',
-          de: 'Richtig. Abstand und keine Hunde sind schon die halbe Hilfe.',
         },
       },
     ],
   },
   {
-    q: { ru: 'Тюлень выглядит вялым.', en: 'The seal looks sluggish.', de: 'Die Robbe wirkt schlapp.' },
+    q: { ru: 'Тюлень выглядит вялым.', en: 'The seal looks sluggish.' },
     options: [
       {
         label: {
           ru: 'Столкнуть обратно в воду',
           en: 'Push it back into the water',
-          de: 'Zurück ins Wasser schieben',
         },
         ok: false,
         feedback: {
           ru: 'Нет: отдых на берегу — это нормально, возвращать в воду нельзя.',
           en: 'No: resting ashore is normal; don’t return it to the water.',
-          de: 'Nein: Ausruhen am Strand ist normal; nicht zurück ins Wasser bringen.',
         },
       },
       {
         label: {
           ru: 'Оценить состояние с расстояния',
           en: 'Assess from a distance',
-          de: 'Zustand aus der Entfernung beurteilen',
         },
         ok: true,
         feedback: {
           ru: 'Верно. Наблюдаем издалека, не кормим.',
           en: 'Right. Observe from afar, don’t feed it.',
-          de: 'Richtig. Aus der Ferne beobachten, nicht füttern.',
         },
       },
     ],
@@ -80,25 +72,22 @@ const steps: Step[] = [
     q: {
       ru: 'Похоже, нужна помощь специалистов.',
       en: 'It looks like it needs expert help.',
-      de: 'Es sieht so aus, als bräuchte sie fachliche Hilfe.',
     },
     options: [
       {
-        label: { ru: 'Уйти, разберётся сам', en: 'Leave — it’ll sort itself out', de: 'Weggehen — sie schafft das allein' },
+        label: { ru: 'Уйти, разберётся сам', en: 'Leave — it’ll sort itself out' },
         ok: false,
         feedback: {
           ru: 'Лучше сообщить специалистам — они решат, нужна ли помощь.',
           en: 'Better to alert specialists — they’ll decide if help is needed.',
-          de: 'Besser Fachleute informieren — sie entscheiden, ob Hilfe nötig ist.',
         },
       },
       {
-        label: { ru: 'Найти ближайший центр', en: 'Find the nearest center', de: 'Das nächste Zentrum finden' },
+        label: { ru: 'Найти ближайший центр', en: 'Find the nearest center' },
         ok: true,
         feedback: {
           ru: 'Верно. Открываем каталог центров.',
           en: 'Right. Let’s open the centers directory.',
-          de: 'Richtig. Öffnen wir das Zentren-Verzeichnis.',
         },
       },
     ],
@@ -108,11 +97,10 @@ const steps: Step[] = [
 const resultText: Loc = {
   ru: 'Ты держал дистанцию, не паниковал и позвал специалистов. Теперь найди центр рядом.',
   en: 'You kept your distance, stayed calm, and called the experts. Now find a center nearby.',
-  de: 'Du hast Abstand gehalten, ruhig reagiert und die Fachleute gerufen. Jetzt finde ein Zentrum in der Nähe.',
 }
-const centersNearby: Loc = { ru: 'Центры рядом →', en: 'Centers nearby →', de: 'Zentren in der Nähe →' }
-const nextLabel: Loc = { ru: 'Дальше →', en: 'Next →', de: 'Weiter →' }
-const resultLabel: Loc = { ru: 'Итог →', en: 'See result →', de: 'Ergebnis →' }
+const centersNearby: Loc = { ru: 'Центры рядом →', en: 'Centers nearby →' }
+const nextLabel: Loc = { ru: 'Дальше →', en: 'Next →' }
+const resultLabel: Loc = { ru: 'Итог →', en: 'See result →' }
 
 export function RescueQuest({ locale }: { locale: Locale }) {
   const c = m(locale)

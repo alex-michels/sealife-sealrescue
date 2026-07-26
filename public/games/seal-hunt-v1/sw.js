@@ -4,7 +4,7 @@
 // players ALWAYS get the latest build when online; fall back to cache only when offline.
 // (Cache-first previously pinned stale art/code until the cache name changed.)
 // skipWaiting + clients.claim make a new SW take control immediately on reload.
-const CACHE = 'seal-hunt-static-v20'; // v20: SH-14 standalone-заглушка «Coming soon»
+const CACHE = 'seal-hunt-static-v21'; // v21: убраны alpha-заметка и контакт для фидбэка со стартового экрана
 const ASSETS = [
   './', './index.html', './style.css',
   './game.js', './i18n.js', './core/balance.js', './core/sim.js', './core/input.js', './core/theme.js', './core/leaderboard.js', './core/alias.js',
@@ -31,7 +31,7 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return; // let cross-origin pass through
   // Не кэшируем API лидерборда/токенов (play-token, сабмиты, чтение доски) — только статику игры.
-  // На standalone-домене (sealthehunter.online) scope SW = '/', поэтому фильтр по пути обязателен.
+  // В standalone-режиме (прямой URL игры) scope SW может оказаться '/', поэтому фильтр по пути обязателен.
   if (url.pathname.startsWith('/api/')) return;
 
   e.respondWith(
