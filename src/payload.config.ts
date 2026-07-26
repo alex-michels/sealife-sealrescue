@@ -3,6 +3,7 @@ import { postgresAdapter } from '@payloadcms/db-postgres'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import type { CollectionConfig } from 'payload'
 import path from 'path'
+import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Users } from './collections/Users'
@@ -18,6 +19,7 @@ import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
 import { SectionContent } from './globals/SectionContent'
 import { isEditor } from './access/roles'
+import { mediaStaticDir } from './media/storage'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { gameConfigRead } from './endpoints/gameConfig'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
@@ -28,10 +30,54 @@ import { de } from '@payloadcms/translations/languages/de'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
-// Медиа: alt-текст локализован и обязателен для accessibility (WCAG/EAA) + SEO.
+/**
+ * Медиа: alt-текст локализован и обязателен для accessibility (WCAG/EAA) + SEO.
+ *
+ * **CR-04.** `staticDir` задан ЯВНО и абсолютным путём (см. `src/media/storage.ts`): без него
+ * Payload резолвил каталог загрузок от рабочего каталога процесса, а в проде это симлинк на
+ * каталог релиза, который деплой пересоздаёт с `--delete` и подчищает `rm -rf`. Загрузки
+ * исчезали бы на следующем деплое, причём локально всё работало бы идеально.
+ *
+ * `imageSizes` + `formatOptions` дают srcset и заодно снимают приватностный хвост: без
+ * пережатия оригинал отдавался байт-в-байт вместе с EXIF, включая GPS с телефона. Sharp
+ * метаданные в вывод не переносит, поэтому пережатие оригинала — и есть очистка.
+ */
+const mediaDir = mediaStaticDir(path.resolve(dirname, '..'))
+
+// Предупреждение о потере загрузок — только на РАБОТАЮЩЕМ сервере. При `next build` конфиг
+// грузится каждым воркером, и MEDIA_DIR там законно пуст (каталог существует на боксе, не в CI):
+// warning на сборке был бы шумом ×N, который приучают игнорировать. Не бросаем исключение
+// вообще — упавший старт хуже, чем работающий сайт с предупреждением в journalctl.
+if (
+  process.env.NODE_ENV === 'production' &&
+  !process.env.MEDIA_DIR &&
+  process.env.NEXT_PHASE !== 'phase-production-build'
+) {
+  console.warn(
+    `[media] MEDIA_DIR не задан, загрузки пойдут в ${mediaDir}. ` +
+      'В проде это каталог релиза — файлы исчезнут при следующем деплое. См. docs/DEPLOYMENT.md §7a.',
+  )
+}
+
 const Media: CollectionConfig = {
   slug: 'media',
-  upload: true,
+  upload: {
+    staticDir: mediaDir,
+    // Только изображения: коллекция обслуживает обложки, а не файловый хостинг.
+    mimeTypes: ['image/*'],
+    // Пережимаем оригинал: ограничивает вес и убирает EXIF (в т.ч. GPS) — sharp не переносит
+    // метаданные в вывод. `withoutEnlargement` не даёт растянуть маленькую картинку.
+    resizeOptions: { width: 2400, height: undefined, withoutEnlargement: true },
+    formatOptions: { format: 'webp', options: { quality: 82 } },
+    // Производные под реальные точки рендера: карточка в сетке, тело статьи, hero.
+    imageSizes: [
+      { name: 'thumbnail', width: 400, withoutEnlargement: true },
+      { name: 'card', width: 800, withoutEnlargement: true },
+      { name: 'hero', width: 1600, withoutEnlargement: true },
+    ],
+    focalPoint: true,
+    crop: true,
+  },
   // Явный access (SEC-07): без него Payload по умолчанию пускал в create/update/delete
   // ЛЮБОГО залогиненного, включая agent — нарушение инварианта «delete никогда не agent».
   access: { read: () => true, create: isEditor, update: isEditor, delete: isEditor },
@@ -48,6 +94,10 @@ const Media: CollectionConfig = {
 
 export default buildConfig({
   serverURL: process.env.SERVER_URL,
+  // CR-04: без явной передачи sharp Payload пишет предупреждение в лог и МОЛЧА игнорирует
+  // imageSizes / resizeOptions / formatOptions — производные не генерируются, а оригинал
+  // сохраняется как есть, вместе с EXIF. Пакет в зависимостях был; не хватало этой строки.
+  sharp,
   admin: { user: 'users' },
   editor: lexicalEditor(),
   collections: [

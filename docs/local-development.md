@@ -135,7 +135,11 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
-  (QA-18); `provenance.int.spec.ts` — поля шкалы провенанса на живом Payload, включая локализацию
+  (QA-18); `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
+  не внутри `releases/`), производные размеры генерируются, оригинал пережат в webp без EXIF.
+  ⚠️ Единственная спека с `// @vitest-environment node`: проверка типа файла в Payload идёт через
+  `file-type`, а тот падает в jsdom — артефакт среды, в реальном Node загрузка работает;
+  `provenance.int.spec.ts` — поля шкалы провенанса на живом Payload, включая локализацию
   флагов и `isEditorField` на «человек проверил» (EU-11); `locale-fallback.int.spec.ts` —
   контракт CR-01: непереведённый документ не виден в чужой локали, плюс ЗАПИСЬ измеренного
   поведения Payload (одного `fallbackLocale: false` мало — документ возвращается с пустым
