@@ -117,7 +117,11 @@ jobs:
         run: |
           set -e
           REL="/opt/sealife/releases/${{ github.sha }}"
-          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "mkdir -p $REL"
+          # CR-04: каталог загрузок живёт ВНЕ releases/ — этот шаг только гарантирует его наличие
+          # и никогда не трогает содержимое. Внутри релиза он лежать не может: rsync --delete ниже
+          # и очистка старых релизов удалили бы все загруженные картинки.
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "mkdir -p $REL /opt/sealife/shared/media"
           rsync -az --delete -e "ssh -i ~/.ssh/id_ed25519" artifact/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$REL/"
 

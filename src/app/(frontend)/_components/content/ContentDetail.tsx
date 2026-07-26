@@ -52,7 +52,15 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
   if (doc.type === 'meme') {
     return (
       <article className="mx-auto max-w-2xl px-5 py-10">
-        <Cover image={doc.coverImage} seed={1} label="MEME" className="rounded-card" />
+        {/* Мем: картинка и есть содержание — не кадрируем и даём осмысленный alt (CR-04). */}
+        <Cover
+          image={doc.coverImage}
+          seed={1}
+          label="MEME"
+          className="rounded-card"
+          fit="natural"
+          altFallback={doc.title}
+        />
         <h1 className="mt-6 text-3xl">{doc.title}</h1>
         <AiBadge locale={locale} provenance={doc.provenance} aiGenerated={doc.aiGenerated} />
         <TopicChips doc={doc} locale={locale} basePath={`/${locale}/memes`} />

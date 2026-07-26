@@ -37,6 +37,10 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`ma
 `title`*/`slug`/`description`, `questions[]` → `options[]` (`text`, `isCorrect`), `explanation`,
 `aiGenerated` (устаревший) + **`provenance`**. Тексты локализованы. Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
 
+### `media`
+
+`alt` (локализован, обязателен — WCAG/EAA + SEO) + файл. **CR-04:** `staticDir` абсолютный и вне каталога релиза (`MEDIA_DIR`, см. `src/media/storage.ts` и `DEPLOYMENT.md` §7a); оригинал пережимается в webp (снимает EXIF/GPS), производные `thumbnail`/`card`/`hero`; `focalPoint`+`crop`; только `image/*`. `sharp` передан в `buildConfig` — без этого вся обработка молча игнорируется.
+
 ### `games` — мини-игры (метаданные)
 Метаданные игры, не сам код: `title`*/`slug` (канонический), `excerpt`, `how` (локализованное «как
 играть» — текст вне canvas, доступность), `embed` (путь к статической игре в `/public/games/<...>`,
