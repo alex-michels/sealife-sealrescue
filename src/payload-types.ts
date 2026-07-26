@@ -305,9 +305,54 @@ export interface Content {
     metaDescription?: string | null;
   };
   /**
-   * EU AI Act: маркировать AI-сгенерированный/переведённый контент.
+   * Устаревший одиночный флаг: не различает язык, поэтому машинный перевод человеческого текста им не описывается. Оставлен для совместимости — заполняйте группу «provenance» (M1-T08/EU-11).
    */
   aiGenerated?: boolean | null;
+  /**
+   * Происхождение материала (AI Act Art. 50). Часть флагов — на локаль: русский оригинал и его машинный перевод маркируются по-разному.
+   */
+  provenance?: {
+    /**
+     * Черновик этого текста готовил AI (человек редактировал).
+     */
+    aiAssisted?: boolean | null;
+    /**
+     * Эта локаль — машинный перевод с исходной (ru).
+     */
+    aiTranslated?: boolean | null;
+    /**
+     * Факты этого текста перепроверял агент по внешним источникам.
+     */
+    aiChecked?: boolean | null;
+    /**
+     * Человек вычитал именно эту локаль. Ставит только editor/admin.
+     */
+    humanReviewed?: boolean | null;
+    /**
+     * Кто вычитал эту локаль.
+     */
+    reviewedBy?: (number | null) | User;
+    /**
+     * Когда вычитана эта локаль.
+     */
+    reviewedAt?: string | null;
+    /**
+     * Фактура подтверждена внешними источниками (см. поле «sources»). Не зависит от языка.
+     */
+    sourceVerified?: boolean | null;
+    /**
+     * Когда агент последний раз сверял факты с источниками.
+     */
+    lastAgentCheckedAt?: string | null;
+    /**
+     * Когда человек последний раз подтверждал фактуру.
+     */
+    lastHumanVerifiedAt?: string | null;
+  };
+  /**
+   * Источники, на которых основан материал. Агент, перепроверяющий факты в интернете, обязан их проставлять (см. docs/agents.md).
+   */
+  sources?: (number | Source)[] | null;
   /**
    * Integrity перевода (Агент 3). Заполняется автоматически.
    */
@@ -368,6 +413,31 @@ export interface Species {
    */
   conservationStatus?: ('LC' | 'NT' | 'VU' | 'EN' | 'CR' | 'DD') | null;
   /**
+   * Контекст охранного статуса. Без него «VU» невозможно отличить от «VU у подвида» — и невозможно перепроверить.
+   */
+  conservationAssessment?: {
+    /**
+     * ЧТО именно оценено. Обязателен по смыслу: глобальный статус вида и статус подвида/субпопуляции часто различаются на несколько ступеней.
+     */
+    scope?: ('species' | 'subspecies' | 'subpopulation' | 'regional') | null;
+    /**
+     * Что стоит в оценке, если это не сам вид: напр. «Pusa hispida botnica» (балтийский подвид). Латынь не локализуется.
+     */
+    assessedEntity?: string | null;
+    /**
+     * Год оценки. Статусы пересматриваются — без года они непроверяемы.
+     */
+    assessmentYear?: number | null;
+    /**
+     * Ссылка на первоисточник оценки (страница IUCN Red List). По ней агент сверяет статус при перепроверке.
+     */
+    sourceUrl?: string | null;
+    /**
+     * Какой это реестр. Разные системы путают: «Threatened» у морского зайца — это US ESA, а не код IUCN (в IUCN он LC).
+     */
+    listingSystem?: ('iucn' | 'helcom' | 'national' | 'esa') | null;
+  };
+  /**
    * Ареал.
    */
   region?: string | null;
@@ -402,9 +472,54 @@ export interface Species {
     | null;
   coverImage?: (number | null) | Media;
   /**
-   * EU AI Act: маркировать AI-сгенерированный/переведённый контент.
+   * Устаревший одиночный флаг: не различает язык. Заполняйте группу «provenance» (M1-T08/EU-11).
    */
   aiGenerated?: boolean | null;
+  /**
+   * Происхождение материала (AI Act Art. 50). Часть флагов — на локаль: русский оригинал и его машинный перевод маркируются по-разному.
+   */
+  provenance?: {
+    /**
+     * Черновик этого текста готовил AI (человек редактировал).
+     */
+    aiAssisted?: boolean | null;
+    /**
+     * Эта локаль — машинный перевод с исходной (ru).
+     */
+    aiTranslated?: boolean | null;
+    /**
+     * Факты этого текста перепроверял агент по внешним источникам.
+     */
+    aiChecked?: boolean | null;
+    /**
+     * Человек вычитал именно эту локаль. Ставит только editor/admin.
+     */
+    humanReviewed?: boolean | null;
+    /**
+     * Кто вычитал эту локаль.
+     */
+    reviewedBy?: (number | null) | User;
+    /**
+     * Когда вычитана эта локаль.
+     */
+    reviewedAt?: string | null;
+    /**
+     * Фактура подтверждена внешними источниками (см. поле «sources»). Не зависит от языка.
+     */
+    sourceVerified?: boolean | null;
+    /**
+     * Когда агент последний раз сверял факты с источниками.
+     */
+    lastAgentCheckedAt?: string | null;
+    /**
+     * Когда человек последний раз подтверждал фактуру.
+     */
+    lastHumanVerifiedAt?: string | null;
+  };
+  /**
+   * Источники по виду (Red List, справочники, публикации). Обязательны для утверждений о статусе и биологии — см. BIO-13/BIO-14.
+   */
+  sources?: (number | Source)[] | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -433,9 +548,50 @@ export interface Quiz {
       }[]
     | null;
   /**
-   * EU AI Act: маркировать, если вопросы сгенерированы AI.
+   * Устаревший одиночный флаг: не различает язык. Заполняйте группу «provenance» (M1-T08/EU-11).
    */
   aiGenerated?: boolean | null;
+  /**
+   * Происхождение материала (AI Act Art. 50). Часть флагов — на локаль: русский оригинал и его машинный перевод маркируются по-разному.
+   */
+  provenance?: {
+    /**
+     * Черновик этого текста готовил AI (человек редактировал).
+     */
+    aiAssisted?: boolean | null;
+    /**
+     * Эта локаль — машинный перевод с исходной (ru).
+     */
+    aiTranslated?: boolean | null;
+    /**
+     * Факты этого текста перепроверял агент по внешним источникам.
+     */
+    aiChecked?: boolean | null;
+    /**
+     * Человек вычитал именно эту локаль. Ставит только editor/admin.
+     */
+    humanReviewed?: boolean | null;
+    /**
+     * Кто вычитал эту локаль.
+     */
+    reviewedBy?: (number | null) | User;
+    /**
+     * Когда вычитана эта локаль.
+     */
+    reviewedAt?: string | null;
+    /**
+     * Фактура подтверждена внешними источниками (см. поле «sources»). Не зависит от языка.
+     */
+    sourceVerified?: boolean | null;
+    /**
+     * Когда агент последний раз сверял факты с источниками.
+     */
+    lastAgentCheckedAt?: string | null;
+    /**
+     * Когда человек последний раз подтверждал фактуру.
+     */
+    lastHumanVerifiedAt?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -574,6 +730,10 @@ export interface Glossary {
    * Не переводить (имена/бренды/телефоны). Подсказка для integrity-проверки Агента 3.
    */
   doNotTranslate?: boolean | null;
+  /**
+   * Источник термина/статуса. Охранные статусы в заметках непроверяемы — при переносе в структурные поля указывайте ссылку (BIO-10/BIO-13).
+   */
+  sources?: (number | Source)[] | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -626,7 +786,10 @@ export interface AgentProposal {
     | number
     | boolean
     | null;
-  sources?: (number | Source)[] | null;
+  /**
+   * Чем подтверждено предложение. Минимум один источник — предложение без источников схемой не принимается.
+   */
+  sources: (number | Source)[];
   confidence?: number | null;
   status: 'pending' | 'approved' | 'rejected' | 'applied';
   reviewerNotes?: string | null;
@@ -902,6 +1065,20 @@ export interface ContentSelect<T extends boolean = true> {
         metaDescription?: T;
       };
   aiGenerated?: T;
+  provenance?:
+    | T
+    | {
+        aiAssisted?: T;
+        aiTranslated?: T;
+        aiChecked?: T;
+        humanReviewed?: T;
+        reviewedBy?: T;
+        reviewedAt?: T;
+        sourceVerified?: T;
+        lastAgentCheckedAt?: T;
+        lastHumanVerifiedAt?: T;
+      };
+  sources?: T;
   localeStatus?:
     | T
     | {
@@ -924,6 +1101,15 @@ export interface SpeciesSelect<T extends boolean = true> {
   slug?: T;
   latin?: T;
   conservationStatus?: T;
+  conservationAssessment?:
+    | T
+    | {
+        scope?: T;
+        assessedEntity?: T;
+        assessmentYear?: T;
+        sourceUrl?: T;
+        listingSystem?: T;
+      };
   region?: T;
   size?: T;
   excerpt?: T;
@@ -936,6 +1122,20 @@ export interface SpeciesSelect<T extends boolean = true> {
       };
   coverImage?: T;
   aiGenerated?: T;
+  provenance?:
+    | T
+    | {
+        aiAssisted?: T;
+        aiTranslated?: T;
+        aiChecked?: T;
+        humanReviewed?: T;
+        reviewedBy?: T;
+        reviewedAt?: T;
+        sourceVerified?: T;
+        lastAgentCheckedAt?: T;
+        lastHumanVerifiedAt?: T;
+      };
+  sources?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -963,6 +1163,19 @@ export interface QuizzesSelect<T extends boolean = true> {
         id?: T;
       };
   aiGenerated?: T;
+  provenance?:
+    | T
+    | {
+        aiAssisted?: T;
+        aiTranslated?: T;
+        aiChecked?: T;
+        humanReviewed?: T;
+        reviewedBy?: T;
+        reviewedAt?: T;
+        sourceVerified?: T;
+        lastAgentCheckedAt?: T;
+        lastHumanVerifiedAt?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
@@ -1034,6 +1247,7 @@ export interface GlossarySelect<T extends boolean = true> {
       };
   note?: T;
   doNotTranslate?: T;
+  sources?: T;
   updatedAt?: T;
   createdAt?: T;
 }
