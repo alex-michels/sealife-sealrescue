@@ -8,7 +8,7 @@ import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { t } from '@/i18n/ui'
 import { getSection } from '@/site/sections'
-import { findSpeciesBySlug } from '@/app/(frontend)/_components/content/getSpecies'
+import { findSpeciesBySlug, speciesLocales } from '@/app/(frontend)/_components/content/getSpecies'
 import { Cover } from '@/app/(frontend)/_components/content/Cover'
 import { AiBadge } from '@/app/(frontend)/_components/content/AiBadge'
 import { CrossLink } from '@/app/(frontend)/_components/content/CrossLink'
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: SlugParams }): Prom
   return {
     title: sp.name,
     description: sp.excerpt || undefined,
-    alternates: buildAlternates(`/${SLUG}/${slug}`, locale, sites[site]),
+    alternates: buildAlternates(`/${SLUG}/${slug}`, locale, sites[site], await speciesLocales(slug)),
   }
 }
 

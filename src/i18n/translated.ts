@@ -1,0 +1,90 @@
+import type { Payload, Where } from 'payload'
+import { locales, type Locale } from './config'
+
+/**
+ * Гейт «в этой локали есть текст» (Roadmap **CR-01**).
+ *
+ * ## Что чинится
+ * У Payload включён locale-fallback, и он падает на `defaultLocale`. Значит документ, написанный
+ * только на исходной локали, возвращался ПОЛНОСТЬЮ ЗАПОЛНЕННЫМ при запросе другой: исходный
+ * заголовок в чужом списке, исходное тело по чужому URL, `hreflang` чужого языка и такой же URL в
+ * sitemap. Это ровно то, что запрещает инвариант №3 (перевод заранее, в хранилище, с hreflang —
+ * никакого перевода «на лету»): непереведённый документ выдавал себя за переведённый.
+ *
+ * ## Почему два условия (замерено на живой БД, `tests/int/locale-fallback.int.spec.ts`)
+ * - `exists: true` компилируется в `isNotNull` и делает всю работу: отсекает локаль, строку
+ *   которой никогда не писали. Это и есть реальный случай.
+ * - `not_equals: ''` — страховка, а не необходимость. Замер показал, что состояния «строка есть,
+ *   заголовок пустой» через API не построить: заголовок `required`, и валидация отклоняет и патч
+ *   целевой локали без него, и запись пустой строки. Условие оставлено на случай данных в обход
+ *   валидации (сид, прямой SQL) или снятия `required`.
+ *   ⚠️ В одиночку `not_equals` НЕ годится: он компилируется в `or(isNull(col), ne(col, ''))` и
+ *   поэтому пропускает непереведённые строки обратно. Порядок и связка `and` существенны.
+ *
+ * ## Почему это не завязано на «исходную локаль»
+ * Формулировка сознательно «в этой локали есть контент», а НЕ «это исходная локаль». Из-за этого
+ * смена направления перевода (ru→en на en→ru, Roadmap CR-14) не трогает ни одной строчки здесь и
+ * остаётся правкой конфига. Если в PR смены направления пришлось править этот файл — гейт написан
+ * неправильно.
+ *
+ * ## Почему не `localeStatus[]`
+ * Оно выглядит как естественный гейт, но у него ноль читателей, а писатель никогда не сохраняет
+ * посчитанный хэш (`sourceHash` помечен `readOnly`), поэтому `status` в проде навсегда залипает в
+ * `stale`. «Перевод существует» и «перевод устарел» — разные вопросы, и прятать страницу может
+ * только первый.
+ */
+export function translatedWhere(field: string): Where {
+  return { and: [{ [field]: { exists: true } }, { [field]: { not_equals: '' } }] }
+}
+
+/** Поле-заголовок, по которому определяется «документ существует в этой локали». */
+export const titleFieldFor = {
+  content: 'title',
+  species: 'name',
+  games: 'title',
+} as const
+
+export type GatedCollection = keyof typeof titleFieldFor
+
+/**
+ * В каких контент-локалях документ реально существует — для hreflang и sitemap.
+ *
+ * Один источник на оба применения СОЗНАТЕЛЬНО: если страница и sitemap посчитают доступность
+ * по-разному, hreflang перестанет быть взаимным, а это хуже, чем его отсутствие.
+ */
+export async function localesWithContent(
+  payload: Payload,
+  collection: GatedCollection,
+  extraWhere: Where = {},
+): Promise<Map<string, Set<Locale>>> {
+  const field = titleFieldFor[collection]
+  const map = new Map<string, Set<Locale>>()
+
+  for (const locale of locales) {
+    const { docs } = await payload.find({
+      collection,
+      locale,
+      fallbackLocale: false,
+      where: { and: [extraWhere, translatedWhere(field)] },
+      depth: 0,
+      pagination: false,
+    })
+    for (const doc of docs) {
+      if (!doc.slug) continue
+      const set = map.get(doc.slug) ?? new Set<Locale>()
+      set.add(locale)
+      map.set(doc.slug, set)
+    }
+  }
+
+  return map
+}
+
+/**
+ * ⚠️ НЕ применять к `rescue-centers`. Там локализовано только `description`, а `name`, `phone` и
+ * `address` не локализуются по инварианту №3 — гейта по заголовку не существует, и единственное
+ * поле, за которое можно зацепиться, это блурб. Спрятать аварийный контакт из-за непереведённого
+ * описания — прямое нарушение инварианта №7. Каталог показывает все центры на обеих локалях;
+ * непереведённым может быть только описание. См. M2-T02.
+ */
+export const NEVER_GATE = ['rescue-centers'] as const

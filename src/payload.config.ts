@@ -72,7 +72,16 @@ export default buildConfig({
     // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en/de.
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),
     defaultLocale,
-    fallback: true,
+    // CR-01: выключено СПЕЦИАЛЬНО. С fallback документ, написанный только на исходной локали,
+    // возвращался заполненным при запросе другой — исходный язык выдавал себя за перевод
+    // (нарушение инварианта №3). Глобально, а не по запросу: у смонтированного REST/GraphQL
+    // локаль задаёт клиент, и опт-аут по месту там недостижим — у `glossary` `read: () => true`,
+    // и русские `note`/`variants` уезжали как английские.
+    // ⚠️ Это меняет ДЕФОЛТ, а не запирает дверь: явный `?fallback-locale=ru` Payload всё ещё
+    // обслуживает. Публичные страницы закрыты гейтом `translatedWhere()` (src/i18n/translated.ts).
+    // Цена для админки проверена: Document/List-вью Payload и так читают с `fallbackLocale: false`,
+    // а локализованных `array` с required/minRows и локализованных `number` в схеме нет.
+    fallback: false,
   },
   // Язык интерфейса админки (staff) — RU/EN/DE; выбирается в профиле пользователя/по Accept-Language.
   // Это НЕ контент-локализация (та — в `localization` выше).

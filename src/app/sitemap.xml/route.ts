@@ -1,7 +1,8 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
 
-import { locales, fallbackLocale } from '@/i18n/config'
+import { locales, fallbackLocale, type Locale } from '@/i18n/config'
+import { localesWithContent } from '@/i18n/translated'
 import { resolveSiteId, sites, siteBaseUrl } from '@/site/config'
 
 /**
@@ -18,18 +19,29 @@ import { resolveSiteId, sites, siteBaseUrl } from '@/site/config'
  */
 export const dynamic = 'force-dynamic'
 
-type SitemapPage = { path: string; lastmod?: string }
+/** `locales` — где страница реально существует; undefined = во всех (страницы из кода). */
+type SitemapPage = { path: string; lastmod?: string; locales?: Locale[] }
 
 const escapeXml = (value: string): string =>
   value.replace(/[&<>"']/g, (c) =>
     c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&apos;',
   )
 
-/** Один `<url>` для конкретной локали страницы + полный набор hreflang-альтернатив (вкл. self и x-default). */
+/**
+ * Один `<url>` для конкретной локали страницы + hreflang-альтернативы (вкл. self и x-default).
+ *
+ * CR-01: перечисляются только локали, в которых страница РЕАЛЬНО существует (`page.locales`).
+ * Раньше на каждую запись вешался полный набор ru+en независимо от того, переведён документ или
+ * нет, — то есть sitemap звал поисковик на страницу, которая теперь отдаёт 404.
+ */
 function renderUrl(base: string, page: SitemapPage, locale: string): string {
+  const available = page.locales ?? locales
+  const xDefault = available.includes(fallbackLocale) ? fallbackLocale : available[0]
   const links = [
-    ...locales.map((alt) => ({ hreflang: alt as string, target: alt as string })),
-    { hreflang: 'x-default', target: fallbackLocale as string },
+    ...locales
+      .filter((alt) => available.includes(alt))
+      .map((alt) => ({ hreflang: alt as string, target: alt as string })),
+    ...(xDefault ? [{ hreflang: 'x-default', target: xDefault as string }] : []),
   ]
     .map(
       ({ hreflang, target }) =>
@@ -57,30 +69,46 @@ export async function GET(request: Request): Promise<Response> {
   if (site.id === 'sealife') {
     try {
       const payload = await getPayload({ config })
+      const published = { _status: { equals: 'published' as const } }
+
+      // CR-01: slug канонический и общий для локалей, но ПЕРЕВОД — нет. Считаем, в каких
+      // локалях документ реально существует, тем же хелпером, что и hreflang страницы:
+      // разойдись они — hreflang перестал бы быть взаимным.
+      const contentLocales = await localesWithContent(payload, 'content', published)
+      const speciesLocales = await localesWithContent(payload, 'species', published)
+
       const { docs } = await payload.find({
         collection: 'content',
-        where: { _status: { equals: 'published' } },
+        where: published,
         sort: '-updatedAt',
         depth: 0,
         pagination: false,
       })
       for (const doc of docs) {
-        // slug канонический и общий для локалей — одной выборки хватает на ru+en.
-        pages.push({ path: `/${doc.slug}`, lastmod: new Date(doc.updatedAt).toISOString().slice(0, 10) })
+        const available = [...(contentLocales.get(doc.slug) ?? [])]
+        if (available.length === 0) continue // не переведён нигде — в карте сайта ему не место
+        pages.push({
+          path: `/${doc.slug}`,
+          lastmod: new Date(doc.updatedAt).toISOString().slice(0, 10),
+          locales: available,
+        })
       }
 
       // Тюленепедия (M1-T03): виды живут на /species/[slug].
       const species = await payload.find({
         collection: 'species',
-        where: { _status: { equals: 'published' } },
+        where: published,
         sort: '-updatedAt',
         depth: 0,
         pagination: false,
       })
       for (const doc of species.docs) {
+        const available = [...(speciesLocales.get(doc.slug) ?? [])]
+        if (available.length === 0) continue
         pages.push({
           path: `/species/${doc.slug}`,
           lastmod: new Date(doc.updatedAt).toISOString().slice(0, 10),
+          locales: available,
         })
       }
     } catch {
@@ -91,7 +119,14 @@ export async function GET(request: Request): Promise<Response> {
   const body =
     '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' +
-    pages.flatMap((page) => locales.map((locale) => renderUrl(base, page, locale))).join('\n') +
+    pages
+      .flatMap((page) =>
+        // <loc> только для локалей, где страница есть (CR-01).
+        locales
+          .filter((l) => (page.locales ?? locales).includes(l))
+          .map((l) => renderUrl(base, page, l)),
+      )
+      .join('\n') +
     '\n</urlset>\n'
 
   return new Response(body, {

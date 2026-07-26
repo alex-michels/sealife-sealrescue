@@ -74,6 +74,7 @@ src/
 | Агент пишет только в `agent-proposals` | access (`update: isEditor` на статусе) + коллекция-очередь |
 | Исходная локаль `ru`, перевод заранее | `i18n/config.ts` + `markTranslationsStale` + localized-поля |
 | Контент-локали — только `ru`/`en`; `de` — legal-only | `i18n/config.ts` (`locales` vs `legalOnlyLocales`/`routeLocales`): страницы контента валидируют `isLocale`, legal-страницы — `isRouteLocale` |
+| Непереведённый документ не отдаётся под чужой локалью | `localization.fallback: false` + гейт `translatedWhere()` (`i18n/translated.ts`) во всех публичных чтениях; деталь → 404, hreflang и sitemap считают доступность `localesWithContent()` |
 | Email с публичных пользователей не собираем | схема коллекций (нет email-полей в UGC; только `contactHandle`) |
 | Лидерборд анонимный (без PII) | `game-scores`: хэш `playerKey`, без IP/email/аккаунтов |
 | Неизвестная локаль / несуществующий slug / контент под `/de` → 404 | `proxy.ts` + `[locale]` route guard |

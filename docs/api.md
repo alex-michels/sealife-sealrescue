@@ -77,6 +77,11 @@ Payload генерирует REST и GraphQL из коллекций (catch-all 
 
 - **REST:** `/api/<collection>` (find/create), `/api/<collection>/<id>` (get/update/delete),
   `/api/<collection>/<id>?locale=ru|en`. Доступ ограничен `access` каждой коллекции (см. [data-model.md](data-model.md)).
+  ⚠️ **Locale-fallback выключен (CR-01).** `GET /api/content?locale=en` для документа без английского
+  перевода возвращает `null` в локализованных полях, а не русский текст — раньше возвращал русский.
+  Так же меняется запрос **без** `?locale=`: он больше не приводится к `defaultLocale`. Это
+  сознательный дефолт, а не запрет: явный `?fallback-locale=ru` Payload по-прежнему обслуживает,
+  поэтому публичные страницы полагаются не на флаг, а на гейт `translatedWhere()`.
 - **GraphQL:** `/api/graphql`, playground `/api/graphql-playground`.
 - **Media:** `/api/media/file/**` (см. `next.config.ts` localPatterns).
 

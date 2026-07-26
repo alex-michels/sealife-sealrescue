@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Game, Media } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
+import { translatedWhere, localesWithContent } from '@/i18n/translated'
 
 /**
  * Обложка КАРТОЧКИ игры: загруженная картинка, если она есть И не скрыта тумблером
@@ -19,7 +20,8 @@ export async function findAllGames(locale: Locale): Promise<Game[]> {
   const { docs } = await payload.find({
     collection: 'games',
     locale,
-    where: { _status: { equals: 'published' } },
+    fallbackLocale: false, // CR-01
+    where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
     sort: 'order',
     depth: 1,
     pagination: false,
@@ -33,9 +35,22 @@ export async function findGameBySlug(locale: Locale, slug: string): Promise<Game
   const { docs } = await payload.find({
     collection: 'games',
     locale,
-    where: { slug: { equals: slug }, _status: { equals: 'published' } },
+    fallbackLocale: false, // CR-01
+    where: {
+      and: [{ slug: { equals: slug }, _status: { equals: 'published' } }, translatedWhere('title')],
+    },
     limit: 1,
     depth: 1,
   })
   return docs[0] ?? null
+}
+
+/** В каких контент-локалях игра реально существует — для честного hreflang (CR-01). */
+export async function gameLocales(slug: string): Promise<Locale[]> {
+  const payload = await getPayload({ config })
+  const map = await localesWithContent(payload, 'games', {
+    slug: { equals: slug },
+    _status: { equals: 'published' },
+  })
+  return [...(map.get(slug) ?? [])]
 }

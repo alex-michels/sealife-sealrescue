@@ -12,21 +12,31 @@ import { siteBaseUrl, type SiteConfig } from '@/site/config'
  * @param pathSuffix путь после локали ('' для главной, '/slug' для страницы)
  * @param current    текущая локаль (для canonical)
  * @param site       текущий сайт (источник домена)
+ * @param available  локали, в которых страница РЕАЛЬНО существует. По умолчанию — все контентные:
+ *                   так ведут себя страницы, собранные из кода (главная, списки разделов), они
+ *                   есть всегда. Документам из Payload набор передаётся честный (CR-01): после
+ *                   выключения locale-fallback непереведённый документ отдаёт 404, и рекламировать
+ *                   такую альтернативу в hreflang значит звать поисковик на несуществующую страницу.
  *
- * Канонический slug общий для всех локалей; x-default → fallbackLocale (en, международный фолбэк).
+ * Канонический slug общий для всех локалей; x-default → fallbackLocale, если он доступен.
  */
 export function buildAlternates(
   pathSuffix: string,
   current: Locale,
   site: SiteConfig,
+  available: readonly Locale[] = locales,
 ): Metadata['alternates'] {
   const base = siteBaseUrl(site)
   const languages: Record<string, string> = {}
   for (const locale of locales) {
+    if (!available.includes(locale)) continue
     languages[locale] = `${base}/${locale}${pathSuffix}`
   }
-  // x-default = международный фолбэк (en): для посетителей, чей язык не ru/en.
-  languages['x-default'] = `${base}/${fallbackLocale}${pathSuffix}`
+  // x-default = международный фолбэк (en) — но только если он существует; иначе единственная
+  // доступная локаль. Взаимность hreflang держится на том, что обе стороны считают набор
+  // одним и тем же хелпером (`localesWithContent`).
+  const xDefault = available.includes(fallbackLocale) ? fallbackLocale : available[0]
+  if (xDefault) languages['x-default'] = `${base}/${xDefault}${pathSuffix}`
 
   return {
     canonical: `${base}/${current}${pathSuffix}`,

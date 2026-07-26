@@ -6,7 +6,7 @@ import { isLocale } from '@/i18n/config'
 import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { getSection } from '@/site/sections'
-import { findGameBySlug } from '@/app/(frontend)/_components/content/getGames'
+import { findGameBySlug, gameLocales } from '@/app/(frontend)/_components/content/getGames'
 import { Cover } from '@/app/(frontend)/_components/content/Cover'
 
 type SlugParams = Promise<{ site: string; locale: string; slug: string }>
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: SlugParams }): Prom
   return {
     title: game.title,
     description: game.excerpt || undefined,
-    alternates: buildAlternates(`/${SLUG}/${slug}`, locale, sites[site]),
+    alternates: buildAlternates(`/${SLUG}/${slug}`, locale, sites[site], await gameLocales(slug)),
   }
 }
 

@@ -3,6 +3,7 @@ import config from '@payload-config'
 import type { Content } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
 import { isTopicSlug, topicSlugs, type TopicSlug } from '@/content/topics'
+import { translatedWhere } from '@/i18n/translated'
 
 /** Опубликованный контент одного типа в активной локали, свежие сверху (M1-T01/T02). */
 export async function findContentByType(type: Content['type'], locale: Locale): Promise<Content[]> {
@@ -10,7 +11,11 @@ export async function findContentByType(type: Content['type'], locale: Locale): 
   const { docs } = await payload.find({
     collection: 'content',
     locale,
-    where: { type: { equals: type }, _status: { equals: 'published' } },
+    // CR-01: непереведённый документ не показываем в чужой локали (см. src/i18n/translated.ts).
+    fallbackLocale: false,
+    where: {
+      and: [{ type: { equals: type }, _status: { equals: 'published' } }, translatedWhere('title')],
+    },
     sort: '-updatedAt',
     depth: 1, // обложки (media.url) для карточек
     pagination: false,
