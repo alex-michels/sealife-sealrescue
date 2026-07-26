@@ -124,7 +124,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
   ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
   alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
-  хуки контента, **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
+  хуки контента, **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет
+  права перезаписать запись), **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
   EU-11), **биология сида** (`seed-biology.unit.spec.ts` — коды IUCN и факты, трек BIO),
   **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
   **fairness** (пороги честности по профилям экранов, QA-31). Coverage-гейт: пороги в
@@ -135,7 +136,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
-  (QA-18); `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
+  (QA-18); `seed-guard.int.spec.ts` — CR-03: опубликованная человеком запись переживает
+  повторный сид, `force` осознанно возвращает демо-эталон; `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
   не внутри `releases/`), производные размеры генерируются, оригинал пережат в webp без EXIF.
   ⚠️ Единственная спека с `// @vitest-environment node`: проверка типа файла в Payload идёт через
   `file-type`, а тот падает в jsdom — артефакт среды, в реальном Node загрузка работает;
