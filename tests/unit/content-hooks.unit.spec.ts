@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import { describe, it, expect } from 'vitest'
 import { forceAgentDrafts, markTranslationsStale } from '@/hooks/contentHooks'
+import { defaultLocale, targetLocales } from '@/i18n/config'
 
 /**
  * QA-14 (unit-слой): хуки контента как чистые функции. Поведение на живом Payload
@@ -21,7 +22,10 @@ const args = (a: {
   }) as unknown as HookArgs
 
 const hashOf = (title: string, body: unknown = '') =>
-  crypto.createHash('sha256').update(`${title}\n${JSON.stringify(body)}`).digest('hex')
+  crypto
+    .createHash('sha256')
+    .update(`${title}\n${JSON.stringify(body)}`)
+    .digest('hex')
 
 describe('forceAgentDrafts', () => {
   it('агент: любое сохранение принудительно draft — даже явный published', () => {
@@ -37,18 +41,24 @@ describe('forceAgentDrafts', () => {
   })
 })
 
+/**
+ * Направление перевода берётся из `@/i18n/config`, а не пришпилено литералами: после CR-14
+ * исходная локаль — en, целевая — ru, и следующий разворот не должен переписывать этот файл.
+ * Литералы живут ровно в одном месте — `tests/unit/i18n.unit.spec.ts`.
+ */
 describe('markTranslationsStale', () => {
-  it('не-исходная локаль (en): data возвращается без localeStatus', () => {
-    const data = { title: 'Hello' }
-    expect(markTranslationsStale(args({ data, locale: 'en' }))).toEqual(data)
-    
+  const target = targetLocales[0]
+
+  it('целевая локаль: data возвращается без localeStatus', () => {
+    const data = { title: 'Перевод' }
+    expect(markTranslationsStale(args({ data, locale: target }))).toEqual(data)
   })
 
-  it('первая RU-запись: en и de помечаются stale', () => {
-    const out = markTranslationsStale(args({ data: { title: 'Тюлень' }, locale: 'ru' })) as {
+  it('первая запись исходной локали: каждая целевая помечается stale', () => {
+    const out = markTranslationsStale(args({ data: { title: 'Seal' }, locale: defaultLocale })) as {
       localeStatus: Array<{ locale: string; status: string; sourceHash: string | null }>
     }
-    expect(out.localeStatus.map((s) => s.locale).sort()).toEqual(['en'])
+    expect(out.localeStatus.map((s) => s.locale).sort()).toEqual([...targetLocales].sort())
     for (const s of out.localeStatus) {
       expect(s.status).toBe('stale')
       expect(s.sourceHash).toBeNull()
@@ -56,13 +66,15 @@ describe('markTranslationsStale', () => {
   })
 
   it('no-op запись при актуальном переводе: статус current сохраняется', () => {
-    const hash = hashOf('Тюлень')
-    const prev = [
-      { locale: 'en', status: 'current', sourceHash: hash, translatedAt: '2026-07-01' },
-      { locale: 'de', status: 'current', sourceHash: hash, translatedAt: '2026-07-01' },
-    ]
+    const hash = hashOf('Seal')
+    const prev = targetLocales.map((locale) => ({
+      locale,
+      status: 'current',
+      sourceHash: hash,
+      translatedAt: '2026-07-01',
+    }))
     const out = markTranslationsStale(
-      args({ data: { title: 'Тюлень', localeStatus: prev }, locale: 'ru' }),
+      args({ data: { title: 'Seal', localeStatus: prev }, locale: defaultLocale }),
     ) as { localeStatus: Array<{ status: string; translatedAt: string | null }> }
     for (const s of out.localeStatus) {
       expect(s.status).toBe('current')
@@ -70,14 +82,16 @@ describe('markTranslationsStale', () => {
     }
   })
 
-  it('смена RU-текста: переводы флипаются в stale, translatedAt/sourceHash сохраняются', () => {
-    const oldHash = hashOf('Тюлень')
-    const prev = [
-      { locale: 'en', status: 'current', sourceHash: oldHash, translatedAt: '2026-07-01' },
-      { locale: 'de', status: 'current', sourceHash: oldHash, translatedAt: '2026-07-01' },
-    ]
+  it('смена исходного текста: переводы флипаются в stale, translatedAt/sourceHash сохраняются', () => {
+    const oldHash = hashOf('Seal')
+    const prev = targetLocales.map((locale) => ({
+      locale,
+      status: 'current',
+      sourceHash: oldHash,
+      translatedAt: '2026-07-01',
+    }))
     const out = markTranslationsStale(
-      args({ data: { title: 'Морж', localeStatus: prev }, locale: 'ru' }),
+      args({ data: { title: 'Walrus', localeStatus: prev }, locale: defaultLocale }),
     ) as { localeStatus: Array<{ status: string; sourceHash: string; translatedAt: string }> }
     for (const s of out.localeStatus) {
       expect(s.status).toBe('stale')
@@ -87,18 +101,20 @@ describe('markTranslationsStale', () => {
   })
 
   it('partial-update без localeStatus: прежнее состояние берётся из originalDoc, не теряется', () => {
-    const hash = hashOf('Тюлень')
+    const hash = hashOf('Seal')
     const originalDoc = {
-      title: 'Тюлень',
-      localeStatus: [
-        { locale: 'en', status: 'current', sourceHash: hash, translatedAt: '2026-07-01' },
-        { locale: 'de', status: 'current', sourceHash: hash, translatedAt: '2026-07-01' },
-      ],
+      title: 'Seal',
+      localeStatus: targetLocales.map((locale) => ({
+        locale,
+        status: 'current',
+        sourceHash: hash,
+        translatedAt: '2026-07-01',
+      })),
     }
     // data без title/body (например, обновили только topics) — hash должен считаться
     // от originalDoc, а не от пустых строк (иначе ложный stale).
     const out = markTranslationsStale(
-      args({ data: { topics: ['seals'] }, locale: 'ru', originalDoc }),
+      args({ data: { topics: ['seals'] }, locale: defaultLocale, originalDoc }),
     ) as { localeStatus: Array<{ status: string; translatedAt: string | null }> }
     for (const s of out.localeStatus) {
       expect(s.status).toBe('current')
@@ -107,9 +123,9 @@ describe('markTranslationsStale', () => {
   })
 
   it('req.locale не задан (агентные partial-записи) — считается исходной локалью', () => {
-    const out = markTranslationsStale(args({ data: { title: 'Тюлень' } })) as {
+    const out = markTranslationsStale(args({ data: { title: 'Seal' } })) as {
       localeStatus: unknown[]
     }
-    expect(out.localeStatus).toHaveLength(1) // targetLocales = [en]
+    expect(out.localeStatus).toHaveLength(targetLocales.length)
   })
 })

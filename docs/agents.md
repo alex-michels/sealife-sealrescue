@@ -63,7 +63,7 @@ Audit-логи **без public-user PII**; тела запросов и секр
 SysAdmin, SEO.
 
 ## Трекинг устаревших переводов — `markTranslationsStale`
-`beforeChange` на исходной локали (`ru`): считает `sha256` от `title`+`body`, и для каждой целевой локали
+`beforeChange` на исходной локали (`en` после CR-14; берётся из `defaultLocale`): считает `sha256` от `title`+`body`, и для каждой целевой локали
 ставит `localeStatus[locale].status = 'stale'`, если хэш изменился. На partial-update прежнее состояние
 берётся из `originalDoc` (чтобы не потерять `translatedAt`/`sourceHash`), и **hash тоже считается с
 подстановкой `title`/`body` из `originalDoc`**, когда их нет в data — иначе апдейт «только topics»

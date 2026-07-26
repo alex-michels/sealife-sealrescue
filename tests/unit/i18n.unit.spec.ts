@@ -15,13 +15,26 @@ import { t } from '@/i18n/ui'
 import { buildAlternates, buildLegalAlternates } from '@/i18n/alternates'
 import { sites } from '@/site/config'
 
-/** Инварианты локалей (CLAUDE.md «Локали и роутинг»): ru исходная, en — перевод. */
+/**
+ * Инварианты локалей (CLAUDE.md «Локали и роутинг»): **en исходная, ru — перевод** (CR-14).
+ *
+ * Это ЕДИНСТВЕННОЕ место, где направление перевода пришпилено литералами. Все остальные тесты
+ * импортируют `defaultLocale`/`targetLocales`, чтобы разворот направления правился в одной точке,
+ * а не расползался по файлам.
+ */
 describe('i18n config invariants', () => {
-  it('exactly ru/en, ru is source, en is international fallback', () => {
+  it('ровно ru/en; исходная — en, целевая — ru', () => {
+    // Порядок массива менять нельзя: из него выводится порядок union в payload-types.ts.
     expect([...locales]).toEqual(['ru', 'en'])
-    expect(defaultLocale).toBe('ru')
+    expect(defaultLocale).toBe('en')
+    expect(targetLocales).toEqual(['ru'])
+  })
+
+  it('fallbackLocale — политика для посетителя, НЕ исходная локаль', () => {
+    // Отдельным тестом сознательно: после CR-14 значение совпадает с defaultLocale, но по
+    // несвязанной причине. Схлопывание их в одну константу — ошибка, которую этот тест ловит
+    // только если он отдельный.
     expect(fallbackLocale).toBe('en')
-    expect(targetLocales).toEqual(['en'])
   })
 
   it('isLocale guards', () => {

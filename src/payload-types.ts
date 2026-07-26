@@ -317,7 +317,7 @@ export interface Content {
      */
     aiAssisted?: boolean | null;
     /**
-     * Эта локаль — машинный перевод с исходной (ru).
+     * Эта локаль — машинный перевод с исходной локали.
      */
     aiTranslated?: boolean | null;
     /**
@@ -484,7 +484,7 @@ export interface Species {
      */
     aiAssisted?: boolean | null;
     /**
-     * Эта локаль — машинный перевод с исходной (ru).
+     * Эта локаль — машинный перевод с исходной локали.
      */
     aiTranslated?: boolean | null;
     /**
@@ -560,7 +560,7 @@ export interface Quiz {
      */
     aiAssisted?: boolean | null;
     /**
-     * Эта локаль — машинный перевод с исходной (ru).
+     * Эта локаль — машинный перевод с исходной локали.
      */
     aiTranslated?: boolean | null;
     /**
@@ -693,7 +693,7 @@ export interface GameScore {
   createdAt: string;
 }
 /**
- * Словарь терминов и тюль-сленга: ru → перевод. Для переводчиков и Агента 3.
+ * Словарь терминов и тюль-сленга: канонический RU-ключ → перевод. Для переводчиков и Агента 3.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "glossary".
@@ -701,11 +701,11 @@ export interface GameScore {
 export interface Glossary {
   id: number;
   /**
-   * Исходный термин на ru (ключ, общий для всех локалей). Не переводится.
+   * Канонический RU-ключ translation memory (общий для всех локалей). Не переводится и НЕ связан с исходной локалью контента — она en.
    */
   source: string;
   /**
-   * Эквивалент в текущей локали (en сейчас, de позже).
+   * Эквивалент в текущей локали.
    */
   translation?: string | null;
   category: 'term' | 'slang' | 'meme';

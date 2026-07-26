@@ -1,4 +1,5 @@
 import type { TopicSlug } from '../content/topics'
+import type { Locale } from '../i18n/config'
 
 /**
  * Демо-наполнение для M1-T01–T04: реальные записи в Payload (Content + Species),
@@ -9,9 +10,17 @@ import type { TopicSlug } from '../content/topics'
  * Весь текст здесь написан AI и человеком не вычитан, поэтому:
  *  - записи сеются ЧЕРНОВИКАМИ (`_status: 'draft'`, см. `./lib.ts`) — публиковать
  *    непроверенную биологию нельзя (инвариант №7);
- *  - флаги провенанса выставляются централизованно в `./lib.ts`: ru — `aiAssisted`
- *    (оригинал черновика), en — `aiTranslated` (машинный перевод). Отдельного поля в записи
- *    нет: правило одинаково для всех строк сида, а исключения появятся вместе с ревью M1-T08.
+ *  - флаги провенанса выводятся из поля `authoredIn` каждой записи (`./lib.ts`): локаль, на
+ *    которой текст написан, получает `aiAssisted` (оригинал черновика), остальные —
+ *    `aiTranslated` (машинный перевод).
+ *
+ * ⚠️ `authoredIn` — это ФАКТ об истории записи, а не следствие порядка записи в БД. Весь
+ * нынешний корпус написан на **ru** и переведён на en машинно, и это остаётся правдой после
+ * смены исходной локали проекта на en (**CR-14**). Привязать провенанс к `defaultLocale`
+ * означало бы после разворота направления пометить русские оригиналы «машинным переводом», а
+ * машинные переводы — «черновиком AI»: ложное заявление о происхождении по AI Act Art. 50,
+ * которое видит читатель в бейдже (инвариант №5). Новые записи, написанные на en, получают
+ * `authoredIn: 'en'`.
  * `sources` не заполняем: коллекция пуста, а выдуманная ссылка хуже отсутствующей.
  *
  * ## Предметная точность (трек BIO)
@@ -25,6 +34,8 @@ type L = { ru: string; en: string }
 type Paras = { ru: string[]; en: string[] }
 
 export interface ContentSeed {
+  /** Локаль, на которой текст РЕАЛЬНО написан. Определяет провенанс, а не порядок записи. */
+  authoredIn: Locale
   type: 'article' | 'news' | 'meme' | 'page'
   slug: string
   title: L
@@ -57,6 +68,8 @@ export interface ConservationAssessmentSeed {
 }
 
 export interface SpeciesSeed {
+  /** Локаль, на которой текст РЕАЛЬНО написан. Определяет провенанс, а не порядок записи. */
+  authoredIn: Locale
   slug: string
   name: L
   latin: string
@@ -71,6 +84,7 @@ export interface SpeciesSeed {
 
 export const contentSeed: ContentSeed[] = [
   {
+    authoredIn: 'ru',
     type: 'article',
     slug: 'why-seals-cry',
     title: {
@@ -94,6 +108,7 @@ export const contentSeed: ContentSeed[] = [
   // уровня семейства (это признак ушастых). Фоциды спят обоими полушариями, зато на
   // задержке дыхания: на дне, в дрейфовом погружении и «столбиком» у поверхности.
   {
+    authoredIn: 'ru',
     type: 'article',
     slug: 'how-seals-sleep',
     title: {
@@ -118,6 +133,7 @@ export const contentSeed: ContentSeed[] = [
       ],    },
   },
   {
+    authoredIn: 'ru',
     type: 'article',
     slug: 'seal-whiskers',
     title: {
@@ -136,6 +152,7 @@ export const contentSeed: ContentSeed[] = [
       ],    },
   },
   {
+    authoredIn: 'ru',
     type: 'news',
     slug: 'baltic-center-released-pups',
     title: {
@@ -158,6 +175,7 @@ export const contentSeed: ContentSeed[] = [
   // сознательно: сид — upsert по slug, и переименование бросило бы старую (опубликованную!)
   // запись с неверным термином сиротой в уже посеянных БД.
   {
+    authoredIn: 'ru',
     type: 'news',
     slug: 'new-rookery-spotted',
     title: {
@@ -176,6 +194,7 @@ export const contentSeed: ContentSeed[] = [
       ],    },
   },
   {
+    authoredIn: 'ru',
     type: 'meme',
     slug: 'meme-blep',
     title: {
@@ -184,12 +203,14 @@ export const contentSeed: ContentSeed[] = [
     topics: ['humor'],
   },
   {
+    authoredIn: 'ru',
     type: 'meme',
     slug: 'meme-monday-seal',
     title: { ru: 'Я в понедельник', en: 'Me on a Monday',},
     topics: ['humor'],
   },
   {
+    authoredIn: 'ru',
     type: 'meme',
     slug: 'meme-banana-pose',
     title: {
@@ -198,6 +219,7 @@ export const contentSeed: ContentSeed[] = [
     topics: ['humor'],
   },
   {
+    authoredIn: 'ru',
     type: 'page',
     slug: 'about',
     title: { ru: 'О проекте', en: 'About',},
@@ -258,6 +280,7 @@ export const speciesSeed: SpeciesSeed[] = [
   // глоссарии), поэтому без `conservationAssessment` сайт публиковал два статуса одного
   // животного и выглядел противоречащим сам себе.
   {
+    authoredIn: 'ru',
     slug: 'baltic-ringed-seal',
     name: { ru: 'Балтийская кольчатая нерпа', en: 'Baltic ringed seal',},
     latin: 'Pusa hispida botnica',
@@ -303,6 +326,7 @@ export const speciesSeed: SpeciesSeed[] = [
   // народные прозвища, а не перевод. Размер дан по полу: «≈ 2 м» стояло прямо над фразой
   // «самцы заметно крупнее самок».
   {
+    authoredIn: 'ru',
     slug: 'grey-seal',
     name: { ru: 'Серый тюлень', en: 'Grey seal',},
     latin: 'Halichoerus grypus',
@@ -342,6 +366,7 @@ export const speciesSeed: SpeciesSeed[] = [
       ],    },
   },
   {
+    authoredIn: 'ru',
     slug: 'harbour-seal',
     name: { ru: 'Обыкновенный тюлень', en: 'Harbour seal',},
     latin: 'Phoca vitulina',
