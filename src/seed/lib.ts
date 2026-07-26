@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 import { contentSeed, speciesSeed, gamesSeed } from './m1SeedData'
 import { glossaryTerms } from './glossaryTerms'
 import { defaultLocale, targetLocales, type Locale } from '../i18n/config'
+import { seedOwnership, skipExplanation } from './ownership'
 
 /**
  * Логика сидов, вынесенная в чистые функции (QA-18): entry-скрипты (`seedBaseline.ts` и др.,
@@ -19,7 +20,15 @@ import { defaultLocale, targetLocales, type Locale } from '../i18n/config'
  * контента. Подробности и цена перекладки ключа — в докблоке `src/collections/Glossary.ts`.
  */
 
-export type SeedCounts = { created: number; updated: number }
+export type SeedCounts = { created: number; updated: number; skipped: number }
+
+/**
+ * CR-03: сид перестал быть разрушительным. `force` перезаписывает даже те записи, которые уже
+ * трогал человек, — нужен только чтобы сознательно откатить демо-набор к эталону.
+ * Пропуски считаются в `skipped` и печатаются в лог: молчаливый пропуск так же плох, как
+ * молчаливая перезапись.
+ */
+export type SeedOptions = { force?: boolean }
 
 /**
  * BIO-16: сид — это AI-черновик, а не публикация.
@@ -156,7 +165,7 @@ export async function seedGames(payload: Payload): Promise<SeedCounts> {
     })
   }
 
-  return { created, updated }
+  return { created, updated, skipped: 0 }
 }
 
 /** Baseline — MUST-HAVE записи любой свежей БД (сейчас: games). */
@@ -226,7 +235,7 @@ export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
     }
   }
 
-  return { created, updated }
+  return { created, updated, skipped: 0 }
 }
 
 /**
@@ -235,8 +244,9 @@ export async function seedGlossary(payload: Payload): Promise<SeedCounts> {
  */
 export async function seedM1(
   payload: Payload,
+  { force = false }: SeedOptions = {},
 ): Promise<{ content: SeedCounts; species: SeedCounts; games: SeedCounts }> {
-  const content: SeedCounts = { created: 0, updated: 0 }
+  const content: SeedCounts = { created: 0, updated: 0, skipped: 0 }
 
   for (const item of contentSeed) {
     const existing = await payload.find({
@@ -259,6 +269,15 @@ export async function seedM1(
 
     let id: number
     if (existing.docs[0]) {
+      // CR-03: не затираем то, что уже трогал человек.
+      const ownership = seedOwnership(existing.docs[0], existing.docs[0].title, sourceData.title)
+      if (!ownership.owned && !force) {
+        payload.logger.info(
+          `seed: пропускаю content/${item.slug} — ${skipExplanation[ownership.reason]}`,
+        )
+        content.skipped++
+        continue
+      }
       id = existing.docs[0].id as number
       await payload.update({ collection: 'content', id, locale: defaultLocale, data: sourceData })
       content.updated++
@@ -290,7 +309,7 @@ export async function seedM1(
 
   }
 
-  const species: SeedCounts = { created: 0, updated: 0 }
+  const species: SeedCounts = { created: 0, updated: 0, skipped: 0 }
 
   for (const sp of speciesSeed) {
     const existing = await payload.find({
@@ -317,6 +336,14 @@ export async function seedM1(
 
     let sourceDoc
     if (existing.docs[0]) {
+      const ownership = seedOwnership(existing.docs[0], existing.docs[0].name, sourceData.name)
+      if (!ownership.owned && !force) {
+        payload.logger.info(
+          `seed: пропускаю species/${sp.slug} — ${skipExplanation[ownership.reason]}`,
+        )
+        species.skipped++
+        continue
+      }
       sourceDoc = await payload.update({
         collection: 'species',
         id: existing.docs[0].id as number,

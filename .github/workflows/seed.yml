@@ -19,6 +19,10 @@ on:
           - baseline   # must-have records only (games) — safe for prod
           - glossary   # i18n glossary
           - m1         # baseline + demo content (articles/species/memes) — dev/alpha only
+      confirm:
+        description: 'Type the seed name again to confirm (guards against a misclick on the wrong DB)'
+        type: string
+        required: true
 
 concurrency:
   group: seed-db
@@ -28,6 +32,15 @@ jobs:
   seed:
     runs-on: ubuntu-latest
     steps:
+      # CR-03: до этого шага сид был тремя кликами в UI против единственного репозиторного
+      # DATABASE_URI, без environment-гейта и без подтверждения — то есть ничто не отличало
+      # прод-БД от dev-БД в момент запуска. Совпадение с выбранным сидом набирается руками.
+      - name: Confirm the target seed
+        if: inputs.confirm != inputs.seed
+        run: |
+          echo "::error::confirm='${{ inputs.confirm }}' не совпадает с seed='${{ inputs.seed }}' — запуск отменён."
+          exit 1
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5

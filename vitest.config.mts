@@ -41,7 +41,14 @@ export default defineConfig({
       exclude: [
         'src/app/**',
         'src/payload-types.ts',
-        'src/seed/**', // данные сидов + payload-run обёртки; логика (lib.ts) закрыта tests/int/seeds.int.spec.ts (QA-18), но данные раздували бы метрику
+        // Данные сидов и payload-run обёртки: раздували бы метрику строками контента, а не логикой.
+        // ЛОГИКА сидов из-под исключения выведена сознательно (CR-03): `ownership.ts` решает,
+        // затирать ли работу человека, и такое должно считаться в пороге.
+        'src/seed/m1SeedData.ts',
+        'src/seed/glossaryTerms.ts',
+        'src/seed/seed*.ts',
+        'src/seed/toggleStandalone.ts',
+        'src/seed/lib.ts', // закрыт int-тестами (QA-18), но там же и длинные data-мэппинги
         'src/mock/**', // сэмпл-данные dev-моков
       ],
       // Порог — QA-10: ratchet, только растёт (актуалы после EU-11: lines 98 / stmts 96 /
