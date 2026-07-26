@@ -136,7 +136,11 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
   (QA-18); `provenance.int.spec.ts` — поля шкалы провенанса на живом Payload, включая локализацию
-  флагов и `isEditorField` на «человек проверил» (EU-11); `api.int.spec.ts` — smoke.
+  флагов и `isEditorField` на «человек проверил» (EU-11); `locale-fallback.int.spec.ts` —
+  контракт CR-01: непереведённый документ не виден в чужой локали, плюс ЗАПИСЬ измеренного
+  поведения Payload (одного `fallbackLocale: false` мало — документ возвращается с пустым
+  заголовком; строка локали не может существовать без заголовка, он `required`);
+  `api.int.spec.ts` — smoke.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные обеих локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная

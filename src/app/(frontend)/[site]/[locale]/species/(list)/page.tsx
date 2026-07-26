@@ -20,8 +20,14 @@ export default async function SpeciesPage({ params }: { params: RouteParams }) {
   const species = await findAllSpecies(locale)
 
   // «Факт дня»: плоский список всех фактов всех видов → детерминированный выбор по дате.
+  // CR-01, полевой случай: сам массив `facts` НЕ локализован, локализован только `facts.text`.
+  // Значит у вида с переведённым `name` (он прошёл гейт) отдельные факты могут быть ещё не
+  // переведены и приходят пустыми. Пустая строка в пуле обнулила бы панель «Факт дня» для всей
+  // локали, поэтому непереведённые факты отсеиваем здесь, а не полагаемся на гейт документа.
   const factPool = species.flatMap((s) =>
-    (s.facts ?? []).map((f) => ({ fact: f.text, name: s.name, href: `/${locale}/species/${s.slug}` })),
+    (s.facts ?? [])
+      .filter((f) => f.text?.trim())
+      .map((f) => ({ fact: f.text, name: s.name, href: `/${locale}/species/${s.slug}` })),
   )
   const today = pickOfDay(factPool)
 

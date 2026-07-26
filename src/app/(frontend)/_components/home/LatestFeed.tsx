@@ -4,6 +4,7 @@ import config from '@payload-config'
 
 import type { Locale } from '@/i18n/config'
 import { t } from '@/i18n/ui'
+import { translatedWhere } from '@/i18n/translated'
 import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 
@@ -18,7 +19,8 @@ export async function LatestFeed({ locale }: { locale: Locale }) {
   const { docs } = await payload.find({
     collection: 'content',
     locale,
-    where: { _status: { equals: 'published' } },
+    fallbackLocale: false, // CR-01
+    where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
     sort: '-updatedAt',
     limit: 20,
     depth: 0,

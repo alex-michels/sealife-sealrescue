@@ -86,6 +86,9 @@ describe('инварианты после сида', () => {
           collection: 'games',
           where: { slug: { equals: g.slug } },
           locale,
+          // CR-01: без opt-out «заполнено в обеих локалях» могло держаться на locale-fallback —
+          // тест доказывал бы утечку исходного языка, а не наличие перевода.
+          fallbackLocale: false,
           limit: 1,
         })
         const doc = res.docs[0]

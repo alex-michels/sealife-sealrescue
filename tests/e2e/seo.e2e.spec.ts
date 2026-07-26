@@ -25,13 +25,33 @@ let payload: Payload
 
 test.beforeAll(async () => {
   payload = await getPayload({ config: await config })
-  await payload.create({
+
+  // CR-01: фикстура ПЕРЕВЕДЕНА явно, вторым вызовом с указанной локалью. Раньше она создавалась
+  // без `locale`, попадала в исходную локаль и «существовала» во второй только за счёт
+  // locale-fallback — то есть перекрёстные alternates ниже доказывали утечку, а не перевод.
+  const pub = await payload.create({
     collection: 'content',
+    locale: 'ru',
     data: { type: 'article', title: `${RUN} pub`, slug: `${RUN}-pub`, _status: 'published' },
   })
+  await payload.update({
+    collection: 'content',
+    id: pub.id,
+    locale: 'en',
+    data: { title: `${RUN} pub EN` },
+  })
+
   await payload.create({
     collection: 'content',
+    locale: 'ru',
     data: { type: 'article', title: `${RUN} draft`, slug: `${RUN}-draft`, _status: 'draft' },
+  })
+
+  // Непереведённая фикстура — негативный случай CR-01.
+  await payload.create({
+    collection: 'content',
+    locale: 'ru',
+    data: { type: 'article', title: `${RUN} только ru`, slug: `${RUN}-onelocale`, _status: 'published' },
   })
 })
 
@@ -88,6 +108,23 @@ test.describe('hreflang / canonical на страницах', () => {
     await expectNoAlt(page, 'de')
   })
 
+  test('CR-01: непереведённый документ — 404 в чужой локали и без hreflang на неё', async ({
+    page,
+  }) => {
+    // Раньше эта страница отдавала 200 с русским текстом под <html lang="en"> и объявляла себя
+    // английской версией. Теперь её в английской локали просто нет.
+    const missing = await page.goto(`${BASE}/en/${RUN}-onelocale`)
+    expect(missing?.status()).toBe(404)
+
+    // А в своей локали она есть и НЕ рекламирует несуществующую английскую альтернативу.
+    const own = await page.goto(`${BASE}/ru/${RUN}-onelocale`)
+    expect(own?.status()).toBe(200)
+    expect(await altHref(page, 'ru')).toBe(`https://sealife.info/ru/${RUN}-onelocale`)
+    await expectNoAlt(page, 'en')
+    // x-default не может указывать на локаль, которой нет.
+    expect(await altHref(page, 'x-default')).toBe(`https://sealife.info/ru/${RUN}-onelocale`)
+  })
+
   test('legal-страница: hreflang шире контентного — включает legal-only de', async ({ page }) => {
     await page.goto(`${BASE}/en/legal-notice`)
     await expect(page.locator('link[rel="canonical"]').first()).toHaveAttribute(
@@ -135,6 +172,14 @@ test.describe('sitemap.xml', () => {
     )
     // Черновик НЕ попадает (только _status=published).
     expect(xml).not.toContain(`${RUN}-draft`)
+
+    // CR-01: непереведённый документ подаётся ТОЛЬКО в своей локали — ни <loc>, ни
+    // hreflang-альтернативы для локали, где его нет. Иначе карта сайта зовёт краулер на 404.
+    expect(xml).toContain(`<loc>https://sealife.info/ru/${RUN}-onelocale</loc>`)
+    expect(xml).not.toContain(`<loc>https://sealife.info/en/${RUN}-onelocale</loc>`)
+    expect(xml).not.toContain(
+      `<xhtml:link rel="alternate" hreflang="en" href="https://sealife.info/en/${RUN}-onelocale" />`,
+    )
     // Карта — по контент-локалям: legal-страниц (и /de вместе с ними) в ней нет вообще.
     expect(xml).not.toContain('sealife.info/de')
     expect(xml).not.toContain('/legal-notice')

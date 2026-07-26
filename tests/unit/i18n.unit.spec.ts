@@ -109,4 +109,36 @@ describe('buildAlternates', () => {
       'https://sealrescue.info/en',
     )
   })
+
+  /**
+   * CR-01: у документа из Payload набор локалей не «все контентные», а те, где он реально есть.
+   * Рекламировать альтернативу, которая после выключения locale-fallback отдаёт 404, — прямая
+   * SEO-ошибка, поэтому hreflang строится по фактической доступности.
+   */
+  describe('available (доступность документа по локалям)', () => {
+    it('одна локаль: только её язык, x-default указывает на неё же', () => {
+      const alt = buildAlternates('/only-ru', 'ru', sites.sealife, ['ru'])
+      const languages = alt?.languages as Record<string, string>
+      expect(languages).toEqual({
+        ru: 'https://sealife.info/ru/only-ru',
+        'x-default': 'https://sealife.info/ru/only-ru',
+      })
+      // Фантомной английской альтернативы быть не должно вовсе.
+      expect(languages.en).toBeUndefined()
+    })
+
+    it('обе локали: набор как раньше', () => {
+      const languages = buildAlternates('/both', 'en', sites.sealife, ['ru', 'en'])
+        ?.languages as Record<string, string>
+      expect(languages.ru).toBe('https://sealife.info/ru/both')
+      expect(languages.en).toBe('https://sealife.info/en/both')
+      expect(languages['x-default']).toBe('https://sealife.info/en/both')
+    })
+
+    it('без аргумента поведение не меняется — страницы из кода есть во всех локалях', () => {
+      const withDefault = buildAlternates('/articles', 'en', sites.sealife)
+      const explicit = buildAlternates('/articles', 'en', sites.sealife, ['ru', 'en'])
+      expect(withDefault?.languages).toEqual(explicit?.languages)
+    })
+  })
 })
