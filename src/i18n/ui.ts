@@ -1,4 +1,4 @@
-import type { Locale } from './config'
+import { defaultLocale, type Locale } from './config'
 
 /**
  * Строки интерфейса фронтенда. Контент (статьи/мемы) хранится в Payload и
@@ -262,4 +262,7 @@ const dict: Record<Locale, Record<UIKey, string>> = {
   },
 }
 
-export const t = (locale: Locale, key: UIKey): string => dict[locale]?.[key] ?? dict.ru[key]
+// Последний рубеж — словарь ИСХОДНОЙ локали (CR-14: en). Пропущенный ключ должен деградировать
+// в язык, на котором строки пишутся, иначе английскому читателю молча покажут русский текст.
+export const t = (locale: Locale, key: UIKey): string =>
+  dict[locale]?.[key] ?? dict[defaultLocale][key]

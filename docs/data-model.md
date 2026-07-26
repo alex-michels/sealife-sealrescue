@@ -1,7 +1,7 @@
 # Модель данных (коллекции Payload)
 
 Все коллекции собираются в [`src/payload.config.ts`](../src/payload.config.ts). Локализация — нативная
-Payload: поля с `localized: true` хранят значение по локали (`ru` исходная, `en` перевод). Контентных
+Payload: поля с `localized: true` хранят значение по локали (`en` исходная, `ru` перевод — CR-14). Контентных
 локалей **две** — `ru`/`en` (источник правды — `src/i18n/config.ts`); `de` — не контентная локаль,
 а legal-only роут (немецкие тексты Impressum/Datenschutz живут в `src/site/legal.ts`, не в Payload),
 см. [localization.md](localization.md). `slug` канонический — **общий для локалей** и не

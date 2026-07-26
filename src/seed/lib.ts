@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { contentSeed, speciesSeed, gamesSeed } from './m1SeedData'
 import { glossaryTerms } from './glossaryTerms'
+import { defaultLocale, targetLocales, type Locale } from '../i18n/config'
 
 /**
  * Логика сидов, вынесенная в чистые функции (QA-18): entry-скрипты (`seedBaseline.ts` и др.,
@@ -8,8 +9,14 @@ import { glossaryTerms } from './glossaryTerms'
  * int-тестом `tests/int/seeds.int.spec.ts`, который вызывает эти функции напрямую.
  *
  * Все сиды — upsert по каноническому ключу (slug/source): повторный прогон не создаёт
- * дублей. Локализация: пишем исходную локаль ru, затем дописываем перевод en
- * (непереведённые поля просто отсутствуют в en).
+ * дублей. Локализация: пишем `defaultLocale`, затем дописываем каждую из `targetLocales`
+ * (непереведённые поля просто отсутствуют в переводе). Направление берётся из
+ * `src/i18n/config.ts`, а не зашито литералами, — поэтому разворот ru→en (**CR-14**) сид не
+ * трогает. Провенанс при этом идёт от `authoredIn` записи, а не от порядка записи.
+ *
+ * ⚠️ Исключение — `seedGlossary`: там ru/en остаются литералами сознательно. Глоссарий это
+ * translation memory с каноническим RU-ключом (`source`), и он НЕ связан с исходной локалью
+ * контента. Подробности и цена перекладки ключа — в докблоке `src/collections/Glossary.ts`.
  */
 
 export type SeedCounts = { created: number; updated: number }
@@ -29,27 +36,30 @@ export type SeedCounts = { created: number; updated: number }
 const SEED_STATUS_CONTENT = 'draft' as const
 
 /**
- * Провенанс сида (BIO-16b/c, EU AI Act Art. 50). Флаги локализованы, поэтому у исходного
- * русского текста и его английского перевода они РАЗНЫЕ: ru — черновик писал AI, en —
- * машинный перевод. До этой правки флаг стоял ровно у одной статьи из трёх, из-за чего
- * бейдж AI висел на корректном тексте и отсутствовал у двух ошибочных.
+ * Провенанс сида (BIO-16b/c, EU AI Act Art. 50). Флаги локализованы, поэтому у оригинала и у его
+ * перевода они РАЗНЫЕ: локаль, на которой текст написан, — «черновик писал AI», остальные —
+ * «машинный перевод». До BIO-16 флаг стоял ровно у одной статьи из трёх, из-за чего бейдж AI
+ * висел на корректном тексте и отсутствовал у двух ошибочных.
+ *
+ * ⚠️ Выбор идёт по `authoredIn` записи, а НЕ по порядку записи в БД и НЕ по `defaultLocale`.
+ * Это принципиально: после разворота исходной локали на en (**CR-14**) привязка к `defaultLocale`
+ * пометила бы русские оригиналы «машинным переводом», а машинные переводы — «черновиком AI».
+ * Читатель видит эти флаги бейджем на каждой странице — это было бы ложное заявление о
+ * происхождении по AI Act Art. 50 (инвариант №5).
  *
  * Пишем и `false` тоже: сид перезаписывает сам текст, значит прежняя вычитка к нему больше
  * не относится — оставить `humanReviewed` от предыдущей версии означало бы соврать читателю.
  * `sources` и `sourceVerified` не трогаем: коллекция источников пуста, а пустая связь честнее
  * выдуманной ссылки.
  */
-const provenanceSource = {
-  aiAssisted: true,
-  aiTranslated: false,
-  aiChecked: false,
-  humanReviewed: false,
-}
-const provenanceTranslation = {
-  aiAssisted: false,
-  aiTranslated: true,
-  aiChecked: false,
-  humanReviewed: false,
+function provenanceFor(locale: Locale, authoredIn: Locale) {
+  const original = locale === authoredIn
+  return {
+    aiAssisted: original,
+    aiTranslated: !original,
+    aiChecked: false,
+    humanReviewed: false,
+  }
 }
 
 /** Минимальный lexical-документ из абзацев. */
@@ -233,43 +243,50 @@ export async function seedM1(
       collection: 'content',
       where: { slug: { equals: item.slug } },
       limit: 1,
-      locale: 'ru',
     })
-    const ruData = {
+    const sourceData = {
       type: item.type,
       slug: item.slug,
-      title: item.title.ru,
-      excerpt: item.excerpt?.ru,
+      title: item.title[defaultLocale],
+      excerpt: item.excerpt?.[defaultLocale],
       topics: item.topics,
       // Устаревший одиночный флаг — зеркалим, пока UI не переехал на группу provenance.
       aiGenerated: true,
-      provenance: provenanceSource,
-      body: item.body ? rich(item.body.ru) : undefined,
+      provenance: provenanceFor(defaultLocale, item.authoredIn),
+      body: item.body ? rich(item.body[defaultLocale]) : undefined,
       _status: SEED_STATUS_CONTENT,
     }
 
     let id: number
     if (existing.docs[0]) {
       id = existing.docs[0].id as number
-      await payload.update({ collection: 'content', id, locale: 'ru', data: ruData })
+      await payload.update({ collection: 'content', id, locale: defaultLocale, data: sourceData })
       content.updated++
     } else {
-      const doc = await payload.create({ collection: 'content', locale: 'ru', data: ruData })
+      const doc = await payload.create({
+        collection: 'content',
+        locale: defaultLocale,
+        data: sourceData,
+      })
       id = doc.id as number
       content.created++
     }
 
-    await payload.update({
-      collection: 'content',
-      id,
-      locale: 'en',
-      data: {
-        title: item.title.en,
-        excerpt: item.excerpt?.en,
-        body: item.body ? rich(item.body.en) : undefined,
-        provenance: provenanceTranslation,
-      },
-    })
+    // Целевые локали: ТОЛЬКО локализованные поля — общие поля пишутся исходной локалью,
+    // иначе патч перевода затрёт их.
+    for (const locale of targetLocales) {
+      await payload.update({
+        collection: 'content',
+        id,
+        locale,
+        data: {
+          title: item.title[locale],
+          excerpt: item.excerpt?.[locale],
+          body: item.body ? rich(item.body[locale]) : undefined,
+          provenance: provenanceFor(locale, item.authoredIn),
+        },
+      })
+    }
 
   }
 
@@ -280,56 +297,61 @@ export async function seedM1(
       collection: 'species',
       where: { slug: { equals: sp.slug } },
       limit: 1,
-      locale: 'ru',
     })
-    const ruData = {
-      name: sp.name.ru,
+    const sourceData = {
+      name: sp.name[defaultLocale],
       slug: sp.slug,
       latin: sp.latin,
       conservationStatus: sp.conservationStatus,
       // BIO-09/BIO-13: контекст оценки не локализуется — «оценён подвид» верно на любом языке.
       conservationAssessment: sp.conservationAssessment,
-      region: sp.region?.ru,
-      size: sp.size?.ru,
-      excerpt: sp.excerpt?.ru,
-      body: sp.body ? rich(sp.body.ru) : undefined,
-      facts: sp.facts.map((f) => ({ text: f.ru })),
+      region: sp.region?.[defaultLocale],
+      size: sp.size?.[defaultLocale],
+      excerpt: sp.excerpt?.[defaultLocale],
+      body: sp.body ? rich(sp.body[defaultLocale]) : undefined,
+      facts: sp.facts.map((f) => ({ text: f[defaultLocale] })),
       aiGenerated: true,
-      provenance: provenanceSource,
+      provenance: provenanceFor(defaultLocale, sp.authoredIn),
       _status: SEED_STATUS_CONTENT,
     }
 
-    let ruDoc
+    let sourceDoc
     if (existing.docs[0]) {
-      ruDoc = await payload.update({
+      sourceDoc = await payload.update({
         collection: 'species',
         id: existing.docs[0].id as number,
-        locale: 'ru',
-        data: ruData,
+        locale: defaultLocale,
+        data: sourceData,
       })
       species.updated++
     } else {
-      ruDoc = await payload.create({ collection: 'species', locale: 'ru', data: ruData })
+      sourceDoc = await payload.create({
+        collection: 'species',
+        locale: defaultLocale,
+        data: sourceData,
+      })
       species.created++
     }
 
-    // Дописываем en: сопоставляем факты по id, созданному при записи ru —
-    // иначе обновление en пересоздаёт строки массива и теряет ru.
-    const factIds = (ruDoc.facts ?? []).map((f) => f.id)
-    await payload.update({
-      collection: 'species',
-      id: ruDoc.id as number,
-      locale: 'en',
-      data: {
-        name: sp.name.en,
-        region: sp.region?.en,
-        size: sp.size?.en,
-        excerpt: sp.excerpt?.en,
-        body: sp.body ? rich(sp.body.en) : undefined,
-        facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f.en })),
-        provenance: provenanceTranslation,
-      },
-    })
+    // Дописываем переводы: факты сопоставляем по id, созданному при записи исходной локали —
+    // иначе обновление пересоздаёт строки массива и теряет оригинал.
+    const factIds = (sourceDoc.facts ?? []).map((f) => f.id)
+    for (const locale of targetLocales) {
+      await payload.update({
+        collection: 'species',
+        id: sourceDoc.id as number,
+        locale,
+        data: {
+          name: sp.name[locale],
+          region: sp.region?.[locale],
+          size: sp.size?.[locale],
+          excerpt: sp.excerpt?.[locale],
+          body: sp.body ? rich(sp.body[locale]) : undefined,
+          facts: sp.facts.map((f, i) => ({ id: factIds[i], text: f[locale] })),
+          provenance: provenanceFor(locale, sp.authoredIn),
+        },
+      })
+    }
 
   }
 

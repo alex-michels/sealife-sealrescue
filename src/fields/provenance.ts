@@ -51,7 +51,7 @@ export function provenanceField(): Field {
         name: 'aiTranslated',
         type: 'checkbox',
         localized: true,
-        admin: { description: 'Эта локаль — машинный перевод с исходной (ru).' },
+        admin: { description: 'Эта локаль — машинный перевод с исходной локали.' },
       },
       {
         name: 'aiChecked',

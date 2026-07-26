@@ -4,6 +4,7 @@ import { describe, it, beforeAll, afterAll, expect } from 'vitest'
 import { seedBaseline, seedGlossary, seedM1 } from '@/seed/lib'
 import { contentSeed, speciesSeed, gamesSeed } from '@/seed/m1SeedData'
 import { glossaryTerms } from '@/seed/glossaryTerms'
+import { locales, type Locale } from '@/i18n/config'
 
 /**
  * QA-18: сиды идемпотентны + после сида выполняются инварианты локалей/slug.
@@ -115,24 +116,28 @@ describe('инварианты после сида', () => {
         expect(res.docs[0]?._status, `${item.slug} (${locale})`).toBe('draft')
       }
 
-      // Флаги провенанса локализованы: ru — AI-черновик, en — машинный перевод.
-      const ru = await payload.find({
-        collection: 'content',
-        where: { slug: { equals: item.slug } },
-        locale: 'ru',
-        limit: 1,
-      })
-      const en = await payload.find({
-        collection: 'content',
-        where: { slug: { equals: item.slug } },
-        locale: 'en',
-        limit: 1,
-      })
-      expect(ru.docs[0]?.provenance?.aiAssisted, `${item.slug} ru aiAssisted`).toBe(true)
-      expect(ru.docs[0]?.provenance?.aiTranslated, `${item.slug} ru aiTranslated`).toBeFalsy()
-      expect(en.docs[0]?.provenance?.aiTranslated, `${item.slug} en aiTranslated`).toBe(true)
-      // Никто из сида не вычитан человеком — иначе бейдж соврёт (EU-11 / AI Act Art. 50).
-      expect(ru.docs[0]?.provenance?.humanReviewed, `${item.slug} ru humanReviewed`).toBeFalsy()
+      // Флаги провенанса локализованы и следуют `authoredIn` записи, а НЕ порядку записи и НЕ
+      // текущей исходной локали проекта. Весь нынешний корпус написан на ru и переведён на en
+      // машинно — и это остаётся правдой после разворота направления на en (CR-14). Привязка к
+      // `defaultLocale` пометила бы русские оригиналы «машинным переводом»: ложное заявление о
+      // происхождении по AI Act Art. 50, которое читатель видит бейджем.
+      const read = (locale: Locale) =>
+        payload.find({
+          collection: 'content',
+          where: { slug: { equals: item.slug } },
+          locale,
+          fallbackLocale: false,
+          limit: 1,
+        })
+
+      for (const locale of locales) {
+        const doc = (await read(locale)).docs[0]
+        const original = locale === item.authoredIn
+        expect(doc?.provenance?.aiAssisted, `${item.slug} ${locale} aiAssisted`).toBe(original)
+        expect(doc?.provenance?.aiTranslated, `${item.slug} ${locale} aiTranslated`).toBe(!original)
+        // Никто из сида не вычитан человеком — иначе бейдж соврёт (EU-11 / AI Act Art. 50).
+        expect(doc?.provenance?.humanReviewed, `${item.slug} ${locale} humanReviewed`).toBeFalsy()
+      }
     }
   })
 
