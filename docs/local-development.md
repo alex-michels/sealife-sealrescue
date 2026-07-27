@@ -76,7 +76,7 @@ CI зелёный — код не при чём.
 | Команда | Что делает |
 | --- | --- |
 | `npm run dev` | Next + Payload в dev |
-| `npm run devsafe` | то же, с чисткой `.next` — лечит «залипший» кэш, в т.ч. ловушку `build` × `dev` ниже |
+| `npm run devsafe` | то же, с чисткой `.next` — лечит «залипший» кэш, в т.ч. ловушку `build` × `dev` выше |
 | `npm run build` / `npm start` | прод-сборка / запуск (`build` поднимает heap до 8 GB) |
 | `npm run generate:types` | сгенерировать `src/payload-types.ts` — **после изменения схемы** |
 | `npm run generate:importmap` | пересобрать import map админки |
@@ -162,7 +162,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
   ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
   alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
-  хуки контента, **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет
+  хуки контента, **дата публикации** (`published-at.unit.spec.ts` — CR-05: когда ставится штамп
+  и когда его нельзя двигать), **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет
   права перезаписать запись), **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
   EU-11), **биология сида** (`seed-biology.unit.spec.ts` — коды IUCN и факты, трек BIO),
   **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
@@ -174,7 +175,9 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
-  (QA-18); `seed-guard.int.spec.ts` — CR-03: опубликованная человеком запись переживает
+  (QA-18); `published-at.int.spec.ts` — CR-05 на живом Payload: публикация ставит дату, правка её
+  не двигает, сортировка `-publishedAt` не поднимает отредактированный старый материал;
+  `seed-guard.int.spec.ts` — CR-03: опубликованная человеком запись переживает
   повторный сид, `force` осознанно возвращает демо-эталон; `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
   не внутри `releases/`), производные размеры генерируются, оригинал пережат в webp без EXIF.
   ⚠️ Единственная спека с `// @vitest-environment node`: проверка типа файла в Payload идёт через

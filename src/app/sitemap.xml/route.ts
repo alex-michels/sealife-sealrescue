@@ -80,7 +80,9 @@ export async function GET(request: Request): Promise<Response> {
       const { docs } = await payload.find({
         collection: 'content',
         where: published,
-        sort: '-updatedAt',
+        // CR-05: порядок — по дате выхода. А вот `lastmod` ниже ОСТАЁТСЯ `updatedAt`, и это не
+        // недосмотр: lastmod по определению «когда последний раз менялось», то есть именно правка.
+        sort: '-publishedAt',
         depth: 0,
         pagination: false,
       })

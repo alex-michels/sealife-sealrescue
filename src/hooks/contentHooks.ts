@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import type { CollectionBeforeChangeHook } from 'payload'
 import { defaultLocale, targetLocales } from '../i18n/config'
+import { nextPublishedAt } from '../content/publishedAt'
 
 // Исходная локаль и целевые локали перевода берутся из единого источника
 // (src/i18n/config.ts). DE добавляется там одной строкой — здесь ничего менять не надо.
@@ -58,4 +59,13 @@ export const markTranslationsStale: CollectionBeforeChangeHook = ({ data, req, o
   })
 
   return { ...data, localeStatus }
+}
+
+/**
+ * CR-05: штамп даты публикации. Логика — чистая `nextPublishedAt` (`src/content/publishedAt.ts`),
+ * здесь только подстановка «сейчас» и склейка с данными записи.
+ */
+export const stampPublishedAt: CollectionBeforeChangeHook = ({ data, originalDoc }) => {
+  const next = nextPublishedAt(data, originalDoc, new Date().toISOString())
+  return next ? { ...data, publishedAt: next } : data
 }

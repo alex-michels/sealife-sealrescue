@@ -270,6 +270,10 @@ export interface Content {
   type: 'article' | 'news' | 'meme' | 'page';
   title: string;
   /**
+   * Дата выхода. Ставится сама при первой публикации; менять только если материал реально вышел в другой день.
+   */
+  publishedAt?: string | null;
+  /**
    * Canonical slug — общий для всех локалей (/ru/slug, /en/slug).
    */
   slug: string;
@@ -1074,6 +1078,7 @@ export interface RescueCentersSelect<T extends boolean = true> {
 export interface ContentSelect<T extends boolean = true> {
   type?: T;
   title?: T;
+  publishedAt?: T;
   slug?: T;
   excerpt?: T;
   body?: T;

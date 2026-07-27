@@ -45,7 +45,9 @@ function crossLinkPath(doc: Content): string {
  * сюда приходит уже найденный опубликованный документ в активной локали (depth>=1).
  */
 export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale }) {
-  const date = formatDate(doc.updatedAt, locale)
+  // CR-05: читателю показываем дату ВЫХОДА. Фолбэк на updatedAt — только для материалов,
+  // опубликованных до появления поля (иначе у них не было бы даты вовсе).
+  const date = formatDate(doc.publishedAt ?? doc.updatedAt, locale)
   const typeLabel = typeLabels[doc.type][locale]
 
   // Мем — картинка + подпись, минимум хрома.

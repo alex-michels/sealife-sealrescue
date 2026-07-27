@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
-import { forceAgentDrafts, markTranslationsStale } from '../hooks/contentHooks'
+import { forceAgentDrafts, markTranslationsStale, stampPublishedAt } from '../hooks/contentHooks'
 import { topicSelectOptions } from '../content/topics'
 import { provenanceField, sourcesField } from '../fields/provenance'
 
@@ -8,7 +8,7 @@ export const Content: CollectionConfig = {
   slug: 'content',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'type', '_status', 'updatedAt'],
+    defaultColumns: ['title', 'type', '_status', 'publishedAt', 'updatedAt'],
     description: 'Статьи, новости, мемы, страницы (sealife.info).',
   },
   // drafts = нативный статус draft/published = human-in-the-loop.
@@ -20,7 +20,7 @@ export const Content: CollectionConfig = {
     delete: isEditor, // агент удалять не может
   },
   hooks: {
-    beforeChange: [forceAgentDrafts, markTranslationsStale],
+    beforeChange: [forceAgentDrafts, markTranslationsStale, stampPublishedAt],
   },
   fields: [
     {
@@ -36,6 +36,21 @@ export const Content: CollectionConfig = {
       ],
     },
     { name: 'title', type: 'text', required: true, localized: true },
+    {
+      // CR-05: дата ВЫХОДА материала. НЕ локализована: оригинал и перевод — один материал,
+      // вышедший один раз. Ставится автоматически при первой публикации и больше не двигается;
+      // выставленное вручную значение автоматика не перетирает (перенос старого материала,
+      // отложенная публикация). См. src/content/publishedAt.ts.
+      name: 'publishedAt',
+      type: 'date',
+      index: true, // по нему сортируются лента главной и все списки
+      admin: {
+        position: 'sidebar',
+        date: { pickerAppearance: 'dayAndTime' },
+        description:
+          'Дата выхода. Ставится сама при первой публикации; менять только если материал реально вышел в другой день.',
+      },
+    },
     {
       name: 'slug',
       type: 'text',
