@@ -35,7 +35,7 @@ export default async function NewsPage({
     href: `/${locale}/${d.slug}`,
     title: d.title,
     excerpt: d.excerpt ?? undefined,
-    meta: formatDate(d.updatedAt, locale),
+    meta: formatDate(d.publishedAt ?? d.updatedAt, locale), // CR-05
     coverImage: d.coverImage,
     seed: typeof d.id === 'number' ? d.id : 0,
   }))

@@ -21,7 +21,7 @@ export async function LatestFeed({ locale }: { locale: Locale }) {
     locale,
     fallbackLocale: false, // CR-01
     where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
-    sort: '-updatedAt',
+    sort: '-publishedAt', // CR-05: дата выхода, а не последней правки
     limit: 20,
     depth: 0,
   })

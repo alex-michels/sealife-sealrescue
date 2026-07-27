@@ -16,7 +16,9 @@ export async function findContentByType(type: Content['type'], locale: Locale): 
     where: {
       and: [{ type: { equals: type }, _status: { equals: 'published' } }, translatedWhere('title')],
     },
-    sort: '-updatedAt',
+    // CR-05: сортируем по дате ВЫХОДА, а не по последней правке — иначе исправленная опечатка
+    // поднимает старый материал на первое место.
+    sort: '-publishedAt',
     depth: 1, // обложки (media.url) для карточек
     pagination: false,
   })
