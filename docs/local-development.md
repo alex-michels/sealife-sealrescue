@@ -162,7 +162,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
   ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
   alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
-  хуки контента, **дата публикации** (`published-at.unit.spec.ts` — CR-05: когда ставится штамп
+  хуки контента, **типы контента** (`content-types.unit.spec.ts` — CR-06: что попадает в ленту
+  главной и есть ли у типа локализованная подпись), **дата публикации** (`published-at.unit.spec.ts` — CR-05: когда ставится штамп
   и когда его нельзя двигать), **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет
   права перезаписать запись), **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
   EU-11), **биология сида** (`seed-biology.unit.spec.ts` — коды IUCN и факты, трек BIO),
@@ -175,7 +176,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
-  (QA-18); `published-at.int.spec.ts` — CR-05 на живом Payload: публикация ставит дату, правка её
+  (QA-18); `feed-types.int.spec.ts` — CR-06: лента не отдаёт служебные страницы (и фиксирует, что
+  без фильтра отдавала бы); `published-at.int.spec.ts` — CR-05 на живом Payload: публикация ставит дату, правка её
   не двигает, сортировка `-publishedAt` не поднимает отредактированный старый материал;
   `seed-guard.int.spec.ts` — CR-03: опубликованная человеком запись переживает
   повторный сид, `force` осознанно возвращает демо-эталон; `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
