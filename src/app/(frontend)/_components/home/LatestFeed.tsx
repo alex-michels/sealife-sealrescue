@@ -5,6 +5,7 @@ import config from '@payload-config'
 import type { Locale } from '@/i18n/config'
 import { t } from '@/i18n/ui'
 import { translatedWhere } from '@/i18n/translated'
+import { feedTypes, typeLabel } from '@/content/contentTypes'
 import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 
@@ -20,7 +21,14 @@ export async function LatestFeed({ locale }: { locale: Locale }) {
     collection: 'content',
     locale,
     fallbackLocale: false, // CR-01
-    where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
+    where: {
+      and: [
+        // CR-06: только редакционные типы. Без этого фильтра первая же опубликованная служебная
+        // страница (about, контакты, редполитика) встала бы карточкой наверх главной.
+        { _status: { equals: 'published' }, type: { in: feedTypes } },
+        translatedWhere('title'),
+      ],
+    },
     sort: '-publishedAt', // CR-05: дата выхода, а не последней правки
     limit: 20,
     depth: 0,
@@ -38,7 +46,8 @@ export async function LatestFeed({ locale }: { locale: Locale }) {
           <Link href={`/${locale}/${doc.slug}`} className="block h-full">
             <Card className="h-full transition-transform hover:-translate-y-0.5">
               <span className="font-mono text-xs uppercase tracking-wide text-muted">
-                {doc.type}
+                {/* CR-06: локализованная подпись, а не сырой enum — читатель видел «article». */}
+                {typeLabel(doc.type, locale)}
               </span>
               <h3 className="mt-2 text-xl">{doc.title}</h3>
             </Card>

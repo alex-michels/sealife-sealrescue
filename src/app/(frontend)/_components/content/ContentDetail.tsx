@@ -4,16 +4,10 @@ import type { Content } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
 import { formatDate } from '@/i18n/date'
 import { topicLabel } from '@/content/topics'
+import { typeLabel } from '@/content/contentTypes'
 import { Cover } from './Cover'
 import { AiBadge } from './AiBadge'
 import { CrossLink } from './CrossLink'
-
-const typeLabels: Record<Content['type'], Record<Locale, string>> = {
-  article: { ru: 'Статья', en: 'Article' },
-  news: { ru: 'Новость', en: 'News' },
-  meme: { ru: 'Мем', en: 'Meme' },
-  page: { ru: 'Страница', en: 'Page' },
-}
 
 /** Темы как ссылки на отфильтрованный каталог соответствующего типа. */
 function TopicChips({ doc, locale, basePath }: { doc: Content; locale: Locale; basePath: string }) {
@@ -48,7 +42,7 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
   // CR-05: читателю показываем дату ВЫХОДА. Фолбэк на updatedAt — только для материалов,
   // опубликованных до появления поля (иначе у них не было бы даты вовсе).
   const date = formatDate(doc.publishedAt ?? doc.updatedAt, locale)
-  const typeLabel = typeLabels[doc.type][locale]
+  const label = typeLabel(doc.type, locale)
 
   // Мем — картинка + подпись, минимум хрома.
   if (doc.type === 'meme') {
@@ -89,7 +83,7 @@ export function ContentDetail({ doc, locale }: { doc: Content; locale: Locale })
   const basePath = `/${locale}/${doc.type === 'news' ? 'news' : 'articles'}`
   return (
     <article className="mx-auto max-w-3xl px-5 py-10">
-      <span className="font-mono text-xs uppercase tracking-wide text-muted">{typeLabel}</span>
+      <span className="font-mono text-xs uppercase tracking-wide text-muted">{label}</span>
       <h1 className="mt-2 text-4xl">{doc.title}</h1>
       <p className="mt-2 font-mono text-xs text-muted">{date}</p>
       <AiBadge locale={locale} provenance={doc.provenance} aiGenerated={doc.aiGenerated} />
