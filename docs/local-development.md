@@ -172,7 +172,16 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   `vitest.config.mts` (ratchet — только вверх).
 - **Integration** — Vitest project `int` (`tests/int/*.int.spec.ts`, jsdom + setup; файлы бегут
   последовательно — `fileParallelism: false`, иначе параллельный boot Payload гоняет drizzle push
-  наперегонки): `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110
+  наперегонки).
+  ⚠️ **Два vitest-процесса против одной БД одновременно запускать нельзя** — `fileParallelism`
+  закрывает гонку внутри прогона, между процессами закрыть нечем. Каждый `getPayload()` гоняет
+  drizzle-push, и два push'а роняют друг друга на DDL ещё до первого теста:
+  `ALTER TABLE … DROP CONSTRAINT … does not exist`, дальше вся спека уходит в skip, а `afterAll`
+  падает на `payload` = undefined. Ловится по стеку: `pushDevSchema` ← `getPayload` в `beforeAll`.
+  Практически: не запускать `npm run test:coverage` и `vitest --project int` одновременно, и не
+  забывать про фоновые прогоны. Своя БД под каждый процесс (`DATABASE_URI_TEST`) — единственный
+  способ обойти, для одиночной машины смысла нет.
+  Состав: `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
   лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
