@@ -79,6 +79,7 @@ src/
 | Email с публичных пользователей не собираем | схема коллекций (нет email-полей в UGC; только `contactHandle`) |
 | Лидерборд анонимный (без PII) | `game-scores`: хэш `playerKey`, без IP/email/аккаунтов |
 | Неизвестная локаль / несуществующий slug / контент под `/de` → 404 | `proxy.ts` + `[locale]` route guard |
+| Бренд и соцкарточка различаются по сайту | `site/social.ts`: `metadataBase`, полный `openGraph`/`twitter` и иконки берутся из `sites[site]`; ассеты — `public/brand/<site>/` (CR-10). Корневой `favicon.ico` не подошёл бы: он один на приложение |
 | Контент одного сайта не резолвится на домене другого | списочные роуты — через `getSection()`; канонический `/[locale]/[slug]` — гейт по `contentSite` (`content` принадлежит sealife), тем же фактом живёт и sitemap (CR-02) |
 | Provenance AI-контента виден пользователю | provenance-поля в `Content`/`Species`/… (расширяется, M1-T08) |
 

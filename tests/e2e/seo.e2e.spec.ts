@@ -254,6 +254,87 @@ test.describe('sitemap.xml', () => {
   })
 })
 
+/**
+ * **CR-10** — карточка ссылки в соцсетях и иконка во вкладке.
+ *
+ * Аудитория приходит из VK/TG, то есть КАЖДАЯ ссылка, которую владелец туда кладёт, — это OG-карточка.
+ * До правки не было ни одного из этих тегов: голый заголовок и дефолтный глобус.
+ */
+test.describe('OpenGraph / иконки / JSON-LD (CR-10)', () => {
+  const meta = (page: Page, selector: string) =>
+    page.locator(selector).first().getAttribute('content')
+
+  for (const [site, query, brand, host] of [
+    ['sealife', '', 'Тюлень.Инфо', 'https://sealife.info'],
+    ['sealrescue', '?site=sealrescue', 'Спасение тюленей', 'https://sealrescue.info'],
+  ] as const) {
+    test(`${site}: OG-карточка и СВОЯ иконка`, async ({ page }) => {
+      await page.goto(`${BASE}/ru${query}`)
+
+      expect(await meta(page, 'meta[property="og:title"]')).toBe(brand)
+      expect(await meta(page, 'meta[property="og:site_name"]')).toBe(brand)
+      expect(await meta(page, 'meta[property="og:locale"]')).toBe('ru_RU')
+      // Картинка абсолютная и локализованная (на ней вордмарк, а он разный на ru/en).
+      expect(await meta(page, 'meta[property="og:image"]')).toBe(`${host}/brand/${site}/og-ru.png`)
+      // Без summary_large_image картинка 1200×630 обрежется в маленький квадрат.
+      expect(await meta(page, 'meta[name="twitter:card"]')).toBe('summary_large_image')
+
+      // Иконки РАЗНЫЕ по сайту — корневой favicon.ico это бы не дал: он один на приложение.
+      await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+        'href',
+        `/brand/${site}/icon.svg`,
+      )
+      await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute(
+        'href',
+        `/brand/${site}/apple-icon.png`,
+      )
+    })
+  }
+
+  test('картинки OG реально отдаются (иначе карточка пустая)', async ({ request }) => {
+    for (const path of [
+      '/brand/sealife/og-ru.png',
+      '/brand/sealife/og-en.png',
+      '/brand/sealrescue/og-ru.png',
+      '/brand/sealrescue/icon.svg',
+      '/brand/sealrescue/apple-icon.png',
+    ]) {
+      const res = await request.get(`${BASE}${path}`)
+      expect(res.status(), path).toBe(200)
+    }
+  })
+
+  test('раздел ставит СВОЙ og:title, а не наследует брендовый', async ({ page }) => {
+    // Next мержит метаданные поверхностно: страница, задавшая только часть openGraph, потеряла бы
+    // картинку и siteName. Хелпер собирает объект целиком — проверяем, что и то, и другое на месте.
+    await page.goto(`${BASE}/en/articles`)
+    expect(await meta(page, 'meta[property="og:title"]')).toBe('Articles')
+    expect(await meta(page, 'meta[property="og:url"]')).toBe('https://sealife.info/en/articles')
+    expect(await meta(page, 'meta[property="og:image"]')).toContain('/brand/sealife/og-en.png')
+  })
+
+  test('главная несёт JSON-LD WebSite, и он валидный JSON', async ({ page }) => {
+    await page.goto(`${BASE}/ru`)
+    const raw = await page.locator('script[type="application/ld+json"]').first().textContent()
+    const data = JSON.parse(raw ?? '{}')
+    expect(data['@type']).toBe('WebSite')
+    expect(data.publisher?.['@type']).toBe('Organization')
+    expect(data.inLanguage).toBe('ru')
+  })
+
+  test('материал: og:type=article и JSON-LD Article с датой выхода', async ({ page }) => {
+    await page.goto(`${BASE}/en/${RUN}-pub`)
+    expect(await meta(page, 'meta[property="og:type"]')).toBe('article')
+
+    const raw = await page.locator('script[type="application/ld+json"]').first().textContent()
+    const data = JSON.parse(raw ?? '{}')
+    expect(data['@type']).toBe('Article')
+    expect(data.headline).toBeTruthy()
+    // Дата — та же, что видит читатель (CR-05), а не updatedAt.
+    expect(data.datePublished, 'datePublished').toBeTruthy()
+  })
+})
+
 test.describe('robots.txt (CR-09)', () => {
   for (const [site, host] of [
     ['sealife', 'https://sealife.info'],

@@ -223,7 +223,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     в `.env`, иначе спек пропускается).
   - `seo.e2e.spec.ts` — hreflang/canonical на контентных страницах ×2 локали (`ru`/`en`) + контракт
     `sitemap.xml` (published-only, прод-домены, x-default; разделы обоих сайтов, legal с `/de`,
-    мок-разделы исключены) и `robots.txt` (per-host Sitemap, QA-20/CR-09).
+    мок-разделы исключены), `robots.txt` (per-host Sitemap, QA-20/CR-09) и соцкарточка (CR-10):
+    OG/twitter, per-site иконки, отдача бренд-ассетов, JSON-LD `WebSite`/`Article`.
   - `legal.e2e.spec.ts` — legal-shell: 12 роутов ×200 (4 legal-страницы × `ru`/`en` + legal-only `de`),
     DE-заголовки (Impressum/…), draft-плашка, футер-ссылки на 6 типах страниц (QA-22).
   - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение

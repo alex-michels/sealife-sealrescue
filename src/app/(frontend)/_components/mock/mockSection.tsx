@@ -5,6 +5,7 @@ import { isSite, sites, type SiteId } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { getSection, type SectionDef } from '@/site/sections'
 import { resolvedSection } from '@/site/sectionContent'
+import { socialMetadata } from '@/site/social'
 import { SectionShell } from './SectionShell'
 import { StateSwitcher, parseState, type MockState } from './StateSwitcher'
 import { MockList, type SampleCardItem } from './MockList'
@@ -41,7 +42,15 @@ export async function sectionMetadata(params: RouteParams, slug: string): Promis
   const resolved = await resolvedSection(section, locale)
   return {
     title: resolved.title[locale],
+    description: resolved.intro[locale],
     alternates: buildAlternates(`/${slug}`, locale, sites[site]),
+    ...socialMetadata({
+      site,
+      locale,
+      title: resolved.title[locale],
+      description: resolved.intro[locale],
+      path: `/${slug}`,
+    }),
     ...noindexIfMock(section),
   }
 }
