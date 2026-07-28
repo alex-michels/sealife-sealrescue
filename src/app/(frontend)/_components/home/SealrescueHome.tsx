@@ -4,7 +4,8 @@ import { t } from '@/i18n/ui'
 import { Card } from '../ui/Card'
 import { EqualCardGrid } from '../ui/EqualCardGrid'
 import { buttonClasses } from '../ui/Button'
-import { sectionsForSite } from '@/site/sections'
+import type { ResolvedSection } from '@/site/sectionContent'
+import { Cover } from '../content/Cover'
 
 /**
  * Главная sealrescue — emergency decision-interface (DESIGN_BRIEF §5), серьёзный тон.
@@ -13,7 +14,18 @@ import { sectionsForSite } from '@/site/sections'
  */
 const STEP_KEYS = ['rescueStep1', 'rescueStep2', 'rescueStep3', 'rescueStep4'] as const
 
-export function SealrescueHome({ locale }: { locale: Locale }) {
+export function SealrescueHome({
+  locale,
+  sections,
+}: {
+  locale: Locale
+  /**
+   * CR-11: разделы приходят УЖЕ с admin-overrides (M1-T27). Раньше компонент читал
+   * `sectionsForSite()` напрямую, и правка интро в админке меняла страницу раздела, но не
+   * главную — без единого намёка почему. Главная sealife получала их правильно, sealrescue нет.
+   */
+  sections: ResolvedSection[]
+}) {
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
       {/* Герой = сценарий действий. Один акцентный CTA (--critical/buoy-dark). */}
@@ -37,10 +49,11 @@ export function SealrescueHome({ locale }: { locale: Locale }) {
       <section>
         <h2 className="mb-4 text-2xl">{{ ru: 'Разделы', en: 'Sections', de: 'Bereiche' }[locale]}</h2>
         <EqualCardGrid>
-          {sectionsForSite('sealrescue').map((s) => (
+          {sections.map((s) => (
             <li key={s.slug}>
               <Link href={`/${locale}/${s.slug}`} className="block h-full">
                 <Card className="h-full transition-transform hover:-translate-y-0.5">
+                  {s.cover && <Cover image={s.cover} className="-mx-6 -mt-6 mb-4" />}
                   <h3 className="text-xl">{s.label[locale]}</h3>
                   <p className="mt-2 text-muted">{s.intro[locale]}</p>
                 </Card>

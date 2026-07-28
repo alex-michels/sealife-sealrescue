@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import config from '@payload-config'
@@ -14,7 +15,13 @@ import { articleJsonLd } from '@/site/jsonLd'
 import { JsonLd } from '@/app/(frontend)/_components/JsonLd'
 import { ContentDetail } from '@/app/(frontend)/_components/content/ContentDetail'
 
-async function getDoc(locale: Locale, slug: string) {
+/**
+ * CR-13: `cache()` дедуплицирует вызов В ПРЕДЕЛАХ ОДНОГО рендера. Next дедуплицирует только
+ * `fetch`, а local API Payload — нет, поэтому каждая деталь и каждый раздел ходили в БД дважды:
+ * один раз в `generateMetadata`, второй в теле страницы. Это НЕ кэш между запросами — данные
+ * по-прежнему свежие на каждый запрос (SSR per-request), просто один запрос не спрашивает дважды.
+ */
+const getDoc = cache(async function getDoc(locale: Locale, slug: string) {
   const payload = await getPayload({ config })
   // CR-08: в предпросмотре отдаём и черновик. Гейт доступа — в /api/preview (там проверяется
   // сессия сотрудника), сюда draft-режим приходит уже подтверждённым cookie Next.
@@ -42,7 +49,7 @@ async function getDoc(locale: Locale, slug: string) {
     depth: 1,
   })
   return docs[0] ?? null
-}
+})
 
 /** В каких локалях документ реально существует — для честного hreflang (CR-01). */
 async function availableLocales(slug: string): Promise<Locale[]> {
