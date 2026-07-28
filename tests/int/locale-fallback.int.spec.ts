@@ -20,28 +20,35 @@ import { translatedWhere, localesWithContent } from '@/i18n/translated'
 
 const other = locales.find((l) => l !== defaultLocale)!
 
+/**
+ * Префикс прогона — как в остальных int-спеках (`qa14-`, `qa20-`, `cr05-`, `cr06-`): фикстуры не
+ * пересекаются между прогонами, а уборка идёт по нему (см. `afterAll`), а не по списку id.
+ *
+ * ⚠️ Это НЕ лечит одновременный запуск двух vitest-процессов против одной дев-БД. Там падает не
+ * spec, а сам boot: каждый `getPayload()` гоняет drizzle-push, и два push'а наперегонки роняют друг
+ * друга на DDL («constraint … does not exist») ещё до первого теста. Внутри одного прогона это
+ * закрыто `fileParallelism: false` в `vitest.config.mts`, между процессами закрыть нечем —
+ * параллельные прогоны против общей БД просто не поддерживаются. См. `docs/local-development.md`.
+ */
+const RUN = `cr01-${Date.now()}`
+
 describe('CR-01: locale fallback и гейт перевода', () => {
   let payload: Payload
-  const created: number[] = []
 
-  const mk = async (slug: string, locale: Locale, title: string) => {
-    const doc = await payload.create({
+  const mk = (slug: string, locale: Locale, title: string) =>
+    payload.create({
       collection: 'content',
       locale,
       data: { type: 'article', slug, title, _status: 'published' },
     })
-    created.push(doc.id as number)
-    return doc
-  }
 
   beforeAll(async () => {
     payload = await getPayload({ config })
   })
 
   afterAll(async () => {
-    for (const id of created) {
-      await payload.delete({ collection: 'content', id }).catch(() => {})
-    }
+    // По префиксу, а не по списку id: список теряется ровно тогда, когда тест падает на полпути.
+    await payload.delete({ collection: 'content', where: { slug: { like: RUN } } }).catch(() => {})
   })
 
   it('конфиг: глобальный fallback выключен (иначе утечка открывается сразу на всех чтениях)', () => {
@@ -49,7 +56,7 @@ describe('CR-01: locale fallback и гейт перевода', () => {
   })
 
   it('документ на одной локали НЕ виден в другой через гейт, и виден в своей', async () => {
-    const slug = 'cr01-source-only'
+    const slug = `${RUN}-source-only`
     await mk(slug, defaultLocale, 'Только исходная локаль')
 
     const gated = (locale: Locale) =>
@@ -68,7 +75,7 @@ describe('CR-01: locale fallback и гейт перевода', () => {
   it('без гейта fallbackLocale:false ВОЗВРАЩАЕТ документ с пустым title — опт-аута мало', async () => {
     // Ключевой замер: выключить фолбэк недостаточно, документ всё равно приходит в списки,
     // просто с пустым заголовком. Отсюда и нужен where-гейт, а не только opt-out.
-    const slug = 'cr01-optout-only'
+    const slug = `${RUN}-optout-only`
     await mk(slug, defaultLocale, 'Исходный заголовок')
 
     const { docs } = await payload.find({
@@ -93,7 +100,7 @@ describe('CR-01: locale fallback и гейт перевода', () => {
    * фиксируют, что оно не мешает.
    */
   it('целевую локаль нельзя записать без заголовка — валидация не даёт', async () => {
-    const slug = 'cr01-partial-target'
+    const slug = `${RUN}-partial-target`
     const doc = await mk(slug, defaultLocale, 'Исходный заголовок')
 
     await expect(
@@ -117,7 +124,7 @@ describe('CR-01: locale fallback и гейт перевода', () => {
   })
 
   it('пустой заголовок перевода тоже отклоняется валидацией', async () => {
-    const slug = 'cr01-empty-string'
+    const slug = `${RUN}-empty-string`
     const doc = await mk(slug, defaultLocale, 'Исходный заголовок')
     await payload.update({
       collection: 'content',
@@ -132,8 +139,8 @@ describe('CR-01: locale fallback и гейт перевода', () => {
   })
 
   it('localesWithContent отдаёт только локали с текстом — один источник для hreflang и sitemap', async () => {
-    const slugOne = 'cr01-avail-one'
-    const slugBoth = 'cr01-avail-both'
+    const slugOne = `${RUN}-avail-one`
+    const slugBoth = `${RUN}-avail-both`
     await mk(slugOne, defaultLocale, 'Только исходная')
     const both = await mk(slugBoth, defaultLocale, 'Исходная')
     await payload.update({
@@ -152,7 +159,7 @@ describe('CR-01: locale fallback и гейт перевода', () => {
   })
 
   it('переведённый документ виден в обеих локалях со своим текстом', async () => {
-    const slug = 'cr01-translated'
+    const slug = `${RUN}-translated`
     const doc = await mk(slug, defaultLocale, 'Исходный текст')
     await payload.update({
       collection: 'content',
