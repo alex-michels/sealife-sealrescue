@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { Media } from '@/payload-types'
@@ -38,8 +39,18 @@ export function applySectionOverride(
   return { ...def, title, intro, cover }
 }
 
-/** Строки overrides для локали (без locale-fallback'а — пустое поле остаётся пустым). */
-export async function fetchSectionOverrides(locale: Locale): Promise<SectionOverrideRow[]> {
+/**
+ * Строки overrides для локали (без locale-fallback'а — пустое поле остаётся пустым).
+ *
+ * CR-13: `cache()` дедуплицирует вызов В ПРЕДЕЛАХ ОДНОГО рендера. Next дедуплицирует только
+ * `fetch`, а local API Payload — нет, поэтому каждый секционный роут ходил за этим глобалом
+ * дважды: один раз в `generateMetadata`, второй в `requireSection`. Это НЕ кэш между запросами —
+ * данные по-прежнему свежие на каждый запрос (SSR per-request), просто один запрос не спрашивает
+ * об одном и том же дважды.
+ */
+export const fetchSectionOverrides = cache(async function fetchSectionOverrides(
+  locale: Locale,
+): Promise<SectionOverrideRow[]> {
   const payload = await getPayload({ config })
   const global = await payload.findGlobal({
     slug: 'section-content',
@@ -48,7 +59,7 @@ export async function fetchSectionOverrides(locale: Locale): Promise<SectionOver
     depth: 1,
   })
   return (global.overrides ?? []) as SectionOverrideRow[]
-}
+})
 
 /** Раздел из кода + overrides (H1/intro/cover) для текущей локали. */
 export async function resolvedSection(def: SectionDef, locale: Locale): Promise<ResolvedSection> {

@@ -39,13 +39,16 @@ export default async function HomePage({
   // M1-T16: издание целиком — на главной обоих сайтов.
   const siteJsonLd = <JsonLd data={websiteJsonLd(site, locale as Locale)} />
 
-  if (site === 'sealrescue')
+  if (site === 'sealrescue') {
+    // CR-11: тот же источник, что у sealife — разделы из кода + overrides из админки.
+    const rescueSections = await sectionCardsForSite('sealrescue', locale as Locale)
     return (
       <>
         {siteJsonLd}
-        <SealrescueHome locale={locale as Locale} />
+        <SealrescueHome locale={locale as Locale} sections={rescueSections} />
       </>
     )
+  }
 
   // sealife: hero/хаб отдаются сразу, лента Payload стримится в <Suspense>
   // (M0-T19: loading-граница только у ленты, страница целиком не soft-404-ится).
