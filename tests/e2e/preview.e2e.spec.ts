@@ -19,7 +19,16 @@ const SLUG = `${RUN}-draft`
 
 let payload: Payload
 
+/**
+ * Хуки, поднимающие Payload, живут дольше дефолтных 30 с: `getPayload()` тянет схему из БД
+ * (drizzle push), и это регулярно 20+ секунд. На дефолте хук падал по таймауту раз в несколько
+ * полных прогонов — и выглядело это как «флака в проверке canonical», хотя сам тест ни при чём.
+ * Int-спеки давно стоят на 120 с; e2e просто забыли.
+ */
+const BOOT_TIMEOUT = 120_000
+
 test.beforeAll(async () => {
+  test.setTimeout(BOOT_TIMEOUT)
   payload = await getPayload({ config: await config })
   await seedTestUser()
   await payload.create({
@@ -30,6 +39,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  test.setTimeout(BOOT_TIMEOUT)
   await payload.delete({ collection: 'content', where: { slug: { like: RUN } } }).catch(() => {})
   await cleanupTestUser()
   await payload.db.destroy?.()

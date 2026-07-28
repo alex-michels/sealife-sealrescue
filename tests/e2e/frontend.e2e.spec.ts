@@ -98,6 +98,17 @@ test.describe('Frontend', () => {
     expect(response?.status()).toBe(404)
   })
 
+  /**
+   * MOCK-04: раздел `/rescue-news` убран из навигации и из `sections.ts`. У sealrescue нет модели
+   * редакционных новостей (у `content` нет дискриминатора `site`, а `type: 'news'` занят разделом
+   * sealife), и раздел рендерил ОДНУ выдуманную запись в навигации аварийного сайта. Пустого
+   * раздела там быть не должно тем более — вернём вместе с реальной моделью в M2.
+   */
+  test('MOCK-04: rescue-news больше не существует', async ({ page }) => {
+    const response = await page.goto(`${BASE}/en/rescue-news?site=sealrescue`)
+    expect(response?.status()).toBe(404)
+  })
+
   test('unknown locale prefix ends in 404', async ({ page }) => {
     const response = await page.goto(`${BASE}/xx/articles`)
     expect(response?.status()).toBe(404)
