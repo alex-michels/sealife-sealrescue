@@ -10,9 +10,10 @@ import { ContentList } from '@/app/(frontend)/_components/content/ContentList'
 import {
   findContentByType,
   availableTopics,
-  filterByTopic,
   parseTopic,
 } from '@/app/(frontend)/_components/content/getContent'
+import { Pagination } from '@/app/(frontend)/_components/content/Pagination'
+import { parsePage } from '@/content/pagination'
 import { formatDate } from '@/i18n/date'
 
 const SLUG = 'news'
@@ -29,9 +30,16 @@ export default async function NewsPage({
   searchParams: SearchParams
 }) {
   const { locale, section } = await requireSection(params, SLUG)
-  const topic = parseTopic((await searchParams).topic)
-  const docs = await findContentByType('news', locale)
-  const items = filterByTopic(docs, topic).map((d) => ({
+  const sp = await searchParams
+  const topic = parseTopic(sp.topic)
+  const page = parsePage(sp.page)
+  // CR-07: страница списка читается страницей; фильтр по теме ушёл в запрос, а чипы тем считаются
+  // отдельно — иначе на второй странице набор тем менялся бы.
+  const [{ docs, totalPages }, topics] = await Promise.all([
+    findContentByType('news', locale, { page, topic }),
+    availableTopics('news', locale),
+  ])
+  const items = docs.map((d) => ({
     href: `/${locale}/${d.slug}`,
     title: d.title,
     excerpt: d.excerpt ?? undefined,
@@ -44,10 +52,17 @@ export default async function NewsPage({
       <TopicFilter
         locale={locale}
         basePath={`/${locale}/${SLUG}`}
-        available={availableTopics(docs)}
+        available={topics}
         active={topic}
       />
       <ContentList locale={locale} items={items} />
+      <Pagination
+        locale={locale}
+        basePath={`/${locale}/${SLUG}`}
+        page={page}
+        totalPages={totalPages}
+        params={{ topic }}
+      />
     </PageShell>
   )
 }

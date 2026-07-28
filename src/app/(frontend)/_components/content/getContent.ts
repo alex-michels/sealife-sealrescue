@@ -4,29 +4,74 @@ import type { Content } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
 import { isTopicSlug, topicSlugs, type TopicSlug } from '@/content/topics'
 import { translatedWhere } from '@/i18n/translated'
+import { PER_PAGE, pageCount } from '@/content/pagination'
 
-/** Опубликованный контент одного типа в активной локали, свежие сверху (M1-T01/T02). */
-export async function findContentByType(type: Content['type'], locale: Locale): Promise<Content[]> {
+export type Paged<T> = { docs: T[]; page: number; totalPages: number; totalDocs: number }
+
+/**
+ * Опубликованный контент одного типа в активной локали, свежие сверху (M1-T01/T02).
+ *
+ * **CR-07:** страница читается страницей, а не таблицей целиком. Фильтр по теме ушёл в запрос —
+ * раньше он применялся В ПАМЯТИ, после выборки всего; с пагинацией это давало бы полупустые
+ * страницы (отфильтровали 12 карточек текущей страницы вместо 12 подходящих из всех).
+ */
+export async function findContentByType(
+  type: Content['type'],
+  locale: Locale,
+  { page = 1, topic }: { page?: number; topic?: TopicSlug } = {},
+): Promise<Paged<Content>> {
   const payload = await getPayload({ config })
-  const { docs } = await payload.find({
+  const res = await payload.find({
     collection: 'content',
     locale,
     // CR-01: непереведённый документ не показываем в чужой локали (см. src/i18n/translated.ts).
     fallbackLocale: false,
     where: {
-      and: [{ type: { equals: type }, _status: { equals: 'published' } }, translatedWhere('title')],
+      and: [
+        { type: { equals: type }, _status: { equals: 'published' } },
+        ...(topic ? [{ topics: { contains: topic } }] : []),
+        translatedWhere('title'),
+      ],
     },
     // CR-05: сортируем по дате ВЫХОДА, а не по последней правке — иначе исправленная опечатка
     // поднимает старый материал на первое место.
     sort: '-publishedAt',
     depth: 1, // обложки (media.url) для карточек
-    pagination: false,
+    limit: PER_PAGE,
+    page,
   })
-  return docs
+  return {
+    docs: res.docs,
+    page: res.page ?? 1,
+    totalDocs: res.totalDocs,
+    totalPages: pageCount(res.totalDocs),
+  }
 }
 
-/** Темы, реально встречающиеся в наборе, в порядке таксономии (для бара фильтров). */
-export function availableTopics(docs: Content[]): TopicSlug[] {
+/**
+ * Темы, реально встречающиеся в разделе, в порядке таксономии (для бара фильтров).
+ *
+ * ⚠️ Отдельный запрос, а не выжимка из текущей страницы: иначе на второй странице чипы менялись бы,
+ * а тема, которой не оказалось в первых двенадцати карточках, просто исчезала бы из фильтра.
+ * Запрос лёгкий — `depth: 0` и только поле `topics`.
+ */
+export async function availableTopics(
+  type: Content['type'],
+  locale: Locale,
+): Promise<TopicSlug[]> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'content',
+    locale,
+    fallbackLocale: false,
+    where: {
+      and: [{ type: { equals: type }, _status: { equals: 'published' } }, translatedWhere('title')],
+    },
+    depth: 0,
+    pagination: false,
+    select: { topics: true },
+  })
+
   const present = new Set<string>()
   for (const d of docs) for (const slug of d.topics ?? []) present.add(slug)
   return topicSlugs.filter((slug) => present.has(slug))
@@ -36,10 +81,4 @@ export function availableTopics(docs: Content[]): TopicSlug[] {
 export function parseTopic(raw?: string | string[]): TopicSlug | undefined {
   const v = Array.isArray(raw) ? raw[0] : raw
   return v && isTopicSlug(v) ? v : undefined
-}
-
-/** Отфильтровать по теме (без темы — весь набор). */
-export function filterByTopic(docs: Content[], topic?: TopicSlug): Content[] {
-  if (!topic) return docs
-  return docs.filter((d) => d.topics?.includes(topic))
 }

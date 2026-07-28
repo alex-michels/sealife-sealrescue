@@ -4,18 +4,50 @@ import type { Species } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
 import { translatedWhere, localesWithContent } from '@/i18n/translated'
 import { isPreview } from '@/preview/state'
+import { PER_PAGE, pageCount } from '@/content/pagination'
+import type { Paged } from './getContent'
 
-/** Все опубликованные виды в активной локали, по алфавиту (M1-T03). */
-export async function findAllSpecies(locale: Locale): Promise<Species[]> {
+/** Опубликованные виды в активной локали, по алфавиту, страницами (M1-T03 + CR-07). */
+export async function findAllSpecies(locale: Locale, page = 1): Promise<Paged<Species>> {
   const payload = await getPayload({ config })
-  const { docs } = await payload.find({
+  const res = await payload.find({
     collection: 'species',
     locale,
     fallbackLocale: false, // CR-01
     where: { and: [{ _status: { equals: 'published' } }, translatedWhere('name')] },
     sort: 'name',
     depth: 1,
+    limit: PER_PAGE,
+    page,
+  })
+  return {
+    docs: res.docs,
+    page: res.page ?? 1,
+    totalDocs: res.totalDocs,
+    totalPages: pageCount(res.totalDocs),
+  }
+}
+
+/**
+ * Факты для «Факта дня» — отдельным лёгким запросом (CR-07).
+ * Раньше пул собирался из полного списка видов; после пагинации он бы схлопнулся до текущей
+ * страницы, и «факт дня» стал бы «фактом первой страницы».
+ */
+export type SpeciesFactsRow = Pick<Species, 'name' | 'slug'> & {
+  facts?: Species['facts']
+}
+
+export async function allSpeciesFacts(locale: Locale): Promise<SpeciesFactsRow[]> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'species',
+    locale,
+    fallbackLocale: false,
+    where: { and: [{ _status: { equals: 'published' } }, translatedWhere('name')] },
+    sort: 'name',
+    depth: 0,
     pagination: false,
+    select: { name: true, slug: true, facts: true },
   })
   return docs
 }
