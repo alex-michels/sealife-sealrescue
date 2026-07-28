@@ -25,7 +25,7 @@ Payload: поля с `localized: true` хранят значение по лок
 НЕ через Payload-локализацию); `crossLink.rescueCenter` (relationship → `rescue-centers` — механизм
 перелинковки sealife↔sealrescue, см. CLAUDE.md); `seo.metaTitle`/`seo.metaDescription` (локализованные);
 **`publishedAt`** (date, `index: true`, НЕ локализовано — CR-05: дата выхода материала; ставится хуком `stampPublishedAt` при первой публикации и не двигается, ручное значение не перетирается; по нему сортируются лента главной, списки и порядок в sitemap, тогда как `lastmod` остаётся `updatedAt`), `aiGenerated` (checkbox, **устаревший** — не различает язык; заменён группой `provenance`), **`provenance`** (группа из `src/fields/provenance.ts`: локализованные `aiAssisted`/`aiTranslated`/`aiChecked`/`humanReviewed`/`reviewedBy`/`reviewedAt` + нелокализованные `sourceVerified`/`lastAgentCheckedAt`/`lastHumanVerifiedAt`; поля «человек проверил» закрыты `isEditorField`), **`sources`** (→`sources`, BIO-14); `localeStatus[]` (`locale`/`status`/`sourceHash`/`translatedAt` —
-заполняется хуком `markTranslationsStale`, см. [agents.md](agents.md)). Drafts включены. **Доступ:**
+заполняется хуком `trackTranslationStatus`, см. [agents.md](agents.md)), **`translationStatus`** (select `current`/`stale`/`review`/`missing`, `index: true`, CR-15 — сводка по переводам для колонки и фильтра в списке админки; без `defaultValue`, поэтому документы старше CR-15 показывают пусто, пока их не сохранят). Drafts включены. **Доступ:**
 read `readPublishedOrStaff` (публично — только `published`, staff видит черновики), create
 `canCreateContent` (вкл. агентов → черновик), update `canUpdateContent` (admin/editor/**translator**/agent),
 **delete `isEditor`** (агент удалять не может).
@@ -35,7 +35,7 @@ read `readPublishedOrStaff` (публично — только `published`, staf
 canonical), `latin` (**не** локализуется — научное имя одинаково), `conservationStatus` (select IUCN:
 `LC`/`NT`/`VU`/`EN`/`CR`/`DD`), `region`/`size` (локализованные), `excerpt`/`body` (локализованные),
 `facts[]` (локализованный array, используется и в «Факте дня»), `coverImage`, `aiGenerated` (устаревший), **`provenance`** и **`sources`** (как у `content`), **`conservationAssessment`** (группа из `src/fields/conservation.ts`: `scope` вид/подвид/субпопуляция/региональная, `assessedEntity`, `assessmentYear`, `sourceUrl`, `listingSystem`) — без неё «VU у подвида» неотличимо от «LC у вида», и агент не может перепроверить статус (BIO-13).
-Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`markTranslationsStale` сюда НЕ подключён**
+Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`trackTranslationStatus` сюда НЕ подключён**
 (в отличие от `content`) — integrity перевода для видов пока не трекается автоматически (M1-T08).
 
 ### `quizzes` — квизы

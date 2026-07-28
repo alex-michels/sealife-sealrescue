@@ -358,12 +358,16 @@ export interface Content {
    */
   sources?: (number | Source)[] | null;
   /**
-   * Integrity перевода (Агент 3). Заполняется автоматически.
+   * Состояние перевода. По этому полю фильтруется список: что осталось перевести.
+   */
+  translationStatus?: ('current' | 'stale' | 'review' | 'missing') | null;
+  /**
+   * Актуальность перевода по локалям (CR-15). Заполняется автоматически: sourceHash — версия исходника, от которой сделан перевод. Устаревший перевод со страницы не убирается, это пометка для редактора.
    */
   localeStatus?:
     | {
         locale?: string | null;
-        status?: ('current' | 'stale' | 'review') | null;
+        status?: ('current' | 'stale' | 'review' | 'missing') | null;
         sourceHash?: string | null;
         translatedAt?: string | null;
         id?: string | null;
@@ -1110,6 +1114,7 @@ export interface ContentSelect<T extends boolean = true> {
         lastHumanVerifiedAt?: T;
       };
   sources?: T;
+  translationStatus?: T;
   localeStatus?:
     | T
     | {
@@ -1456,7 +1461,6 @@ export interface SectionContent {
           | 'species'
           | 'what-to-do'
           | 'rescue-centers'
-          | 'rescue-news'
           | 'report'
           | 'rescue-quest';
         /**

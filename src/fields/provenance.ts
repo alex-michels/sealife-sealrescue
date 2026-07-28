@@ -19,12 +19,12 @@ import type { Field } from 'payload'
  *
  * ## Чего здесь намеренно НЕТ: `sourceContentHash`
  * EU-11 перечисляет его, но заводить отдельное поле — значит завести ВТОРОЙ механизм рядом с уже
- * работающим: хук `markTranslationsStale` (`src/hooks/contentHooks.ts`) считает sha256 исходной
+ * работающим: хук `trackTranslationStatus` (`src/hooks/contentHooks.ts`) считает sha256 исходной
  * локали и хранит его в `localeStatus[].sourceHash`. Две копии одного хэша неизбежно разъедутся
  * (тот же класс проблемы, что дублирование списков слов между `alias.js` и `leaderboard.ts`).
  * Поэтому источником правды остаётся `localeStatus[].sourceHash`.
  * ⚠️ Следствие: у коллекций без `localeStatus` (`species`, `quizzes`) хэша исходника сегодня нет
- * вообще — расширение `markTranslationsStale` на них остаётся в M1-T08.
+ * вообще — расширение `trackTranslationStatus` на них остаётся в M1-T08.
  *
  * Поля заполняются человеком в админке и агентом (M2-T09); `agent` физически не может выставить
  * `humanReviewed` — ему закрыт доступ на уровне поля (`isEditorField`).

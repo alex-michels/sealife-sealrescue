@@ -167,7 +167,9 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   открытого редиректа), **типы контента** (`content-types.unit.spec.ts` — CR-06: что попадает в ленту
   главной и есть ли у типа локализованная подпись), **дата публикации** (`published-at.unit.spec.ts` — CR-05: когда ставится штамп
   и когда его нельзя двигать), **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет
-  права перезаписать запись), **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
+  права перезаписать запись), **актуальность перевода** (`locale-status.unit.spec.ts` — CR-15: хэш
+  исходника, покрытие поле-в-поле, переходы `missing`/`stale`/`review`/`current`),
+  **provenance-шкала** (`ai-badge.unit.spec.ts` — какие метки увидит читатель,
   EU-11), **биология сида** (`seed-biology.unit.spec.ts` — коды IUCN и факты, трек BIO),
   **sim-golden** (детерминизм ядра игры; обновление — `UPDATE_GOLDEN=1`, QA-30) и
   **fairness** (пороги честности по профилям экранов, QA-31). Coverage-гейт: пороги в
@@ -193,7 +195,7 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   способ обойти, для одиночной машины смысла нет.
   Состав: `access-matrix.int.spec.ts` — вся access-матрица из `data-model.md` (QA-13, 110
   тестов, включая инварианты №1–2 и `forceAgentDrafts`); `leaderboard.int.spec.ts` — контракт
-  лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `markTranslationsStale`
+  лидерборда, все ветки анти-чита (QA-15); `content-hooks.int.spec.ts` — `trackTranslationStatus`
   на живом Payload (QA-14); `seeds.int.spec.ts` — идемпотентность сидов + инварианты локалей
   (QA-18); `feed-types.int.spec.ts` — CR-06: лента не отдаёт служебные страницы (и фиксирует, что
   без фильтра отдавала бы); `published-at.int.spec.ts` — CR-05 на живом Payload: публикация ставит дату, правка её

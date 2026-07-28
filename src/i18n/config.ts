@@ -21,7 +21,7 @@ export type Locale = (typeof locales)[number]
  * англоязычные, и агенты-факт-чекеры (инвариант №8) проверяют факты по ним же. Писать исходник
  * на языке источников — значит не терять точность на двойном переводе.
  *
- * Используется Payload (`localization.defaultLocale`) и хуком `markTranslationsStale`, который
+ * Используется Payload (`localization.defaultLocale`) и хуком `trackTranslationStatus`, который
  * отсюда же берёт, изменение КАКОЙ локали делает переводы устаревшими.
  *
  * ⚠️ Порядок `locales` менять НЕ надо: из него выводится порядок членов union в

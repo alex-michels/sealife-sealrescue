@@ -31,8 +31,8 @@ export const Species: CollectionConfig = {
     delete: isEditor, // агент удалять не может
   },
   hooks: {
-    // Только human-in-the-loop (агент → черновик). Трекинг integrity перевода
-    // (localeStatus, как в Content) подключим вместе с провенансом в M1-T08/EU-11.
+    // Только human-in-the-loop (агент → черновик). Трекинг актуальности перевода
+    // (localeStatus/translationStatus, как в Content — CR-15) подключим в M1-T08/EU-11.
     beforeChange: [forceAgentDrafts],
   },
   fields: [
