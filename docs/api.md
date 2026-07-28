@@ -93,10 +93,22 @@ Payload генерирует REST и GraphQL из коллекций (catch-all 
 `GET /sitemap.xml` (`src/app/sitemap.xml/route.ts`) — не Payload-endpoint и не авто-REST; отдельный Next
 route handler, который сам делает неаутентифицированные `payload.find()` по `content`/`species`
 (только `published`, только для `site.id === 'sealife'`) и строит URL по **контент-локалям** (`ru`/`en`)
-с hreflang и `x-default` по хосту запроса (`resolveSiteId`). Legal-страницы — и, соответственно,
-legal-only локаль `/de` — в карту сайта не попадают. ⚠️ `rescue-centers` пока сознательно исключён
-(см. комментарий в файле: «появится в M2») — sitemap НЕ покрывает sealrescue. `robots.txt`-роута
-в проекте пока нет вообще.
+с hreflang и `x-default` по хосту запроса (`resolveSiteId`).
+
+**Состав после CR-09:** главная + разделы сайта (из `sections.ts`) + legal-страницы + детали
+`content`/`species`/`games` для sealife. Legal — единственные, что подаются ещё и на `/de`
+(немецкие Impressum/Datenschutz реально отдаются), у остальных hreflang остаётся `ru`/`en`.
+Оба сайта теперь покрыты: у sealrescue в карте `/what-to-do`, `/report`, `/rescue-quest` и legal.
+
+⚠️ **Разделы на выдуманных данных не подаются вовсе** (`mockBacked` в `sections.ts`:
+`rescue-centers`, `quizzes`) и вдобавок помечены `noindex, nofollow`. Исключить их только из
+карты недостаточно: списочная страница ссылается на свои детали, и краулер дошёл бы туда в один
+шаг. Для каталога центров это инвариант №7 — карточки несут выдуманные телефоны и «штамп проверки».
+Флаг снимается вместе с переездом раздела на Payload (M2-T02, M1-T10).
+
+`robots.txt` — тоже динамический route handler (`src/app/robots.txt/route.ts`): per-host, указывает
+на карту своего домена, закрывает `/admin` и `/api/`, но разрешает `/api/media/` (медиа отдаётся
+приложением и должно индексироваться).
 
 ## 4. Route guards (фронтенд)
 
