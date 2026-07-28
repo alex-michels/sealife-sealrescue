@@ -72,8 +72,9 @@ src/
 | --- | --- |
 | Агент не публикует/не удаляет (human-in-the-loop) | access control коллекций + хук `forceAgentDrafts` |
 | Агент пишет только в `agent-proposals` | access (`update: isEditor` на статусе) + коллекция-очередь |
-| Исходная локаль `ru`, перевод заранее | `i18n/config.ts` + `markTranslationsStale` + localized-поля |
+| Исходная локаль `en`, перевод заранее (CR-14) | `i18n/config.ts` (`defaultLocale`/`targetLocales`) + `markTranslationsStale` + localized-поля |
 | Контент-локали — только `ru`/`en`; `de` — legal-only | `i18n/config.ts` (`locales` vs `legalOnlyLocales`/`routeLocales`): страницы контента валидируют `isLocale`, legal-страницы — `isRouteLocale` |
+| Черновик виден только сотруднику | draft-режим включает `/api/preview` после проверки сессии Payload (роли staff); детальные роуты читают `draft: true` только в этом режиме, списки/лента/sitemap — всегда published-only (CR-08) |
 | Непереведённый документ не отдаётся под чужой локалью | `localization.fallback: false` + гейт `translatedWhere()` (`i18n/translated.ts`) во всех публичных чтениях; деталь → 404, hreflang и sitemap считают доступность `localesWithContent()` |
 | Email с публичных пользователей не собираем | схема коллекций (нет email-полей в UGC; только `contactHandle`) |
 | Лидерборд анонимный (без PII) | `game-scores`: хэш `playerKey`, без IP/email/аккаунтов |

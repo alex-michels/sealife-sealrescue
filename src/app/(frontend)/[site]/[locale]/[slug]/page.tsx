@@ -7,20 +7,30 @@ import { isLocale, type Locale } from '@/i18n/config'
 import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { translatedWhere, localesWithContent } from '@/i18n/translated'
+import { isPreview } from '@/preview/state'
 import { ContentDetail } from '@/app/(frontend)/_components/content/ContentDetail'
 
 async function getDoc(locale: Locale, slug: string) {
   const payload = await getPayload({ config })
+  // CR-08: в предпросмотре отдаём и черновик. Гейт доступа — в /api/preview (там проверяется
+  // сессия сотрудника), сюда draft-режим приходит уже подтверждённым cookie Next.
+  const preview = await isPreview()
   const { docs } = await payload.find({
     collection: 'content',
     locale,
+    draft: preview,
     // CR-01: без перевода документа в этой локали НЕ существует — 404, а не исходный язык
     // под чужим `<html lang>`. Рендер «с пометкой» здесь неверен: страница осталась бы
     // индексируемой и повторила бы ровно то нарушение инварианта №3, которое мы убираем.
     fallbackLocale: false,
     where: {
       and: [
-        { slug: { equals: slug }, _status: { equals: 'published' } },
+        // В предпросмотре статус не фильтруем — иначе черновик, ради которого всё и затевалось,
+        // не найдётся. Гейт перевода (CR-01) остаётся: показывать русскую страницу английским
+        // текстом неверно и в предпросмотре тоже.
+        preview
+          ? { slug: { equals: slug } }
+          : { slug: { equals: slug }, _status: { equals: 'published' } },
         translatedWhere('title'),
       ],
     },

@@ -6,6 +6,7 @@ import { siteIds, isSite, sites } from '@/site/config'
 import { fontDisplay, fontBody, fontMono } from '@/app/(frontend)/fonts'
 import { SiteHeader } from '@/app/(frontend)/_components/SiteHeader'
 import { SiteFooter } from '@/app/(frontend)/_components/SiteFooter'
+import { PreviewBanner } from '@/app/(frontend)/_components/PreviewBanner'
 import { Analytics } from '@/app/(frontend)/_components/consent/Analytics'
 import { ConsentBanner } from '@/app/(frontend)/_components/consent/ConsentBanner'
 import '@/app/(frontend)/globals.css'
@@ -50,6 +51,8 @@ export default async function SiteLocaleLayout({
   return (
     <html lang={locale} data-site={sites[site].id} className={fontVars}>
       <body>
+        {/* CR-08: виден только в draft-режиме, иначе не рендерится вовсе. */}
+        <PreviewBanner locale={locale} />
         <SiteHeader site={sites[site].id} lang={locale} />
         <main>{children}</main>
         <SiteFooter lang={locale} />
