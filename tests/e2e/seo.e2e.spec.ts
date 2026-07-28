@@ -60,7 +60,12 @@ test.beforeAll(async () => {
   await payload.create({
     collection: 'content',
     locale: 'ru',
-    data: { type: 'article', title: `${RUN} только ru`, slug: `${RUN}-onelocale`, _status: 'published' },
+    data: {
+      type: 'article',
+      title: `${RUN} только ru`,
+      slug: `${RUN}-onelocale`,
+      _status: 'published',
+    },
   })
 })
 
@@ -204,18 +209,71 @@ test.describe('sitemap.xml', () => {
     expect(xml).not.toContain(
       `<xhtml:link rel="alternate" hreflang="en" href="https://sealife.info/en/${RUN}-onelocale" />`,
     )
-    // Карта — по контент-локалям: legal-страниц (и /de вместе с ними) в ней нет вообще.
-    expect(xml).not.toContain('sealife.info/de')
-    expect(xml).not.toContain('/legal-notice')
+    // CR-09: разделы сайта тоже подаются — раньше в карте не было ни одного.
+    for (const section of ['articles', 'news', 'memes', 'games', 'species']) {
+      expect(xml, `раздел ${section}`).toContain(`<loc>https://sealife.info/en/${section}</loc>`)
+    }
+    // ...кроме разделов на выдуманных данных: quizzes рендерится из `sampleQuizzes`.
+    expect(xml, 'мок-раздел в карте не нужен').not.toContain(
+      '<loc>https://sealife.info/en/quizzes</loc>',
+    )
+    // Legal — единственные страницы, живущие ещё и на /de (§5 DDG / §18 MStV).
+    expect(xml).toContain('<loc>https://sealife.info/de/legal-notice</loc>')
+    expect(xml).toContain('<loc>https://sealife.info/ru/privacy</loc>')
+    // ...но /de существует ТОЛЬКО у legal: контентной страницы под ним быть не может.
+    expect(xml).not.toContain(`https://sealife.info/de/${RUN}-pub`)
+    expect(xml).not.toContain('<loc>https://sealife.info/de/articles</loc>')
   })
 
-  test('sealrescue: только главная, свой домен, без sealife-контента (до M2)', async ({
-    request,
-  }) => {
+  test('sealrescue: свои разделы и legal, без sealife-контента', async ({ request }) => {
     const res = await request.get(`${BASE}/sitemap.xml?site=sealrescue`)
     const xml = await res.text()
+
     expect(xml).toContain('<loc>https://sealrescue.info/ru</loc>')
+
+    // CR-09: главное приобретение — /what-to-do теперь подаётся. Ради него второй сайт и есть,
+    // а раньше в карте sealrescue была буквально одна главная.
+    for (const locale of LOCALES) {
+      expect(xml, `what-to-do (${locale})`).toContain(
+        `<loc>https://sealrescue.info/${locale}/what-to-do</loc>`,
+      )
+    }
+    expect(xml).toContain('<loc>https://sealrescue.info/de/legal-notice</loc>')
+
+    // ⚠️ Каталог центров НЕ подаётся вовсе — ни список, ни детали. До M2-T02 он рендерит
+    // выдуманные центры с рабочими на вид телефонами и «штампом проверки»: позвать туда краулер
+    // значит нарушить инвариант №7 на аварийном пути. Одного исключения деталей было бы мало —
+    // списочная страница на них ссылается, и краулер дошёл бы в один шаг.
+    expect(xml, 'мок-каталог центров не подаём').not.toContain('rescue-centers')
+
+    // Раздела rescue-news больше нет (MOCK-04).
+    expect(xml).not.toContain('rescue-news')
+    // Чужой домен и чужой контент — по-прежнему нет.
     expect(xml).not.toContain('sealife.info')
     expect(xml).not.toContain(`${RUN}-pub`)
   })
+})
+
+test.describe('robots.txt (CR-09)', () => {
+  for (const [site, host] of [
+    ['sealife', 'https://sealife.info'],
+    ['sealrescue', 'https://sealrescue.info'],
+  ] as const) {
+    test(`${site}: указывает на карту СВОЕГО домена`, async ({ request }) => {
+      const res = await request.get(`${BASE}/robots.txt?site=${site}`)
+      expect(res.status()).toBe(200)
+      expect(res.headers()['content-type']).toContain('text/plain')
+
+      const txt = await res.text()
+      expect(txt).toContain(`Sitemap: ${host}/sitemap.xml`)
+      expect(txt).toContain('Disallow: /admin')
+      // Медиа отдаётся приложением и индексировать его нужно. Проверяем НАЛИЧИЕ правила, а не
+      // порядок строк: побеждает более длинное совпадение (RFC 9309), порядок не значит ничего —
+      // тест на порядок закреплял бы несуществующее требование.
+      expect(txt).toContain('Allow: /api/media/')
+      expect(txt).toContain('Disallow: /api/')
+      // styleguide НЕ запрещаем: у него noindex, а запрет обхода помешал бы краулеру это увидеть.
+      expect(txt).not.toContain('styleguide')
+    })
+  }
 })

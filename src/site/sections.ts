@@ -19,6 +19,19 @@ export interface SectionDef {
   label: Record<Locale, string> // короткая подпись для nav
   title: Record<Locale, string> // H1 страницы
   intro: Record<Locale, string> // лид-абзац
+  /**
+   * Раздел ещё рендерится из ВЫДУМАННЫХ данных (`@/mock/sample`), а не из Payload.
+   *
+   * Такой раздел **не подаётся в sitemap и помечается `noindex`** — и то, и другое обязательно:
+   * убрать из карты мало, потому что списочная страница ссылается на свои детали, и краулер
+   * дойдёт до них в один шаг с любого другого места. Для `rescue-centers` это прямое нарушение
+   * инварианта №7: карточки несут выдуманные телефоны, `tel:`-ссылки и «штамп проверки», то есть
+   * выдают непроверенные контакты за verified — на аварийном пути.
+   *
+   * Флаг снимается вместе с переездом раздела на реальные данные (rescue-centers → M2-T02,
+   * quizzes → M1-T10).
+   */
+  mockBacked?: true
 }
 
 export const sectionDefs: SectionDef[] = [
@@ -62,6 +75,7 @@ export const sectionDefs: SectionDef[] = [
   {
     slug: 'quizzes',
     site: 'sealife',
+    mockBacked: true,
     nav: true,
     hasDetail: true,
     label: { ru: 'Квизы', en: 'Quizzes' },
@@ -115,6 +129,7 @@ export const sectionDefs: SectionDef[] = [
   {
     slug: 'rescue-centers',
     site: 'sealrescue',
+    mockBacked: true,
     nav: true,
     hasDetail: true,
     label: { ru: 'Центры', en: 'Centers' },

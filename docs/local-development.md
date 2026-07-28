@@ -222,7 +222,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
     заданном `NEXT_PUBLIC_PLAUSIBLE_SRC` (CI ставит фиктивный `.test`-URL; локально — по желанию
     в `.env`, иначе спек пропускается).
   - `seo.e2e.spec.ts` — hreflang/canonical на контентных страницах ×2 локали (`ru`/`en`) + контракт
-    `sitemap.xml` (published-only, прод-домены, x-default; sealrescue — только главная до M2) (QA-20).
+    `sitemap.xml` (published-only, прод-домены, x-default; разделы обоих сайтов, legal с `/de`,
+    мок-разделы исключены) и `robots.txt` (per-host Sitemap, QA-20/CR-09).
   - `legal.e2e.spec.ts` — legal-shell: 12 роутов ×200 (4 legal-страницы × `ru`/`en` + legal-only `de`),
     DE-заголовки (Impressum/…), draft-плашка, футер-ссылки на 6 типах страниц (QA-22).
   - `language-switcher.e2e.spec.ts` — aria-контракт свитчера, закрытие (Esc/вне/Tab), сохранение

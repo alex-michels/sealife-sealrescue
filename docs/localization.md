@@ -211,9 +211,10 @@ e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
 - `app/sitemap.xml/route.ts` отдаёт карту по **контент-локалям** (`locales` = ru/en) с hreflang/x-default
   — и только для тех локалей, в которых документ переведён (CR-01), считая доступность тем же
   `localesWithContent()`, что и hreflang страницы;
-  но **пока только для `content`+`species` на sealife**; `rescue-centers` сознательно исключён до M2
-  (см. [api.md](api.md)). Legal-страницы (и, соответственно, `/de`) в sitemap не попадают вообще.
-  `robots.txt` не реализован.
+  и включает разделы обоих сайтов, legal-страницы и детали `content`/`species`/`games` (CR-09,
+  состав — в [api.md](api.md)). Legal — единственные страницы в карте, у которых есть `/de`.
+  ⚠️ Разделы на выдуманных данных (`mockBacked`: `rescue-centers`, `quizzes`) не подаются и несут
+  `noindex`. `robots.txt` реализован тем же способом, что и карта, — per-host route handler.
 - ⚠️ **Статическая генерация — пока не факт, а цель.** Только layout-шелл `[site]/[locale]/layout.tsx`
   использует `generateStaticParams` (перечисляет site×routeLocale). Все страницы с данными (articles, memes,
   species, `[slug]`, rescue-centers, quizzes, games, главная) — динамические server components: каждый

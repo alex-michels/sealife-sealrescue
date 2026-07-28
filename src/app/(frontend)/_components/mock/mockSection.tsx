@@ -42,7 +42,19 @@ export async function sectionMetadata(params: RouteParams, slug: string): Promis
   return {
     title: resolved.title[locale],
     alternates: buildAlternates(`/${slug}`, locale, sites[site]),
+    ...noindexIfMock(section),
   }
+}
+
+/**
+ * CR-09: раздел на выдуманных данных не должен попадать в индекс.
+ *
+ * Из карты сайта его недостаточно просто убрать: списочная страница ссылается на свои детали, и
+ * краулер дойдёт до них в один шаг с любой другой страницы. Поэтому машиночитаемый `noindex` —
+ * на самих страницах. `MockBanner` для этого не годится: это проза, а не сигнал.
+ */
+function noindexIfMock(section: SectionDef): Pick<Metadata, 'robots'> {
+  return section.mockBacked ? { robots: { index: false, follow: false } } : {}
 }
 
 /** Guard детальной /[slug] страницы: те же проверки сайта/раздела + возвращает slug. */
@@ -69,7 +81,12 @@ export async function detailMetadata(
   if (!getSection(site, sectionSlug)) return {}
   const title = resolveTitle(locale, slug)
   if (!title) return {}
-  return { title, alternates: buildAlternates(`/${sectionSlug}/${slug}`, locale, sites[site]) }
+  const section = getSection(site, sectionSlug)
+  return {
+    title,
+    alternates: buildAlternates(`/${sectionSlug}/${slug}`, locale, sites[site]),
+    ...(section ? noindexIfMock(section) : {}),
+  }
 }
 
 /** Общий рендер списочной mock-страницы: shell + демо-переключатель состояний + список. */
