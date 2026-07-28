@@ -9,6 +9,9 @@ import { buildAlternates } from '@/i18n/alternates'
 import { translatedWhere, localesWithContent } from '@/i18n/translated'
 import { isPreview } from '@/preview/state'
 import { contentSite } from '@/content/contentTypes'
+import { socialMetadata } from '@/site/social'
+import { articleJsonLd } from '@/site/jsonLd'
+import { JsonLd } from '@/app/(frontend)/_components/JsonLd'
 import { ContentDetail } from '@/app/(frontend)/_components/content/ContentDetail'
 
 async function getDoc(locale: Locale, slug: string) {
@@ -62,9 +65,14 @@ export async function generateMetadata({
   const doc = await getDoc(locale, slug)
   if (!doc) return {}
 
+  const title = doc.seo?.metaTitle || doc.title
+  const description = doc.seo?.metaDescription || doc.excerpt || undefined
   return {
-    title: doc.seo?.metaTitle || doc.title,
-    description: doc.seo?.metaDescription || doc.excerpt || undefined,
+    title,
+    description,
+    // CR-10: у материала своя карточка в соцсетях. `article` — потому что это и есть статья;
+    // соцсети показывают её иначе, чем обычную страницу.
+    ...socialMetadata({ site, locale, title, description, path: `/${slug}`, type: 'article' }),
     // hreflang перечисляет только те локали, где документ реально есть (CR-01): рекламировать
     // альтернативу, которая отдаёт 404, хуже, чем не рекламировать ничего.
     alternates: buildAlternates(`/${slug}`, locale, sites[site], await availableLocales(slug)),
@@ -85,5 +93,22 @@ export default async function ContentPage({
   const doc = await getDoc(locale, slug)
   if (!doc) notFound()
 
-  return <ContentDetail doc={doc} locale={locale} />
+  return (
+    <>
+      {/* M1-T16: разметка совпадает с видимой страницей — дата та же, что в шапке (CR-05). */}
+      <JsonLd
+        data={articleJsonLd({
+          site,
+          locale,
+          title: doc.title,
+          description: doc.excerpt,
+          path: `/${slug}`,
+          publishedAt: doc.publishedAt,
+          updatedAt: doc.updatedAt,
+          isNews: doc.type === 'news',
+        })}
+      />
+      <ContentDetail doc={doc} locale={locale} />
+    </>
+  )
 }

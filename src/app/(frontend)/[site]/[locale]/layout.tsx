@@ -6,6 +6,7 @@ import { siteIds, isSite, sites } from '@/site/config'
 import { fontDisplay, fontBody, fontMono } from '@/app/(frontend)/fonts'
 import { SiteHeader } from '@/app/(frontend)/_components/SiteHeader'
 import { SiteFooter } from '@/app/(frontend)/_components/SiteFooter'
+import { metadataBaseFor, iconsFor, socialMetadata } from '@/site/social'
 import { PreviewBanner } from '@/app/(frontend)/_components/PreviewBanner'
 import { Analytics } from '@/app/(frontend)/_components/consent/Analytics'
 import { ConsentBanner } from '@/app/(frontend)/_components/consent/ConsentBanner'
@@ -28,8 +29,18 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { site, locale } = await params
   if (!isSite(site) || !isRouteLocale(locale)) return {}
-  const brand = sites[site].brand[chromeLocale(locale)]
-  return { title: { default: brand, template: `%s · ${brand}` } }
+  const chrome = chromeLocale(locale)
+  const brand = sites[site].brand[chrome]
+  return {
+    title: { default: brand, template: `%s · ${brand}` },
+    // CR-10: база для относительных URL в метаданных + иконки (у двух сайтов они РАЗНЫЕ,
+    // поэтому файловый favicon.ico в корне не подошёл бы — он один на приложение).
+    metadataBase: metadataBaseFor(site),
+    icons: iconsFor(site),
+    // Дефолт сайта. Страницы, которым есть что сказать точнее, зовут socialMetadata() сами —
+    // и обязаны отдать ПОЛНЫЙ openGraph, потому что Next замещает его, а не дополняет.
+    ...socialMetadata({ site, locale, title: brand, path: '' }),
+  }
 }
 
 export default async function SiteLocaleLayout({
