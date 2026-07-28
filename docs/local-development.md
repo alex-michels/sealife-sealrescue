@@ -162,7 +162,8 @@ npm run test:e2e      # затронутые спеки, если менял e2e
 - **Unit** — Vitest project `unit` (`tests/unit/*.unit.spec.ts`, node-env, без БД): access-матрица
   ролей, `resolveSiteId`/`pickLocale`/proxy-контракт, инварианты локалей, `t()`/`buildAlternates`,
   alias-контракт server↔client, season-математика, `factOfDay`, sections/legal/`formatDate`,
-  хуки контента, **пути предпросмотра** (`preview-paths.unit.spec.ts` — CR-08, в т.ч. защита от
+  хуки контента, **пагинация** (`pagination.unit.spec.ts` — CR-07: разбор `?page`, окно номеров,
+  сохранение прочих параметров), **пути предпросмотра** (`preview-paths.unit.spec.ts` — CR-08, в т.ч. защита от
   открытого редиректа), **типы контента** (`content-types.unit.spec.ts` — CR-06: что попадает в ленту
   главной и есть ли у типа локализованная подпись), **дата публикации** (`published-at.unit.spec.ts` — CR-05: когда ставится штамп
   и когда его нельзя двигать), **владение сида** (`seed-ownership.unit.spec.ts` — CR-03, когда сид НЕ имеет

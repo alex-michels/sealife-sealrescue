@@ -3,6 +3,8 @@ import config from '@payload-config'
 import type { Game, Media } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
 import { translatedWhere, localesWithContent } from '@/i18n/translated'
+import { PER_PAGE, pageCount } from '@/content/pagination'
+import type { Paged } from './getContent'
 
 /**
  * Обложка КАРТОЧКИ игры: загруженная картинка, если она есть И не скрыта тумблером
@@ -14,19 +16,25 @@ export function cardCover(game: Pick<Game, 'coverImage' | 'showCardCover'>): Med
   return game.coverImage && typeof game.coverImage === 'object' ? game.coverImage : null
 }
 
-/** Все опубликованные мини-игры в активной локали, в заданном порядке (order ↑). */
-export async function findAllGames(locale: Locale): Promise<Game[]> {
+/** Опубликованные мини-игры в активной локали, в заданном порядке (order ↑), страницами. */
+export async function findAllGames(locale: Locale, page = 1): Promise<Paged<Game>> {
   const payload = await getPayload({ config })
-  const { docs } = await payload.find({
+  const res = await payload.find({
     collection: 'games',
     locale,
     fallbackLocale: false, // CR-01
     where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
     sort: 'order',
     depth: 1,
-    pagination: false,
+    limit: PER_PAGE,
+    page,
   })
-  return docs
+  return {
+    docs: res.docs,
+    page: res.page ?? 1,
+    totalDocs: res.totalDocs,
+    totalPages: pageCount(res.totalDocs),
+  }
 }
 
 /** Одна опубликованная игра по slug (или null). */
