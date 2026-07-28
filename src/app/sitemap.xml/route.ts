@@ -4,6 +4,7 @@ import config from '@payload-config'
 import { locales, fallbackLocale, type Locale } from '@/i18n/config'
 import { localesWithContent } from '@/i18n/translated'
 import { resolveSiteId, sites, siteBaseUrl } from '@/site/config'
+import { contentSite } from '@/content/contentTypes'
 
 /**
  * Карта сайта по локалям (M0-T10): абсолютные production-URL + hreflang + x-default,
@@ -66,7 +67,8 @@ export async function GET(request: Request): Promise<Response> {
   // Главная — в каждой локали всегда.
   const pages: SitemapPage[] = [{ path: '' }]
 
-  if (site.id === 'sealife') {
+  // Тот же факт, что и гейт канонического роута (CR-02): `content`/`species` — sealife.
+  if (site.id === contentSite) {
     try {
       const payload = await getPayload({ config })
       const published = { _status: { equals: 'published' as const } }

@@ -125,18 +125,6 @@ export const sectionDefs: SectionDef[] = [
     },
   },
   {
-    slug: 'rescue-news',
-    site: 'sealrescue',
-    nav: true,
-    hasDetail: false,
-    label: { ru: 'Новости', en: 'News' },
-    title: { ru: 'Новости спасения', en: 'Rescue news' },
-    intro: {
-      ru: 'Обновления центров и спасательных операций.',
-      en: 'Updates from centers and rescue operations.',
-    },
-  },
-  {
     slug: 'report',
     site: 'sealrescue',
     nav: true,

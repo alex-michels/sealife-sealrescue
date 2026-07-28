@@ -23,7 +23,16 @@ const LOCALES = ['ru', 'en'] as const
 
 let payload: Payload
 
+/**
+ * Хуки, поднимающие Payload, живут дольше дефолтных 30 с: `getPayload()` тянет схему из БД
+ * (drizzle push), и это регулярно 20+ секунд. На дефолте хук падал по таймауту раз в несколько
+ * полных прогонов — и выглядело это как «флака в проверке canonical», хотя сам тест ни при чём.
+ * Int-спеки давно стоят на 120 с; e2e просто забыли.
+ */
+const BOOT_TIMEOUT = 120_000
+
 test.beforeAll(async () => {
+  test.setTimeout(BOOT_TIMEOUT)
   payload = await getPayload({ config: await config })
 
   // CR-01: фикстура ПЕРЕВЕДЕНА явно, вторым вызовом с указанной локалью. Раньше она создавалась
@@ -56,6 +65,7 @@ test.beforeAll(async () => {
 })
 
 test.afterAll(async () => {
+  test.setTimeout(BOOT_TIMEOUT)
   await payload.delete({ collection: 'content', where: { slug: { like: `${RUN}-` } } })
   await payload.db.destroy?.()
 })
@@ -123,6 +133,20 @@ test.describe('hreflang / canonical на страницах', () => {
     await expectNoAlt(page, 'en')
     // x-default не может указывать на локаль, которой нет.
     expect(await altHref(page, 'x-default')).toBe(`https://sealife.info/ru/${RUN}-onelocale`)
+  })
+
+  /**
+   * CR-02: канонический роут `/[locale]/[slug]` обслуживает `content` — коллекцию sealife.
+   * До гейта каждая опубликованная статья резолвилась и на sealrescue.info, причём canonical
+   * строится от ЗАПРОШЕННОГО хоста: один документ самоканонизировался на двух доменах.
+   * Списочные роуты этой дыры не имели — они идут через `getSection()`.
+   */
+  test('CR-02: контентный slug на чужом сайте отдаёт 404, а не вторую копию', async ({ page }) => {
+    const own = await page.goto(`${BASE}/en/${RUN}-pub`)
+    expect(own?.status(), 'на sealife страница есть').toBe(200)
+
+    const foreign = await page.goto(`${BASE}/en/${RUN}-pub?site=sealrescue`)
+    expect(foreign?.status(), 'на sealrescue её быть не должно').toBe(404)
   })
 
   test('legal-страница: hreflang шире контентного — включает legal-only de', async ({ page }) => {

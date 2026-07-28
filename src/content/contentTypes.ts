@@ -1,5 +1,6 @@
 import type { Content } from '@/payload-types'
 import type { Locale } from '@/i18n/config'
+import type { SiteId } from '@/site/config'
 
 /**
  * Что такое каждый тип `Content` и попадает ли он в редакционную ленту (Roadmap **CR-06**).
@@ -37,3 +38,23 @@ export const feedTypes = (Object.keys(contentTypes) as Content['type'][]).filter
 /** Локализованная подпись типа (кикер карточки, мета детальной страницы). */
 export const typeLabel = (type: Content['type'], locale: Locale): string =>
   contentTypes[type].label[locale]
+
+/**
+ * Сайт, которому принадлежит коллекция `content` (**CR-02**).
+ *
+ * Это не настройка, а факт о модели: все шесть разделов sealife (articles, news, memes, quizzes,
+ * games, species) читают `content`, а у sealrescue нет ни одного — там центры, инструкции и форма.
+ * Поля-дискриминатора `site` в схеме нет ни у одной коллекции, и заводить его сейчас значило бы
+ * строить механизм под контент, которого не существует и чью модель M2 ещё не проектировал.
+ *
+ * Отсюда и форма починки CR-02: канонический роут `/[locale]/[slug]` **гейтится по сайту**, а не
+ * фильтруется по несуществующему полю. До этого он проверял только `isSite`/`isLocale`, поэтому
+ * каждая опубликованная статья sealife резолвилась и на sealrescue.info — причём `buildAlternates`
+ * строит canonical от ЗАПРОШЕННОГО хоста, то есть один документ самоканонизировался на двух
+ * доменах. Списочные роуты этой дыры не имели: они проходят через `getSection()`, который на чужом
+ * сайте возвращает undefined.
+ *
+ * Когда у sealrescue появится своя редакционная лента (M2), правильный ход — не расширить этот
+ * гейт, а завести дискриминатор осознанно, вместе с моделью.
+ */
+export const contentSite: SiteId = 'sealife'

@@ -8,6 +8,7 @@ import { isSite, sites } from '@/site/config'
 import { buildAlternates } from '@/i18n/alternates'
 import { translatedWhere, localesWithContent } from '@/i18n/translated'
 import { isPreview } from '@/preview/state'
+import { contentSite } from '@/content/contentTypes'
 import { ContentDetail } from '@/app/(frontend)/_components/content/ContentDetail'
 
 async function getDoc(locale: Locale, slug: string) {
@@ -56,7 +57,7 @@ export async function generateMetadata({
   params: Promise<{ site: string; locale: string; slug: string }>
 }): Promise<Metadata> {
   const { site, locale, slug } = await params
-  if (!isSite(site) || !isLocale(locale)) return {}
+  if (!isSite(site) || !isLocale(locale) || site !== contentSite) return {}
 
   const doc = await getDoc(locale, slug)
   if (!doc) return {}
@@ -76,7 +77,10 @@ export default async function ContentPage({
   params: Promise<{ site: string; locale: string; slug: string }>
 }) {
   const { site, locale, slug } = await params
-  if (!isSite(site) || !isLocale(locale)) notFound()
+  // CR-02: `content` принадлежит sealife. Без этой проверки каждая статья резолвилась и на
+  // sealrescue.info, а canonical строится от запрошенного хоста — то есть один документ
+  // самоканонизировался на двух доменах.
+  if (!isSite(site) || !isLocale(locale) || site !== contentSite) notFound()
 
   const doc = await getDoc(locale, slug)
   if (!doc) notFound()

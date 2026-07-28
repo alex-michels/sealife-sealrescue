@@ -304,21 +304,6 @@ export const sampleCenters: SampleCenter[] = [
   },
 ]
 
-export const sampleRescueNews: SampleDoc[] = [
-  {
-    slug: 'baltic-release',
-    title: lorem('График приёма обновлён на лето', 'Intake schedule updated for summer'),
-    excerpt: lorem(
-      'Несколько центров изменили часы работы.',
-      'A few centers changed their opening hours.',
-    ),
-    date: '2026-06-15',
-    readMin: 2,
-    aiAssisted: false,
-    body: [lorem('Образец новости спасения.', 'Sample rescue news item.')],
-  },
-]
-
 const bySlug = <T extends { slug: string }>(items: T[], slug: string): T | undefined =>
   items.find((i) => i.slug === slug)
 
