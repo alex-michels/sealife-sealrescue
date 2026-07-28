@@ -3,6 +3,7 @@ import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } fr
 import { forceAgentDrafts, markTranslationsStale, stampPublishedAt } from '../hooks/contentHooks'
 import { topicSelectOptions } from '../content/topics'
 import { provenanceField, sourcesField } from '../fields/provenance'
+import { adminPreview } from '../preview/adminPreview'
 
 export const Content: CollectionConfig = {
   slug: 'content',
@@ -10,6 +11,7 @@ export const Content: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', '_status', 'publishedAt', 'updatedAt'],
     description: 'Статьи, новости, мемы, страницы (sealife.info).',
+    preview: adminPreview('content'), // CR-08
   },
   // drafts = нативный статус draft/published = human-in-the-loop.
   versions: { drafts: true },

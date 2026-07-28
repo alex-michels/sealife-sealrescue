@@ -3,6 +3,7 @@ import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } fr
 import { forceAgentDrafts } from '../hooks/contentHooks'
 import { provenanceField, sourcesField } from '../fields/provenance'
 import { conservationAssessmentField } from '../fields/conservation'
+import { adminPreview } from '../preview/adminPreview'
 
 /**
  * «Тюленепедия» (M1-T03): карточки видов ластоногих для sealife.info.
@@ -19,6 +20,7 @@ export const Species: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'latin', 'conservationStatus', '_status', 'updatedAt'],
+    preview: adminPreview('species'), // CR-08
     description: 'Виды ластоногих (Тюленепедия, sealife.info).',
   },
   versions: { drafts: true },
