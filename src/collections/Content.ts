@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { readPublishedOrStaff, canCreateContent, canUpdateContent, isEditor } from '../access/roles'
-import { forceAgentDrafts, markTranslationsStale, stampPublishedAt } from '../hooks/contentHooks'
+import { forceAgentDrafts, trackTranslationStatus, stampPublishedAt } from '../hooks/contentHooks'
 import { topicSelectOptions } from '../content/topics'
 import { provenanceField, sourcesField } from '../fields/provenance'
 import { adminPreview } from '../preview/adminPreview'
@@ -9,7 +9,7 @@ export const Content: CollectionConfig = {
   slug: 'content',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'type', '_status', 'publishedAt', 'updatedAt'],
+    defaultColumns: ['title', 'type', '_status', 'translationStatus', 'publishedAt', 'updatedAt'],
     description: 'Статьи, новости, мемы, страницы (sealife.info).',
     preview: adminPreview('content'), // CR-08
   },
@@ -22,7 +22,7 @@ export const Content: CollectionConfig = {
     delete: isEditor, // агент удалять не может
   },
   hooks: {
-    beforeChange: [forceAgentDrafts, markTranslationsStale, stampPublishedAt],
+    beforeChange: [forceAgentDrafts, trackTranslationStatus, stampPublishedAt],
   },
   fields: [
     {
@@ -106,13 +106,41 @@ export const Content: CollectionConfig = {
         'обязан их проставлять (см. docs/agents.md).',
     ),
     {
+      // CR-15: сводка по переводам — колонка в списке. Массив `localeStatus` колонкой быть не
+      // может, а без сводки «что осталось перевести» пришлось бы открывать документы по одному.
+      // Заполняется хуком; редактировать руками нечего.
+      name: 'translationStatus',
+      type: 'select',
+      index: true,
+      // Без defaultValue сознательно: документы, созданные до CR-15, показывают ПУСТО, пока их не
+      // сохранят. Пустое поле ничего не утверждает, а `missing` по умолчанию соврал бы про
+      // переведённые материалы — то есть повторил бы ровно ту ошибку, ради которой всё чинилось.
+      options: [
+        { label: 'Переведено', value: 'current' },
+        { label: 'Устарел', value: 'stale' },
+        { label: 'Нужна проверка', value: 'review' },
+        { label: 'Нет перевода', value: 'missing' },
+      ],
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Состояние перевода. По этому полю фильтруется список: что осталось перевести.',
+      },
+    },
+    {
       name: 'localeStatus',
       type: 'array',
-      admin: { description: 'Integrity перевода (Агент 3). Заполняется автоматически.' },
+      admin: {
+        readOnly: true,
+        description:
+          'Актуальность перевода по локалям (CR-15). Заполняется автоматически: sourceHash — версия ' +
+          'исходника, от которой сделан перевод. Устаревший перевод со страницы не убирается, ' +
+          'это пометка для редактора.',
+      },
       fields: [
         { name: 'locale', type: 'text' },
-        { name: 'status', type: 'select', options: ['current', 'stale', 'review'] },
-        { name: 'sourceHash', type: 'text', admin: { readOnly: true } },
+        { name: 'status', type: 'select', options: ['current', 'stale', 'review', 'missing'] },
+        { name: 'sourceHash', type: 'text' },
         { name: 'translatedAt', type: 'date' },
       ],
     },

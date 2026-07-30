@@ -53,7 +53,7 @@ src/
   payload.config.ts   # сборка Payload: коллекции, локали, БД, endpoints
   proxy.ts            # мультидомен + локаль-роутинг
   access/roles.ts     # RBAC: admin/editor/translator/viewer/agent (см. agents.md)
-  hooks/              # contentHooks: forceAgentDrafts, markTranslationsStale
+  hooks/              # contentHooks: forceAgentDrafts, trackTranslationStatus, stampPublishedAt
   collections/        # 14 коллекций Payload (см. data-model.md)
   endpoints/          # leaderboard.ts — server-authoritative лидерборд (см. api.md)
   i18n/               # config (локали — единый источник), ui, date, alternates
@@ -72,7 +72,7 @@ src/
 | --- | --- |
 | Агент не публикует/не удаляет (human-in-the-loop) | access control коллекций + хук `forceAgentDrafts` |
 | Агент пишет только в `agent-proposals` | access (`update: isEditor` на статусе) + коллекция-очередь |
-| Исходная локаль `en`, перевод заранее (CR-14) | `i18n/config.ts` (`defaultLocale`/`targetLocales`) + `markTranslationsStale` + localized-поля |
+| Исходная локаль `en`, перевод заранее (CR-14) | `i18n/config.ts` (`defaultLocale`/`targetLocales`) + `trackTranslationStatus` + localized-поля |
 | Контент-локали — только `ru`/`en`; `de` — legal-only | `i18n/config.ts` (`locales` vs `legalOnlyLocales`/`routeLocales`): страницы контента валидируют `isLocale`, legal-страницы — `isRouteLocale` |
 | Черновик виден только сотруднику | draft-режим включает `/api/preview` после проверки сессии Payload (роли staff); детальные роуты читают `draft: true` только в этом режиме, списки/лента/sitemap — всегда published-only (CR-08) |
 | Непереведённый документ не отдаётся под чужой локалью | `localization.fallback: false` + гейт `translatedWhere()` (`i18n/translated.ts`) во всех публичных чтениях; деталь → 404, hreflang и sitemap считают доступность `localesWithContent()` |
