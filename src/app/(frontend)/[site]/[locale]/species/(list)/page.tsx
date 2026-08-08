@@ -11,6 +11,7 @@ import { findAllSpecies, allSpeciesFacts } from '@/app/(frontend)/_components/co
 import { Pagination } from '@/app/(frontend)/_components/content/Pagination'
 import { parsePage } from '@/content/pagination'
 import { pickOfDay } from '@/content/factOfDay'
+import { factPool } from '@/content/bento'
 
 const SLUG = 'species'
 
@@ -35,16 +36,10 @@ export default async function SpeciesPage({
   ])
 
   // «Факт дня»: плоский список всех фактов всех видов → детерминированный выбор по дате.
-  // CR-01, полевой случай: сам массив `facts` НЕ локализован, локализован только `facts.text`.
-  // Значит у вида с переведённым `name` (он прошёл гейт) отдельные факты могут быть ещё не
-  // переведены и приходят пустыми. Пустая строка в пуле обнулила бы панель «Факт дня» для всей
-  // локали, поэтому непереведённые факты отсеиваем здесь, а не полагаемся на гейт документа.
-  const factPool = factSource.flatMap((s) =>
-    (s.facts ?? [])
-      .filter((f) => f.text?.trim())
-      .map((f) => ({ fact: f.text, name: s.name, href: `/${locale}/species/${s.slug}` })),
-  )
-  const today = pickOfDay(factPool)
+  // Сборка пула (включая отсев непереведённых фактов — полевой случай CR-01) вынесена в
+  // `src/content/bento.ts`: тот же пул нужен плитке «Факт дня» на главной (M1-T05), а две копии
+  // правила «какой факт считается переведённым» разъехались бы.
+  const today = pickOfDay(factPool(factSource, locale))
 
   const items = species.map((s) => ({
     href: `/${locale}/species/${s.slug}`,

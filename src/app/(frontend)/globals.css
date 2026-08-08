@@ -189,6 +189,126 @@
     }
   }
 
+  /*
+   * Bento-хаб главной sealife (M1-T05). НЕ `.card-grid`: там равные плитки каталогов (§4b),
+   * здесь — ОБЪЯВЛЕННАЯ иерархия из §6a. Трогать `.card-grid` под bento нельзя вовсе: он
+   * flex-based с универсальным `> *`, его же рендерят все каталоги, лента, оба хаба разделов и
+   * скелет загрузки, а `grid-column: span N` на flex-элементе не работает в принципе.
+   *
+   * Анти-masonry (§16) держится на трёх свойствах: карта областей СТАТИЧНА на каждом брейкпоинте,
+   * каждая строка занята целиком, плитки строки равной ширины и (через stretch) равной высоты.
+   * `grid-auto-flow: dense` запрещён сознательно — backfill молча поднял бы низкоприоритетную
+   * плитку вверх, и порядок DOM (он же порядок для клавиатуры и скринридера) разошёлся бы с
+   * визуальным.
+   */
+  .bento {
+    display: grid;
+    gap: 14px; /* тот же ритм, что у .card-grid */
+    align-items: stretch;
+    grid-template-columns: 1fr;
+    grid-template-areas: 'fact' 'quiz' 'meme' 'game' 'news' 'species';
+  }
+  /* Порог тот же, что у .card-grid, — сетки страницы ломаются в одной точке. */
+  @media (min-width: 821px) {
+    .bento {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-areas:
+        'fact fact'
+        'quiz meme'
+        'game news'
+        'species species';
+    }
+  }
+  @media (min-width: 1024px) {
+    .bento {
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-areas:
+        'fact fact fact fact fact fact'
+        'quiz quiz meme meme game game'
+        'news news news species species species';
+    }
+  }
+  .bento > [data-slot='fact'] {
+    grid-area: fact;
+  }
+  .bento > [data-slot='quiz'] {
+    grid-area: quiz;
+  }
+  .bento > [data-slot='meme'] {
+    grid-area: meme;
+  }
+  .bento > [data-slot='game'] {
+    grid-area: game;
+  }
+  .bento > [data-slot='news'] {
+    grid-area: news;
+  }
+  .bento > [data-slot='species'] {
+    grid-area: species;
+  }
+
+  /*
+   * Кинетичный вордмарк hero (M1-T05) — «прилив» света по глифам: один проход азурного блика
+   * слева направо, дальше заголовок стоит в покое.
+   *
+   * Пять контрактов сходятся здесь в одну точку, поэтому приём именно такой:
+   *  1. Анимируется ТОЛЬКО `background-position` — paint-only. Рамка `h1` не двигается, значит
+   *     CLS = 0 и hit-target стабилен: `language-switcher.e2e` закрывает меню кликом по `h1`, а
+   *     Playwright ждёт стабильности bounding box два кадра (бесконечный `transform` подвесил бы
+   *     клик, а `waitForTimeout` в тестах запрещён линтером).
+   *  2. Ни одного нового DOM-узла: `<h1>` остаётся одним текстовым узлом = вордмарк. Разбор на
+   *     пер-глифовые `span` отвергнут — «Тюлень.Инфо» без пробелов, `inline-block`-глифы ломают
+   *     `text-wrap: balance`, а часть скринридеров читает такое по буквам.
+   *  3. Ни `opacity` от нуля, ни clip-wipe: в hero нет картинок, LCP-элемент — сам заголовок, а
+   *     прозрачный текст не считается отрисованным (§14).
+   *  4. Один проход (`1`), не `infinite`: §16 «не перегружать анимацией», плюс бесконечная
+   *     перерисовка на мобиле — это расход батареи без пользы.
+   *  5. Покой = кадр `to` И базовое состояние одновременно, поэтому и глобальный блок
+   *     prefers-reduced-motion (он давит только `animation-duration`/`iteration-count`), и
+   *     локальный `animation: none` ниже дают ровно один результат — ровный baltic. Локальное
+   *     правило продублировано намеренно: глобальное НЕ обнуляет `animation-delay` и не трогает
+   *     `fill-mode`, и полагаться на него как на единственную защиту нового моушена нельзя.
+   *
+   * Класс hero-only. НЕ на `.wordmark` (он в SiteHeader на каждой странице ОБОИХ сайтов, включая
+   * calm-режим sealrescue, где display-шрифт снят намеренно) и НЕ на базовом `h1`.
+   */
+  [data-site='sealife'] .kinetic-wordmark {
+    /* Блик живёт в правой трети картинки; в покое (position 0%) видна только ровная часть. */
+    background-image: linear-gradient(
+      100deg,
+      var(--color-heading) 0%,
+      var(--color-heading) 60%,
+      var(--color-link) 78%,
+      var(--color-heading) 96%,
+      var(--color-heading) 100%
+    );
+    background-size: 300% 100%;
+    background-position: 0% 50%; /* = кадр `to`: базовое состояние и есть покой */
+    background-repeat: no-repeat;
+    animation: wordmark-tide 1600ms ease-out 1;
+  }
+  /* Заливку глифов градиентом включаем только там, где она поддержана, — иначе текст исчезнет. */
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    [data-site='sealife'] .kinetic-wordmark {
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+  /* Высокий контраст и печать: возвращаем обычный цвет текста, иначе заголовка не будет видно. */
+  @media (forced-colors: active), print {
+    [data-site='sealife'] .kinetic-wordmark {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+      animation: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-site='sealife'] .kinetic-wordmark {
+      animation: none;
+    }
+  }
+
   /* Dapple — крап тюленьей шкуры (§5). CSS-паттерн, не растр. */
   .dapple {
     background-image:
@@ -254,6 +374,16 @@
   }
   96% {
     transform: scaleY(0);
+  }
+}
+
+/* Кинетичный вордмарк (M1-T05): блик уходит вправо, заголовок остаётся ровным baltic. */
+@keyframes wordmark-tide {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0% 50%;
   }
 }
 

@@ -31,6 +31,23 @@ type UIKey =
   | 'notFoundTitle'
   | 'notFoundBodyLife'
   | 'notFoundBodyRescue'
+  // bento-хаб главной sealife (M1-T05). Порядок слотов — §6a брифа.
+  | 'bentoToday'
+  | 'sectionsAll'
+  | 'quizOfDay'
+  | 'memeOfDay'
+  | 'gamePick'
+  | 'newsLatest'
+  | 'speciesHub'
+  // Пустые состояния плиток: у каждой своя строка (§8 — пустой экран приглашает к действию,
+  // а пять одинаковых «пусто» читаются как сломанная страница).
+  | 'bentoFactEmpty'
+  | 'bentoQuizSoon'
+  | 'bentoMemeEmpty'
+  | 'bentoGameEmpty'
+  | 'bentoNewsEmpty'
+  | 'bentoSpeciesEmpty'
+  | 'bentoOpen'
   | 'filterAll'
   | 'filterByTopic'
   | 'factOfDay'
@@ -107,6 +124,20 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     notFoundBodyLife: 'Эта страница уплыла — или её никогда и не было.',
     notFoundBodyRescue:
       'Такой страницы нет. Проверьте адрес или вернитесь на главную — там есть инструкция «нашёл тюленя» и список разделов.',
+    bentoToday: 'Сегодня',
+    sectionsAll: 'Все разделы',
+    quizOfDay: 'Квиз дня',
+    memeOfDay: 'Мем дня',
+    gamePick: 'Во что поиграть',
+    newsLatest: 'Последняя новость',
+    speciesHub: 'Тюленепедия',
+    bentoFactEmpty: 'Факты ещё досыпаются в тюленепедию.',
+    bentoQuizSoon: 'Квизы ещё на подходе — готовим вопросы.',
+    bentoMemeEmpty: 'Мемы ещё сохнут на камне.',
+    bentoGameEmpty: 'Игры чинят ласты.',
+    bentoNewsEmpty: 'Новостей нет — у ластоногих всё спокойно.',
+    bentoSpeciesEmpty: 'Тюленепедия ещё набирает виды.',
+    bentoOpen: 'Открыть раздел',
     filterAll: 'Все',
     filterByTopic: 'Фильтр по теме',
     factOfDay: 'Факт дня',
@@ -193,6 +224,20 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     notFoundBodyLife: 'This page swam away — or maybe it never existed.',
     notFoundBodyRescue:
       'This page does not exist. Check the address or return to the start page — it has the "found a seal" guide and all sections.',
+    bentoToday: 'Today',
+    sectionsAll: 'All sections',
+    quizOfDay: 'Quiz of the day',
+    memeOfDay: 'Meme of the day',
+    gamePick: 'Something to play',
+    newsLatest: 'Latest news',
+    speciesHub: 'Seal-pedia',
+    bentoFactEmpty: 'Facts are still trickling into the seal-pedia.',
+    bentoQuizSoon: 'Quizzes are on their way — questions in the making.',
+    bentoMemeEmpty: 'The memes are still drying on a rock.',
+    bentoGameEmpty: 'The games are fixing their flippers.',
+    bentoNewsEmpty: 'No news — all quiet on the pinniped front.',
+    bentoSpeciesEmpty: 'The seal-pedia is still collecting species.',
+    bentoOpen: 'Open section',
     filterAll: 'All',
     filterByTopic: 'Filter by topic',
     factOfDay: 'Fact of the day',
