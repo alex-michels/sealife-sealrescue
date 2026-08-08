@@ -46,6 +46,63 @@ self-host шрифты (`next/font`) · аналитика Plausible (cookieless
 (site×routeLocale-шелл, включая `/de` ради legal); все страницы с данными делают живой `getPayload`-запрос на каждый рендер (SSR
 per-request), без ISR/`force-static`. См. [localization.md](localization.md).
 
+## Главная sealife: bento-хаб «Сегодня» (M1-T05)
+
+Порядок полос повторяет приоритет из [DESIGN_BRIEF §6a](DESIGN_BRIEF.md): hero → bento «Сегодня» →
+хаб всех разделов → лента «Свежее» → cross-link на sealrescue.
+
+**Иерархия объявлена в CSS, а не выведена из данных.** `.bento` (globals.css) — CSS Grid со
+статичной картой `grid-template-areas` на каждом из трёх брейкпоинтов (1 колонка → 2 от 821px → 6 от
+1024px). Порядок слотов зашит в `BENTO_SLOTS` (`src/content/bento.ts`): `fact` → `quiz` → `meme` →
+`game` → `news` → `species`. Порядок DOM = визуальный порядок = порядок для клавиатуры и
+скринридера; `grid-auto-flow: dense` и masonry запрещены (§16) именно поэтому — backfill молча
+поднял бы низкоприоритетную плитку вверх. Разметка заголовков даёт то же оглавление: `h2` «Сегодня»,
+дальше по `h3` на плитку.
+
+**Плитка не исчезает.** Пустой слот рендерит честное пустое состояние в своей области. Скрывать
+пустые плитки нельзя: сетка даст дыры и «зажатые слева» карточки, которые §16 запрещает прямым
+текстом. Сегодня это режим по умолчанию, а не край: сиды пишут `content` и `species` черновиками
+(BIO-16 — публикация есть человеческое действие, инвариант №1), поэтому наполнен ровно один слот —
+игры. Микрокопия у каждой плитки своя (§8: пустой экран приглашает к действию), и пустая плитка тоже
+ссылка на свой раздел.
+
+**Никаких mock-данных.** У главной нет `noindex`, и она стоит первой записью в sitemap — то есть
+выдуманные данные на ней обошли бы СРАЗУ оба механизма CR-09. Раздел на выдуманных источниках
+(`mockBacked`, сейчас `quizzes` — до M1-T10) получает состояние `soon` и **ноль запросов**:
+`tileState(hasData, mockBacked)` возвращает `soon` даже при наличии данных. Флаг снимут вместе с
+переездом раздела на Payload, и плитка сама станет обычной.
+
+**Обложки — только настоящие** (`realCover`). `Cover` при пустой картинке подставляет декоративный
+`PlaceholderMedia`, а его тинт чередуется по seed и включает `bg-surface-warm` (sandbank) — тёплую
+пару, зарезервированную §6a за переходом на sealrescue. На главной ровно один тёплый блок:
+`CrossLink variant="emergency"`.
+
+**Запросы и границы.** `BentoToday` — async server component под своим `<Suspense>` с
+`BentoSkeleton` (та же сетка `.bento` → подмена не сдвигает layout). Hero и хаб разделов отдаются
+сразу, как и с `LatestFeed` (M0-T19). Граница именно вокруг блока: `loading.tsx` на уровне
+`[site]/[locale]` заставил бы Next стримить `notFound()` со статусом 200 (soft-404). Пул для «X дня»
+берётся БЕЗ пагинации: `pickOfDay` считает `день % длина_пула`, и обрезанный пул превратил бы «мем
+дня» в «мем первой страницы» (эту ошибку уже поймал CR-07). Разделы приходят пропсом
+`ResolvedSection[]` — читать `sectionsForSite()` внутри компонента нельзя, это откат CR-11.
+
+**Кинетичный хэдлайн** — `.kinetic-wordmark`, hero-only, `[data-site='sealife']`: один проход
+азурного блика по глифам вордмарка (`background-clip: text` + анимация только
+`background-position`). Почему именно так:
+
+| Ограничение | Следствие |
+| --- | --- |
+| §16 «не перегружать анимацией» | один проход, не `infinite` |
+| CLS = 0 и стабильный hit-target | анимируется только `background-position` (paint-only). `language-switcher.e2e` закрывает меню кликом по `h1`, а Playwright ждёт стабильности bounding box — `transform`-цикл подвесил бы клик |
+| LCP не отодвигать | ни `opacity` от нуля, ни clip-wipe: в hero нет картинок, LCP-элемент — сам заголовок |
+| контракт главной | `<h1>` остаётся ОДНИМ текстовым узлом = вордмарк; ни пер-глифовых `span`, ни `.sr-only`-дубля |
+| prefers-reduced-motion | кадр `to` = базовое состояние **плюс** локальный `animation: none`. Глобальный блок давит только `animation-duration`/`iteration-count` — он не обнуляет `animation-delay` и не трогает `fill-mode`, поэтому единственной защитой нового моушена быть не может |
+| высокий контраст и печать | `@supports` на `background-clip: text` + фолбэк `forced-colors`/`print` на `currentColor`, иначе заголовок исчезнет целиком |
+
+Решения закреплены тестами: `tests/unit/bento.unit.spec.ts` (порядок слотов, `tileState`,
+`factPool`, `realCover` + CSS-контракты сетки и хэдлайна), `tests/int/bento-tiles.int.spec.ts`
+(запросы плиток на живом Payload), `tests/e2e/home-bento.e2e.spec.ts` (порядок плиток на странице,
+единственный `h1`, отсутствие выдуманных квизов).
+
 ## Слои кода
 
 ```
@@ -58,7 +115,7 @@ src/
   endpoints/          # leaderboard.ts — server-authoritative лидерборд (см. api.md)
   i18n/               # config (локали — единый источник), ui, date, alternates
   site/               # config (сайты/бренды), sections, legal
-  content/            # таксономия тем, «факт дня»
+  content/            # таксономия тем, «факт дня», bento-логика главной, пагинация
   seed/               # glossaryTerms+seedGlossary, m1SeedData+seedM1
   app/(frontend)/     # публичные сайты (App Router)
   app/(payload)/      # админка + авто REST/GraphQL Payload

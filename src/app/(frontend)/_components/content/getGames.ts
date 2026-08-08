@@ -53,6 +53,27 @@ export async function findGameBySlug(locale: Locale, slug: string): Promise<Game
   return docs[0] ?? null
 }
 
+/**
+ * Игра для плитки bento на главной (M1-T05): первая по `order`.
+ *
+ * Порядок редакторский (`order`), а НЕ `pickOfDay`: список игр короткий и меняется редко, и
+ * «какая игра на витрине» — решение редактора, а не календаря. Встраивать саму игру на главную
+ * нельзя (§14: игры и карта — только lazy), поэтому плитка — обычная ссылка на страницу игры.
+ */
+export async function featuredGame(locale: Locale): Promise<Game | null> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'games',
+    locale,
+    fallbackLocale: false, // CR-01
+    where: { and: [{ _status: { equals: 'published' } }, translatedWhere('title')] },
+    sort: 'order',
+    limit: 1,
+    depth: 1, // обложка карточки (cardCover)
+  })
+  return docs[0] ?? null
+}
+
 /** В каких контент-локалях игра реально существует — для честного hreflang (CR-01). */
 export async function gameLocales(slug: string): Promise<Locale[]> {
   const payload = await getPayload({ config })

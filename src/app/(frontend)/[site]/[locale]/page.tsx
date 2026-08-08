@@ -11,6 +11,8 @@ import { LatestFeed } from '@/app/(frontend)/_components/home/LatestFeed'
 import { JsonLd } from '@/app/(frontend)/_components/JsonLd'
 import { websiteJsonLd } from '@/site/jsonLd'
 import { CardGridSkeleton } from '@/app/(frontend)/_components/ui/CardGridSkeleton'
+import { BentoSkeleton } from '@/app/(frontend)/_components/ui/BentoSkeleton'
+import { BentoToday } from '@/app/(frontend)/_components/home/BentoToday'
 import { sectionCardsForSite } from '@/site/sectionContent'
 
 export async function generateMetadata({
@@ -50,8 +52,8 @@ export default async function HomePage({
     )
   }
 
-  // sealife: hero/хаб отдаются сразу, лента Payload стримится в <Suspense>
-  // (M0-T19: loading-граница только у ленты, страница целиком не soft-404-ится).
+  // sealife: hero/хаб отдаются сразу, а оба блока с данными Payload стримятся каждый в своём
+  // <Suspense> (M0-T19: loading-границы только вокруг блоков, страница целиком не soft-404-ится).
   // Карточки хаба — разделы из кода + admin-overrides (M1-T27: intro/cover из админки).
   const sections = await sectionCardsForSite('sealife', locale as Locale)
   return (
@@ -60,6 +62,13 @@ export default async function HomePage({
       <SealifeHome
         locale={locale as Locale}
         sections={sections}
+        // M1-T05: bento «Сегодня». Скелет использует ту же сетку `.bento`, поэтому подмена
+        // контентом не сдвигает layout.
+        bento={
+          <Suspense fallback={<BentoSkeleton />}>
+            <BentoToday locale={locale as Locale} sections={sections} />
+          </Suspense>
+        }
         feed={
           <Suspense fallback={<CardGridSkeleton />}>
             <LatestFeed locale={locale as Locale} />

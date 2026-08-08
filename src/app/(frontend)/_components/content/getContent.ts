@@ -82,3 +82,63 @@ export function parseTopic(raw?: string | string[]): TopicSlug | undefined {
   const v = Array.isArray(raw) ? raw[0] : raw
   return v && isTopicSlug(v) ? v : undefined
 }
+
+/** Что нужно плитке bento: заголовок, ссылка, обложка (M1-T05). */
+export type TeaserDoc = Pick<Content, 'id' | 'slug' | 'title' | 'excerpt' | 'coverImage'>
+
+const TEASER_SELECT = { slug: true, title: true, excerpt: true, coverImage: true } as const
+
+const publishedOfType = (type: Content['type']) => ({
+  and: [
+    { type: { equals: type }, _status: { equals: 'published' } },
+    // CR-01: пара `fallbackLocale: false` + `translatedWhere` обязательна В КАЖДОМ публичном
+    // запросе — гейт не глобальный, `localization.fallback` выключен лишь как дефолт.
+    translatedWhere('title'),
+  ],
+})
+
+/**
+ * ПОЛНЫЙ пул документов типа для выбора «X дня» (`pickOfDay`) — M1-T05.
+ *
+ * ⚠️ `pagination: false` здесь обязательно, а не «пока данных мало». `pickOfDay` берёт
+ * `день % длина_пула`, поэтому пул из `limit: PER_PAGE` превратил бы «мем дня» в «мем первой
+ * страницы» — ровно та ошибка, которую CR-07 уже поймал на «факте дня». Запрос лёгкий за счёт
+ * `select`: ни тела, ни provenance, ни localeStatus.
+ */
+export async function dailyPool(type: Content['type'], locale: Locale): Promise<TeaserDoc[]> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'content',
+    locale,
+    fallbackLocale: false,
+    where: publishedOfType(type),
+    sort: 'slug', // стабильный порядок пула: от него зависит, какой элемент «сегодняшний»
+    depth: 1, // обложка карточки
+    pagination: false,
+    select: TEASER_SELECT,
+  })
+  return docs as TeaserDoc[]
+}
+
+/**
+ * Самый свежий документ типа (плитка «последняя новость», M1-T05).
+ * Сортировка по `publishedAt` — дате ВЫХОДА, а не последней правки (CR-05): иначе исправленная
+ * опечатка делала бы старый материал «последней новостью».
+ */
+export async function latestOfType(
+  type: Content['type'],
+  locale: Locale,
+): Promise<TeaserDoc | null> {
+  const payload = await getPayload({ config })
+  const { docs } = await payload.find({
+    collection: 'content',
+    locale,
+    fallbackLocale: false,
+    where: publishedOfType(type),
+    sort: '-publishedAt',
+    depth: 1,
+    limit: 1,
+    select: TEASER_SELECT,
+  })
+  return (docs[0] as TeaserDoc | undefined) ?? null
+}
