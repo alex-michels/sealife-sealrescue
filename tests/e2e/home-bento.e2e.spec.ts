@@ -3,14 +3,13 @@ import { locales } from '@/i18n/config'
 import { sites } from '@/site/config'
 import { t } from '@/i18n/ui'
 import { BENTO_SLOTS } from '@/content/bento'
-import { sampleQuizzes } from '@/mock/sample'
 
 /**
  * **M1-T05** — bento-хаб главной sealife.
  *
  * Проверяется то, что нельзя проверить ни unit-, ни int-тестом: что иерархия §6a реально доехала
  * до страницы в нужном ПОРЯДКЕ, что пустые плитки остались на месте (а не исчезли, оставив дыры),
- * и что на индексируемой главной нет ни одного выдуманного квиза.
+ * а также что плитки ведут в свои разделы.
  */
 
 const BASE = 'http://localhost:3000'
@@ -51,16 +50,19 @@ test.describe('Главная sealife: bento «Сегодня»', () => {
       await expect(h1).toHaveClass(/kinetic-wordmark/)
     })
 
-    test(`/${locale}: на главной НЕТ выдуманных квизов`, async ({ page }) => {
+    test(`/${locale}: плитка квиза ведёт в раздел квизов`, async ({ page }) => {
       await page.goto(`${BASE}/${locale}`)
 
-      // Раздел quizzes ещё на mock-данных (M1-T10), а у главной нет noindex и она стоит первой
-      // записью в sitemap — то есть mock на ней обошёл бы СРАЗУ оба механизма CR-09.
-      const quiz = page.locator('.bento > li[data-slot="quiz"]')
-      await expect(quiz).toContainText(t(locale, 'bentoQuizSoon'))
-      for (const q of sampleQuizzes) {
-        await expect(page.locator('body')).not.toContainText(q.title[locale])
-      }
+      /*
+       * M1-T10 переписал этот тест. Раньше он проверял, что на главной нет ни одного выдуманного
+       * квиза из `sampleQuizzes` — сейчас проверять нечего: мок удалён, а раздел читает Payload.
+       * Осталось то, что не зависит от наполнения базы: плитка на месте и ведёт в квизы.
+       * (Что `mockBacked`-раздел не показывает данных ВООБЩЕ, закреплено в `bento.unit.spec.ts`
+       * на `tileState` — там это утверждение проверяется без базы.)
+       */
+      const link = page.locator('.bento > li[data-slot="quiz"] a[href]')
+      await expect(link).toHaveCount(1)
+      await expect(link).toHaveAttribute('href', new RegExp(`^/${locale}/quizzes`))
     })
 
     test(`/${locale}: второго landmark «Разделы» не появилось`, async ({ page }) => {

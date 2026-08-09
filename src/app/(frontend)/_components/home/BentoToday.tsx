@@ -8,6 +8,7 @@ import type { ResolvedSection } from '@/site/sectionContent'
 import { dailyPool, latestOfType } from '../content/getContent'
 import { allSpeciesFacts } from '../content/getSpecies'
 import { featuredGame } from '../content/getGames'
+import { quizPool } from '../content/getQuizzes'
 import { Cover } from '../content/Cover'
 import { cx } from '../ui/cx'
 
@@ -42,15 +43,20 @@ export async function BentoToday({
 
   // Один заход в базу на все плитки. `allSpeciesFacts` переиспользуется дважды (факт + тюленепедия),
   // поэтому запрашивается один раз, а не по разу на плитку (урок CR-13 про дедупликацию).
-  const [speciesRows, memePool, game, news] = await Promise.all([
+  const [speciesRows, memePool, game, news, quizzes] = await Promise.all([
     allSpeciesFacts(locale),
     dailyPool('meme', locale),
     featuredGame(locale),
     latestOfType('news', locale),
+    // M1-T10: раздел уехал на Payload, поэтому плитка наконец читает данные. Пока раздел был
+    // `mockBacked`, здесь стоял захардкоженный `false` — со снятием флага он превратил бы плитку в
+    // вечно пустую, и снятие флага выглядело бы как поломка.
+    quizSection?.mockBacked ? Promise.resolve([]) : quizPool(locale),
   ])
 
   const fact = pickOfDay(factPool(speciesRows, locale))
   const meme = pickOfDay(memePool)
+  const quiz = pickOfDay(quizzes)
   const speciesNames = speciesRows.map((s) => s.name).filter(Boolean)
 
   return (
@@ -69,17 +75,19 @@ export async function BentoToday({
       />
 
       {/*
-        Квиз: ноль запросов и ноль данных, пока раздел на выдуманных источниках. Состояние
-        выводится из флага `mockBacked` — снимут его вместе с M1-T10, и плитка сама станет обычной.
-        Любой контент из `@/mock/sample` на главной обходил бы СРАЗУ оба механизма CR-09: у главной
-        нет `noindex`, и она стоит первой записью в sitemap.
+        Квиз (M1-T10): читает Payload, как и остальные плитки. `tileState` по-прежнему принимает
+        `mockBacked` — механизм общий и остаётся рабочим для разделов, которые ещё не переехали
+        (сейчас это `rescue-centers` → M2-T02). Пока флаг стоит, плитка не берёт данные ВООБЩЕ:
+        контент из `@/mock/sample` на главной обошёл бы сразу оба механизма CR-09, потому что у
+        главной нет `noindex` и она стоит первой записью в sitemap.
       */}
       <Tile
         slot="quiz"
-        state={tileState(false, quizSection?.mockBacked)}
+        state={tileState(Boolean(quiz), quizSection?.mockBacked)}
         label={t(locale, 'quizOfDay')}
-        href={`/${locale}/quizzes`}
-        empty={t(locale, 'bentoQuizSoon')}
+        href={quiz ? `/${locale}/quizzes/${quiz.slug}` : `/${locale}/quizzes`}
+        headline={quiz?.title}
+        empty={quizSection?.mockBacked ? t(locale, 'bentoQuizSoon') : t(locale, 'bentoQuizEmpty')}
         locale={locale}
       />
 

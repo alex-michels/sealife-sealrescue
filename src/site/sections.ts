@@ -28,8 +28,8 @@ export interface SectionDef {
    * инварианта №7: карточки несут выдуманные телефоны, `tel:`-ссылки и «штамп проверки», то есть
    * выдают непроверенные контакты за verified — на аварийном пути.
    *
-   * Флаг снимается вместе с переездом раздела на реальные данные (rescue-centers → M2-T02,
-   * quizzes → M1-T10).
+   * Флаг снимается вместе с переездом раздела на реальные данные. `quizzes` уехали в M1-T10;
+   * остался единственный носитель — `rescue-centers` (→ M2-T02).
    */
   mockBacked?: true
 }
@@ -73,9 +73,10 @@ export const sectionDefs: SectionDef[] = [
     },
   },
   {
+    // M1-T10: раздел переехал на Payload — флаг `mockBacked` снят, значит список и детали снова
+    // индексируются и попадают в sitemap.
     slug: 'quizzes',
     site: 'sealife',
-    mockBacked: true,
     nav: true,
     hasDetail: true,
     label: { ru: 'Квизы', en: 'Quizzes' },

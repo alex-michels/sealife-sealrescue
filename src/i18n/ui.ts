@@ -43,11 +43,22 @@ type UIKey =
   // а пять одинаковых «пусто» читаются как сломанная страница).
   | 'bentoFactEmpty'
   | 'bentoQuizSoon'
+  | 'bentoQuizEmpty'
   | 'bentoMemeEmpty'
   | 'bentoGameEmpty'
   | 'bentoNewsEmpty'
   | 'bentoSpeciesEmpty'
   | 'bentoOpen'
+  // Квизы (M1-T10): раздел переехал с выдуманных данных на Payload.
+  | 'quizQuestions'
+  | 'quizSubmit'
+  | 'quizResult'
+  | 'quizRetry'
+  | 'quizCorrect'
+  | 'quizYours'
+  | 'quizUnanswered'
+  | 'quizUnscorable'
+  | 'quizNoQuestions'
   | 'filterAll'
   | 'filterByTopic'
   | 'factOfDay'
@@ -133,11 +144,21 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     speciesHub: 'Тюленепедия',
     bentoFactEmpty: 'Факты ещё досыпаются в тюленепедию.',
     bentoQuizSoon: 'Квизы ещё на подходе — готовим вопросы.',
+    bentoQuizEmpty: 'Квизы ещё не опубликованы.',
     bentoMemeEmpty: 'Мемы ещё сохнут на камне.',
     bentoGameEmpty: 'Игры чинят ласты.',
     bentoNewsEmpty: 'Новостей нет — у ластоногих всё спокойно.',
     bentoSpeciesEmpty: 'Тюленепедия ещё набирает виды.',
     bentoOpen: 'Открыть раздел',
+    quizQuestions: 'Вопросов',
+    quizSubmit: 'Проверить',
+    quizResult: 'Результат',
+    quizRetry: 'Пройти заново',
+    quizCorrect: 'Верно',
+    quizYours: 'Ваш ответ',
+    quizUnanswered: 'Вы не ответили на этот вопрос.',
+    quizUnscorable: 'Вопрос не оценивался: у него не отмечен единственный верный вариант.',
+    quizNoQuestions: 'Вопросы этого квиза ещё не переведены на этот язык.',
     filterAll: 'Все',
     filterByTopic: 'Фильтр по теме',
     factOfDay: 'Факт дня',
@@ -233,11 +254,21 @@ const dict: Record<Locale, Record<UIKey, string>> = {
     speciesHub: 'Seal-pedia',
     bentoFactEmpty: 'Facts are still trickling into the seal-pedia.',
     bentoQuizSoon: 'Quizzes are on their way — questions in the making.',
+    bentoQuizEmpty: 'No quizzes published yet.',
     bentoMemeEmpty: 'The memes are still drying on a rock.',
     bentoGameEmpty: 'The games are fixing their flippers.',
     bentoNewsEmpty: 'No news — all quiet on the pinniped front.',
     bentoSpeciesEmpty: 'The seal-pedia is still collecting species.',
     bentoOpen: 'Open section',
+    quizQuestions: 'Questions',
+    quizSubmit: 'Check answers',
+    quizResult: 'Result',
+    quizRetry: 'Try again',
+    quizCorrect: 'Correct',
+    quizYours: 'Your answer',
+    quizUnanswered: 'You left this question unanswered.',
+    quizUnscorable: 'Not scored: this question has no single correct option marked.',
+    quizNoQuestions: 'The questions of this quiz are not translated into this language yet.',
     filterAll: 'All',
     filterByTopic: 'Filter by topic',
     factOfDay: 'Fact of the day',
