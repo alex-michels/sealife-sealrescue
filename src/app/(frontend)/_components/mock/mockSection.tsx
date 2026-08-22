@@ -6,15 +6,10 @@ import { buildAlternates } from '@/i18n/alternates'
 import { getSection, type SectionDef } from '@/site/sections'
 import { resolvedSection } from '@/site/sectionContent'
 import { socialMetadata } from '@/site/social'
-import { SectionShell } from './SectionShell'
-import { StateSwitcher, parseState, type MockState } from './StateSwitcher'
-import { MockList, type SampleCardItem } from './MockList'
 
 export type RouteParams = Promise<{ site: string; locale: string }>
 export type SlugParams = Promise<{ site: string; locale: string; slug: string }>
 export type SearchParams = Promise<Record<string, string | string[] | undefined>>
-
-export { parseState }
 
 /**
  * Guard раздела (M0-T19): валидирует site+locale и принадлежность раздела сайту.
@@ -96,31 +91,4 @@ export async function detailMetadata(
     alternates: buildAlternates(`/${sectionSlug}/${slug}`, locale, sites[site]),
     ...(section ? noindexIfMock(section) : {}),
   }
-}
-
-/** Общий рендер списочной mock-страницы: shell + демо-переключатель состояний + список. */
-export function SectionListView({
-  site,
-  locale,
-  slug,
-  title,
-  intro,
-  items,
-  state,
-}: {
-  site: SiteId
-  locale: Locale
-  slug: string
-  title: string
-  intro?: string
-  items: SampleCardItem[]
-  state: MockState
-}) {
-  const basePath = `/${locale}/${slug}`
-  return (
-    <SectionShell locale={locale} title={title} intro={intro}>
-      <StateSwitcher basePath={basePath} locale={locale} current={state} />
-      <MockList site={site} locale={locale} state={state} items={items} basePath={basePath} />
-    </SectionShell>
-  )
 }

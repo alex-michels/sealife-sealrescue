@@ -35,9 +35,9 @@
 
 ```ts
 export const locales = ['ru', 'en'] as const
-export const defaultLocale: Locale = 'ru'        // контент пишется на ru
+export const defaultLocale: Locale = 'en'        // исходник пишется на en (CR-14)
 export const fallbackLocale: Locale = 'en'       // неподдерживаемые языки → en
-export const targetLocales = locales.filter((l) => l !== defaultLocale) // что переводить (en)
+export const targetLocales = locales.filter((l) => l !== defaultLocale) // что переводить (ru)
 
 /** Не контент-локаль: только legal-страницы (немецкий Impressum, §5 DDG / §18 MStV). */
 export const legalOnlyLocales = ['de'] as const
@@ -168,7 +168,7 @@ app/(frontend)/[site]/[locale]/          # locale ∈ {ru, en} для конте
   not-found.tsx            # локализованная 404 (site/locale — из x-site/x-locale proxy)
   articles, news, memes/   # медиа sealife (у списков — свой loading.tsx)
   species/(list), species/[slug]  # Тюленепедия (loading.tsx только в (list))
-  quizzes, quizzes/[slug]  # квизы
+  quizzes, quizzes/[slug]  # квизы (M1-T10; СОЗНАТЕЛЬНО без loading.tsx — см. «404 и loading-границы»)
   games/(list), games/[slug]      # игры (встраивает /public/games/<slug>, ?lang=<locale>)
   rescue-centers/[slug]    # центры (sealrescue) — сейчас на dev-моках, не на Payload (см. M2-T02)
   what-to-do, report       # emergency / нотис
@@ -195,6 +195,19 @@ route-группа `(list)` у разделов с детальными деть
 рендерят локализованную `[locale]/not-found.tsx` (микрокопия по сайту — бриф §7). Контракт закреплён
 e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
 
+> ⚠️ **Тот же эффект есть и у СПИСОЧНЫХ страниц, и он шире, чем «детальные роуты».** Список сам
+> зовёт `notFound()` для чужой локали (`requireSection`), и своя же loading-граница мешает ему
+> отдать настоящий 404: `/de/species`, `/de/articles`, `/de/news`, `/de/memes`, `/de/games` отвечают
+> **200** вместо 404 — замерено на `next build` + `next start`, не только в dev.
+>
+> Поэтому **раздел `quizzes` намеренно оставлен БЕЗ `loading.tsx`** (M1-T10): это единственный
+> контентный раздел без границы, и `tests/e2e/legal.e2e.spec.ts` проверяет hard-404 под `/de`
+> именно на нём. Добавить туда скелет — значит убрать последнее место, где контракт «контента под
+> `/de` не существует» вообще проверяется.
+>
+> Остальные разделы под `/de` пока отдают soft-404 — это **известный незакрытый дефект**, не
+> задуманное поведение (Roadmap **CR-16**).
+
 ## hreflang / canonical / sitemap
 
 - Альтернаты и canonical считаются из `src/i18n/alternates.ts`, и функций там **две** —
@@ -215,7 +228,7 @@ e2e-тестами: `tests/e2e/frontend.e2e.spec.ts`.
   `localesWithContent()`, что и hreflang страницы;
   и включает разделы обоих сайтов, legal-страницы и детали `content`/`species`/`games` (CR-09,
   состав — в [api.md](api.md)). Legal — единственные страницы в карте, у которых есть `/de`.
-  ⚠️ Разделы на выдуманных данных (`mockBacked`: `rescue-centers`, `quizzes`) не подаются и несут
+  ⚠️ Разделы на выдуманных данных (`mockBacked` — остался только `rescue-centers`, → M2-T02) не подаются и несут
   `noindex`. `robots.txt` реализован тем же способом, что и карта, — per-host route handler.
 - ⚠️ **Статическая генерация — пока не факт, а цель.** Только layout-шелл `[site]/[locale]/layout.tsx`
   использует `generateStaticParams` (перечисляет site×routeLocale). Все страницы с данными (articles, memes,

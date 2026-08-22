@@ -384,7 +384,7 @@ sealife:
 /ru/articles/sample-article
 /ru/news, /ru/news/sample-news
 /ru/memes
-/ru/quizzes, /ru/quizzes/sample-quiz
+/ru/rescue-centers, /ru/rescue-centers/<slug>
 /ru/games, /ru/games/sample-game
 /ru/species, /ru/species/sample-species
 ```

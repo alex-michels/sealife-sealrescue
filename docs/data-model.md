@@ -40,7 +40,15 @@ Drafts + `forceAgentDrafts`. **Доступ:** как у `content`. ⚠️ **`tr
 
 ### `quizzes` — квизы
 `title`*/`slug`/`description`, `questions[]` → `options[]` (`text`, `isCorrect`), `explanation`,
-`aiGenerated` (устаревший) + **`provenance`**. Тексты локализованы. Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
+`aiGenerated` (устаревший) + **`provenance`**. Drafts + `forceAgentDrafts`. **Доступ:** как у `content`.
+**M1-T10:** у коллекции наконец есть публичный читатель — `_components/content/getQuizzes.ts`
+(список с пагинацией, деталь по slug с предпросмотром черновика, непагинированный `quizPool` под
+«квиз дня», `quizLocales` для hreflang); до этого она была осиротевшей и редактор мог опубликовать
+квиз без единого изменения на сайте. ⚠️ Локализованы ЛИСТЬЯ (`title`/`description`/
+`questions[].question`/`options[].text`/`explanation`), а сами массивы `questions`/`options` — НЕТ:
+перевод надо писать, передавая `id` строк массива, иначе Payload пересоздаст строки и потеряет
+исходный текст вместе с разметкой `isCorrect`. Прохождение — GET-форма, состояние в URL, в БД
+ничего не пишется (`src/content/quiz.ts`).
 
 ### `media`
 

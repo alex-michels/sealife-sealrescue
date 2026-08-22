@@ -46,6 +46,7 @@ export const titleFieldFor = {
   content: 'title',
   species: 'name',
   games: 'title',
+  quizzes: 'title', // M1-T10: раздел переехал с выдуманных данных на Payload
 } as const
 
 export type GatedCollection = keyof typeof titleFieldFor

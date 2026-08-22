@@ -210,12 +210,15 @@ test.describe('sitemap.xml', () => {
       `<xhtml:link rel="alternate" hreflang="en" href="https://sealife.info/en/${RUN}-onelocale" />`,
     )
     // CR-09: разделы сайта тоже подаются — раньше в карте не было ни одного.
-    for (const section of ['articles', 'news', 'memes', 'games', 'species']) {
+    // `quizzes` попал сюда в M1-T10: раздел уехал с выдуманных данных на Payload, флаг
+    // `mockBacked` снят, значит он снова индексируется и обязан быть в карте.
+    for (const section of ['articles', 'news', 'memes', 'games', 'species', 'quizzes']) {
       expect(xml, `раздел ${section}`).toContain(`<loc>https://sealife.info/en/${section}</loc>`)
     }
-    // ...кроме разделов на выдуманных данных: quizzes рендерится из `sampleQuizzes`.
+    // ...а вот раздел, который ВСЁ ЕЩЁ на выдуманных данных, в карту не подаётся: у центров
+    // карточки несут фиктивные телефоны и «штамп проверки» (инвариант №7, снимется с M2-T02).
     expect(xml, 'мок-раздел в карте не нужен').not.toContain(
-      '<loc>https://sealife.info/en/quizzes</loc>',
+      '<loc>https://sealrescue.info/en/rescue-centers</loc>',
     )
     // Legal — единственные страницы, живущие ещё и на /de (§5 DDG / §18 MStV).
     expect(xml).toContain('<loc>https://sealife.info/de/legal-notice</loc>')

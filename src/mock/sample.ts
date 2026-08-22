@@ -27,14 +27,6 @@ export interface SampleMeme {
   seed: number
 }
 
-export interface SampleQuiz {
-  slug: string
-  title: L
-  excerpt: L
-  questions: number
-  sample: { q: L; options: L[] }
-}
-
 export interface SampleSpecies {
   slug: string
   name: L
@@ -159,36 +151,6 @@ export const sampleMemes: SampleMeme[] = [
   },
 ]
 
-export const sampleQuizzes: SampleQuiz[] = [
-  {
-    slug: 'sample-quiz',
-    title: lorem('Какой ты тюлень?', 'Which seal are you?'),
-    excerpt: lorem('Шесть вопросов — один диагноз.', 'Six questions, one diagnosis.'),
-    questions: 6,
-    sample: {
-      q: lorem('Идеальный день — это…', 'The perfect day is…'),
-      options: [
-        lorem('Лежать на гальке', 'Lying on the pebbles'),
-        lorem('Нырять за рыбой', 'Diving for fish'),
-        lorem('Орать на чаек', 'Yelling at gulls'),
-      ],
-    },
-  },
-  {
-    slug: 'true-or-false-seals',
-    title: lorem('Миф или правда?', 'Myth or fact?'),
-    excerpt: lorem('Развенчиваем тюленьи легенды.', 'Busting seal legends.'),
-    questions: 8,
-    sample: {
-      q: lorem(
-        'Тюленю нужно помочь вернуться в воду.',
-        'A seal needs help getting back to the water.',
-      ),
-      options: [lorem('Правда', 'Fact'), lorem('Миф', 'Myth')],
-    },
-  },
-]
-
 export const sampleSpecies: SampleSpecies[] = [
   {
     slug: 'sample-species',
@@ -309,6 +271,5 @@ const bySlug = <T extends { slug: string }>(items: T[], slug: string): T | undef
 
 export const findArticle = (slug: string) => bySlug(sampleArticles, slug)
 export const findNews = (slug: string) => bySlug(sampleNews, slug)
-export const findQuiz = (slug: string) => bySlug(sampleQuizzes, slug)
 export const findSpecies = (slug: string) => bySlug(sampleSpecies, slug)
 export const findCenter = (slug: string) => bySlug(sampleCenters, slug)
