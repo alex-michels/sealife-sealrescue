@@ -19,7 +19,7 @@ import { AgentProposals, AgentRuns } from './collections/Agents'
 import { UserSubmissions, Reactions } from './collections/Community'
 import { SectionContent } from './globals/SectionContent'
 import { isEditor } from './access/roles'
-import { mediaStaticDir } from './media/storage'
+import { mediaDirWarning, mediaStaticDir } from './media/storage'
 import { leaderboardSubmit, leaderboardRead, leaderboardStart } from './endpoints/leaderboard'
 import { gameConfigRead } from './endpoints/gameConfig'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
@@ -47,20 +47,12 @@ const mediaDir = mediaStaticDir(path.resolve(dirname, '..'))
 /** Один формат на оригинал и на все производные — повторяется, потому что не наследуется. */
 const WEBP = { formatOptions: { format: 'webp' as const, options: { quality: 82 } } }
 
-// Предупреждение о потере загрузок — только на РАБОТАЮЩЕМ сервере. При `next build` конфиг
-// грузится каждым воркером, и MEDIA_DIR там законно пуст (каталог существует на боксе, не в CI):
-// warning на сборке был бы шумом ×N, который приучают игнорировать. Не бросаем исключение
-// вообще — упавший старт хуже, чем работающий сайт с предупреждением в journalctl.
-if (
-  process.env.NODE_ENV === 'production' &&
-  !process.env.MEDIA_DIR &&
-  process.env.NEXT_PHASE !== 'phase-production-build'
-) {
-  console.warn(
-    `[media] MEDIA_DIR не задан, загрузки пойдут в ${mediaDir}. ` +
-      'В проде это каталог релиза — файлы исчезнут при следующем деплое. См. docs/DEPLOYMENT.md §7a.',
-  )
-}
+// CR-18: решение о предупреждении принимает `mediaDirWarning` — по РЕЗУЛЬТАТУ резолва, а не по
+// отсутствию env. Прежняя инлайновая проверка смотрела только на `!process.env.MEDIA_DIR`, из-за
+// чего случай «MEDIA_DIR задан, но ведёт внутрь releases/» проходил молча, а `isEphemeralMediaDir`
+// не вызывалась вообще. Громкий отказ живёт в шаге деплоя, здесь — предупреждение (см. storage.ts).
+const mediaWarning = mediaDirWarning(mediaDir)
+if (mediaWarning) console.warn(mediaWarning)
 
 const Media: CollectionConfig = {
   slug: 'media',
