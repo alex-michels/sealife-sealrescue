@@ -1,6 +1,6 @@
 import path from 'path'
 import { describe, it, expect } from 'vitest'
-import { mediaStaticDir, isEphemeralMediaDir } from '@/media/storage'
+import { mediaStaticDir, isEphemeralMediaDir, mediaDirWarning } from '@/media/storage'
 import { coverAlt } from '@/media/alt'
 
 /**
@@ -65,5 +65,42 @@ describe('coverAlt', () => {
 
   it('пробельные значения не считаются заполненными', () => {
     expect(coverAlt({ alt: '   ' }, '  ')).toBe('')
+  })
+})
+
+/**
+ * **CR-18** — предупреждение о каталоге загрузок.
+ *
+ * До этой правки решение принималось инлайном в `payload.config.ts` по ОТСУТСТВИЮ `MEDIA_DIR`,
+ * из-за чего `isEphemeralMediaDir` не вызывалась ниоткуда (страховка без читателя, как
+ * `localeStatus` в CR-15), а случай «MEDIA_DIR задан, но ведёт внутрь releases/» проходил молча.
+ */
+describe('mediaDirWarning', () => {
+  const RELEASE = '/opt/sealife/releases/abc123/media'
+
+  it('каталог релиза без MEDIA_DIR — предупреждаем и называем причину', () => {
+    const msg = mediaDirWarning(RELEASE, {})
+    expect(msg).toContain(RELEASE)
+    expect(msg).toContain('MEDIA_DIR не задан')
+  })
+
+  it('MEDIA_DIR ЗАДАН, но ведёт внутрь releases/ — тоже предупреждаем', () => {
+    // Ровно тот случай, который прежняя проверка пропускала: env есть, файлы всё равно исчезнут.
+    const msg = mediaDirWarning(RELEASE, { MEDIA_DIR: RELEASE })
+    expect(msg).toContain('указывает внутрь каталога релиза')
+  })
+
+  it('shared-каталог — молчим', () => {
+    expect(mediaDirWarning('/opt/sealife/shared/media', { MEDIA_DIR: '/opt/sealife/shared/media' })).toBeNull()
+  })
+
+  it('дев-каталог репозитория — молчим', () => {
+    expect(mediaDirWarning('/home/dev/sealife/media', {})).toBeNull()
+  })
+
+  it('во время next build молчим даже для каталога релиза', () => {
+    // Конфиг грузится каждым воркером сборки, MEDIA_DIR там законно пуст: warning ×N приучает
+    // его игнорировать — а именно этот warning и должен быть заметен на боксе.
+    expect(mediaDirWarning(RELEASE, { NEXT_PHASE: 'phase-production-build' })).toBeNull()
   })
 })

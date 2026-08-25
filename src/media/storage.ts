@@ -59,3 +59,37 @@ export function isEphemeralMediaDir(dir: string, releasesRoot = '/opt/sealife/re
   const normalized = dir.split(path.sep).join('/')
   return normalized.startsWith(`${releasesRoot}/`) || normalized.includes('/releases/')
 }
+
+/**
+ * Нужно ли ругаться на текущий каталог загрузок — и что именно сказать (Roadmap **CR-18**).
+ *
+ * ## Зачем отдельная функция
+ * Проверка жила инлайном в `payload.config.ts` и смотрела на ОТСУТСТВИЕ `MEDIA_DIR`, а не на
+ * получившийся путь. Из-за этого `isEphemeralMediaDir()` — написанная в CR-04 ровно под эту
+ * задачу — не вызывалась ниоткуда: страховка без читателя, тот же класс, что `localeStatus` в
+ * CR-15. Заодно мимо проверки проходил случай «MEDIA_DIR задан, но указывает ВНУТРЬ `releases/`»:
+ * env есть, предупреждения нет, файлы всё равно исчезнут.
+ *
+ * Теперь решение принимается по РЕЗУЛЬТАТУ резолва, поэтому оба случая ловятся одним условием.
+ *
+ * ## Почему предупреждение, а не исключение
+ * Решение из CR-04 сохранено сознательно: упавший старт хуже, чем работающий сайт с
+ * предупреждением в journalctl — потеря загрузок не мешает страницам рендериться. Громкий отказ
+ * перенесён туда, где он уместен и ничего не роняет: в шаг деплоя (`.github/workflows/deploy.yml`),
+ * который проверяет `/etc/sealife/.env` ДО активации релиза.
+ *
+ * `next build` пропускаем: конфиг грузится каждым воркером, `MEDIA_DIR` там законно пуст
+ * (каталог существует на боксе, не в CI), и warning ×N приучает его игнорировать.
+ */
+export function mediaDirWarning(dir: string, env: MediaEnv = process.env): string | null {
+  if (env.NEXT_PHASE === 'phase-production-build') return null
+  if (!isEphemeralMediaDir(dir)) return null
+
+  const cause = env.MEDIA_DIR?.trim()
+    ? `MEDIA_DIR указывает внутрь каталога релиза (${dir})`
+    : `MEDIA_DIR не задан, загрузки пойдут в ${dir}`
+  return (
+    `[media] ${cause}. Этот каталог удаляется следующим деплоем — загруженные картинки исчезнут. ` +
+    'Задайте MEDIA_DIR=/opt/sealife/shared/media в /etc/sealife/.env. См. docs/DEPLOYMENT.md §7a.'
+  )
+}

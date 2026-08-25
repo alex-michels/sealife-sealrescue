@@ -125,6 +125,33 @@ jobs:
           rsync -az --delete -e "ssh -i ~/.ssh/id_ed25519" artifact/ \
             "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:$REL/"
 
+      # CR-18: каталог загрузок должен лежать ВНЕ releases/. Проверяем ДО активации релиза:
+      # шаблон Ansible создаётся с force: false, поэтому на уже поднятом боксе правка шаблона
+      # ничего не меняет — реальную защиту даёт только эта проверка. Отказ здесь ничего не роняет:
+      # текущий релиз продолжает работать, деплой просто не активируется.
+      - name: Verify MEDIA_DIR before activating (uploads must survive the deploy)
+        run: |
+          set -e
+          ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -s <<'REMOTE'
+          set -eu
+          ENV_FILE=/etc/sealife/.env
+          line=$(grep -E '^MEDIA_DIR=' "$ENV_FILE" 2>/dev/null | tail -n1 || true)
+          val=$(printf '%s' "${line#MEDIA_DIR=}" | tr -d '"' | tr -d "'")
+          hint="Добавьте строку MEDIA_DIR=/opt/sealife/shared/media в $ENV_FILE и повторите деплой (docs/DEPLOYMENT.md §7a)."
+          if [ -z "$val" ]; then
+            echo "MEDIA_DIR не задан в $ENV_FILE — загрузки попадут в каталог релиза и исчезнут при следующем деплое."
+            echo "$hint"; exit 1
+          fi
+          case "$val" in
+            /*) ;;
+            *) echo "MEDIA_DIR должен быть абсолютным путём (сейчас: $val)."; echo "$hint"; exit 1 ;;
+          esac
+          case "$val" in
+            /opt/sealife/releases/*) echo "MEDIA_DIR ведёт внутрь releases/ ($val) — этот каталог удаляется деплоем."; echo "$hint"; exit 1 ;;
+          esac
+          echo "MEDIA_DIR ok: $val"
+          REMOTE
+
       - name: Activate release + restart service
         run: |
           ssh -i ~/.ssh/id_ed25519 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \

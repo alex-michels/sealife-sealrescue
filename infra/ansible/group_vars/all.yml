@@ -12,6 +12,11 @@ env_file: /etc/sealife/.env
 # молча ломает canonical/hreflang/sitemap-URL — страницы отдадут чужой домен.
 server_url: https://sealife.info
 
+# CR-04/CR-18: каталог загрузок. ОБЯЗАН быть вне {{ app_dir }}/releases — иначе следующий деплой
+# снесёт все загруженные картинки вместе со старым релизом. Шаг деплоя проверяет это и
+# отказывается активировать релиз, если путь пуст, относителен или ведёт внутрь releases/.
+media_dir: /opt/sealife/shared/media
+
 # Public keys allowed to log in as `deploy` (same keypair as the CI SSH_KEY secret).
 # Paste one or more "ssh-ed25519 AAAA... comment" lines.
 deploy_authorized_keys: []
