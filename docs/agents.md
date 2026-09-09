@@ -54,6 +54,14 @@ agent ──create──▶ agent-proposals (status: pending)
 > ⚠️ Переход `approved` → `applied` (собственно «Применить предложение») — контракт описан выше, но
 > **код для него ещё не написан** (ни хук, ни endpoint); см. Roadmap **M2-T13**.
 
+## Контракт вывода Researcher (M2-T06)
+
+Реализованы [контракт v1, схема, EN-промпт и проверенный пример](agents/researcher-contract.md).
+`src/agents/researcherContract.ts` валидирует структуру и цитаты против отдельно переданных
+снапшотов; адаптер готовит только `pending`-предложение или возвращает `null` при abstention.
+Валидация и адаптер пока не подключены к REST/writer: это M2-T09; live-fetcher — M2-T07.
+Существующий RBAC очереди сохраняется, публикации и применения изменений нет.
+
 ## Audit и бюджет — `agent-runs`
 Каждый прогон агента логируется: `agentName` (researcher/content_admin/translator/sysadmin/seo),
 `status`, тайминги, `proposalsCreated`, **`cost`** (USD — контроль бюджета AI API), `logs`.
