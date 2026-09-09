@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { isEditor, isEditorField, isLoggedIn, canCreateContent, canUpdateContent } from '../access/roles'
+import { guardProposalLifecycle } from '../hooks/proposalLifecycle'
+import { proposalReview } from '../endpoints/proposalReview'
 
 /**
  * AgentProposal — СЕРДЦЕ human-in-the-loop.
@@ -7,6 +9,8 @@ import { isEditor, isEditorField, isLoggedIn, canCreateContent, canUpdateContent
  */
 export const AgentProposals: CollectionConfig = {
   slug: 'agent-proposals',
+  hooks: { beforeChange: [guardProposalLifecycle] },
+  endpoints: [proposalReview],
   admin: {
     useAsTitle: 'summary',
     defaultColumns: ['summary', 'proposalType', 'status', 'confidence', 'createdAt'],

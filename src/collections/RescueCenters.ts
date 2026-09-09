@@ -1,15 +1,16 @@
 import type { CollectionConfig } from 'payload'
-import { isEditor } from '../access/roles'
+import { isEditor, readPublishedOrStaff } from '../access/roles'
 
 export const RescueCenters: CollectionConfig = {
   slug: 'rescue-centers',
+  versions: { drafts: true },
   admin: {
     useAsTitle: 'name',
     defaultColumns: ['name', 'country', 'status', 'lastCheckedAt', 'verificationScore'],
     description: 'Каталог реабилитационных центров (sealrescue.info). Поддерживается Агентом-1.',
   },
   access: {
-    read: () => true, // публичный справочник
+    read: readPublishedOrStaff,
     // Агенты НЕ пишут в прод напрямую (CLAUDE.md §1–2): изменения центров идут
     // через agent-proposals → ревью человека. Прямая запись — только людям-редакторам.
     create: isEditor,
@@ -66,6 +67,8 @@ export const RescueCenters: CollectionConfig = {
     {
       name: 'status',
       type: 'select',
+      // Keep operational status distinct from Payload's generated draft _status enum.
+      enumName: 'rescue_center_operating_status',
       required: true,
       defaultValue: 'needs_check',
       options: [

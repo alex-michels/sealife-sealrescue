@@ -88,6 +88,9 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 ## Rescue
 
 ### `rescue-centers` — справочник центров
+
+**M2-T13:** native drafts/versions включены. Публичное чтение — только published; staff читает drafts. `status` описывает состояние центра, `_status` — draft/published; их PostgreSQL enum-разделение задано явно. Для существующей БД обязательна [миграция перед rollout](agents/proposal-review.md#database-rollout), сохраняющая прежнюю публичность и данные. Применение agent-proposal создаёт только draft и сбрасывает его проверочные отметки; Publish делает человек.
+
 Публичный справочник. `name` (**не** локализуется — имя центра не переводим, правило глоссария),
 `slug` (unique), `country`*/`region`, `website`, `email`/`phone`, `address`, `location` (point
 `[lng,lat]`, для карты), `socialLinks[]` (`platform` select + `url`), `operatingLanguages`
@@ -165,8 +168,7 @@ number/text, все null/omitted у существующих строк Seal Hun
 коллекционный `isEditor`** (не `canUpdateContent`!) — т.е. агент не может редактировать предложение
 вообще после создания, не только поле `status`; field-access `isEditorField` на `status` — доп.
 защитный слой, а не единственное ограничение.
-> ⚠️ Переход `approved` → `applied` («Применить предложение», diff → черновик целевой коллекции) —
-> **пока не реализован кодом** (ни хука, ни endpoint'а); это ожидаемо и отслеживается как **M2-T13**.
+Переход `approved` → `applied` реализован для Researcher v1 / rescue-centers: серверная транзакция пишет только draft и проверяет прежние значения. Хук запрещает прямое выставление applied, applied-запись неизменяема. См. [review workflow](agents/proposal-review.md).
 
 ### `agent-runs` — audit log прогонов
 Аудит + бюджет-контроль. `agentName` (researcher/content_admin/translator/sysadmin/seo), `status`,
@@ -187,7 +189,7 @@ number/text, все null/omitted у существующих строк Seal Hun
 | Коллекция | read | create | update | delete |
 | --- | --- | --- | --- | --- |
 | `content`, `species`, `quizzes`, `games` | published/staff | +agent (draft) | translator/+agent | editor |
-| `rescue-centers` | public | editor | editor | editor |
+| `rescue-centers` | published / staff drafts | editor | editor | editor |
 | `media` | public | editor | editor | editor |
 | `glossary` | public | staff | staff | editor |
 | `sources` | logged-in | +agent | translator/+agent | editor |
@@ -208,3 +210,5 @@ number/text, все null/omitted у существующих строк Seal Hun
 > Вся матрица (включая read-фильтры черновиков, least-privilege чтение `users` и хук
 > `forceAgentDrafts`) закреплена параметризованным int-тестом
 > `tests/int/access-matrix.int.spec.ts` (**QA-13**): расхождение кода с этой таблицей валит CI.
+
+M2-T11: агенты создают Sources с trustLevel=0; URL/type/trust существующего источника меняют только editor/admin. M2-T12/T13: applied ставится только через транзакционный apply; applied-предложения неизменяемы.
