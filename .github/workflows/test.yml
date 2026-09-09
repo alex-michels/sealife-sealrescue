@@ -117,6 +117,19 @@ jobs:
       - name: Install Playwright chromium
         run: npx playwright install --with-deps chromium
 
+      # Ubuntu restricts unprivileged namespaces for unregistered browser binaries.
+      # Permit only this ephemeral runner's Playwright headless shell to use its OS sandbox.
+      - name: Allow the Researcher Chromium sandbox
+        run: |
+          sudo tee /etc/apparmor.d/playwright-researcher > /dev/null <<'PROFILE'
+          abi <abi/4.0>,
+          include <tunables/global>
+          profile playwright-researcher /home/runner/.cache/ms-playwright/**/chrome-headless-shell flags=(unconfined) {
+            userns,
+          }
+          PROFILE
+          sudo apparmor_parser -r /etc/apparmor.d/playwright-researcher
+
       - name: Prepare DB schema (drizzle push on empty Postgres)
         run: npx tsx scripts/push-dev-schema.mts
 
