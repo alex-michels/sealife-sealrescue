@@ -79,9 +79,12 @@ export function storedResearcherProposal(doc: AgentProposal): ResearcherProposal
 
 function fieldValue(field: string, value: unknown): unknown {
   if (field === 'socialLinks') {
-    return Array.isArray(value)
-      ? value.map((item: Record<string, unknown>) => ({ platform: item.platform, url: item.url }))
-      : []
+    if (!Array.isArray(value)) return value ?? []
+    return value.map((item: unknown) => {
+      if (!item || typeof item !== 'object' || Array.isArray(item)) return item
+      const link = item as Record<string, unknown>
+      return { platform: link.platform, url: link.url }
+    })
   }
   if (field === 'operatingLanguages') return value ?? []
   return value ?? null

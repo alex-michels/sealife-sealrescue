@@ -21,7 +21,8 @@ belong to their later Roadmap tasks.
 **Apply as draft** is available after approval. The server revalidates the stored proposal, locks
 its row, reads the centre's latest draft and compares every `from` value. A mismatch returns
 `target_changed` and changes nothing. Edits to unrelated fields are preserved. Generated social-link
-row IDs are excluded from semantic comparison. A stale review form returns `proposal_changed`.
+row IDs are excluded from semantic comparison; malformed before-values are never treated as empty lists.
+A stale review form returns `proposal_changed`.
 
 The centre write and transition to `applied` share one PostgreSQL transaction and request context,
 with `overrideAccess: false`. Existing-centre rows are locked during comparison and version creation.

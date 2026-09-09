@@ -87,6 +87,18 @@ it('normalizes generated social-link row IDs when comparing current data', () =>
     }),
   ).not.toThrow()
 })
+it.each([42, 'invalid', {}, [null]])(
+  'does not treat malformed social-link before-values as empty: %j',
+  (from) => {
+    const proposal = {
+      ...storedResearcherProposal(doc),
+      diff: [{ field: 'socialLinks' as const, from, to: [] }],
+    }
+    expect(() => centerDraftData(proposal, { ...target, socialLinks: [] })).toThrow(
+      'target_changed',
+    )
+  },
+)
 const hookArgs = {
   operation: 'update' as const,
   req: { user: { role: 'editor' } } as PayloadRequest,
