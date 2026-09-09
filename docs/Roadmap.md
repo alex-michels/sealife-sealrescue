@@ -808,8 +808,10 @@
 
 ### Дашборд (ревью)
 
-* [ ] **M2-T12** «Очередь изменений»: карточки, diff было→стало, Approve/Reject/Edit. *[M]*
-* [ ] **M2-T13** «Применить предложение»: diff → обновить документ КАК ЧЕРНОВИК, proposal `applied`. *[M]* *(CLAUDE.md шаг 3)*
+* [x] **M2-T12** «Очередь изменений»: карточки, diff было→стало, Approve/Reject/Edit. *[M]*
+  — **2026-09-10:** `/admin/agent-review`, EN/RU, фильтры/пагинация, diff/цитаты/источники/confidence; approve/reject/edit только editor/admin, редактирование требует нового ревью. Researcher v1; старые контракты доступны для чтения/отклонения.
+* [x] **M2-T13** «Применить предложение»: diff → обновить документ КАК ЧЕРНОВИК, proposal `applied`. *[M]* *(CLAUDE.md шаг 3)*
+  — **2026-09-10:** атомарное применение проверенного Researcher v1 к rescue-centers как draft; сравнение from, row locks, rollback и idempotent повтор. Native drafts + опубликованные версии, сброс проверочных отметок только в новом черновике. SQL-миграция существующих данных и тесты: `docs/agents/proposal-review.md`. Другие агенты — отдельные apply-адаптеры позже.
 * [ ] **M2-T14** Turnstile на формы. *[S]* → SEC/EU
 
 ---

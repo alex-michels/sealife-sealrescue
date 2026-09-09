@@ -42,7 +42,8 @@ test.afterAll(async () => {
   test.setTimeout(BOOT_TIMEOUT)
   await payload.delete({ collection: 'content', where: { slug: { like: RUN } } }).catch(() => {})
   await cleanupTestUser()
-  await payload.db.destroy?.()
+  // getPayload caches this instance across files in the same Playwright worker.
+  // Resetting its database adapter here leaves later specs waiting for initialization forever.
 })
 
 test.describe('CR-08: предпросмотр черновика', () => {

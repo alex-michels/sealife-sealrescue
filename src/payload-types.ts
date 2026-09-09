@@ -239,6 +239,7 @@ export interface RescueCenter {
   sources?: (number | Source)[] | null;
   updatedAt: string;
   createdAt: string;
+  _status?: ('draft' | 'published') | null;
 }
 /**
  * Источники для фактчекинга. trustLevel = allowlist (OWASP).
@@ -1074,6 +1075,7 @@ export interface RescueCentersSelect<T extends boolean = true> {
   sources?: T;
   updatedAt?: T;
   createdAt?: T;
+  _status?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

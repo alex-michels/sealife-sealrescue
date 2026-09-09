@@ -96,7 +96,14 @@ export default buildConfig({
   // imageSizes / resizeOptions / formatOptions — производные не генерируются, а оригинал
   // сохраняется как есть, вместе с EXIF. Пакет в зависимостях был; не хватало этой строки.
   sharp,
-  admin: { user: 'users' },
+  admin: {
+    user: 'users',
+    importMap: { baseDir: dirname },
+    components: {
+      afterNavLinks: ['/app/(payload)/admin/components/ProposalReviewLink#ProposalReviewLink'],
+      views: { agentReview: { Component: '/app/(payload)/admin/components/ProposalReviewView#ProposalReviewView', path: '/agent-review' } },
+    },
+  },
   editor: lexicalEditor(),
   collections: [
     Users,

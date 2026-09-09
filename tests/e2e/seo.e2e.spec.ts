@@ -72,7 +72,7 @@ test.beforeAll(async () => {
 test.afterAll(async () => {
   test.setTimeout(BOOT_TIMEOUT)
   await payload.delete({ collection: 'content', where: { slug: { like: `${RUN}-` } } })
-  await payload.db.destroy?.()
+  // The default Payload instance is shared with later specs in this worker.
 })
 
 const altHref = (page: Page, hreflang: string) =>
