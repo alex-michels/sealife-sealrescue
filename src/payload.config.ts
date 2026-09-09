@@ -25,7 +25,6 @@ import { gameConfigRead } from './endpoints/gameConfig'
 import { locales, defaultLocale, localeLabels } from './i18n/config'
 import { en } from '@payloadcms/translations/languages/en'
 import { ru } from '@payloadcms/translations/languages/ru'
-import { de } from '@payloadcms/translations/languages/de'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -118,7 +117,7 @@ export default buildConfig({
   globals: [SectionContent],
   endpoints: [leaderboardStart, leaderboardSubmit, leaderboardRead, gameConfigRead],
   localization: {
-    // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en/de.
+    // Контент-локали берутся из единого источника (src/i18n/config.ts): ru/en.
     locales: locales.map((code) => ({ code, label: localeLabels[code] })),
     defaultLocale,
     // CR-01: выключено СПЕЦИАЛЬНО. С fallback документ, написанный только на исходной локали,
@@ -132,10 +131,10 @@ export default buildConfig({
     // а локализованных `array` с required/minRows и локализованных `number` в схеме нет.
     fallback: false,
   },
-  // Язык интерфейса админки (staff) — RU/EN/DE; выбирается в профиле пользователя/по Accept-Language.
+  // CR-17: интерфейс админки — RU/EN. Немецкий браузер/старая de-cookie → fallback en.
   // Это НЕ контент-локализация (та — в `localization` выше).
   i18n: {
-    supportedLanguages: { en, ru, de },
+    supportedLanguages: { en, ru },
     fallbackLanguage: 'en',
   },
   db: postgresAdapter({
