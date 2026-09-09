@@ -1,8 +1,10 @@
 import type { CollectionConfig } from 'payload'
 import { isEditor, isLoggedIn, canCreateContent, canUpdateContent } from '../access/roles'
+import { protectSourceTrust } from '../hooks/sourceTrust'
 
 export const Sources: CollectionConfig = {
   slug: 'sources',
+  hooks: { beforeChange: [protectSourceTrust] },
   admin: {
     useAsTitle: 'url',
     defaultColumns: ['url', 'type', 'trustLevel', 'lastFetchedAt'],
