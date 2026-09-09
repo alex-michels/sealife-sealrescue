@@ -98,6 +98,7 @@ export default buildConfig({
   sharp,
   admin: {
     user: 'users',
+    importMap: { baseDir: dirname },
     components: {
       afterNavLinks: ['/app/(payload)/admin/components/ProposalReviewLink#ProposalReviewLink'],
       views: { agentReview: { Component: '/app/(payload)/admin/components/ProposalReviewView#ProposalReviewView', path: '/agent-review' } },
