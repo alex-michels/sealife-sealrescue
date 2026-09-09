@@ -212,6 +212,11 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   заголовком; строка локали не может существовать без заголовка, он `required`);
   `api.int.spec.ts` — smoke.
 - **E2E** — Playwright (`playwright.config.ts`), `tests/e2e/`:
+  - `getPayload()` кэширует default-instance на весь worker, включая следующие spec-файлы.
+    В `afterAll` удалять только собственные фикстуры, **не вызывать `payload.db.destroy()`**:
+    адаптер сбрасывает initialization promise, а `getPayload()` возвращает тот же кэшированный
+    экземпляр без повторной инициализации. Следующий spec зависает; retry с новым worker маскирует
+    ошибку (выявлено при M2-T12: preview → proposal-review).
   - `frontend.e2e.spec.ts` — контракты брендинга/роутинга: главные обеих локалей (title/h1/`lang`/свитчер),
     sealrescue через `?site=`, redirect-политика `/`, настоящие HTTP 404 + локализованная
     `not-found.tsx` (QA-04/05 — done, PR #39/#40).
