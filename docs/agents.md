@@ -212,3 +212,7 @@ SysAdmin, SEO.
 - [data-model.md](data-model.md) — `agent-proposals` / `agent-runs` / поля
 - [architecture.md](architecture.md) — как инварианты зашиты в коде
 - [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md) — AI Act, DSA, минимизация данных
+
+## Запись Researcher в CMS (M2-T09)
+
+Исполняемый REST-клиент, audit run и ручной запуск описаны в [researcher-runner.md](agents/researcher-runner.md). Проверенный контракт подключён к worker; общий REST endpoint очереди сохраняет прежние RBAC/required-sources проверки.

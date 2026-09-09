@@ -48,9 +48,9 @@ Payload: `diff` → `{field:{from,to}}`, `sources` → relationship IDs; в `evi
 Функция чистая: она **не пишет** в CMS и не присваивает human-reviewed/source-verified метки.
 
 **Подключение к живому агенту ещё впереди:** M2-T07 поставляет интернет/fetcher, M2-T08/T11 —
-проверку фактов, свежести и allowlist источников, M2-T09 — клиент записи по API-ключу.
+проверку фактов, свежести и allowlist источников, M2-T09 — реализованный [клиент записи по API-ключу](researcher-runner.md).
 Текущий REST endpoint очереди не подключён к этому валидатору; там остаётся существующая
-проверка непустого relationship `sources` и RBAC. Будущий writer обязан вызвать
+проверка непустого relationship `sources` и RBAC. Writer вызывает
 `prepareResearcherProposal` с доверенными снапшотами до `create` и записывать от роли agent
 (Local API — с `overrideAccess: false`). Логи ошибок не должны содержать сырой ответ модели,
 request body, PII или секреты. Существующие права publish/delete/approve не меняются.
