@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import { NextRequest } from 'next/server'
 import { pickLocale, proxy } from '@/proxy'
+import { legalSlugs } from '@/site/legalRoutes'
+import { legalNav } from '@/site/legal'
+import { routeLocales } from '@/i18n/config'
 
 /**
  * QA-19: роутинг proxy.ts — авто-выбор локали и rewrite/redirect-контракт.
@@ -26,9 +29,9 @@ describe('pickLocale', () => {
   })
 
   it('невалидная cookie игнорируется', () => {
-    expect(
-      pickLocale(req('/', { cookie: 'NEXT_LOCALE=xx', 'accept-language': 'ru-RU' })),
-    ).toBe('ru')
+    expect(pickLocale(req('/', { cookie: 'NEXT_LOCALE=xx', 'accept-language': 'ru-RU' }))).toBe(
+      'ru',
+    )
   })
 
   it('Accept-Language: учитываются q-веса, а не порядок', () => {
@@ -85,7 +88,7 @@ describe('proxy(): rewrite с локалью в пути', () => {
   })
 
   // legal-only локаль: префикс /de распознаётся (иначе Impressum улетел бы в /en/de/...),
-  // а 404 для контентных роутов даёт уже сама страница (isLocale), не proxy.
+  // остальные /de пути proxy отправляет в отдельный 404-роут до стриминга.
   it('/de/privacy НЕ редиректится: legal-only локаль — валидный префикс пути', () => {
     const res = proxy(req('/de/privacy'))
     expect(res.headers.get('location')).toBeNull()
@@ -121,4 +124,38 @@ describe('proxy(): rewrite с локалью в пути', () => {
     const res = proxy(req('/de/articles'))
     expect(res.headers.get('set-cookie') ?? '').not.toContain('NEXT_LOCALE')
   })
+})
+
+describe('CR-16: legal-only paths are rejected before list streaming', () => {
+  it('the proxy allowlist matches every locale’s legal navigation', () => {
+    for (const locale of routeLocales) {
+      expect(legalNav[locale].map(({ slug }) => slug)).toEqual([...legalSlugs])
+    }
+  })
+
+  it.each(legalSlugs)('preserves exactly /de/%s, including a trailing slash', (slug) => {
+    for (const suffix of ['', '/']) {
+      const res = proxy(req(`/de/${slug}${suffix}?site=sealrescue`))
+      expect(new URL(res.headers.get('x-middleware-rewrite')!).pathname).toBe(
+        `/sealrescue/de/${slug}${suffix}`,
+      )
+      expect(res.headers.get('location')).toBeNull()
+    }
+  })
+
+  it.each(['', '/articles', '/species/seal', '/privacy/extra', '/privacy-policy', '/terms-extra'])(
+    'rewrites /de%s to the branded 404 route',
+    (path) => {
+      for (const site of ['sealife', 'sealrescue']) {
+        const res = proxy(req(`/de${path}?site=${site}&topic=biology`))
+        const rewrite = new URL(res.headers.get('x-middleware-rewrite')!)
+        expect(rewrite.pathname).toBe(`/${site}/de/not-found`)
+        expect(rewrite.searchParams.get('topic')).toBe('biology')
+        expect(res.headers.get('location')).toBeNull()
+        expect(res.headers.get('x-middleware-request-x-site')).toBe(site)
+        expect(res.headers.get('x-middleware-request-x-locale')).toBe('de')
+        expect(res.headers.get('set-cookie') ?? '').not.toContain('NEXT_LOCALE')
+      }
+    },
+  )
 })

@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { legalNav, legalHref, draftNote } from '../../src/site/legal.js'
+import { sectionDefs } from '../../src/site/sections.js'
+import { siteIds } from '../../src/site/config.js'
 
 /**
  * QA-22: legal-shell (M0-T13 / EU-07) — обязателен независимо от набора языков сайта
@@ -30,33 +32,49 @@ test.describe('Legal shell', () => {
     }
   })
 
-  test('/de — legal-only локаль: юр. роуты 200, контентные 404', async ({ request }) => {
-    for (const { slug } of legalNav.de) {
-      const res = await request.get(`${BASE}${legalHref('de', slug)}`)
-      expect(res.status(), `de/${slug}`).toBe(200)
-    }
+  for (const site of siteIds) {
+    test(`CR-16: ${site} legal routes stay 200; every /de content section is HTTP 404`, async ({
+      request,
+    }) => {
+      for (const { slug } of legalNav.de) {
+        const res = await request.get(`${BASE}${legalHref('de', slug)}?site=${site}`)
+        expect(res.status(), `${site}/de/${slug}`).toBe(200)
+      }
+      const sections = sectionDefs.filter((section) => section.site === site)
+      const paths = [
+        '',
+        '/definitely-not-a-page',
+        '/privacy/extra',
+        '/privacy-policy',
+        ...sections.flatMap(({ slug, hasDetail }) =>
+          hasDetail ? [`/${slug}`, `/${slug}/unknown`] : [`/${slug}`],
+        ),
+      ]
+      for (const path of paths) {
+        const res = await request.get(`${BASE}/de${path}?site=${site}`)
+        expect(res.status(), `${site}/de${path}`).toBe(404)
+      }
+    })
+  }
 
-    // Контентные пути под /de не существуют. Статус проверяем на роутах БЕЗ loading-границы:
-    // только там notFound() успевает выставить настоящий HTTP 404 до первого флаша
-    // (см. docs/localization.md § «404 и loading-границы»).
-    for (const path of ['', '/quizzes', '/definitely-not-a-page']) {
-      const res = await request.get(`${BASE}/de${path}`)
-      expect(res.status(), `de${path || ' (главная)'}`).toBe(404)
-    }
-    // Разделы sealrescue — на своём сайте (?site= override, как в proxy.ts).
-    for (const path of ['/what-to-do', '/rescue-centers', '/report']) {
-      const res = await request.get(`${BASE}/de${path}?site=sealrescue`)
-      expect(res.status(), `de${path} (sealrescue)`).toBe(404)
+  test('/de: списочные разделы отдают 404-страницу, а не немецкий контент', async ({ page }) => {
+    // CR-16: проверяем и HTTP-статус, и прежний UI — soft-404 больше не допускается.
+    for (const path of ['/de/articles', '/de/news', '/de/memes', '/de/species', '/de/games']) {
+      const response = await page.goto(`${BASE}${path}`)
+      expect(response?.status(), path).toBe(404)
+      await expect(page).toHaveURL(`${BASE}${path}`)
+      await expect(page.getByRole('heading', { level: 1 }), path).toHaveText('Page not found')
     }
   })
 
-  test('/de: списочные разделы отдают 404-страницу, а не немецкий контент', async ({ page }) => {
-    // У списков есть loading.tsx, поэтому статус может быть soft-404 (200) — контракт здесь
-    // про содержимое: немецкого раздела нет, рендерится not-found (на фолбэке en).
-    for (const path of ['/de/articles', '/de/news', '/de/memes', '/de/species', '/de/games']) {
-      await page.goto(`${BASE}${path}`)
-      await expect(page.getByRole('heading', { level: 1 }), path).toHaveText('Page not found')
-    }
+  test('CR-16: rejected rescue URL retains rescue branding and legal footer', async ({ page }) => {
+    const response = await page.goto(`${BASE}/de/rescue-centers?site=sealrescue`)
+    expect(response?.status()).toBe(404)
+    await expect(page.locator('html')).toHaveAttribute('data-site', 'sealrescue')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Page not found')
+    await expect(
+      page.getByRole('contentinfo').getByRole('link', { name: 'Impressum', exact: true }),
+    ).toHaveAttribute('href', '/de/legal-notice')
   })
 
   test('DE рендерит немецкие юридические заголовки', async ({ page }) => {

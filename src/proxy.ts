@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { locales, routeLocales, fallbackLocale } from '@/i18n/config'
+import { locales, routeLocales, fallbackLocale, isLocale } from '@/i18n/config'
 import { resolveSiteId } from '@/site/config'
+import { legalSlugs } from '@/site/legalRoutes'
 
 /**
  * Роутинг публичного фронтенда (Next 16 `proxy.ts`, бывш. middleware):
@@ -71,6 +72,15 @@ export function proxy(req: NextRequest) {
   // Язык НЕ запоминаем здесь — cookie NEXT_LOCALE ставит LanguageSwitcher при явном выборе.
   const url = req.nextUrl.clone()
   url.pathname = `/${siteId}${pathname}`
+  // CR-16: reject legal-only content paths before their loading.tsx can start streaming.
+  // The dedicated route throws notFound() without a loading boundary or CMS lookup,
+  // retaining the site's normal 404 shell and the original browser URL.
+  const isLegalPath = legalSlugs.some(
+    (slug) => pathname.replace(/\/$/, '') === `/${pathLocale}/${slug}`,
+  )
+  if (!isLocale(pathLocale) && !isLegalPath) {
+    url.pathname = `/${siteId}/${pathLocale}/not-found`
+  }
   // x-site/x-locale — для мест без params (not-found.tsx рендерится без props).
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set('x-site', siteId)
