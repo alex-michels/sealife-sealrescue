@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "locale": "en",
+  "proposalType": "center_update",
+  "targetCollection": "rescue-centers",
+  "targetId": "101",
+  "summary": "Fill the missing centre address from the official contact page; human review required.",
+  "diff": [
+    {
+      "field": "address",
+      "from": null,
+      "to": "Seal Rescue Ireland, Courtown Harbour,\nCo.Wexford, Ireland, Y25PD92"
+    }
+  ],
+  "sources": [
+    {
+      "sourceId": 1,
+      "url": "https://www.sealrescueireland.org/contact-us/",
+      "checkedAt": "2026-09-09T21:41:31Z",
+      "snapshotHash": "3e54851077a87540a6c9390f622081dc2537f7bfdceef7433513bf8dff23e7a0"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "address",
+      "sourceId": 1,
+      "quote": "Seal Rescue Ireland, Courtown Harbour,\nCo.Wexford, Ireland, Y25PD92"
+    }
+  ],
+  "confidence": 0.95
+}
