@@ -27,7 +27,7 @@ npx tsx scripts/researcher-write.mts output.json snapshots.json
 `snapshots.json` is an array of `{sourceId,url,checkedAt,text}` from the trusted fetcher, **never
 from the model**. The checked-in contract example uses fictitious IDs and is only a test fixture;
 do not submit it to a real CMS. The callback API allows the live fetcher/model pipeline to run
-inside the same audited operation. That integration is M2-T07.
+inside the same audited operation. The live integration is documented in [researcher-sources.md](researcher-sources.md) (M2-T07).
 
 ## Failure and retry semantics
 

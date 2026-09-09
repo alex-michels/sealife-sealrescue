@@ -25,6 +25,8 @@
     "typecheck": "cross-env NODE_OPTIONS=--no-deprecation tsc --noEmit"
   },
   "dependencies": {
+    "@langchain/core": "1.1.48",
+    "@langchain/langgraph": "1.4.14",
     "@payloadcms/db-postgres": "3.85.1",
     "@payloadcms/next": "3.85.1",
     "@payloadcms/richtext-lexical": "3.85.1",
@@ -32,8 +34,10 @@
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
+    "ipaddr.js": "2.5.0",
     "next": "16.2.12",
     "payload": "3.85.1",
+    "playwright": "1.58.2",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "sharp": "0.34.2",

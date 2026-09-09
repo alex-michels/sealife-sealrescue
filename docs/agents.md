@@ -182,8 +182,7 @@ SysAdmin, SEO.
 
 ## Доступ в интернет и обязательная перепроверка фактов
 
-> Требование владельца, 2026-07-26. Пока не реализовано (M2-T07/T08/T11) — здесь зафиксирован
-> контракт, которому обязана соответствовать реализация.
+> Требование владельца, 2026-07-26. M2-T07/T11 реализованы в [live worker](agents/researcher-sources.md); семантическая проверка фактов M2-T08 остаётся открытой.
 
 - **Агент имеет доступ в интернет** — поиск (Tavily/Perplexity) + парсинг страниц (Playwright
   в sandbox). Без внешней проверки агент не имеет права утверждать факт.
@@ -216,3 +215,5 @@ SysAdmin, SEO.
 ## Запись Researcher в CMS (M2-T09)
 
 Исполняемый REST-клиент, audit run и ручной запуск описаны в [researcher-runner.md](agents/researcher-runner.md). Проверенный контракт подключён к worker; общий REST endpoint очереди сохраняет прежние RBAC/required-sources проверки.
+
+Источники и ограниченный LangGraph workflow: [researcher-sources.md](agents/researcher-sources.md).

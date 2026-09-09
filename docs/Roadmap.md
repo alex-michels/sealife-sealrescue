@@ -797,12 +797,14 @@
   снапшота; адаптер готовит только `pending` (или `null` при отсутствии доказательств).
   Документация: `docs/agents/researcher-contract.md`. Подключение к живому fetcher/writer
   остаётся в M2-T07/M2-T09; текущие права CMS и публикация не меняются.
-* [ ] **M2-T07** Оркестрация (LangGraph) + **интернет-доступ агента**: поиск (Tavily/Perplexity) + парсинг (Playwright в sandbox) + снапшот страницы с хэшем. Без этого агент не имеет права утверждать факты. *[L]* → SEC
+* [x] **M2-T07** Оркестрация (LangGraph) + **интернет-доступ агента**: поиск (Tavily/Perplexity) + парсинг (Playwright в sandbox) + снапшот страницы с хэшем. Без этого агент не имеет права утверждать факты. *[L]* → SEC
+  — **2026-09-10:** ограниченный LangGraph workflow + Tavily, HTTPS fetch с проверкой всех DNS/IP и закреплением адреса, sandbox Chromium без JS/сети, снапшот/хэш и Responses-модель → M2-T09 pending. Ручной запуск, 3 одобренных source IDs; конфигурация ключей/модели обязательна. См. `docs/agents/researcher-sources.md`; M2-T08 — семантическая факт-проверка, M2-T10 — cron/бюджеты.
 * [ ] **M2-T08** Логика проверки центров: ссылки, телефон/email/адрес, новые центры, новости; confidence + снапшот. *[L]*
 * [x] **M2-T09** Запись в `agent-proposals`/`agent-runs` по API-ключу `agent`. Проверить: нет publish/delete. *[M]* → SEC
   — **2026-09-10:** REST-клиент и `runResearcher()` проверяют роль и контракт, сохраняют только pending, связывают предложение с audit run; null = abstention. Без секретов/сырых ответов в логах, без автоматического повтора неоднозначного POST. Unit + e2e с настоящим API-ключом; инструкция: `docs/agents/researcher-runner.md`. Cron/idempotency/budget остаются M2-T10.
 * [ ] **M2-T10** Cron + бюджет-лимит AI API + лог `cost`. *[M]* → SEC
-* [ ] **M2-T11** Allowlist источников через `Source.trustLevel`. *[S]* → SEC
+* [x] **M2-T11** Allowlist источников через `Source.trustLevel`. *[S]* → SEC
+  — **2026-09-10:** порог trustLevel >= 0.8, точные HTTPS URL; агенты создают только trust=0 и не меняют URL/type/trust. Поиск не расширяет allowlist; новые источники одобряет editor/admin.
 
 ### Дашборд (ревью)
 
