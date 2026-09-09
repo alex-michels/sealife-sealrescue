@@ -157,6 +157,7 @@
   loading-границы — см. **CR-16**. Настоящий 404 сейчас только у `/de`, `/de/quizzes` и
   несуществующих путей.
   (3) «свитчер RU/EN везде» не выполнен в админке — см. **CR-17**.
+  — **2026-09-09:** HTTP-404 списков исправлен в **CR-16**; единственный остаток — **CR-17**.
   — **аудит 2026-07-26:** сверх формулировки: контракт «контент на `/de` → 404, legal на `/de` → 200»
   закреплён e2e, немецкий браузер уходит на `/en`, устаревшая cookie `NEXT_LOCALE=de` игнорируется.
 * [x] **M0-T10** `hreflang` + `x-default` + canonical + sitemap по локалям (контент — ru/en через `buildAlternates`; legal-роуты — ru/en/de через `buildLegalAlternates`). *[S]* → SEO
@@ -169,7 +170,7 @@
 * [x] **M0-T16** Токены в Tailwind + CSS-переменные: primitive → **semantic-слой** (используем в компонентах только его) → два режима через data-атрибут. *[M]* → DESIGN
 * [x] **M0-T17** Шрифты через `next/font` (self-host, все с кириллицей): sealife Display = Unbounded/Rubik; sealrescue = без декор-display (заголовки тяжёлым Golos Text/Onest); Body = Onest/Golos Text; Mono = JetBrains Mono. НЕ Baloo 2. *[S]* → DESIGN
 * [x] **M0-T18** Базовые примитивы: типошкала, кнопки, карточка, «усатый» разделитель, статус-точка, штамп проверки. *[M]* → DESIGN
-* [~] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell RU/EN + legal-only DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher RU/EN; route guards (`/de` content → 404, `/de` legal → 200); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
+* [x] **M0-T19** Кликабельный design mock / sample shell для ВСЕХ публичных страниц и разделов без реального контента: sample texts/fake records/placeholder media; sealife + sealrescue RU/EN; legal-shell RU/EN + legal-only DE; empty/loading/error/populated states; footer legal links + cookie settings; language switcher RU/EN; route guards (`/de` content → 404, `/de` legal → 200); равномерная card grid на sealife; smoke-test навигации ссылок. [L] → DESIGN/QA
   — **аудит 2026-08-22:** переведено из `[x]` в `[~]` по ОДНОМУ пункту формулировки — route guards.
   Половина «`/de` legal → 200» держится, половина «`/de` content → 404» — нет: пять списочных
   разделов отдают 200 из-за собственной loading-границы (**CR-16**). Остальное из списка
@@ -1684,7 +1685,7 @@ players (auth: true)
   Старый int-спек переписан: он закреплял как ожидаемое ровно то, что было багом («запись целевой
   локали не трогает `localeStatus`»), а до `current` доходил, подавая хэш руками.
 
-* [ ] **CR-16** Списочные разделы под `/de` отдают **200 вместо 404** из-за своей loading-границы. *[M]*
+* [x] **CR-16** Списочные разделы под `/de` отдают **200 вместо 404** из-за своей loading-границы. *[M]*
   Найдено замером при M1-T10 (`next build` + `next start`, не только dev): `/de/species`,
   `/de/articles`, `/de/news`, `/de/memes`, `/de/games` возвращают **200**, хотя контента под `/de`
   быть не должно (CLAUDE.md «Локали и роутинг»). Причина — известный механизм, но применённый шире,
@@ -1702,7 +1703,11 @@ players (auth: true)
   и `LatestFeed`), либо отдавать 404 из proxy для контентных путей под `legalOnlyLocales`, не доходя
   до роута. Третий выглядит самым дешёвым и надёжным, но требует, чтобы proxy знал список
   legal-слагов.
-  Расширить e2e на ВСЕ разделы после починки — сейчас проверяется один.
+  — **сделано 2026-09-09:** proxy проверяет точный allowlist legal-слагов до входа в
+  loading-границу; остальные `/de` пути переписываются на отдельный синхронный 404-роут.
+  Сохранены URL, бренд и legal-shell; контентный рендер и скелеты RU/EN не меняются.
+  Unit закрепляет allowlist/rewrite, e2e — HTTP-статусы всех разделов и деталей обоих сайтов,
+  четыре DE legal-роута и прежний 404 UI (прод-сборка в CI). M0-T19 закрыт; в M0-T09 остаётся CR-17.
 
 * [ ] **CR-17** Немецкий UI админки жив вопреки решению о снятии DE. *[S]*
   Найдено аудитом 2026-08-22. `src/payload.config.ts` импортирует `de` из

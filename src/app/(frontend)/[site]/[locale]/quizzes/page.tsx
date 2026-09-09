@@ -16,13 +16,8 @@ import { t } from '@/i18n/ui'
  * Список квизов (Roadmap **M1-T10**). До этой задачи раздел рендерился из выдуманных
  * `sampleQuizzes`, а коллекция `quizzes` в Payload стояла без единого читателя.
  *
- * ⚠️ **У этого раздела СОЗНАТЕЛЬНО нет `loading.tsx` и нет route-группы `(list)`** — в отличие от
- * species/games/articles. Причина не в лени: loading-граница заставляет Next стримить ответ до
- * `notFound()`, и тогда `/de/quizzes` (контент под legal-only локалью) отдаёт 200 вместо 404.
- * `tests/e2e/legal.e2e.spec.ts` проверяет hard-404 именно на `/quizzes`, потому что это
- * ЕДИНСТВЕННЫЙ контентный раздел без такой границы — то есть единственная точка, где контракт
- * «контента под `/de` не существует» вообще проверяется. Заведёте здесь скелет — контракт
- * перестанет проверяться где-либо. Замерено на `next build`/`next start`: с границей 200, без — 404.
+ * CR-16: /de content paths are rejected by the proxy before list streaming.
+ * A future list skeleton must remain separate from quiz detail routes.
  */
 const SLUG = 'quizzes'
 

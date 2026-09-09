@@ -8,10 +8,12 @@
  * юридическую проверку (IT-/Datenschutzrecht) перед публичным запуском.
  * Орган надзора — ULD Schleswig-Holstein. OS-Plattform-ссылку НЕ ставить.
  */
+import type { LegalSlug } from './legalRoutes'
+
 export type LegalLang = 'ru' | 'en' | 'de'
 
 /** Ссылки в футере — фиксированный allowlist на язык страницы (DE-ссылки только на /de). */
-export const legalNav: Record<LegalLang, Array<{ slug: string; label: string }>> = {
+export const legalNav: Record<LegalLang, Array<{ slug: LegalSlug; label: string }>> = {
   ru: [
     { slug: 'legal-notice', label: 'Правовая информация' },
     { slug: 'privacy', label: 'Конфиденциальность' },
