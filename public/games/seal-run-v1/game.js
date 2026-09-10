@@ -11,6 +11,7 @@ import { createSim, getResult } from './core/sim.js'
 import { FIELD_W, WORLD_H, BAL } from './core/balance.js'
 import { createPlayScene } from './render/scene.js'
 import { paintPreview, paintHero, loadOcean } from './render/expedition.js'
+import { loadScenery } from './render/scenery.js'
 import { renderName } from './core/alias.js'
 import { t, lang, setLanguage, preference, savePreference } from './i18n.js'
 import { OceanAudio } from './audio.js'
@@ -256,7 +257,7 @@ async function beginRound() {
           ...generateCourse(seed + ':' + chapter, biome),
           speedMultiplier: roundSpeed(chapter) * ($('gentle').checked ? 0.8 : 1),
         }
-  await loadOcean(biome)
+  await Promise.all([loadOcean(biome), loadScenery(biome)])
   state = createSim(course)
   announcedLow = false
   const Phaser = (await import('./vendor/phaser.esm.js')).default

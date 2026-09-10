@@ -29,9 +29,32 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. Procedural animals and five local generated plates are rendered into reusable canvases and pooled Phaser objects. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. Procedural animals use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
+
+## Visual follow-up: moving marathon scenery
+
+In play the viewport travels through a 1620-unit panorama (960 units visible), reaching
+its right edge at 900 m. There is no looping photographic seam. Independent scenery
+recycles beyond the screen at 0.16/0.40/0.72 of world speed; nearer props are larger and
+clearer. Kelp sways using scale, avoiding rotating WebGL quads. Scenery never changes
+collisions, course hashes, scoring or server validation.
+
+Pause/finish stop scenery and particles. Reduced motion freezes decorative planes and
+hides shimmer/motes; gameplay still scrolls. Six-second image deadlines preserve playable
+procedural fallback. Versioned local WebP files and their exact prompts are documented in
+[assets/README.md](../public/games/seal-run-v1/assets/README.md).
+
+The freeze reported in the embedded browser was a ReferenceError when the first dynamically
+named biome rock requested an obsolete texture fallback. Removing that fallback restores
+the Phaser loop. A browser regression sweeps all 900 m of each genuine generated biome,
+including rocks/hazards, checks layered movement and texture release. A separate ordinary
+play test passes the first tropical rocks, where the user encountered the failure.
+
+The shortened tail blends into the rump without a closed root outline; the eye moves
+forward and a partial far eye supplies a slight three-quarter muzzle. The four species
+were checked against [photographic anatomy references](seal-run-anatomy-references.md).
 
 ## Source review
 

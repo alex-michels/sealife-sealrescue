@@ -28,9 +28,10 @@ Energy is an arcade resource; fish do not supply breathing air.
 
 ## Art and rendering
 
-Original Canvas2D animals produce Phaser textures at runtime. Five separately generated,
-local WebP environment plates supply realistic backgrounds; failed artwork loads retain the
-procedural fallback. The ten delivery images (including thumbnails) total 681,228 bytes.
+Original Canvas2D animals produce Phaser textures at runtime. Five generated 3:1 panoramas
+and six transparent scenery cutouts supply the moving game environment; the original five
+plates and thumbnails serve the menu/fallback. All 21 WebP files total 1,549,098 bytes.
+Missing or slow artwork retains playable procedural fallback.
 Asset prompts, provenance and extension guidance: [art manifest](../public/games/seal-run-v1/assets/README.md).
 `render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
 biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hindflippers,
@@ -44,11 +45,16 @@ The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad cor
 flipper frames provide its swimming motion (see the SR review for the upstream report).
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
 Pixel regressions check player and predator collision circles inside the visible bodies.
-Background canvases use 1× logical resolution and are released when a chapter shuts down,
-keeping their raw RGBA storage at about 9.7 MB for the active chapter (excluding GPU copies).
-Two background particle layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
+The shortened tail blends into the rump without a closed root outline; the near eye moves
+forward and a partially visible far eye gives the muzzle a slight three-quarter view.
+[Photographic references for all four species](seal-run-anatomy-references.md) record the visual review.
+The panorama pans from its left edge to its right edge over 900 m. Separate scenery moves
+at 0.16×, 0.40× and 0.72× world speed, with nearer props larger and clearer. Phaser TileSprite
+shimmer, subtle kelp sway and a ParticleEmitter capped at 36 motes add water motion.
+Chapter panorama/prop GPU textures are released on shutdown; at most two decoded panoramas
+are cached. Tiny shimmer/mote textures are shared. Fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
-frame animation. Invulnerability uses steady transparency instead of flashing.
+frame animation, and hides shimmer/motes. Pause/finish freeze scenery and particles. Invulnerability uses steady transparency instead of flashing.
 
 The engine is imported only after Play. HTML owns the menu, HUD, instructions, pause, result
 and leaderboard. Visible focus, modal focus trapping, safe-area padding and controls at least

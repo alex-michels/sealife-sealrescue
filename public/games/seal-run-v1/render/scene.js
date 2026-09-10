@@ -1,23 +1,12 @@
 // SR-05/SR-16: renderer is a projection of the fixed-step simulation.
 import { applyInput, step, takeEvents, predatorPos } from '../core/sim.js'
-import { SIM_DT, FIELD_W, WORLD_H, SEAL_X } from '../core/balance.js'
+import { SIM_DT, FIELD_W, SEAL_X } from '../core/balance.js'
 import { TEXTURES, WATERLINE_Y } from '../core/theme.js'
 import { buildExpeditionTextures } from './expedition.js'
 import { fishBob } from './motion.js'
+import { createScenery } from './scenery.js'
 const STEP_MS = SIM_DT * 1000
 const texSize = (kind) => TEXTURES[kind]
-function addScrollLayer(scene, key, factor, depth) {
-  const w = 1200
-  const a = scene.add.image(0, 0, key).setOrigin(0, 0).setDisplaySize(w, WORLD_H).setDepth(depth)
-  const b = scene.add.image(w, 0, key).setOrigin(0, 0).setDisplaySize(w, WORLD_H).setDepth(depth)
-  return {
-    scroll(d) {
-      const x = -((d * factor) % w)
-      a.x = x
-      b.x = x + w
-    },
-  }
-}
 export function createPlayScene(Phaser, hooks) {
   const { state, course, currentCtrl, updateHud, onEvents, onEnd, isPaused, isReduced } = hooks
   return class PlayScene extends Phaser.Scene {
@@ -27,11 +16,6 @@ export function createPlayScene(Phaser, hooks) {
 
     create() {
       buildExpeditionTextures(this, course.biome)
-      // Only one chapter is active. Release large background canvases and GPU textures.
-      this.events.once('shutdown', () => {
-        for (const layer of ['water', 'far', 'mid'])
-          this.textures.remove('ocean_' + course.biome + '_' + layer)
-      })
       this.exitMs = 0
       this.completed = false
       // Пул спрайтов на тип + карта «сущность → спрайт» (object pooling, Roadmap SR-05)
@@ -44,18 +28,8 @@ export function createPlayScene(Phaser, hooks) {
       this.seal.setOrigin(0.5, TEXTURES.seal.originY)
       this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h)
 
-      // Многослойный фон (SR-06): статичная толща воды → дальний/средний параллакс →
-      // геймплей (спрайты, depth 5..10) → пена ватерлинии. При prefers-reduced-motion
-      // параллакс глушится (factor 0); пена — НЕ параллакс (поверхность живёт в плане
-      // геймплея, камни band 0 её пробивают), она скроллится со скоростью мира всегда.
-      this.add
-        .image(0, 0, 'ocean_' + course.biome + '_water')
-        .setOrigin(0, 0)
-        .setDisplaySize(FIELD_W, WORLD_H)
-        .setDepth(-10)
-      this.layers = ['far', 'mid'].map((layer, i) =>
-        addScrollLayer(this, 'ocean_' + course.biome + '_' + layer, [0.12, 0.35][i], -8 + i),
-      )
+      this.scenery = createScenery(this, course)
+      this.scenery.update(0, 0, isReduced())
     }
 
     acquire(kind) {
@@ -68,7 +42,7 @@ export function createPlayScene(Phaser, hooks) {
       if (!spr) {
         // Декор-оверлеи (макушки кекуров) — НАД пеной (7 > 6), геймплей-спрайты — под ней.
         spr = this.add.image(0, 0, kind).setDepth(kind === 'skerry_cap' ? 7 : 5)
-        const t = TEXTURES[kind] || EXTRA[kind]
+        const t = TEXTURES[kind] // Biome rocks use dimensions supplied by place().
         if (t && t.originY) spr.setOrigin(0.5, t.originY) // центр ТЕЛА = сим-координата
       }
       spr.setVisible(true)
@@ -149,6 +123,7 @@ export function createPlayScene(Phaser, hooks) {
     }
 
     update(_t, deltaMs) {
+      this.scenery.setPaused(isPaused() || state.phase !== 'running', isReduced())
       if (this.completed) return
       if (isPaused()) {
         this.acc = 0
@@ -190,7 +165,7 @@ export function createPlayScene(Phaser, hooks) {
         this.seal.setTexture('seal_' + course.biome + '_' + frame)
         this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h)
       }
-      for (const layer of this.layers) layer.scroll(isReduced() ? 0 : d)
+      this.scenery.update(d, state.tMs, isReduced())
       this.syncWorld(d)
       updateHud(state)
     }

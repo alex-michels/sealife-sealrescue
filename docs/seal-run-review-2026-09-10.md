@@ -31,9 +31,24 @@ texture. The seal now stays axis-aligned and swims through articulated flipper f
 This is consistent with [Phaser issue #7341](https://github.com/phaserjs/phaser/issues/7341),
 checked 2026-09-10; the exact internal engine cause is not asserted. WebGL remains enabled.
 Initial layout now sizes the parent before Phaser starts and explicitly refreshes its scale
-manager when interface bounds change. Real mobile touch input was also exercised. Large background canvases now use 1× logical
-resolution and are released on chapter shutdown; the five-chapter flow does not retain all
-15 large background textures.
+manager when interface bounds change. Real mobile touch input was also exercised. Chapter-specific panorama/prop textures are released on shutdown; the decoded panorama cache is capped at two. The old three large background canvases per chapter have been removed.
+
+## Follow-up from embedded-browser play
+
+Embedded-browser logs identified ReferenceError: EXTRA is not defined in PlayScene.acquire,
+triggered when a generated rock_<biome> entered view. The obsolete fallback is removed;
+those rocks already receive correct dimensions from the course. The prior short UI fixtures
+did not reach this path. New browser coverage sweeps every full 900 m biome in real
+Phaser/WebGL, visits actual rocks/hazards and separately plays beyond the first tropical
+rocks without page errors.
+
+Static photographic water and sparse motes are replaced in gameplay by five 3:1 panoramas
+plus six alpha-preserving generated cutouts. Three independent speed/depth planes, kelp
+sway, Phaser TileSprite shimmer and bounded particles make forward travel visible. Tests
+check progression, the panorama's right-edge arrival, reduced motion and texture release.
+The tail is shorter and has no closed root outline; the eyes are closer to the muzzle.
+Four species photographs were inspected and documented in
+[the anatomy reference review](seal-run-anatomy-references.md).
 
 ## Task-by-task assessment
 
@@ -68,6 +83,8 @@ The interface has keyboard/focus/motion/size checks; no claim of complete nonvis
 or a full WCAG certification is made. Background plates are illustrative, not biological evidence.
 
 Validation record: the reviewed server CI job passed 689 unit/integration tests with its coverage gate;
-local TypeScript and lint pass (16 existing warnings). All 12 static-preview browser scenarios
+local TypeScript and lint pass (16 existing warnings). The original 12 static-preview browser scenarios
 pass under both the normal and CI tsx loaders; the thirteenth scenario targets the production
 directory redirect. Final full-workflow status is attached to [PR #126](https://github.com/alex-michels/sealife-sealrescue/pull/126/checks).
+
+The follow-up expands the suite to 15 cases (14 static-preview cases plus the production-only directory redirect). Current results are recorded on the PR checks.

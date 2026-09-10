@@ -334,7 +334,7 @@ test('SR-06: distinct tail remains between webbed hindflippers throughout the st
       c.clearRect(0, 0, 180, 96)
       drawPhocid(c, 180, 96, 'spotted', i / 8)
       return {
-        tail: c.getImageData(20, 51, 1, 1).data[3],
+        tail: c.getImageData(28, 51, 1, 1).data[3],
         above: Math.min(
           ...Array.from(c.getImageData(15, 46, 1, 4).data).filter((_, i) => i % 4 === 3),
         ),
@@ -427,4 +427,147 @@ test('SR-06: predator collision circles stay inside visible bodies', async ({ pa
     return missing
   })
   expect(gaps).toEqual([])
+})
+
+test('SR-05/14: every full-length biome renders its rocks and hazards without stopping', async ({
+  page,
+}) => {
+  test.setTimeout(120000)
+  await config(page)
+  await page.goto(url)
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  const report = await page.evaluate(async () => {
+    const root = location.origin + '/games/seal-run-v1/'
+    const Phaser = (await import(root + 'vendor/phaser.esm.js')).default
+    const { createPlayScene } = await import(root + 'render/scene.js')
+    const { generateCourse } = await import(root + 'core/course.js')
+    const { createSim } = await import(root + 'core/sim.js')
+    const { loadScenery } = await import(root + 'render/scenery.js')
+    const host = document.createElement('div')
+    document.body.replaceChildren(host)
+    const results = []
+    for (const biome of ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic']) {
+      await loadScenery(biome)
+      const course = generateCourse('renderer-regression', biome)
+      const state = createSim(course)
+      const Play = createPlayScene(Phaser, {
+        state,
+        course,
+        currentCtrl() {
+          return {}
+        },
+        updateHud() {},
+        onEvents() {},
+        onEnd() {},
+        isPaused() {
+          return false
+        },
+        isReduced() {
+          return false
+        },
+      })
+      const game = new Phaser.Game({
+        type: Phaser.WEBGL,
+        parent: host,
+        width: 960,
+        height: 540,
+        audio: { noAudio: true },
+        scene: [Play],
+      })
+      while (!game.scene.getScene('play')?.scenery)
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()))
+      game.loop.stop()
+      const play = game.scene.getScene('play')
+      const scenery = play.scenery
+      scenery.update(0, 0, false)
+      const start = scenery.panorama.x
+      const moving = scenery.props.filter((prop: { base: number }) => prop.base > 1000)
+      const before = moving.map((prop: { sprite: { x: number } }) => prop.sprite.x)
+      scenery.update(100, 1000, false)
+      const shifts = moving.map(
+        (prop: { sprite: { x: number }; plane: { depth: number } }, i: number) => ({
+          shift: before[i] - prop.sprite.x,
+          depth: prop.plane.depth,
+        }),
+      )
+      const frozen = [
+        scenery.panorama.x,
+        ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
+      ]
+      scenery.setPaused(true, true)
+      scenery.update(200, 2000, true)
+      const reducedFrozen =
+        JSON.stringify(frozen) ===
+          JSON.stringify([
+            scenery.panorama.x,
+            ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
+          ]) &&
+        !scenery.motes.active &&
+        !scenery.motes.visible &&
+        !scenery.shimmer.visible
+      const kinds = new Set<string>()
+      // Sweep the whole genuine 900 m course, including dynamically named biome rocks.
+      for (let distance = 0; distance <= course.lengthLu; distance += 300) {
+        state.d = distance
+        play.syncWorld(distance)
+        scenery.update(distance, distance * 3, false)
+        for (const rec of play.bound.values()) kinds.add(rec.kind)
+      }
+      scenery.update(course.lengthLu, 120000, false)
+      results.push({
+        biome,
+        kinds: [...kinds],
+        start,
+        shifts,
+        reducedFrozen,
+        released: false,
+        endRight: scenery.panorama.x + scenery.panorama.displayWidth,
+        panoramaWidth: scenery.panorama.displayWidth,
+        particlesBounded: scenery.motes.maxParticles <= 36,
+      })
+      game.scene.stop('play')
+      const released = !game.textures.exists('panorama_' + biome)
+      results.at(-1)!.released = released
+      game.destroy(true)
+      // A stopped RAF loop must be given one step to process Phaser's queued destruction.
+      game.runDestroy()
+    }
+    return results
+  })
+  expect(errors).toEqual([])
+  for (const row of report) {
+    expect(row.kinds).toContain('rock_' + row.biome)
+    expect(row.kinds.some((kind: string) => kind.startsWith('fish_'))).toBe(true)
+    expect(row.start).toBeCloseTo(0, 4)
+    expect(row.panoramaWidth).toBeGreaterThan(1500)
+    expect(row.endRight).toBeCloseTo(960, 4)
+    expect(row.reducedFrozen).toBe(true)
+    expect(row.particlesBounded).toBe(true)
+    expect(row.released).toBe(true)
+    const byDepth = [-8, -6, -4].map(
+      (depth) => row.shifts.find((s: { depth: number }) => s.depth === depth)!.shift,
+    )
+    expect(byDepth[0]).toBeGreaterThan(0)
+    expect(byDepth[1]).toBeGreaterThan(byDepth[0])
+    expect(byDepth[2]).toBeGreaterThan(byDepth[1])
+  }
+})
+
+test('SR-14: tropical play keeps advancing after the first rocks enter the viewport', async ({
+  page,
+}) => {
+  test.setTimeout(60000)
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await config(page)
+  await page.goto(url)
+  await page.locator('[data-biome="tropical"]').click()
+  await page.locator('#start').click()
+  await page.waitForFunction(() => (window.SealRun?.state?.d ?? 0) > 7000, undefined, {
+    timeout: 45000,
+  })
+  await page.locator('#pause-button').click()
+  await expect(page.locator('#resume')).toBeVisible()
+  expect(errors).toEqual([])
 })

@@ -129,23 +129,15 @@ export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
   }
   c.restore()
   hind(true)
-  // Small fleshy tail, visibly BETWEEN the two hindflippers; never a whale fluke.
-  c.fillStyle = '#b1c2bd'
+  // Short tapered tail blends into the rump: no closed outline across its root.
+  c.fillStyle = body
   c.beginPath()
-  c.moveTo(35, 46)
-  c.bezierCurveTo(29, 46, 20, 46, 17, 50)
-  c.quadraticCurveTo(16, 53, 22, 54)
-  c.quadraticCurveTo(30, 55, 38, 55)
+  c.moveTo(40, 45)
+  c.bezierCurveTo(34, 46, 28, 49, 25, 51)
+  c.quadraticCurveTo(24, 53, 29, 53)
+  c.quadraticCurveTo(35, 53, 42, 55)
   c.closePath()
   c.fill()
-  c.strokeStyle = '#496572'
-  c.lineWidth = 0.7
-  c.stroke()
-  c.strokeStyle = 'rgba(226,237,221,.6)'
-  c.beginPath()
-  c.moveTo(21, 49)
-  c.quadraticCurveTo(27, 48, 33, 49)
-  c.stroke()
   // Near foreflipper: compact rounded paw, five short blunt claws.
   c.save()
   c.translate(117, 59)
@@ -169,8 +161,10 @@ export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
   c.restore()
   // Ear opening (no external ear flap), glossy eye, blunt muzzle and whisker follicles.
   ellipse(c, 133, 40, 0.8, 1.3, '#526972')
-  ellipse(c, 151, 40.5, 3.4, 3.8, '#203b47', -0.2)
-  ellipse(c, 152, 39.3, 0.9, 0.9, '#e5f5ef')
+  // Slight three-quarter muzzle: near eye forward, far eye partly visible.
+  ellipse(c, 164, 39, 1.6, 2.2, '#344a52', -0.2)
+  ellipse(c, 156.5, 40.5, 3.3, 3.7, '#203b47', -0.2)
+  ellipse(c, 157.5, 39.3, 0.9, 0.9, '#e5f5ef')
   ellipse(c, 160, 51, 12, 8.5, '#c7d1c5')
   ellipse(c, 156, 53, 7, 5.5, '#dce0cd')
   ellipse(c, 165, 49, 3.4, 2.7, '#233e47')
@@ -438,14 +432,6 @@ export function buildExpeditionTextures(scene, biome) {
   for (let frame = 0; frame < 8; frame++)
     add('seal_' + biome + '_' + frame, 180, 96, (c, w, h) =>
       drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
-    )
-  for (const layer of ['water', 'far', 'mid'])
-    add(
-      'ocean_' + biome + '_' + layer,
-      1200,
-      675,
-      (c, w, h) => paintOcean(c, w, h, biome, layer),
-      1,
     )
   // Predators reuse the phocid anatomy at sizes that contain their full collision circles.
   for (const [key, w, h] of [

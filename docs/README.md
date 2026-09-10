@@ -24,6 +24,7 @@
 | [game-seal-run.md](game-seal-run.md) | Игра «Seal Run»: side-scroll Phaser 4-раннер, свободный Y + banded-контент, сид-детерминированная трасса, лидерборд, SR-01..SR-20 |
 | [game-seal-run-spec.md](game-seal-run-spec.md) | Нормативная спека механик Seal Run v1 (SR-01): единицы/детерминизм, физика free-Y, полосы, ярусы препятствий, автомат стамины, формат чанков + `generateCourse`, формула очков, серверные проверки |
 | [game-seal-run-expedition.md](game-seal-run-expedition.md) | Seal Run: пять биомов, арт-концепт, источники биологии, управление и мульти-раунды |
+| [seal-run-anatomy-references.md](seal-run-anatomy-references.md) | Фотореференсы четырёх видов Seal Run: морда, глаза, ласты и хвост; источники и ограничения |
 | [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |
 
