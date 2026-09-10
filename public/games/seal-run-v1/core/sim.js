@@ -48,10 +48,14 @@ export function predatorPos(o, d) {
         y: yc + o.ampBands * BAND_STEP * sin((2 * PI * (d - o.atLu)) / BAL.ORCA_PERIOD_LU),
         r: OBSTACLE_DIMS.orca.r,
       };
+    case 'polar_bear':
+      return { x: o.atLu, y: yc, r: OBSTACLE_DIMS.polar_bear.r };
+    case 'leopard_seal':
     case 'shark_white': {
       const adv = max(0, d - (o.atLu - HORIZON_LU)); // активируется, войдя в горизонт
       return { x: o.atLu - (BAL.SHARK_CHARGE_REL / BAL.SPEED_MAX) * adv, y: yc, r: OBSTACLE_DIMS.shark_white.r };
     }
+    case 'leopard_seal_big':
     case 'shark_big': {
       const adv = max(0, d - (o.atLu - HORIZON_LU));
       return {
@@ -99,6 +103,9 @@ export function createSim(course) {
     lengthLu: course.lengthLu ?? COURSE_LENGTH_LU,
     tMs: 0,
     effSpeed: 0, // скорость последнего тика (для HUD/рендера)
+    speedMultiplier: course.speedMultiplier ?? 1,
+    burstUntilMs: 0,
+    burstReadyMs: 0,
     // — ресурсы и статусы (спека §5.2): status — ресурсный автомат; хит-стан/i-frames —
     // независимые таймеры (множители §4.2 ортогональны); phase — жизненный цикл раунда.
     lives: BAL.STARTING_LIVES,
@@ -135,6 +142,12 @@ export function createSim(course) {
 export function applyInput(state, ctrl, dt = SIM_DT) {
   if (state.phase !== 'running') return;
   if (ctrl == null) return;
+  if (ctrl.burst && state.tMs >= state.burstReadyMs && state.stamina >= BAL.BURST_COST) {
+    state.stamina -= BAL.BURST_COST;
+    state.burstUntilMs = state.tMs + BAL.BURST_MS;
+    state.burstReadyMs = state.tMs + BAL.BURST_COOLDOWN_MS;
+    emit(state, 'burst');
+  }
   if (typeof ctrl.targetY === 'number') state.targetY = clampY(ctrl.targetY);
   else if (typeof ctrl.pointerY === 'number') state.targetY = clampY(ctrl.pointerY);
   else if (ctrl.keyDir === -1 || ctrl.keyDir === 1)
@@ -183,7 +196,8 @@ export function step(state, dt = SIM_DT) {
   const slowed = state.tMs < state.debrisUntilMs;
   const effSpeed = inHitstun
     ? 0
-    : baseSpeed(state.d) *
+    : baseSpeed(state.d) * state.speedMultiplier *
+      (state.tMs < state.burstUntilMs ? BAL.BURST_MULT : 1) *
       (buffed ? BAL.FISH_SPEED_BUFF_MULT : 1) *
       (slowed ? BAL.DEBRIS_SLOW_MULT : 1) *
       (state.status === 'exhausted' ? BAL.STAMINA_EMPTY_SLOW_MULT : 1);
@@ -299,9 +313,9 @@ export function step(state, dt = SIM_DT) {
     state.phase = 'finished';
     emit(state, 'finished');
   } else if (state.tMs >= BAL.MAX_COURSE_MS) {
-    state.phase = 'finished';
+    state.phase = 'dead';
     state.finishedByTimeout = true;
-    emit(state, 'finished', { timeout: true });
+    emit(state, 'dead', { timeout: true });
   }
 }
 

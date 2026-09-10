@@ -21,8 +21,10 @@
 | [agents.md](agents.md) | RBAC-роли, очередь `agent-proposals`, audit `agent-runs`, хуки, human-in-the-loop, безопасность |
 | [game-seal-hunter.md](game-seal-hunter.md) | Игра «Seal The Hunter»: структура, fairness, service worker, лидерборд, анти-чит, **статический бэкдроп + анимированная сцена**, финальный interstitial |
 | [game-seal-hunter-worklog.md](game-seal-hunter-worklog.md) | Журнал работ: full-screen + 2:1 clamp (PR #25), fairness-харнесс, prey-решение (PR #26), **визуал-цикл: leaderboard-фиксы (#28–31) + статический бэкдроп (#32)** |
-| [game-seal-run.md](game-seal-run.md) | Игра «Seal Run»: side-scroll Phaser 4-раннер, свободный Y + banded-контент, сид-детерминированная трасса, лидерборд, SR-01..SR-15 |
+| [game-seal-run.md](game-seal-run.md) | Игра «Seal Run»: side-scroll Phaser 4-раннер, свободный Y + banded-контент, сид-детерминированная трасса, лидерборд, SR-01..SR-20 |
 | [game-seal-run-spec.md](game-seal-run-spec.md) | Нормативная спека механик Seal Run v1 (SR-01): единицы/детерминизм, физика free-Y, полосы, ярусы препятствий, автомат стамины, формат чанков + `generateCourse`, формула очков, серверные проверки |
+| [game-seal-run-expedition.md](game-seal-run-expedition.md) | Seal Run: пять биомов, арт-концепт, источники биологии, управление и мульти-раунды |
+| [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |
 
 ## Стратегические / governance доки

@@ -250,3 +250,33 @@ export const legalDocs: Record<LegalDocKey, Record<LegalLang, LegalDoc>> = {
     },
   },
 }
+
+
+// SR-13: additive storage disclosure; existing German legal text is retained.
+const sealRunStorage: Record<LegalLang, string[]> = {
+ ru: [
+  'Seal Run: тренировочный режим работает без аккаунта и таблицы результатов. Состояние заплыва и тренировочные очки живут только в памяти вкладки.',
+  'Только после явного изменения настройки в localStorage сохраняются seal_run_lang (ru/en), seal_run_sound (звук) и seal_run_motion (уменьшенное движение). Они остаются до удаления данных сайта. Очки, очередь отправки и идентификатор игрока там не хранятся.',
+  'При запуске «Экспедиции недели» сервер устанавливает функциональный cookie seal_run_player: случайный подписанный идентификатор, HttpOnly, SameSite=Lax, путь /api/leaderboard, срок 7 дней. Он нужен для одной анонимной записи и личного рекорда недели. Его можно удалить в настройках браузера; после удаления прежний рекорд не связывается с новым игроком. Email не запрашивается.',
+  'На сервере хранятся псевдоним, недельный ключ игрока и лучший результат: очки, дистанция, рыба, жизни, главы и длительность. Публичная таблица показывает псевдоним и результат. Старые сезоны удаляются при последующих отправках; предусмотрен часовой переходный период для заплывов через границу недели. Данные не используются для рекламы.',
+  'После запуска игры service worker кэширует только её файлы для офлайн-тренировки. API и результаты не кэшируются. Кэш удаляется вместе с данными сайта.'
+ ],
+ en: [
+  'Seal Run practice works without an account or leaderboard. The current swim and practice scores exist only in this tab’s memory.',
+  'Only an explicit settings change writes seal_run_lang (ru/en), seal_run_sound (sound) or seal_run_motion (reduced motion) to localStorage. They remain until site data is cleared. Scores, submission queues and player identity are not stored there.',
+  'Starting the Weekly expedition sets the functional seal_run_player cookie: a random signed identifier, HttpOnly, SameSite=Lax, path /api/leaderboard, valid for 7 days. It supports one anonymous entry and a personal weekly best. You can remove it in your browser settings; a new identity will not be linked to the previous best. No email is requested.',
+  'The server stores a pseudonym, weekly player key and best result: score, distance, fish, lives, chapters and duration. The public board shows the pseudonym and result. Old seasons are removed on later submissions, with a one-hour grace period for swims crossing the weekly boundary. The data is not used for advertising.',
+  'After play starts, a service worker caches only game files for offline practice. APIs and scores are never cached. Clearing site data removes this cache.'
+ ],
+ de: [
+  'Das Training in Seal Run funktioniert ohne Konto und Rangliste. Der laufende Versuch und Trainingspunkte befinden sich nur im Arbeitsspeicher dieses Tabs.',
+  'Erst nach einer ausdrücklichen Änderung werden seal_run_lang (ru/en), seal_run_sound (Ton) oder seal_run_motion (reduzierte Bewegung) im localStorage gespeichert. Diese Einstellungen bleiben bis zum Löschen der Websitedaten erhalten. Punktestände, Übertragungswarteschlangen und Spielerkennungen werden dort nicht gespeichert.',
+  'Beim Start der Wochenexpedition setzt der Server das funktionale Cookie seal_run_player: eine zufällige signierte Kennung, HttpOnly, SameSite=Lax, Pfad /api/leaderboard, Laufzeit 7 Tage. Es ermöglicht einen anonymen Eintrag und den persönlichen Wochenrekord. Sie können es in den Browsereinstellungen löschen; eine neue Kennung wird nicht mit dem vorherigen Rekord verknüpft. Eine E-Mail-Adresse wird nicht abgefragt.',
+  'Der Server speichert ein Pseudonym, einen wöchentlichen Spielerschlüssel und das beste Ergebnis: Punkte, Distanz, Fische, Leben, Kapitel und Dauer. Die öffentliche Rangliste zeigt Pseudonym und Ergebnis. Frühere Saisons werden bei späteren Einreichungen gelöscht; für Versuche über den Wochenwechsel gilt eine Übergangsfrist von einer Stunde. Die Daten werden nicht für Werbung verwendet.',
+  'Nach dem Spielstart speichert ein Service Worker ausschließlich Spieldateien für das Offline-Training. APIs und Ergebnisse werden nicht zwischengespeichert. Der Cache wird mit den Websitedaten gelöscht.'
+ ]
+}
+for (const locale of ['ru', 'en', 'de'] as const) {
+ legalDocs.privacy[locale].sections.push({ heading: 'Seal Run', paragraphs: sealRunStorage[locale] })
+ legalDocs.privacy[locale].updated = '2026-09-10'
+}

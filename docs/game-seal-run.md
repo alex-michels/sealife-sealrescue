@@ -1,452 +1,112 @@
-# Игра «Seal Run» (seal-run-v1) — дизайн-документ
+# Seal Run — ocean expeditions
 
-Side-scroll раннер про тюленя: уворачиваться от хищников/мусора/камней, ловить рыбу, дистанция —
-очки. Второй флагманский Phaser-референс проекта (Seal Hunter — vanilla Canvas2D эталон; Seal Run —
-Phaser эталон, см. `docs/Roadmap.md` «🕹 Phaser»). Статус: дизайн зафиксирован (аудит 2026-07-01,
-§2.9), реализация — по задачам SR-01..SR-15. **SR-01 закрыт:** нормативная спека механик —
-[game-seal-run-spec.md](game-seal-run-spec.md) (формулы и константы первичны там; этот файл —
-«почему», спека — «что именно»). **SR-02 закрыт:** изоморфный генератор трассы живёт в
-`public/games/seal-run-v1/core/{course.js,chunks/}` (18 авторских чанков), инварианты §9.4 спеки
-охраняет `tools/chunk-lint{,-lib}.mjs` + CI-тест `tests/unit/seal-run-course.unit.spec.ts`.
-**SR-03 закрыт:** DOM-free sim-core — `core/{sim.js,balance.js}` (физика/ресурсы/коллизии,
-константы спеки §14) + CI-тест `tests/unit/seal-run-sim.unit.spec.ts`. **SR-05 закрыт
-(vertical slice играбелен):** vendored Phaser 4.2.0 + `index.html`/`game.js` — тонкая
-Play-сцена над sim-core, меню/HUD/результат HTML вне canvas, динамический `import()` по
-«Старт»; Arcade Physics намеренно не подключена (коллизии авторитетны в sim — спека §12).
-**SR-04 закрыт:** харнесс честности — `tools/{bot-lib,fairness-sim,compare-variants}.mjs`
-(бот-политика фикс., профили каденса ввода вместо экранной девайс-оси — см. §2.8; тюнинги
-переехали в мутируемый `BAL` для A/B).
+Seal Run is a browser-only Phaser 4.2.0 runner at `/games/seal-run-v1/`, embedded by
+`/[locale]/games/seal-run`. RU and EN are the only game languages. The original
+coastal prototype is now a five-chapter expedition (SR-07…SR-20).
 
-## Файлы (текущее состояние)
-```
-public/games/seal-run-v1/
-  index.html            # меню/HUD/результат — HTML вне canvas; загрузка game.js
-  style.css             # оболочка + letterbox «глубокая вода» (SR-06); полный HUD — SR-07
-  game.js               # bootstrap: ввод, HTML-оверлеи, динамический import Phaser,
-                        #   Play-сцена (фикс-шаг аккумулятор → sim, пулы спрайтов, параллакс)
-  vendor/phaser.esm.js  # Phaser 4.2.0 ESM (min, 1.4 МБ) — зафиксированная версия
-  core/
-    course.js           # SR-02: сид-детерминированный генератор трассы (изоморфный)
-    chunks/             # SR-02: библиотека авторских чанков + реестр (sorted by id)
-    balance.js          # SR-03: константы спеки §14 + SURFACE-задел v2
-    sim.js              # SR-03: DOM-free ядро (физика/ресурсы/коллизии/события)
-    theme.js            # SR-06: палитра (бренд-токены) + арт-контракт TEXTURES (Node-тестируем)
-  render/
-    art.js              # SR-06: процедурные Canvas2D-текстуры (спрайты 2×, фоновые тайлы 1×)
-  tools/
-    chunk-lint{,-lib}.mjs # SR-02: CI-гейт инвариантов трассы (§9.4)
-    bot-lib.mjs           # SR-04: headless-бот (фикс. политика Y-контроля) + матрица прогонов
-    fairness-sim.mjs      # SR-04: CLI-харнесс (профили каденса × N сидов) — гейт тюнинга
-    compare-variants.mjs  # SR-04: seeded A/B тюнингов (JSON-патч поверх BAL)
-```
+## Player experience
 
-## 0. Решения (TL;DR)
+- **Explore** opens any of five waters, with a new generated route on demand and an optional
+  gentle pace (80% speed). It works without a leaderboard connection. Runs exist in tab memory.
+- **Weekly expedition** obtains a signed server ticket before starting. Everyone swims the
+  same five 900 m chapters for that ISO week. Each chapter has three fresh lives and full energy.
+- Pointer/drag chooses depth; ↑/↓ or W/S steers. Space spends 18 energy on an 800 ms burst,
+  with a four-second cooldown. Touch also has separate up/down and burst buttons.
+- Escape/P, the pause button, blur and a hidden tab pause the simulation and clear input.
+  Returning to the tab requires an explicit resume. Pauses consume no gameplay time.
+- Reaching 900 m freezes simulation, score and input. The seal glides out for 950 ms
+  (180 ms with reduced motion); the HTML result then offers the next chapter or banking the score.
+  Timeout at 150 seconds ends a chapter without awarding completion.
+- Weekly results are sent only on the result screen. A failed request can be retried while
+  that result remains open. There is no persistent submission queue.
 
-| Вопрос | Решение |
-| --- | --- |
-| Вид | **Сбоку** (side-scroll), не сверху — top-down уже занят Seal Hunter; торпедообразный силуэт плывущего тюленя читается сбоку |
-| Управление | **Свободное по вертикали** (тюлень плывёт к целевому Y со сглаживанием): касание/перетаскивание = один инпут на мобильном, указатель/↑↓ на десктопе. Контент авторится по дискретным Y-«полосам» (bands) — читаемые, заучиваемые паттерны |
-| Трасса | **Сид-детерминированная процедурная**, общий сид на неделю (`courseSeed = hash(season)`); генератор — **изоморфный dependency-free ESM** (одни файлы в браузере И в Node) |
-| Форма сессии | **Фиксированная по дистанции**, не бесконечная: смерть ИЛИ финиш-дистанция |
-| Кислород/дыхание | **Да**, единый метр со стаминой (не третий ресурс) |
-| Хищники / biome | v1 `coastal` — **орка + белая акула (+ крупная акула-вариант)**; полярный медведь → биом `arctic` (v2), морской леопард → биом `antarctic/polar`, элитный хищник-тюленеед (v2) |
-| Суша/вода | **v1 — только вода**; задел (`SURFACE`-таблица, `biome`-тег чанка) под v2 |
-| Движок | **Phaser 4** (≥4.1.0 «Salusa», исправленный ESM-билд), vendored статический файл, БЕЗ нового бандлера; lazy-`import()` по «Старт» |
-| Домен | **Роут на `sealife.info`** (`/[locale]/games/seal-run`) + **vanity-редирект `sealrun.sealife.info`** → этот путь (один origin → без повтора SH-10) |
-| Лидерборд | Переиспользуем `game-scores`/`leaderboard.ts` как есть + опциональные поля |
+The visual concept and verified biological references are in
+[game-seal-run-expedition.md](game-seal-run-expedition.md). Kelp coast and fantasy Atlantis
+use a harbour seal; Hawaii uses a Hawaiian monk seal; the Arctic a ringed seal; Antarctica
+a Weddell seal. These are separate local encounters. Atlantis is explicitly fictional.
+Energy is an arcade resource; fish do not supply breathing air.
 
-## 1. Игровой дизайн
+## Art and rendering
 
-### 1.1 Вид сбоку + управление — свободное плавание по вертикали
-Камера фиксирована, мир скроллится с нарастающей скоростью (`baseSpeed(distance)`, см. §1.7).
-Игрок управляет только позицией по Y: тюлень **непрерывно плывёт к целевому Y** со сглаживанием
-(eased-follow) — на мобильном это касание/перетаскивание (один инпут, самый доступный жест), на
-десктопе — указатель мыши или ↑↓. Ось X у игрока авто-скроллится, как в swim/fly-раннерах.
+Original Canvas2D artwork produces Phaser textures at runtime, with no external asset requests.
+`render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
+biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hindflippers,
+short foreflippers, small ear openings and no external pinnae distinguish seals from sea lions.
+`render/art.js` supplies the common fish, orca, shark and debris textures.
 
-**Почему свободный Y, а не дискретные полосы (решено для этой игры на её условиях):** тюлень в воде
-плывёт свободно — непрерывное вертикальное управление биологически естественно и соответствует
-конвенции жанра (swim/fly-раннеры); один касательный инпут — самая доступная схема на мобильном
-(WCAG target ≥24px всё равно применяется к HUD/кнопкам, не к жесту плавания). Честности это не
-вредит: трасса сид-детерминирована (§1.2), коллизии позиционно-детерминированы — лидерборд измеряет,
-насколько чисто игрок проходит **фиксированный** мир, что и есть смысл соревнования.
+All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
+The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
+not run a second physics engine. Sprites are pooled and simulation positions are interpolated.
+Two background layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
+pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
+rotation/frame animation. Invulnerability uses steady transparency instead of flashing.
 
-**Контент — по дискретным Y-«полосам» (bands), тюлень между ними движется непрерывно.** Препятствия
-и рыба авторятся на нескольких фиксированных вертикальных уровнях внутри чанка → читаемые,
-заучиваемые паттерны (главная провальная точка жанра раннеров — непоследовательность распознавания
-паттернов), при этом сам тюлень плывёт плавно. Силуэт тюленя (торпедообразное тело) читается сбоку
-лучше, чем сверху — задел под будущую «галумпинг»-анимацию на суше (§1.6).
+The engine is imported only after Play. HTML owns the menu, HUD, instructions, pause, result
+and leaderboard. Visible focus, modal focus trapping, safe-area padding and controls at least
+24 × 24 CSS pixels cover the surrounding interface. SFX are synthesised locally and muted
+by default. A saved sound preference is activated only after a new player gesture.
 
-### 1.2 Трасса — сид-детерминированная процедурная генерация
-Не полностью фиксированная (нет ручной единой трассы) и не свободно-случайная на игрока — общий
-сид на всех игроков за период, как **дневной сид Race the Sun** или **посид-генерация No Man's Sky**
-(процедурный контент, одинаковый для всех при одном сиде — так игроки сравнимы на лидерборде без
-передачи геометрии по сети).
+## Course and balance
 
-**Сид = переиспользование существующего сезона, не новая инфраструктура:**
-`courseSeed = hash(season)`, где `season` — уже существующая ISO-неделя из `currentSeason()`
-(`src/endpoints/leaderboard.ts`). Трасса недели = трасса до сброса доски (уже есть еженедельный
-`pruneOldSeasons`) — нулевая новая инфраструктура сезонов.
+`core/chunks/biomes.js` supplies 20 templates per biome: the original 18 coastal patterns,
+adapted and mirrored for other waters, plus two authored passages per biome. The registry is
+sorted by ASCII id. No random choice occurs in simulation or renderer physics.
 
-**Фиксировано (одинаково для всех при одном `courseSeed`):** последовательность чанков (сид-PRNG
-по `courseSeed`), тип/позиция препятствий и рыбы внутри чанков, суммарная длина/длительность трассы,
-кривая сложности (детерминированная функция ОТ ДИСТАНЦИИ, не от результата игрока — см. §1.7),
-содержимое библиотеки чанков (авторское, версионируется в статическом бандле игры — правка библиотеки
-= деплой, меняет «трассу недели» для всех одинаково, как баланс-патч Seal Hunter).
+The difficulty ceiling reaches 5 at 300 m. A floor rises from 1 to 2 at 300 m and to 3 at
+600 m; the guaranteed easy recovery after an intense chunk takes priority. Chapter speed is
+`1 + index × 0.035` (1.00…1.14). Burst is optional; the conservative route linter checks
+reachability at the fastest chapter speed without requiring burst.
 
-**Варьируется (не влияет на честность):** собственный результат игрока внутри фиксированной трассы
-(время выживания, реально собранная рыба vs. размещённая), декоративная нерелевантная геймплею
-случайность (фоновая живность, вариации частиц) — по аналогии с `WIGGLE` в `entities/prey.js`.
+The unchanged bot policy was measured across 52 seeds and three input cadences:
+the coastal baseline finishes **78.8%, 80.8%, 84.6%** (81.4% combined). The worst individual
+seed has a large cadence spread; the bot is a regression instrument, not proof of equal
+human difficulty. The 780 chapter runs are recorded in
+[seal-run-expedition-balance.json](seal-run-expedition-balance.json): 85.8%, 88.8%, 93.8%.
+Arctic surface ambushes make that chapter comparatively forgiving; higher speed does not
+imply every biome is harder. All 100 templates and 260 generated routes pass the conservative
+reachability, fish-budget and corridor checks.
 
-*(v2, не v1): вторичный дневной сид (`hash(season + ':' + isoDate)`) для отдельной «ежедневный
-челлендж» доски — отдельное измерение доски, не нужно для запуска.)*
+## Server and storage
 
-### 1.3 Форма сессии — фикс. по дистанции, гибрид «смерть или финиш»
-Раунд длится до смерти (жизни = 0 или истечение grace-окна после нуля стамины) ИЛИ до
-фиксированной финиш-дистанции — что раньше. Очки = **дистанция** (первично), `survivalTimeMs`/
-`livesRemaining`/`fishCollected` — вторичные колонки лидерборда (закрывает запрос «время + прочие
-очки + жизни»). Целевая длина: отличный забег ≈ 90–120с (Seal Hunter — 60с; чуть длиннее, чтобы
-кривая сложности успевала раскрыться). Серверный жёсткий потолок: `MAX_COURSE_MS ≈ 150000` вне
-зависимости от клиентских заявлений.
+`src/games/sealRun.ts` imports the **same** generator used in the browser.
+The signed ticket pins game, season, rules version and anonymous player seed.
+For each submitted chapter the server rebuilds the course, checks distance/time bounds,
+reachable small/rare fish counts, exact score and consecutive completed chapters.
+Scores sum to at most 494,500; the request cap is 500,000. Hunter keeps its existing limits.
+This is budget/plausibility validation, not replay verification or cheat-proof competitive play.
 
-Почему не чистый «бесконечный раннер» (Subway Surfers): открытый конец усложняет анти-чит
-(«правдоподобный счёт за прошедшее время» становится безграничным) и обесценивает «одна трасса на
-всех», как только фиксированная библиотека чанков начинает повторяться. Почему не чистая «гонка до
-финиша»: не даёт «как далеко я добрался» для тех, кто умер рано. Гибрид даёт оба.
+Starting Weekly creates a signed, HttpOnly, SameSite=Lax `seal_run_player` cookie for seven
+days, restricted to `/api/leaderboard` (Secure in production). The server derives a weekly
+alias and player key; the personal best lives in Postgres. No email is collected.
+Only explicit language/sound/motion choices write `seal_run_lang`, `seal_run_sound`,
+`seal_run_motion` to localStorage. No score, seed or outbox is stored there.
 
-### 1.4 Жизни / рыба-валюта / баффы / дебаффы / ярусы препятствий
+A service worker registers after Play and caches an explicit list of game files.
+It never caches API responses or other sites' files. Navigation tries the network first.
+Practice remains available offline; scores require a connection. See the additive RU/EN/DE
+privacy disclosure in `src/site/legal.ts`.
 
-**Два метра, не три:**
-- **Жизни** (целое, старт 3): теряются ТОЛЬКО от столкновения с хищником. 0 жизней = раунд
-  завершён немедленно.
-- **Стамина/кислород** (единый непрерывный метр 0–100, буквально метр дыхания — см. §1.5): пассивно
-  падает, восстанавливается рыбой. На нуле — принудительное замедление + grace-окно
-  (`GRACE_WINDOW_MS`), а не мгновенная смерть; не восстановился за окно → минус жизнь.
+The additive [SR-09 migration](migrations/SR-09-seal-run-scores.sql) must be reviewed and
+applied before deploying against an existing database. Generated Payload types are included.
+The earlier M2-T13 review-workflow migration remains a separate deployment prerequisite.
 
-**Рыба = очки + бафф:** мелкая рыба = 1 очко, редкая/золотая = 4 очка (место — по сиду §1.2);
-+`FISH_STAMINA_RESTORE` стамины; временный бафф скорости `FISH_SPEED_BUFF_MULT` на
-`FISH_SPEED_BUFF_MS` — баффы складываются ДЛИТЕЛЬНОСТЬЮ, не силой (несколько рыб подряд продлевают
-буст, а не удваивают скорость) — избегаем деградации в «цепочка рыбы = неубиваемый спидран».
+## Development and launch
 
-**Три яруса препятствий — разная МЕХАНИКА, не просто разные числа урона:**
-
-| Ярус | Примеры | Эффект | Обоснование (биология) |
-| --- | --- | --- | --- |
-| Высокий (хищник) | **v1 `coastal`: орка, белая акула (+ крупная акула-вариант).** Отложены со своими биомами (v2): белый медведь → `arctic`, морской леопард → `antarctic/polar`, элитный хищник-тюленеед | −1 жизнь, хит-стан + отброс | **Биом-точный ростер.** Орка и белая акула — реальные хищники тюленей умеренной прибрежной зоны. Белый медведь обитает ТОЛЬКО в Арктике; морской леопард — ТОЛЬКО в Южном океане (и сам апекс-хищник ДРУГИХ тюленей — тематически точный элитный враг, но в своём биоме, не на умеренном побережье) |
-| Средний (антропогенный) | сеть-призрак, пластиковый мусор | Замедление 0.4× на 1800мс + удвоенный расход стамины, БЕЗ потери жизни | Мусор не «охотится» — честнее моделировать как помеху, не атаку; перекликается с миссией sealrescue.info |
-| Низкий (естественный) | камни, водоросли, льдины | Жёсткий отскок + небольшой стамина-налог, без потери жизни | Навыковый челлендж на движение, не ресурсный |
-
-**Стартовые тюнинги (первый проход, ЯВНО предварительные — тюнить харнессом §2.8):**
-```
-STARTING_LIVES = 3
-STAMINA_MAX = 100
-STAMINA_DRAIN_PER_SEC = 4
-FISH_STAMINA_RESTORE = 12
-FISH_SCORE_BASE = 1 · FISH_SCORE_RARE = 4
-FISH_SPEED_BUFF_MULT = 1.15 · FISH_SPEED_BUFF_MS = 1500
-PREDATOR_LIFE_COST = 1 · PREDATOR_HITSTUN_MS = 400
-DEBRIS_SLOW_MULT = 0.4 · DEBRIS_SLOW_MS = 1800 · DEBRIS_STAMINA_DRAIN_MULT = 2.0
-ROCK_BOUNCE_PX = 40 · ROCK_STAMINA_TAX = 5
-GRACE_WINDOW_MS = 2000
-MAX_COURSE_MS = 150000
+```sh
+node tools/serve-seal-run.mjs
+# http://127.0.0.1:4173/games/seal-run-v1/
+npm run test:seal-run
+node public/games/seal-run-v1/tools/chunk-lint.mjs 52
+node public/games/seal-run-v1/tools/expedition-report.mjs
+npm run lint
+npm run typecheck
 ```
 
-### 1.5 Кислород/дыхание — да, тот же метр, что стамина
-Тюлень — дышащее воздухом млекопитающее (реальная биология); классическая механика жанра (Ecco the
-Dolphin: метр дыхания падает под водой, на нуле — урон здоровью, всплытие восстанавливает). Отличает
-от Seal Hunter (там вообще нет ресурсного метра). Объединяем со стаминой — расход стамины ПОД ВОДОЙ
-буквально И ЕСТЬ расход дыхания, механически то же самое, что «съел рыбу → восстановил стамину».
-В v1 (только вода) единственный способ восстановления — рыба; задел под v2: всплытие/суша даёт
-альтернативное восстановление того же метра, без новой системы состояния.
+The static preview never connects to Payload or a database. Its leaderboard intentionally
+returns unavailable; practice is fully playable.
 
-### 1.6 Суша/вода — v1 только вода, задел на v2
-Настоящая биология тюленей даёт готовый risk/reward для будущей версии: безухие тюлени (наш бренд —
-именно безухий/гавань-тип) быстрые и манёвренные в воде (гребут задними ластами + телом), но НЕ могут
-развернуть задние ласты под тело и на суше двигаются «галумпингом» — медленно, неуклюже, уязвимо.
-Значит: секция суши в v2 — не «шорткат», а осознанный рискованный манёвр (например, уйти от орки,
-которая не может выйти на берег, но на суше тюлень медленный и там другой хищник — белый медведь).
-v1 ЭТОГО не строит (реальный доп. объём: вторая локомоция, второй ростер хищников, анимации
-перехода) — но модель локомоции тюленя делаем таблицей `SURFACE.water`/`SURFACE.land` с самого
-начала (в v1 заполнен только `water`), чтобы v2 не требовал переписывания шага физики.
-
-### 1.7 Прогрессия сложности — две кривые, обе от дистанции (не от времени)
-Привязка к ПОЗИЦИИ на фиксированной трассе, а не к результату игрока — иначе игрок, которого
-замедлил мусор, получит другую сложность, чем «по расписанию» у всех остальных (нарушит честность
-сид-модели §1.2). 1) Линейная рампа `baseSpeed(distance)` от MIN до MAX за `RAMP_DISTANCE`, далее
-плато — та же логика, что прогресс-рампа спавна в Seal Hunter (`core/sim.js`, `progress = 1 -
-timeLeft/ROUND_MS`), только по дистанции. 2) Расширяющаяся полоса `difficultyScore` чанков — чем
-дальше, тем выше потолок сложности доступных чанков; гарантированный «лёгкий» чанк сразу после
-известных по трассе (не реактивно на ошибку игрока — реактивность нарушила бы «одна трасса на всех»)
-кластеров хищников — «дыхание» после напряжённого участка.
-
-### 1.8 Расширяемость — задел, не реализация
-Одно поле `biome` (в v1 — жёстко `'coastal'`) в формате чанка и в конфиге трассы — чтобы v2 мог
-добавить `arctic` (белый медведь/лёд), `antarctic`/`polar` (морской леопард), `kelp-forest` и т.д.
-без миграции схемы. Ростер хищников привязан к биому (§1.4) — новый биом приносит своих хищников. Не строим тему/арт/UI
-выбора трассы в v1 — только формат данных, который это переживёт.
-
-## 2. Техническая архитектура
-
-### 2.1 Структура сцен + маппинг sim-core/fairness-харнесса
-Сцены Phaser: `Boot → Preload → MainMenu → Play → GameOver` (Preload и результат — HTML ВНЕ canvas,
-доступность). `Play`-сцена — тонкий рендер-слой над DOM-free `core/sim.js`/`core/course.js`, копирует
-разделение `game.js`/`core/sim.js` у Seal Hunter.
-
-| Seal Hunter (есть) | Seal Run (новое) |
-| --- | --- |
-| `core/sim.js` (stepSeal, spawnTick) | `core/sim.js` — stepSeal (только Y, eased target-Y follow), stepWorld (дистанция, коллизии по чанку, стамина/жизни/баффы) |
-| `core/balance.js` (BAL, computeWorld) | `core/balance.js` — та же философия device-independent invariants, константы §1.4 |
-| `entities/{seal,prey}.js` | `entities/{seal,fish,obstacle}.js` (предатор/мусор/камень подтипы) |
-| — (нет уровня) | **`core/course.js` + `core/chunks/*.js`** — библиотека чанков + `generateCourse(seed, biome)`. Самая новая часть кода, **изоморфный dependency-free ESM** (см. ниже). |
-| `tools/fairness-sim.mjs` | `tools/fairness-sim.mjs` — headless-бот (фикс. политика непрерывного Y-контроля: держаться безопасной полосы, заходить за рыбой, если путь чист) по матрице устройств (как у Seal Hunter) × N сидов трассы — разброс И по девайсам, И по сидам |
-| `tools/compare-variants.mjs` | `tools/compare-variants.mjs` — тот же seeded A/B тюнингов |
-
-**Генератор трассы — изоморфный ESM (критично для анти-чита §2.2).** `core/course.js` +
-`core/chunks/*.js` пишутся как **dependency-free ESM без DOM/Phaser**, целочисленная математика на
-проектном `mulberry32` (никакого `Math.random`, никакой накапливаемой float-арифметики, которая
-разошлась бы между Node и браузером). Одни и те же файлы импортит и браузерная игра, и тонкий
-серверный адаптер под `src/` (§2.2 п.3). Это осознанный уход от ловушки «синхронизировать байт-в-байт
-руками», которая УЖЕ существует для `core/alias.js` ↔ `leaderboard.ts` — не плодить вторую такую пару.
-
-Формат чанка: небольшие ESM-файлы (`core/chunks/coastal-01.js`: `difficultyScore`, `biome`,
-раскладка полос `bands` (дискретные Y-уровни), список препятствий `{type, band, distance}`, список
-рыбы `{type, band, distance, value}`), фикс. логическая длина; `generateCourse` сшивает
-сид-выбранные чанки до целевой длины. 15–25 авторских чанков на старт (v1, один biome).
-
-### 2.2 Анти-чит / контракт submit — та же инфра, жанрово-специфичная валидация
-**Переиспользуем без изменений:** HMAC play-token (`signToken`/`verifyToken`), одноразовый nonce,
-transient rate-limit по IP, модель личности `playerKey = sha256(seed:game:season)` + недельный
-prune + рендер alias/nameParts (`makeParts(seed, game)` уже солит по слагу игры — Seal Run получает
-имена того же стиля бесплатно). Доска единая (деление `board` desktop/mobile снято 2026-07-03 —
-именно из-за «равного горизонта» Seal Run, и Seal Hunter приведён к тому же для консистентности).
-
-Меняются три вещи. Текущий submit-хендлер (`leaderboard.ts`, ~L269–307) — **единый путь с зашитым
-окном 50–70с**; его надо разветвить:
-
-**(1) Per-game dispatch.** `SubmitBody` получает опциональные поля; хендлер ветвит правдоподобие по
-слагу: Seal Hunter — свой фикс.-оконный путь без изменений; Seal Run — путь «правдоподобная
-длительность ОТ ЗАЯВЛЕННОЙ ДИСТАНЦИИ»:
-```
-MAX_COURSE_MS = 150000
-minPlausibleMs = distance / MAX_SPEED_UNITS_PER_MS   // из SPEED_MAX §1.7 + допуск
-if (durationMs < minPlausibleMs * 0.9) → reject('implausible_duration')
-```
-Порог token-age (`MIN_PLAY_MS`) тоже становится per-game: у Run забег может честно длиться ~3с
-(мгновенная смерть), поэтому глобальный 40с-пол Seal Hunter к Run не применяется — Run опирается на
-пересборку трассы (п.3) и связку distance↔duration, а не на «прожить ~раунд».
-
-**(2) `courseSeed` доверяем ТОКЕНУ, а не клиенту.** Play-token на `/start` получает поля `cs`
-(courseSeed) + сезон; сервер выводит `courseSeed = hash(сезон-выдачи)`, клиент НЕ поставляет его как
-истину (сегодня токен пинит только `{g,b,t,n}` — `courseSeed` без этого был бы неподписанным вводом
-клиента). Валидируем `fishCollected`/`distance` против трассы ИМЕННО ЭТОГО токена и пишем результат в
-сезон/доску токена. Это чинит **баг границы недели** (забег через Вс→Пн rollover сыгран по прошлой
-трассе; наивный `currentSeason()` на submit пересобрал бы трассу ЭТОЙ недели → ложный отказ каждую
-неделю) И блокирует «гриндить самый лёгкий исторический сид» (токен одноразовый, TTL 30 мин — сдать
-можно только ту трассу, под которую тебе только что выдали токен).
-
-**(3) Серверная пересборка трассы** через изоморфный модуль §2.1 (тонкий адаптер в `src/`, импортит
-ТЕ ЖЕ `core/course.js`/`core/chunks/*.js`) → сверка заявленного улова/дистанции с реальным бюджетом
-рыбы этой сид-детерминированной трассы. Не «человечески правдоподобно», а «совпадает с существовавшим
-миром». Это **основной** гейт; статистические капы Seal Hunter — быстрый предфильтр. Требует
-детерминизма `generateCourse` в Node и браузере → golden-hash parity-тест (§2.8, SR-14) как CI-страж
-против дрейфа (та же дисциплина, что уже нужна для `alias.js`).
-
-Новые **опциональные** поля submit: `distance`, `livesRemaining`, `fishCollected`. `score` —
-по-прежнему required сорт-ключ (производная формула distance+улов+жизни, **ДОЛЖНА оставаться ≤100000**
-— текущий Zod-кап; иначе бампнуть кап в той же задаче). `courseSeed` НЕ приходит от клиента как истина
-— берётся из токена. Без изменений: `durationMs`, `seed`, `token` (поле `board` удалено 2026-07-03).
-
-### 2.3 Бандл/lazy-load для Phaser 4
-**Phaser 4** (≥4.1.0 «Salusa» — именно в 4.1.0 починили ESM-билд: отсутствовавший default-export и
-Class-конструктор). Phaser 4 — актуальная линия (июль 2026; команда ведёт все новые фичи ТОЛЬКО на
-v4). Vendored статический файл (`public/games/seal-run-v1/vendor/phaser.esm.js`, зафикс. версия,
-закоммичен как есть, как ассеты Seal Hunter), БЕЗ нового бандлера в проекте (сборки для игр за
-пределами голых статических файлов сейчас вообще нет — вводить бандлер ради одной игры
-непропорционально). Бандл ~400–500 КБ gzip (тяжелее лёгкой аркады — поэтому динамический `import()`
-вендор-файла ТОЛЬКО по нажатию «Старт» внутри собственного `index.html` игры: это вне JS-чанков Next
-— игра грузится iframe'ом на статику, бюджет CWV основного сайта не задет). Версионирование — бамп
-имени вендор-файла или `CACHE`-константы SW при апдейте Phaser (дисциплина `CACHE = seal-hunt-static-v13`).
-
-**iframe-подводные камни (учесть в SR-05/SR-07):** `allowfullscreen` на встраивающем iframe; запрос
-fullscreen на `pointerup` (не `pointerdown`) на iOS; guard против «iframe ушёл в фон → тач залипает»
-(отключить visibility-change-паузу игры). Все три подтверждены багрепортами Phaser.
-
-### 2.4 i18n / SW / анонимная личность — подтверждённое переиспользование, без новых паттернов
-Собственный `i18n.js` (IIFE, словарь `ru`/`en`, `window.SealI18n` с идентичной формой lang/t/dict/
-standalone/setLang/onLangChange, приоритет `?lang=` → сохранённый выбор → язык браузера
-(ru→ru, иначе en) → `ru`); собственный `sw.js`
-(network-first, свой `CACHE`, свой ASSETS-список, `/api/*` не кэшируется); собственный
-`core/alias.js` — копия структуры Seal Hunter (word lists/mulberry32/PATTERNS БАЙТ-В-БАЙТ синхронно
-с сервером — тот же общий `leaderboard.ts`, только новый `game`-слаг), свой ключ `localStorage`
-(`seal_run_seed`, не путать с `seal_hunt_seed` — раздельная личность на игру уже норма системы, т.к.
-`playerKey` солится слагом игры).
-
-### 2.5 Домен — роут на sealife.info + vanity-редирект (подтверждено)
-**Доменная политика проекта (решение владельца 2026-07-26):** публичных корневых домена ровно два —
-`sealife.info` и `sealrescue.info`; всё остальное живёт роутами или **поддоменами** под ними, новых
-корневых доменов проект не заводит. Seal Run в эту политику укладывается без исключений.
-
-Канонический origin — `sealife.info/[locale]/games/seal-run` через существующую `Games.embed`
-iframe-конвенцию (как Seal Hunter сегодня). **Плюс vanity-редирект `sealrun.sealife.info` → этот
-путь** (301 на уровне Caddy/хоста, ~5 строк; операционно легко — подтверждено аудитом; поддомен
-`*.sealife.info` — политике соответствует). Пользователь получает запоминаемый URL СЕЙЧАС, но
-публичный origin остаётся ОДИН: Impressum/Datenschutz достижимы через обычный футер сайта →
-**разрыв SH-10 не повторяется** (у выведенной альфы был свой standalone-origin, которому пришлось бы
-нести собственную legal-достижимость с первого дня, — и он её так и не получил). Почему канонический
-путь, а не standalone-поддомен в v1: `sealife.info` ещё не в проде (см. Roadmap M0-T03), публичных
-площадок у проекта сейчас нет вовсе; выигрыш ACC от `*.sealife.info` (общий cookie с будущим IdP)
-одинаково доступен и роуту, и редиректу, и поддомену — различие в ACC-доке касается РАЗНЫХ корневых
-доменов (`sealife.info` vs `sealrescue.info`), а не «путь против поддомена» внутри одного корня.
-**Промоушен `sealrun.sealife.info` в полноценный standalone-origin** (своя игра + свой legal-shell,
-по-прежнему внутри `*.sealife.info`) — пересмотр ПОСЛЕ прод-запуска `sealife.info` И ПОСЛЕ закрытия
-legal-долга SH-10 (реальный Impressum + секция Datenschutz про игру).
-
-**Standalone kill-switch (SH-14, общий с Seal Hunter):** прямой URL `/games/seal-run-v1/` (и
-будущий vanity-домен) уважает админ-тумблер `games.standaloneComingSoon` — при включённом флаге
-standalone-страница показывает заглушку «Coming soon» (статичный подводный фон из `render/art.js`
-без Phaser и без сущностей); iframe-встраивание на sealife.info флаг не читает. Клиентская ветка —
-в `game.js` (fail-open при недоступном `/api/game-config`).
-
-### 2.6 Схема Payload
-`games`: без изменений схемы — один новый документ (`slug: seal-run`, `embed:
-/games/seal-run-v1/index.html`, `title`/`excerpt`/`how`). **Сделано (SR-08):** запись в
-`gamesSeed` (`src/seed/m1SeedData.ts`, RU/EN, `order: 1`) — сеется baseline- и m1-сидом,
-идемпотентность/инварианты локалей закрывает `tests/int/seeds.int.spec.ts` (итерируется по
-`gamesSeed`); карточка на `/[locale]/games` и detail-страница с iframe работают из коробки
-(generic-роут `games/[slug]`). `game-scores`: добавить НЕОБЯЗАТЕЛЬНЫЕ
-поля, годные для любой будущей не-Hunter игры (не Seal-Run-специфичные имена): `distance` (number,
-opt — null у существующих строк Seal Hunter, обратная совместимость), `livesRemaining` (number,
-opt), `fishCollected` (number, opt), `courseSeed` (text, opt — в v1 равен `season`, **выводится
-сервером из play-токена §2.2, не приходит от клиента**; отдельное поле ради будущего дневного сида
-без миграции). `score` остаётся required сорт-ключом — код ранжирования
-в `leaderboard.ts` (`sort: ['-score', 'createdAt']`) не меняется; `score` для Seal Run — производная
-формула от дистанции+улова+жизней. После правки схемы — `npm run generate:types` + обновить
-`docs/data-model.md`. Отдельная коллекция очков НЕ нужна — дублировала бы identity/dedup/season/prune
-логику `leaderboard.ts` ради нуля выгоды.
-
-### 2.7 Доступность и EU-комплаенс — не повторять SH-10
-HTML-инструкции вне canvas (поле `Games.how`, как уже спроектировано); HTML-результат вне canvas
-(дистанция/очки/ранг/перцентиль в доступном DOM); видимый focus, target ≥24px,
-`prefers-reduced-motion` (замедлить/выключить параллакс, вспышки частиц); ярусы препятствий
-различимы НЕ только цветом (силуэт — дальтоник должен отличить акулу от камня). Поскольку игра —
-роут `sealife.info` + vanity-редирект на ТОТ ЖЕ один origin (§2.5), а не отдельный standalone-домен,
-разрыв SH-10 НЕ возникает по построению — Impressum/Datenschutz уже достижимы через обычный футер
-сайта; новый Caddy-allowlist/футер не нужен. Правка
-Datenschutz: добавить абзац про новые ключи `localStorage` (`seal_run_seed`, `seal_run_best`,
-`seal_run_lang` и т.п.) на уже существующей странице (которой в любом случае предстоит описать ключи
-Seal Hunter, когда закроется SH-10) — не новая страница. Cookie-consent не нужен по той же причине,
-что у Seal Hunter (строго необходимое/функциональное хранилище, без аналитики/трекинга). Выбор языка
-сохраняется в `localStorage` ТОЛЬКО после явного действия пользователя — копия дисциплины
-`setLang(lang, persist)` из Seal Hunter.
-
-### 2.8 Тестирование
-`tools/fairness-sim.mjs` (реализовано, SR-04) — бот с фикс. политикой **непрерывного Y-контроля**
-(`tools/bot-lib.mjs`: плыть к безопасной Y-полосе; заходить за рыбой, если путь к ней не пересекает
-угрозу) × N `courseSeed`. **Ось «устройств» заменена профилями каденса ввода** (80/160/240 мс между
-корректировками цели): equal horizon (спека §1.2) убрал экранную геометрию из симуляции ПО
-ПОСТРОЕНИЮ, сравнивать профили экранов нечем — каденс ввода остался единственным
-девайс-зависимым фактором. Базлайн (2026-07-03, 20 сидов, дефолтные тюнинги): финиш-рейт бота
-80–85%, средняя дистанция ~864–870 м (min 621 — «тяжёлые» недели), длительность ~82 с (< потолка
-150 с), каденс-разброс в среднем 12.5 м (mouse≈touch; расходятся только бинарные «выжил/умер»
-недели). Инсайт: боту стамина не лимит (улов ~78 рыб перекрывает расход) — смерти от хищников.
-Гейт перед тюнингом баланса, как и у Seal Hunter. `tools/compare-variants.mjs` (реализовано) —
-тот же common-random-numbers A/B: JSON-патч поверх мутируемого `BAL` (`core/balance.js`), снапшот →
-прогон → откат; больше никто BAL не мутирует. CI-контракты бота —
-`tests/unit/seal-run-bot.unit.spec.ts` (детерминизм, вменяемость, работоспособность A/B-механизма). E2E (`tests/e2e/game-seal-run.e2e.spec.ts`, по конвенции `game-standalone.e2e.spec.ts`, БЕЗ
-standalone-ветки — v1 только встроен): стартовый оверлей рендерит HTML-инструкции, смена языка
-(`?lang=` → сохранённый выбор после явного клика → переживает reload), результат вне canvas после
-тестового забега, фетч/рендер лидерборда. **Determinism/parity юнит-тест `generateCourse(seed)`:
-golden-hash одной трассы совпадает (а) при повторном вызове и (б) **между Node и браузерным билдом**
-— именно на кросс-рантайм-совпадение опирается серверная пересборка анти-чита §2.2 п.3; это CI-страж
-против дрейфа изоморфного модуля (та же болячка, что у пары `alias.js` ↔ `leaderboard.ts`).
-
-### 2.9 Аудит: риски и меры (2026-07-01)
-Аудит SR-блока против кода `sealife-sealrescue`. Дизайн подтверждён на ~95%; три факта уровня кода
-меняют инженерию (зафиксированы здесь, чтобы обоснование не потерялось):
-
-1. **Сервер НЕ читает `public/` в рантайме** (grep: нет `fs.readFile` ассетов в `src/`). Хедлайн-гейт
-   §2.2 п.3 требует запуска генератора трассы в Node. **Мера:** изоморфный `core/course.js` (§2.1),
-   импортируемый и браузером, и тонким адаптером в `src/` — не читать `public/` с диска.
-2. **Списки слов alias уже дублируются байт-в-байт** между `leaderboard.ts` и `core/alias.js` с
-   ручным «⚠️ KEEP IN SYNC». Дублировать так же целую библиотеку чанков + PRNG — та же болячка, но
-   крупнее; дрейф → **ложные отказы честным игрокам**. **Мера:** изоморфный модуль (одни файлы, не
-   две копии) + golden-hash parity-тест в CI (§2.8, SR-14).
-3. **Play-токен пинит `{g,b,t,n}` — не seed/трассу**, а `currentSeason()` — wall-clock на submit БЕЗ
-   grace. Забег через границу ISO-недели (Вс→Пн) сыгран по прошлой трассе → наивная пересборка по
-   `currentSeason()` даёт **ложный отказ каждую неделю**. **Мера:** пиннинг `courseSeed`+сезона в
-   токен на `/start`; валидация и запись — против сезона/трассы токена (§2.2 п.2). Побочно закрывает
-   «грайнд самого лёгкого исторического сида».
-
-### 2.10 Арт (SR-06) — направление и многослойный дизайн трассы
-
-**Направление (решения владельца, 2026-07-04):** cartoon-flat underwater; камни — «квази-суша»
-(кекуры пробивают линию воды: под водой — препятствие, над водой — сухая макушка с пеной);
-тюлень — **уэдделлов (настоящий/безухий): без ушных раковин, серебристый градиент**
-с контршейдингом (тёмная сине-сланцевая спина → серебро → светлое брюхо), тёмный крап,
-большие глаза, «улыбка». Хищники нос ВЛЕВО (навстречу), тюлень — вправо: угроза читается
-направлением. Палитра — из бренд-примитивов Foggy Coastal Utility (`DESIGN_BRIEF §2a`);
-вода = тот же градиент, что у Seal Hunter (`theme.js` обеих игр) — один океан на обе игры.
-
-**Пайплайн (решение SR-06):** НЕ бинарный спрайт-атлас в репо, а **процедурные
-Canvas2D-текстуры** — `core/theme.js` (палитра + арт-контракт `TEXTURES`, чистые данные,
-Node-тестируем) + `render/art.js` (рисование оффскрин-канвасами → `textures.addCanvas` при
-создании сцены). Прецедент — theme.js/scenery.js Seal Hunter; git без blob'ов, арт диффабелен
-и тонируется токенами. Спрайты рисуются 2× (чёткость при апскейле `Scale.FIT`), фоновые
-тайлы 1×. «Атлас» из Roadmap = набор кадров-ключей (`seal_0/seal_1`, гребок; структура —
-задел под галумпинг-кадры v2), не packed-PNG.
-
-**Слои (back→front), правила многослойной трассы:**
-
-| Слой | depth | Скорость | Содержимое |
-| --- | --- | --- | --- |
-| `bg_water` | −10 | статичен | вертикальный градиент толщи (surface→floor) + запечённые лучи света и придонная дымка |
-| `bg_far` | −8 | 0.12× | кекуры-столбы до поверхности + донные стеки + силуэты ламинарии, цвета ~72% примешаны к воде |
-| `bg_mid` | −6 | 0.35× | грунтовая полоса, келп-лес, валуны, ~45% к воде |
-| геймплей | 5–10 | 1× | сущности sim + тюлень; полный диапазон контраста |
-| `foam` | 6/7 | 1× | пена ватерлинии (`WATERLINE_Y`=10) + сухие макушки кекуров (depth 7) над пеной |
-
-Правила: (1) **глубина = светимость** — фоновые слои живут в узкой полосе ΔL ≤ 0.08 от воды,
-тюлень ΔL ≥ 0.2 от всей толщи (числовой контракт в `tests/unit/seal-run-theme.unit.spec.ts`);
-(2) **никаких силуэтов-обманок** — в фоне нет форм, читающихся как хищник/рыба игрового
-масштаба; (3) тайлы слоёв **несоизмеримы** (1280 vs 880) — повторы не синхронизируются;
-(4) горизонт зафиксирован (equal horizon §1.2) — параллакс только по X;
-(5) `prefers-reduced-motion` → параллакс-факторы 0 (слои статичны); пена — НЕ параллакс
-(поверхность живёт в плане геймплея, камни band 0 её пробивают) и скроллится с миром всегда;
-(6) декор не врёт о механике: `Math.random` только в раскладке фоновых тайлов при генерации
-текстуры, всё игровое — из sim-состояния.
-
-**Честность габаритов:** тело спрайта хищника обязано накрывать круглый хитбокс
-(`OBSTACLE_DIMS.r`) целиком; плавники могут торчать наружу («прощающий» перебор визуала).
-SR-05-плейсхолдеры это нарушали (орка 60 lu при хитбоксе Ø92) — исправлено в SR-06,
-инвариант закреплён unit-тестом. `originY` в `TEXTURES` = позиция центра ТЕЛА в текстуре
-(спинной плавник выше сим-координаты).
-
-## 3. Что переиспользуется vs. что новое
-
-**Переиспользуется дословно/почти дословно:** `src/endpoints/leaderboard.ts` (токены/nonce/
-rate-limit/alias/сезон/ранжирование), `src/collections/Games.ts` (0 изменений схемы), `src/app/
-(frontend)/[site]/[locale]/games/[slug]/page.tsx` (iframe-конвенция), файловый паттерн
-i18n.js/sw.js/core/alias.js на игру (копия, не общий модуль), методология `tools/fairness-sim.mjs`+
-`tools/compare-variants.mjs`, разделение DOM-free sim-core / тонкий рендер-слой, конвенции
-доступности (`Games.how`, HTML вне canvas).
-
-**Новое, специфичное для Seal Run:** `core/course.js` + `core/chunks/*.js` — **изоморфный
-dependency-free ESM**-генератор трассы (аналога нет у Seal Hunter; целочисленный `mulberry32`, одни
-файлы в браузере и в Node); state-machine стамина/кислород/жизни/баффы/дебаффы (у Seal Hunter вообще
-нет ресурсного метра); серверная пересборка трассы для анти-чита + пиннинг `courseSeed`/сезона в токен
-(сильнее статистических банд Seal Hunter, доступно именно благодаря сид-детерминированной трассе);
-vendored **Phaser 4**-бандл + сценная архитектура (Seal Hunter — vanilla Canvas2D); аудио (SR-15);
-заготовка `SURFACE`-таблицы и `biome`-тега чанка (однозначно заполненные заглушки под v2 сушу/
-мульти-трассы).
-
-**Осознанно отложено (не забыто):** секции суши/пляжа (асимметрия локомоции безухих тюленей) — v2;
-несколько biome/трасс + их хищники (белый медведь → `arctic`, морской леопард → `antarctic/polar`) —
-v2, задел только в схеме/формате чанка; вторичная доска дневного сида (Race-the-Sun-стиль) — v2, в v1
-только недельный сид; **промоушен `sealrun.sealife.info` в standalone-origin** — пересмотр после
-запуска (в v1 поддомен работает как vanity-редирект на канонический путь, §2.5).
-
-## Связанные доки
-- [game-seal-run-spec.md](game-seal-run-spec.md) — нормативная спека механик v1 (SR-01): формулы, константы, формат чанка
-- [game-seal-hunter.md](game-seal-hunter.md) — паттерны, которые Seal Run переиспользует
-- [api.md](api.md) — контракт `/api/leaderboard*` (расширяется полями §2.2/§2.6)
-- [data-model.md](data-model.md) — коллекции `games`/`game-scores` (расширяется §2.6)
-- [Roadmap.md](Roadmap.md) — задачи `SR-01..SR-15`
+The existing generic Next game page and RU/EN seed instructions embed the game.
+`deploy/Caddyfile` contains a reviewed-shape 301 vanity redirect block for
+`sealrun.sealife.info`, kept commented while the public sites are shut down.
+DNS/TLS activation and the live redirect check remain part of the separately authorised
+production launch (SR-12). No public deployment is performed by this change.

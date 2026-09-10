@@ -425,3 +425,20 @@ prod-сайтами/PII** — self-hosted Postgres + off-box бэкапы (§7),
   пуст до первого деплоя; стартует, когда Deploy положит код и сделает `systemctl restart`.
 * **Neon connection string:** pooler-endpoint + `sslmode=require`; предупреждение pg про `verify-full`
   косметическое (можно позже сменить на `sslmode=verify-full`).
+
+### Seal Run: migration and launch prerequisites (SR-09/SR-12)
+
+The game is playable at `/games/seal-run-v1/`; the existing Games page embeds it
+at `/en/games/seal-run` and `/ru/games/seal-run`. The updated baseline seed supplies
+the instructions for new databases; do not overwrite edited production content blindly.
+
+Before upgrading an existing database, review and apply
+[migrations/SR-09-seal-run-scores.sql](migrations/SR-09-seal-run-scores.sql). It only adds
+nullable GameScores fields. The previously merged M2-T13 migration is a separate prerequisite.
+
+The commented `sealrun.sealife.info` block in `deploy/Caddyfile` returns a 301 to the
+canonical EN game page, preserving explicit /ru entry paths. It intentionally does not
+forward arbitrary query parameters or create a second game origin. At the separately
+authorised public launch, point DNS to the EU VPS, enable the canonical site and vanity
+blocks, validate Caddy, deploy and check both redirects, TLS and the RU/EN iframe.
+No DNS, service activation, database migration or public deployment was performed by SR code work.

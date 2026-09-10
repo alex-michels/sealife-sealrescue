@@ -1,0 +1,113 @@
+{
+  "version": "expedition-1",
+  "seasons": 52,
+  "runs": 780,
+  "profiles": [
+    {
+      "name": "sharp-mouse  80ms",
+      "n": 260,
+      "distMean": 871.6846153846154,
+      "distSd": 86.09864955747732,
+      "distMin": 432,
+      "distMax": 900,
+      "scoreMean": 89871.30769230769,
+      "fishMean": 80.08076923076923,
+      "livesMean": 1.9038461538461537,
+      "finishRate": 0.8576923076923076,
+      "durMean": 77.58921923076923
+    },
+    {
+      "name": "touch       160ms",
+      "n": 260,
+      "distMean": 879.6307692307693,
+      "distSd": 71.02449614924726,
+      "distMin": 432,
+      "distMax": 900,
+      "scoreMean": 90719,
+      "fishMean": 81.63846153846154,
+      "livesMean": 1.9730769230769232,
+      "finishRate": 0.8884615384615384,
+      "durMean": 78.18077307692309
+    },
+    {
+      "name": "relaxed     240ms",
+      "n": 260,
+      "distMean": 887.3538461538461,
+      "distSd": 64.71034414259626,
+      "distMin": 261,
+      "distMax": 900,
+      "scoreMean": 91555.53846153847,
+      "fishMean": 82.62307692307692,
+      "livesMean": 2.1153846153846154,
+      "finishRate": 0.9384615384615385,
+      "durMean": 78.89983461538462
+    }
+  ],
+  "biomes": [
+    {
+      "biome": "coastal",
+      "n": 156,
+      "distMean": 869.1346153846154,
+      "distSd": 83.02579816388109,
+      "distMin": 261,
+      "distMax": 900,
+      "scoreMean": 89517.17948717948,
+      "fishMean": 81.80128205128206,
+      "livesMean": 1.4935897435897436,
+      "finishRate": 0.8141025641025641,
+      "durMean": 82.83445512820512
+    },
+    {
+      "biome": "atlantis",
+      "n": 156,
+      "distMean": 883.8589743589744,
+      "distSd": 66.15090060029495,
+      "distMin": 523,
+      "distMax": 900,
+      "scoreMean": 91213.71794871795,
+      "fishMean": 84.33333333333333,
+      "livesMean": 2.019230769230769,
+      "finishRate": 0.9358974358974359,
+      "durMean": 81.00321153846153
+    },
+    {
+      "biome": "tropical",
+      "n": 156,
+      "distMean": 861.1410256410256,
+      "distSd": 102.66228233549423,
+      "distMin": 501,
+      "distMax": 900,
+      "scoreMean": 88711.92307692308,
+      "fishMean": 79.91025641025641,
+      "livesMean": 1.6217948717948718,
+      "finishRate": 0.8333333333333334,
+      "durMean": 76.32403846153846
+    },
+    {
+      "biome": "arctic",
+      "n": 156,
+      "distMean": 900,
+      "distSd": 0,
+      "distMin": 900,
+      "distMax": 900,
+      "scoreMean": 92979.7435897436,
+      "fishMean": 77.21794871794872,
+      "livesMean": 2.9871794871794872,
+      "finishRate": 1,
+      "durMean": 77.37864743589743
+    },
+    {
+      "biome": "antarctic",
+      "n": 156,
+      "distMean": 883.6474358974359,
+      "distSd": 72.36293892126568,
+      "distMin": 432,
+      "distMax": 900,
+      "scoreMean": 91153.84615384616,
+      "fishMean": 83.97435897435898,
+      "livesMean": 1.8653846153846154,
+      "finishRate": 0.8910256410256411,
+      "durMean": 73.57602564102564
+    }
+  ]
+}

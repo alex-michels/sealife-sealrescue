@@ -27,13 +27,15 @@ type SimState = {
   status: string
   phase: string
   finishedByTimeout: boolean
+  burstReadyMs: number
+  burstUntilMs: number
   buffLeftMs: number
   debrisUntilMs: number
   events: Array<{ t: number; type: string }>
 }
 type SimLib = {
   createSim: (c: unknown) => SimState
-  applyInput: (s: SimState, ctrl: { targetY?: number; pointerY?: number; keyDir?: number }, dt?: number) => void
+  applyInput: (s: SimState, ctrl: { burst?: boolean; targetY?: number; pointerY?: number; keyDir?: number }, dt?: number) => void
   step: (s: SimState, dt?: number) => void
   takeEvents: (s: SimState) => Array<{ t: number; type: string }>
   getResult: (s: SimState) => {
@@ -241,7 +243,7 @@ describe('SR-03: завершение и очки (§10)', () => {
     const s = sim.createSim(empty())
     s.tMs = bal.BAL.MAX_COURSE_MS - 1
     sim.step(s)
-    expect(s.phase).toBe('finished')
+    expect(s.phase).toBe('dead')
     expect(s.finishedByTimeout).toBe(true)
   })
 })
@@ -264,4 +266,33 @@ describe('SR-03: детерминизм на реальной трассе (§1.
     }
     expect(run()).toBe(run())
   })
+})
+
+describe('SR-15/16: burst and frozen finish', () => {
+ it('spends energy once per cooldown and refuses a burst without enough energy', () => {
+  const s=sim.createSim(empty())
+  sim.applyInput(s,{burst:true})
+  expect(s.stamina).toBe(82)
+  expect(s.burstUntilMs).toBe(800)
+  expect(s.burstReadyMs).toBe(4000)
+  sim.applyInput(s,{burst:true})
+  expect(s.stamina).toBe(82)
+  sim.step(s)
+  expect(s.effSpeed).toBeGreaterThan(bal.baseSpeed(0))
+  s.tMs=4000;s.stamina=17
+  sim.applyInput(s,{burst:true})
+  expect(s.stamina).toBe(17)
+  expect(s.burstReadyMs).toBe(4000)
+ })
+ it('does not change state or score once the finish has been reached', () => {
+  const s=sim.createSim(empty())
+  s.d=35999
+  sim.step(s)
+  expect(s.phase).toBe('finished')
+  const before=structuredClone(s)
+  sim.applyInput(s,{burst:true,targetY:30})
+  sim.step(s)
+  expect(s).toEqual(before)
+  expect(sim.getResult(s).distanceM).toBe(900)
+ })
 })

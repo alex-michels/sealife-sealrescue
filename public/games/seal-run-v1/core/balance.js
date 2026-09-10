@@ -66,6 +66,10 @@ export const BAL = {
   FISH_SPEED_BUFF_MS: 1500,
   BUFF_STACK_MAX_MS: 6000, // баффы складываются длительностью, с потолком
   FISH_PICKUP_R: 12, // lu (эффективный радиус подбора = SEAL_R + это)
+  BURST_MULT: 1.35,
+  BURST_MS: 800,
+  BURST_COST: 18,
+  BURST_COOLDOWN_MS: 4000,
 
   // — Хищники (спека §6.2/§6.4).
   PREDATOR_LIFE_COST: 1,

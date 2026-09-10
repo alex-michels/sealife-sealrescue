@@ -9,7 +9,8 @@
 //
 // Нормативная спека: docs/game-seal-run-spec.md §1, §4.3, §9.
 
-import { CHUNKS } from './chunks/index.js';
+import { ALL_CHUNKS } from './chunks/biomes.js';
+import { EXPEDITION, MAX_ROUNDS, roundSeed, roundSpeed } from './biomes.js';
 
 // — Константы мира/трассы (спека §1, §14). Физика/баланс тюленя — SR-03 (core/balance.js).
 export const WORLD_H = 540;            // lu; 0 = поверхность, 540 = дно
@@ -38,6 +39,9 @@ export const OBSTACLE_DIMS = {
   orca: { r: 46 },
   shark_white: { r: 30 },
   shark_big: { r: 42 },
+  polar_bear: { r: 30 },
+  leopard_seal: { r: 30 },
+  leopard_seal_big: { r: 42 },
 };
 
 /** Центр полосы k (0 — у поверхности, N_BANDS-1 — у дна). Спека §3. */
@@ -78,6 +82,11 @@ export function difficultyCeil(d) {
   return 1 + Math.floor(4 * Math.min(1, d / RAMP_DISTANCE_LU));
 }
 
+/** Rising baseline; recovery chunks after an intense pattern are an intentional exception. */
+export function difficultyFloor(d) {
+  return 1 + Math.min(2, Math.floor(3 * d / COURSE_LENGTH_LU));
+}
+
 // После intense-чанка — принудительно «дыхание» (спека §4.3).
 const EASY_AFTER_INTENSE_MAX = 2;
 
@@ -89,7 +98,7 @@ const EASY_AFTER_INTENSE_MAX = 2;
  * @param {string} biome    v1: только 'coastal'
  * @param {Array}  registry реестр чанков (инъекция для тестов/линта; по умолчанию CHUNKS)
  */
-export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
+export function generateCourse(seedStr, biome = 'coastal', registry = ALL_CHUNKS) {
   const pool = registry.filter((c) => c.biome === biome);
   if (pool.length === 0) throw new Error(`no chunks for biome ${biome}`);
   const seedU32 = seedU32For(seedStr);
@@ -104,6 +113,7 @@ export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
     let eligible = pool.filter(
       (c) =>
         c.difficulty <= ceil &&
+        (afterIntense || c.difficulty >= difficultyFloor(total)) &&
         (last === null || c.id !== last.id) &&
         (!afterIntense || (c.difficulty <= EASY_AFTER_INTENSE_MAX && !c.intense)),
     );
@@ -137,9 +147,17 @@ export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
     lengthLu: COURSE_LENGTH_LU,
     chunkIds: picked.map((p) => p.chunk.id),
     chunkStarts: picked.map((p) => p.startLu),
+    difficulties: picked.map((p) => p.chunk.difficulty),
     obstacles,
     fish,
   };
+}
+
+/** Server and browser use the same chapter mapping, seed and speed. */
+export function generateRound(season, index) {
+  if (!Number.isInteger(index) || index < 0 || index >= MAX_ROUNDS) throw new Error('invalid round');
+  return { ...generateCourse(roundSeed(season, index), EXPEDITION[index]), roundIndex: index,
+    speedMultiplier: roundSpeed(index) };
 }
 
 /**

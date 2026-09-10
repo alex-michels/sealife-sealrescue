@@ -27,21 +27,25 @@ import {
   OBSTACLE_DIMS,
   bandY,
   difficultyCeil,
+  difficultyFloor,
   generateCourse,
   courseHash,
 } from '../core/course.js';
 import { BAL } from '../core/balance.js';
+import { BIOME_IDS, roundSpeed, MAX_ROUNDS } from '../core/biomes.js';
 
 // — Константы модели (производные спеки §2.2/§9.4). Скорости/баффы/чардж — из
 // core/balance.js BAL (SR-03/SR-04, единый источник правды; линт снимает значения на момент
 // импорта — вариантные мутации BAL к линту не относятся); дериваты фиксируются здесь,
 // чтобы дрейф был осознанным диффом, а не «случайно поехало».
-const WORST_SPEED = BAL.SPEED_MAX * BAL.FISH_SPEED_BUFF_MULT; // 483 lu/с
+const WORST_SPEED = BAL.SPEED_MAX * BAL.FISH_SPEED_BUFF_MULT * roundSpeed(MAX_ROUNDS-1); // fastest chapter, without optional burst
 const REACT_S = 0.25;
 const BAND_HOP_S = 0.34;
-export const HOP_LU = Math.ceil(WORST_SPEED * (REACT_S + BAND_HOP_S)); // 285
+export const HOP_LU = Math.ceil(WORST_SPEED * (REACT_S + BAND_HOP_S)); // 325
 const PAD = 8; // страховочный зазор вокруг хитбоксов, lu
 const CHARGE_EXTEND = {
+  leopard_seal: Math.ceil((FIELD_W * BAL.SHARK_CHARGE_REL) / BAL.SPEED_MAX),
+  leopard_seal_big: Math.ceil((FIELD_W * BAL.SHARK_BIG_CHARGE_REL) / BAL.SPEED_MAX),
   shark_white: Math.ceil((FIELD_W * BAL.SHARK_CHARGE_REL) / BAL.SPEED_MAX), // 412
   shark_big: Math.ceil((FIELD_W * BAL.SHARK_BIG_CHARGE_REL) / BAL.SPEED_MAX), // 275
 };
@@ -52,8 +56,8 @@ const FISH_WINDOW_MIN = 10; //   на рампе 6000 lu занимают дол
 const CHUNK_EDGE_MARGIN = 120; // препятствия не ближе к границам чанка (кросс-чанк-честность)
 const MAX_CHUNK_FISH_POINTS = Math.floor(FISH_POINTS_BUDGET_MAX / (COURSE_LENGTH_LU / CHUNK_LEN_LU)); // 13
 
-const PREDATORS = new Set(['orca', 'shark_white', 'shark_big']);
-const KNOWN = new Set(['rock', 'orca', 'shark_white', 'shark_big', 'ghost_net', 'plastic_cluster']);
+const PREDATORS = new Set(['orca', 'shark_white', 'shark_big', 'polar_bear', 'leopard_seal', 'leopard_seal_big']);
+const KNOWN = new Set(['rock', ...PREDATORS, 'ghost_net', 'plastic_cluster']);
 
 /** Вертикальный диапазон тела угрозы (lu). null — мусор (не смертелен). */
 function threatYRange(o) {
@@ -65,10 +69,13 @@ function threatYRange(o) {
       const r = OBSTACLE_DIMS.orca.r;
       return [yc - o.ampBands * BAND_STEP - r, yc + o.ampBands * BAND_STEP + r];
     }
+    case 'polar_bear':
+    case 'leopard_seal':
     case 'shark_white': {
       const r = OBSTACLE_DIMS.shark_white.r;
       return [yc - r, yc + r];
     }
+    case 'leopard_seal_big':
     case 'shark_big': {
       const r = OBSTACLE_DIMS.shark_big.r;
       return [yc - 0.5 * BAND_STEP - r, yc + 0.5 * BAND_STEP + r];
@@ -201,7 +208,7 @@ export function lintChunk(c) {
   const e = (m) => errs.push(`[${c.id ?? '?'}] ${m}`);
 
   if (typeof c.id !== 'string' || !c.id) e('id обязателен');
-  if (c.biome !== 'coastal') e(`biome '${c.biome}' — v1 поддерживает только 'coastal'`);
+  if (!BIOME_IDS.includes(c.biome)) e(`unknown biome '${c.biome}'`);
   if (!Number.isInteger(c.difficulty) || c.difficulty < 1 || c.difficulty > 5)
     e(`difficulty ${c.difficulty} вне 1..5`);
   if (typeof c.intense !== 'boolean') e('intense обязан быть boolean');
@@ -228,7 +235,7 @@ export function lintChunk(c) {
       if (lo < r || hi > WORLD_H - r)
         e(`orca band ${o.band} amp ${o.ampBands}: траектория выходит за столб воды (${lo}..${hi})`);
     }
-    if (o.type === 'shark_big') {
+    if (o.type === 'shark_big' || o.type === 'leopard_seal_big') {
       const r = OBSTACLE_DIMS.shark_big.r;
       const lo = bandY(o.band) - 0.5 * BAND_STEP;
       const hi = bandY(o.band) + 0.5 * BAND_STEP;
@@ -267,8 +274,10 @@ export function lintChunk(c) {
 /** Инварианты библиотеки в целом (спека §9.4-5). */
 export function lintLibrary(registry) {
   const errs = [];
-  if (registry.length < 15 || registry.length > 25)
-    errs.push(`библиотека: ${registry.length} чанков вне 15..25`);
+  for (const biome of new Set(registry.map((c) => c.biome))) {
+    const n = registry.filter((c) => c.biome === biome).length;
+    if (n < 15 || n > 25) errs.push(`biome ${biome}: ${n} chunks outside 15..25`);
+  }
   const ids = new Set();
   for (const c of registry) {
     if (ids.has(c.id)) errs.push(`дубликат id ${c.id}`);
@@ -298,6 +307,7 @@ export function lintCourse(course, registry) {
     const c = byId.get(course.chunkIds[i]);
     if (!c) { e(`неизвестный чанк ${course.chunkIds[i]}`); continue; }
     const startLu = course.chunkStarts[i];
+    if (!last?.intense && c.difficulty < difficultyFloor(startLu)) e("chunk below late-course difficulty floor: " + c.id);
     if (c.difficulty > difficultyCeil(startLu))
       e(`чанк ${c.id} (d${c.difficulty}) на ${startLu} lu выше потолка ${difficultyCeil(startLu)}`);
     if (last) {
@@ -330,9 +340,9 @@ export function lintCourse(course, registry) {
 /** Полный прогон: библиотека + N сид-сборок (+детерминизм повторного вызова). */
 export function runLint(registry, seeds) {
   const errors = [...lintLibrary(registry)];
-  for (const seed of seeds) {
-    const a = generateCourse(seed, 'coastal', registry);
-    const b = generateCourse(seed, 'coastal', registry);
+  for (const biome of new Set(registry.map((c) => c.biome))) for (const seed of seeds) {
+    const a = generateCourse(seed, biome, registry);
+    const b = generateCourse(seed, biome, registry);
     if (courseHash(a) !== courseHash(b)) errors.push(`[seed ${seed}] недетерминизм generateCourse`);
     errors.push(...lintCourse(a, registry));
   }

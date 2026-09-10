@@ -124,18 +124,18 @@ d += effSpeed · dt                                               // кроме 
 90–120 с»). Харнесс SR-04 обязан подтвердить `p99 < MAX_COURSE_MS = 150000` — иначе бампать
 потолок в SR-10, не молча.
 
-### 4.3 Потолок сложности чанков
+### 4.3 Окно сложности чанков
 ```
 difficultyCeil(d) = 1 + floor(4 · min(1, d / RAMP_DISTANCE_LU))   // 1..5
+difficultyFloor(d) = 1 + min(2, floor(3 · d / COURSE_LENGTH_LU)) // 1 → 2 → 3
 ```
-Генератор (§9.3) выбирает только чанки с `difficulty ≤ difficultyCeil(d)`; после чанка с флагом
+Генератор (§9.3) выбирает чанки в окне `difficultyFloor(d) ≤ difficulty ≤ difficultyCeil(d)`; после чанка с флагом
 `intense: true` — принудительно лёгкий (`difficulty ≤ 2`, не-intense) — «дыхание» по расписанию
 трассы, одинаковое для всех (не реактивное на ошибки игрока).
 
-## 5. Ресурсы: жизни + единый стамина/кислород-метр
+## 5. Ресурсы: жизни и энергия
 
-**Два метра, не три.** Стамина — буквально метр дыхания (§1.5 дизайн-дока): расход под водой И
-есть расход кислорода; в v1 (только вода) восстановление — только рыбой.
+Энергия — условность аркады, не шкала кислорода. Тюлени дышат воздухом; рыба восстанавливает игровую энергию. UI и инструкции явно разделяют биологию и механику.
 
 ### 5.1 Константы
 ```
@@ -289,7 +289,7 @@ rnd      = mulberry32(seedU32)                        // побитовая ко
 1. Реестр чанков биома, **отсортированный по `id`** (порядок не зависит от порядка импортов —
    критично для Node/браузер-паритета).
 2. Цикл, пока `Σ lenLu < COURSE_LENGTH_LU (36000)`; на итерации: `eligible` = чанки с
-   `difficulty ≤ difficultyCeil(dCur)` (§4.3), `id ≠ предыдущему`, а если предыдущий был
+   `difficultyFloor(dCur) ≤ difficulty ≤ difficultyCeil(dCur)` (§4.3), `id ≠ предыдущему`, а если предыдущий был
    `intense` — только `difficulty ≤ 2 && !intense`. Выбор: `eligible[floor(rnd() ·
    eligible.length)]` — **ровно один вызов `rnd()` на чанк**, больше RNG нигде (дисциплина
    счётчика бросков — как в `makeParts`).
@@ -329,31 +329,33 @@ rnd      = mulberry32(seedU32)                        // побитовая ко
 score = SCORE_PER_M · distance_m + SCORE_PER_FISH_POINT · fishPoints + SCORE_PER_LIFE · livesRemaining
 SCORE_PER_M = 100 · SCORE_PER_FISH_POINT = 20 · SCORE_PER_LIFE = 300
 ```
-Максимум: `100·900 + 20·400 + 300·3 = 98 900` ≤ 100 000 (Zod-кап `SubmitBody.score` НЕ бампается —
-инвариант §9.4 п.4 это гарантирует). Дистанция доминирует до финиша; **финишировавшие сравниваются
-рыбой и жизнями** — это осознанная вершина мета-игры («дойди, потом дойди чисто»), а вторичные
-колонки доски (`livesRemaining`/`fishCollected`) показывают «как именно».
+Максимум главы: `100·900 + 20·400 + 300·3 = 98 900`. Пять глав дают максимум
+494 500; Zod-кап Seal Run — 500 000. Hunter сохраняет свой прежний кап 100 000.
+Дистанция доминирует; при равной дистанции решают рыба и сохранённые жизни.
 
-### 10.3 Контракт сабмита и серверные проверки (нормативно для SR-10)
-Поля: существующие (`game`, `score`, `durationMs`, `seed`, `token`; `board` удалён 2026-07-03) + **опциональные**
-`distance` (= `distance_m`, int 0..900), `livesRemaining` (0..3), `fishCollected` (int ≥ 0).
-`courseSeed` клиент НЕ шлёт — сервер берёт из токена. Проверки Seal Run поверх общих
-(подпись/nonce/rate-limit):
+### 10.3 Контракт сабмита SR-10/SR-20
+Существующие поля `game, score, durationMs, seed, token` дополняются обязательным для Run
+массивом `rounds` (1…5). Глава: `distanceM` 0…900, `fishCollected` 0…400,
+`fishPoints` 0…400, `livesRemaining` 0…3, `durationMs` 3000…150010.
+Все предыдущие главы должны иметь 900 м и хотя бы одну жизнь. Последнюю можно закончить
+досрочно. Таймаут — не финиш. Сервер выводит `levelsCompleted`, общую дистанцию, рыбу
+и `courseSeed`; клиент не задаёт эти агрегаты как истину.
 
-```
-distanceLu = distance · LU_PER_M
-minPlausibleMs = distanceLu / (SPEED_MAX · FISH_SPEED_BUFF_MULT / 1000)   // 483 lu/c → полная трасса ≈ 74.5 c
-durationMs < minPlausibleMs · 0.9            → reject('implausible_duration')
-durationMs > MAX_COURSE_MS                   → reject (жёсткий потолок)
-fishPointsImplied = (score − 100·distance − 300·livesRemaining) / 20
-   не целое или < 0                          → reject('score_mismatch')
-   ∉ [fishCollected·1, fishCollected·4]      → reject('score_mismatch')   // микс типов 1 и 4
-fishCollected > fishCountBudget(distanceLu)  → reject('implausible_fish') // пересборка трассы
-fishPointsImplied > fishPointsBudget(distanceLu) → reject('implausible_fish')
-livesRemaining > 0 && distance < 900 && durationMs < MAX_COURSE_MS − допуск → подозрение (лог), не reject
-```
-`MIN_PLAY_MS` per-game: для Seal Run пол — не 40 с (честная смерть бывает на ~3 с), опора —
-связка `distance↔durationMs` + пересборка трассы токена.
+Токен /start (TTL 30 минут) подписывает `g,t,n,s,cs,rv,p`: игру, время, nonce,
+ISO-неделю, seed курса (неделя), rules version и player seed. Проверка и запись используют
+неделю токена, даже после понедельника 00:00 UTC. Старый сезон получает часовой grace period.
+Одноразовые nonce и rate limits живут в памяти одного процесса, как у Hunter.
+
+Для каждой главы сервер вызывает `generateRound(token.cs,index)`. Максимальная возможная
+скорость для нижней оценки времени: `420 × 1.15 × 1.35 × roundSpeed(index)`;
+допуск округления 100 мс. Реальная скорость обычно ниже из-за рампы, стоимости/кулдауна рывка
+и препятствий. Возраст токена ≥3 с, суммарное игровое время ≤ возраст+1000 мс.
+Количество рыбы и очков не превышает бюджет достигнутого участка (+50 lu).
+Число редких рыб `(fishPoints-fishCollected)/3` должно быть целым и достижимым;
+сервер отдельно ограничивает обычный улов. Итоговый score точно равен сумме формул глав;
+durationMs равен сумме длительностей с допуском 5 мс.
+
+Это проверка правдоподобия по бюджетам, не replay верификация ввода.
 
 ## 11. Телеграфирование и честность паттернов (обязательные правила авторинга)
 
@@ -418,3 +420,15 @@ livesRemaining > 0 && distance < 900 && durationMs < MAX_COURSE_MS − допу�
 - [game-seal-hunter.md](game-seal-hunter.md) — переиспользуемые паттерны (sim-core, fairness, лидерборд)
 - [Roadmap.md](Roadmap.md) — задачи SR-01..SR-15
 - [api.md](api.md) / [data-model.md](data-model.md) — контракт лидерборда и коллекции (расширение — SR-09/SR-10)
+
+## 15. Экспедиции, рывок и представление (SR-15…SR-20)
+
+Пять биомов: coastal → atlantis → tropical (Hawaii) → arctic → antarctic.
+Сид главы: `expedition-1:ISO-week:index`; скорость `1 + index × 0.035`.
+Тренировка выбирает любую стартовую локацию и seed; gentle pace умножает скорость на 0.8.
+Space: стоимость 18 энергии, множитель скорости 1.35 на 800 мс, cooldown 4000 мс.
+Пауза не двигает sim-время. После 900 м sim заморожена, выход спрайта длится 950 мс
+(180 мс при reduced motion), затем HTML-результат. Каждая новая глава начинает с 3 жизнями
+и 100 энергии. Таймаут 150 с завершает главу как dead без levelsCompleted.
+Боб рыбы — render-only: small ±5 lu, rare ±8 lu; при reduced motion 0.
+Актуальные арт/UX/хранение и отчёт баланса: [game-seal-run.md](game-seal-run.md).

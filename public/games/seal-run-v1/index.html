@@ -1,67 +1,229 @@
 <!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Seal Run — заплыв тюленя</title>
-  <meta name="description" content="Side-scroll раннер: тюлень уворачивается от хищников, мусора и камней, ловит рыбу. Дистанция — очки." />
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <!-- SR-05 vertical slice: меню/HUD/результат — HTML ВНЕ canvas (доступность, спека §2.1/SR-07);
-       Phaser (vendor/phaser.esm.js) грузится динамически ТОЛЬКО по «Старт» — бюджет CWV. -->
-  <main id="app">
-    <div id="stage-wrap">
-      <div id="stage" aria-hidden="true"></div>
-
-      <!-- Standalone-заглушка (SH-14, тумблер games.standaloneComingSoon в админке):
-           статичный подводный фон (render/art.js, без Phaser) + надпись. Во фрейме не бывает. -->
-      <div id="coming-soon" hidden aria-live="polite">
-        <canvas id="coming-soon-bg" aria-hidden="true"></canvas>
-        <span class="coming-soon-text">Coming&nbsp;soon</span>
-      </div>
-
-      <div id="hud" hidden>
-        <span id="hud-lives" aria-label="Жизни"></span>
-        <div id="hud-stamina" role="meter" aria-label="Дыхание" aria-valuemin="0" aria-valuemax="100">
-          <div id="hud-stamina-fill"></div>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <meta name="theme-color" content="#102d43" />
+    <title>Seal Run · Ocean expeditions</title>
+    <meta
+      name="description"
+      content="Swim through five ocean worlds as a true seal. Generated routes, gentle practice and a weekly expedition."
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header class="topbar">
+        <a href="#" id="brand" aria-label="Seal Run home"
+          ><svg viewBox="0 0 42 30" aria-hidden="true">
+            <path
+              d="M3 21C7 14 8 6 20 5c8-1 16 3 17 10 4 1 4 4 1 5-4 2-9 0-13 2-7 4-11 1-14 0L2 26l3-6Z"
+              fill="currentColor"
+            />
+            <circle cx="31" cy="12" r="1.5" fill="#123248" /></svg
+          ><span
+            >seal<span class="word-run">run</span
+            ><small data-i18n="brand">OCEAN EXPEDITIONS</small></span
+          ></a
+        >
+        <div class="settings">
+          <button id="board-open" class="icon-button" data-label="leaderboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 20V11h5v9m1 0V4h5v16m1 0v-6h5v6" />
+            </svg></button
+          ><button id="sound" class="icon-button" data-label="sound" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m11 5-5 4H3v6h3l5 4V5Zm5 3 5 8m0-8-5 8" />
+            </svg></button
+          ><button id="motion" class="icon-button" data-label="motion" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 9c4-7 9 7 13 0m-10 7c4-7 9 7 13 0" />
+            </svg>
+          </button>
+          <div class="language" aria-label="Language">
+            <button data-lang="en">EN</button><button data-lang="ru">RU</button>
+          </div>
+          <button id="fs" class="icon-button" data-label="fullscreen">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9V4h5m6 0h5v5M4 15v5h5m6 0h5v-5" />
+            </svg>
+          </button>
         </div>
-        <span id="hud-dist" aria-label="Дистанция">0 м</span>
-      </div>
-
-      <section id="menu" class="overlay">
-        <h1>Seal Run</h1>
-        <p class="tagline">Заплыв тюленя: 900 метров прибрежной воды.</p>
-        <div class="how">
-          <p><b>Управление:</b> веди тюленя по глубине — палец/мышь задают цель,
-            <kbd>↑</kbd>/<kbd>↓</kbd> или <kbd>W</kbd>/<kbd>S</kbd> — с клавиатуры.</p>
-          <p><b>Рыба</b> — очки и дыхание (метр падает сам — ешь, чтобы плыть).
-            <b>Хищники</b> отнимают жизнь. <b>Сети и пластик</b> вязнут и душат.
-            <b>Камни</b> отбрасывают.</p>
-          <p>Трасса недели одна на всех — дистанция решает.</p>
+      </header>
+      <div id="stage-wrap">
+        <canvas id="ocean-preview" aria-hidden="true"></canvas>
+        <div id="stage" aria-hidden="true"></div>
+        <div id="coming-soon" hidden>
+          <canvas id="coming-soon-bg" aria-hidden="true"></canvas
+          ><span class="coming-soon-text" data-i18n="comingSoon">Coming soon</span>
         </div>
-        <button id="start" type="button">Старт</button>
-        <p class="note">Прототип: лидерборд — позже. Трасса: <span id="seed-label"></span></p>
-      </section>
-
-      <section id="over" class="overlay" hidden>
-        <h2 id="over-title">Заплыв окончен</h2>
-        <dl id="result">
-          <div><dt>Дистанция</dt><dd id="r-dist"></dd></div>
-          <div><dt>Рыба</dt><dd id="r-fish"></dd></div>
-          <div><dt>Жизни</dt><dd id="r-lives"></dd></div>
-          <div><dt>Очки</dt><dd id="r-score"></dd></div>
-        </dl>
-        <button id="restart" type="button">Ещё заплыв</button>
-      </section>
-    </div>
-
-    <footer class="bar">
-      <span>Seal Run · прототип</span>
-      <button id="fs" type="button" hidden>На весь экран</button>
-    </footer>
-  </main>
-
-  <script type="module" src="game.js"></script>
-</body>
+        <section id="menu" class="menu" aria-labelledby="hero-title">
+          <div class="intro-panel">
+            <p class="eyebrow">
+              <span class="status-dot"></span><span id="chapter-eyebrow">01 / 05 · 900 M</span>
+            </p>
+            <h1 id="hero-title">
+              <span data-i18n="heroTop">A little seal.</span><br /><em data-i18n="heroBottom"
+                >A great big ocean.</em
+              >
+            </h1>
+            <p class="intro" data-i18n="intro"></p>
+            <div class="mode-switch" role="group" aria-label="Game mode">
+              <button id="mode-explore" aria-pressed="true" data-i18n="explore"></button
+              ><button id="mode-weekly" aria-pressed="false" data-i18n="weekly"></button>
+            </div>
+            <p id="mode-hint" class="mode-hint"></p>
+            <div class="play-row">
+              <button id="start" class="primary">
+                <span data-i18n="play">Let’s swim</span><span aria-hidden="true">↗</span></button
+              ><button id="regenerate" class="secondary" data-label="regenerate">⟳</button>
+            </div>
+            <label id="pace-label" class="pace"
+              ><input id="gentle" type="checkbox" /><span data-i18n="relaxed"></span
+            ></label>
+            <p id="start-error" class="error" role="alert" hidden></p>
+            <details class="how">
+              <summary data-i18n="how"></summary>
+              <p data-i18n="howMove"></p>
+              <p data-i18n="howFish"></p>
+              <p data-i18n="howHazards"></p>
+              <p data-i18n="howBurst"></p>
+            </details>
+          </div>
+          <div class="location-note">
+            <span id="location-number">01</span>
+            <div>
+              <h2 id="location-name"></h2>
+              <p id="location-species"></p>
+            </div>
+          </div>
+          <nav class="biome-map" data-label="locations" id="biome-map"></nav>
+          <p class="route-note">
+            <span data-i18n="route"></span><span id="seed-label"></span
+            ><span id="offline-ready"></span>
+          </p>
+        </section>
+        <section id="hud" hidden data-label="chapter">
+          <div class="hud-chapter">
+            <span id="hud-chapter"></span><strong id="hud-location"></strong>
+          </div>
+          <div class="hud-energy">
+            <div><span data-i18n="energy"></span><span id="hud-energy-value">100</span></div>
+            <div
+              id="hud-stamina"
+              role="meter"
+              data-label="energy"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow="100"
+            >
+              <div id="hud-stamina-fill"></div>
+            </div>
+          </div>
+          <span id="hud-lives" data-label="lives"></span>
+          <div class="hud-distance"><strong id="hud-dist">0 m</strong><span>/ 900 m</span></div>
+          <button id="pause-button" class="icon-button" data-label="pause">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14" /></svg>
+          </button>
+          <div class="course-progress"><div id="course-progress-fill"></div></div>
+        </section>
+        <p id="toast" class="toast" hidden role="status"></p>
+        <div id="play-controls" hidden>
+          <div class="touch-steering">
+            <button id="swim-up" class="secondary" data-label="up">↑</button
+            ><button id="swim-down" class="secondary" data-label="down">↓</button>
+          </div>
+          <p data-i18n="drag"></p>
+          <button id="burst" class="secondary">
+            <span data-i18n="burst"></span><kbd>Space</kbd>
+          </button>
+        </div>
+        <p id="portrait-tip" hidden data-i18n="portrait"></p>
+        <section id="paused" class="modal-layer" hidden aria-labelledby="pause-title">
+          <div class="dialog">
+            <p class="eyebrow" data-i18n="pause"></p>
+            <h2 id="pause-title" data-i18n="paused"></h2>
+            <p data-i18n="pauseHint"></p>
+            <button id="resume" class="primary" data-i18n="resume"></button
+            ><button id="end-swim" class="quiet" data-i18n="quit"></button>
+          </div>
+        </section>
+        <section id="over" class="modal-layer" hidden aria-labelledby="over-title">
+          <div class="dialog result-dialog">
+            <div class="result-emblem" aria-hidden="true">〰</div>
+            <p class="eyebrow" id="result-kicker"></p>
+            <h2 id="over-title"></h2>
+            <p id="result-hint"></p>
+            <dl id="result">
+              <div class="score-stat">
+                <dt data-i18n="score"></dt>
+                <dd id="r-score"></dd>
+              </div>
+              <div>
+                <dt data-i18n="distance"></dt>
+                <dd id="r-dist"></dd>
+              </div>
+              <div>
+                <dt data-i18n="fish"></dt>
+                <dd id="r-fish"></dd>
+              </div>
+              <div>
+                <dt data-i18n="levels"></dt>
+                <dd id="r-levels"></dd>
+              </div>
+              <div>
+                <dt data-i18n="lives"></dt>
+                <dd id="r-lives"></dd>
+              </div>
+            </dl>
+            <p id="result-mode" class="muted"></p>
+            <p id="submit-status" role="status"></p>
+            <button id="next-round" class="primary" data-i18n="next" hidden></button
+            ><button id="submit-score" class="secondary" data-i18n="submit" hidden></button>
+            <div class="result-actions">
+              <button id="restart" class="quiet" data-i18n="retry"></button
+              ><button id="back-map" class="quiet" data-i18n="home"></button>
+            </div>
+          </div>
+        </section>
+        <section id="board" class="modal-layer" hidden aria-labelledby="board-title">
+          <div class="dialog board-dialog">
+            <div class="dialog-header">
+              <h2 id="board-title" data-i18n="leaderboard"></h2>
+              <button id="board-close" class="icon-button" data-label="close">×</button>
+            </div>
+            <p id="board-season" class="muted"></p>
+            <p id="board-status" role="status"></p>
+            <p id="personal-best"></p>
+            <table id="board-table" hidden>
+              <thead>
+                <tr>
+                  <th data-i18n="rank"></th>
+                  <th data-i18n="swimmer"></th>
+                  <th data-i18n="score"></th>
+                  <th data-i18n="levels"></th>
+                </tr>
+              </thead>
+              <tbody id="board-rows"></tbody>
+            </table>
+            <div class="board-pagination">
+              <button id="board-prev" class="quiet" data-i18n="previous"></button
+              ><button id="board-retry" class="quiet" data-i18n="reload"></button
+              ><button id="board-next" class="quiet" data-i18n="more"></button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <footer class="bar">
+        <span>SeaLife.Info <span aria-hidden="true">/</span> Seal Run</span>
+        <nav aria-label="Legal">
+          <a data-legal="legal-notice" data-i18n="legal" href="/en/legal-notice">Legal notice</a
+          ><a data-legal="privacy" data-i18n="privacy" href="/en/privacy">Privacy</a
+          ><a data-legal="cookies" data-i18n="cookies" href="/en/cookies">Cookies</a
+          ><a data-legal="terms" data-i18n="terms" href="/en/terms">Terms</a>
+        </nav>
+      </footer>
+    </main>
+    <script type="module" src="game.js"></script>
+  </body>
 </html>
