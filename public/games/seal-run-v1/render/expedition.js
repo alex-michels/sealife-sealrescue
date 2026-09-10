@@ -160,9 +160,12 @@ export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
   // Ear opening (no external ear flap), glossy eye, blunt muzzle and whisker follicles.
   ellipse(c, 133, 40, 0.8, 1.3, '#526972')
   // Slight three-quarter muzzle: near eye forward, far eye partly visible.
-  ellipse(c, 164, 39, 1.6, 2.2, '#344a52', -0.2)
-  ellipse(c, 156.5, 40.5, 3.3, 3.7, '#203b47', -0.2)
-  ellipse(c, 157.5, 39.3, 0.9, 0.9, '#e5f5ef')
+  // SR-22: the user's three-quarter face reference, with two readable eyes.
+  ellipse(c, 163.8, 38.5, 2.6, 3.1, '#172e39', -0.16)
+  ellipse(c, 155.8, 39.5, 3.7, 4.1, '#203b47', -0.16)
+  ellipse(c, 156.7, 38.2, 1.05, 1.05, '#f2faf2')
+  ellipse(c, 164.5, 37.5, 0.75, 0.75, '#f2faf2')
+  ellipse(c, 154.9, 41, 0.45, 0.45, '#8cabb1')
   ellipse(c, 160, 51, 12, 8.5, '#c7d1c5')
   ellipse(c, 156, 53, 7, 5.5, '#dce0cd')
   ellipse(c, 165, 49, 3.4, 2.7, '#233e47')
@@ -475,6 +478,10 @@ export function buildExpeditionTextures(scene, biome) {
       ],
       g,
     )
+    // A quiet, continuous rim identifies solid terrain against photographic rocks.
+    c.strokeStyle = icy ? '#39566a' : '#d0d8bd'
+    c.lineWidth = 2
+    c.stroke()
     polygon(
       c,
       [

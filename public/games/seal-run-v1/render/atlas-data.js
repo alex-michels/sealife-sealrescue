@@ -589,22 +589,22 @@ export const ATLASES = {
     }
   },
   "weddell-pup": {
-    "file": "weddell-pup-atlas-v6.webp",
+    "file": "weddell-pup-atlas-v7.webp",
     "frames": {
       "weddell-pup_0": {
         "frame": {
           "x": 2,
           "y": 2,
-          "w": 360,
-          "h": 150
+          "w": 363,
+          "h": 153
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 31,
+          "x": 30,
           "y": 79,
-          "w": 360,
-          "h": 150
+          "w": 363,
+          "h": 153
         },
         "sourceSize": {
           "w": 400,
@@ -613,18 +613,18 @@ export const ATLASES = {
       },
       "weddell-pup_1": {
         "frame": {
-          "x": 366,
+          "x": 370,
           "y": 2,
-          "w": 356,
-          "h": 147
+          "w": 358,
+          "h": 150
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
           "x": 32,
-          "y": 82,
-          "w": 356,
-          "h": 147
+          "y": 81,
+          "w": 358,
+          "h": 150
         },
         "sourceSize": {
           "w": 400,
@@ -634,17 +634,17 @@ export const ATLASES = {
       "weddell-pup_2": {
         "frame": {
           "x": 2,
-          "y": 156,
-          "w": 357,
-          "h": 147
+          "y": 159,
+          "w": 364,
+          "h": 151
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 33,
-          "y": 82,
-          "w": 357,
-          "h": 147
+          "x": 30,
+          "y": 81,
+          "w": 364,
+          "h": 151
         },
         "sourceSize": {
           "w": 400,
@@ -653,18 +653,18 @@ export const ATLASES = {
       },
       "weddell-pup_3": {
         "frame": {
-          "x": 366,
-          "y": 156,
-          "w": 341,
-          "h": 148
+          "x": 370,
+          "y": 159,
+          "w": 348,
+          "h": 150
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 46,
+          "x": 45,
           "y": 79,
-          "w": 341,
-          "h": 148
+          "w": 348,
+          "h": 150
         },
         "sourceSize": {
           "w": 400,
@@ -674,35 +674,35 @@ export const ATLASES = {
     },
     "meta": {
       "size": {
-        "w": 728,
-        "h": 308
+        "w": 736,
+        "h": 314
       },
       "sources": [
-        "weddell-pup-v5-0.webp",
-        "weddell-pup-v5-1.webp",
-        "weddell-pup-v5-2.webp",
-        "weddell-pup-v5-3.webp"
+        "weddell-pup-v7-0.webp",
+        "weddell-pup-v7-1.webp",
+        "weddell-pup-v7-2.webp",
+        "weddell-pup-v7-3.webp"
       ],
       "extrusion": 2
     }
   },
   "grey-seal": {
-    "file": "grey-seal-atlas-v6.webp",
+    "file": "grey-seal-atlas-v7.webp",
     "frames": {
       "grey-seal_0": {
         "frame": {
           "x": 2,
           "y": 2,
-          "w": 377,
-          "h": 141
+          "w": 368,
+          "h": 143
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 16,
-          "y": 77,
-          "w": 377,
-          "h": 141
+          "x": 14,
+          "y": 76,
+          "w": 368,
+          "h": 143
         },
         "sourceSize": {
           "w": 400,
@@ -711,18 +711,18 @@ export const ATLASES = {
       },
       "grey-seal_1": {
         "frame": {
-          "x": 391,
+          "x": 376,
           "y": 2,
-          "w": 377,
-          "h": 158
+          "w": 370,
+          "h": 162
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 18,
+          "x": 16,
           "y": 69,
-          "w": 377,
-          "h": 158
+          "w": 370,
+          "h": 162
         },
         "sourceSize": {
           "w": 400,
@@ -732,17 +732,17 @@ export const ATLASES = {
       "grey-seal_2": {
         "frame": {
           "x": 2,
-          "y": 172,
-          "w": 371,
-          "h": 166
+          "y": 173,
+          "w": 369,
+          "h": 167
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 22,
-          "y": 52,
-          "w": 371,
-          "h": 166
+          "x": 20,
+          "y": 50,
+          "w": 369,
+          "h": 167
         },
         "sourceSize": {
           "w": 400,
@@ -751,18 +751,18 @@ export const ATLASES = {
       },
       "grey-seal_3": {
         "frame": {
-          "x": 391,
-          "y": 172,
-          "w": 385,
-          "h": 134
+          "x": 376,
+          "y": 173,
+          "w": 364,
+          "h": 138
         },
         "rotated": false,
         "trimmed": true,
         "spriteSourceSize": {
-          "x": 10,
-          "y": 78,
-          "w": 385,
-          "h": 134
+          "x": 22,
+          "y": 76,
+          "w": 364,
+          "h": 138
         },
         "sourceSize": {
           "w": 400,
@@ -772,14 +772,14 @@ export const ATLASES = {
     },
     "meta": {
       "size": {
-        "w": 778,
-        "h": 340
+        "w": 748,
+        "h": 342
       },
       "sources": [
-        "grey-seal-v4-0.webp",
-        "grey-seal-v4-1.webp",
-        "grey-seal-v4-2.webp",
-        "grey-seal-v4-3.webp"
+        "grey-seal-v7-0.webp",
+        "grey-seal-v7-1.webp",
+        "grey-seal-v7-2.webp",
+        "grey-seal-v7-3.webp"
       ],
       "extrusion": 2
     }

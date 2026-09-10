@@ -52,8 +52,8 @@ short tail, compact foreflippers with claws, small ear openings, whiskers and co
 The location caption participates in the menu grid, above the route cards.
 
 The menu uses the v1 plate. In play, render/scenery.js composes the distance-driven
-panorama, three independent prop planes (16%, 40%, 72% of world speed), gentle scale-based
-kelp sway, a Phaser TileSprite light pattern and a bounded ParticleEmitter (36 motes).
+panorama and two faint distant planes by default. Rich additionally enables three planes
+(16%, 40%, 72% target factors), kelp sway, shimmer and at most 36 motes. Motion is smoothed.
 All decor sits behind gameplay. Pausing freezes it; reduced motion freezes scenery and
 hides shimmer/particles. Generated decorative rocks are distinct from solid game terrain.
 Collision geometry is independent of all background pictures.
@@ -161,7 +161,7 @@ and the versioned offline cache uses the new files.
 
 ## Packed delivery and compact panoramas (v6 / SR-21)
 
-Ten four-frame animal atlases are exported from the versioned v3–v5 WebP frames by
+The original ten v6 four-frame animal atlases were exported from the versioned v3–v5 WebP frames by
 [tools/pack-art.mjs](../tools/pack-art.mjs). Every nonzero-alpha pixel is retained. Cropped
 frames have two extruded edge pixels on every side and remain non-rotated. Phaser
 sourceSize/spriteSourceSize metadata in [atlas-data.js](../render/atlas-data.js) preserves
@@ -184,3 +184,11 @@ share one 384×192 atlas. Ring/propeller center stays aligned to the hull origin
 No moving Phaser sprite rotates and only the propeller collision disc causes damage.
 Historical individual frames and prompts remain source assets, outside the live offline
 manifest. Delivery sizes and runtime budgets are recorded in the performance review.
+
+## Softer two-eye faces (v7 / SR-22)
+
+Coastal, Hawaiian monk and ringed players have updated code-native Canvas faces. Grey and Weddell retain their generated bodies, coats, poses and tail, with edited two-eye faces. Two lossless source WebPs in tools/assets/seal-run (outside public delivery) retain the generated chroma-key sheets; four 400×280 delivery frames per species are encoded at quality 94 / alpha 100, then packed with the same 2px extrusion into v7 atlases. Predator v6 atlases stay unchanged.
+
+Built-in imagegen produced the artwork. Rejected checkerboard outputs are not shipped. The accepted solid green source is keyed/despilled and sliced by [prepare-faces.mjs](../tools/prepare-faces.mjs); disconnected resampling specks are removed before packing. All generated player and predator alpha planes are checked for detached fragments, and every body covers its unchanged collision circle. Source registration and physical anatomy remain subject to visual review.
+
+[Provenance](prompts-v7.json), [exact selected prompts](prompts-v7-generation.json), [five-player preview](../../../../docs/images/seal-run-players-v7.png). Run prepare-faces.mjs then pack-art.mjs to rebuild delivery files. Original v4/v5/v6 files are preserved.

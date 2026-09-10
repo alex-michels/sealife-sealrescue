@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-11",
+  "roadmap": "SR-22",
+  "generator": "Built-in imagegen",
+  "reference": "User-edited Coastal seal face, two visible eyes (private reference not redistributed)",
+  "preserved": "Species coats, earless bodies, four swimming poses, paired upright hindfeet, short central tail",
+  "preparation": "Generator returned RGB checkerboard despite two alpha requests. Accepted a generated solid green sheet; tools/prepare-faces.mjs performs chroma-key delivery preparation, slices to four 400x280 WebP frames, then tools/pack-art.mjs trims with 2px extrusion into v7 atlases. Original v4/v5/v6 files retained.",
+  "assets": ["grey-seal", "weddell-pup"]
+}

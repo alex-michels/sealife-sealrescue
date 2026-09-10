@@ -1378,3 +1378,242 @@ kbd {
   background: var(--accent);
   color: var(--on-accent);
 }
+/* SR-22: one visual anchor for HUD, fixed-FOV ocean and status. */
+.background-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.background-setting select {
+  font: inherit;
+  color: var(--text);
+  background: var(--ocean-floor);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 6px 10px;
+  max-width: 100%;
+}
+.background-setting select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.dialog .background-setting {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.dialog .background-hint {
+  font-size: 14px;
+}
+#app[data-view='play'] {
+  min-height: 0;
+}
+#app[data-view='play'] .topbar {
+  display: none;
+}
+#app[data-view='play'] .bar {
+  padding-top: 2px;
+  padding-bottom: max(2px, env(safe-area-inset-bottom));
+}
+#play-shell {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% - 16px);
+  container-type: inline-size;
+}
+#play-shell #stage {
+  inset: var(--hud-height, 64px) 0 auto;
+  height: var(--field-height, 540px);
+  touch-action: none;
+}
+#play-shell #hud {
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 10px 10px 0 0;
+  background: var(--ocean-floor);
+}
+#play-shell .hud-chapter {
+  min-width: 0;
+  max-width: 170px;
+  flex: 1;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+#play-shell .hud-chapter > span {
+  display: none;
+}
+#play-shell .hud-chapter strong {
+  font-size: 14px;
+  max-width: none;
+  line-height: 1.2;
+}
+#play-shell .hud-energy {
+  width: 140px;
+  flex-shrink: 1;
+  min-width: 75px;
+  font-size: 14px;
+}
+#play-shell .hud-energy > div:first-child {
+  margin-bottom: 3px;
+}
+#play-shell .hud-distance {
+  min-width: 52px;
+}
+#play-shell .hud-distance strong {
+  font-size: 18px;
+}
+#play-shell .hud-distance span {
+  display: none;
+}
+#play-shell #hud-lives {
+  font-size: 17px;
+  letter-spacing: 2px;
+}
+#play-shell #hud .icon-button {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+}
+#play-shell .course-progress {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+#play-shell #hud-stamina-fill {
+  transition: none;
+}
+#play-shell .toast {
+  top: calc(var(--hud-height) + var(--field-height));
+  bottom: auto;
+  left: 0;
+  transform: none;
+  width: 100%;
+  max-width: 100%;
+  height: 32px;
+  border: 0;
+  border-radius: 0;
+  padding: 5px 2px;
+  font-size: 14px;
+  background: var(--ocean-floor);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#play-shell #play-controls {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 54px;
+  pointer-events: none;
+}
+#play-shell #play-controls button {
+  pointer-events: auto;
+  min-height: 44px;
+  height: 44px;
+}
+#play-shell #play-controls p {
+  display: none;
+}
+#play-shell #burst {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+#play-shell #burst kbd {
+  display: none;
+}
+#play-shell .touch-steering button {
+  width: 52px;
+  padding: 4px;
+}
+#app[data-view='play'] #portrait-tip {
+  display: none;
+}
+#play-shell.side-controls #play-controls {
+  left: -76px;
+  right: -76px;
+  bottom: auto;
+  top: calc(var(--hud-height) + var(--field-height) / 2 - 48px);
+  height: 96px;
+}
+#play-shell.side-controls .touch-steering {
+  flex-direction: column;
+  gap: 8px;
+}
+#play-shell.side-controls #burst {
+  width: 68px;
+  padding: 4px;
+  justify-content: center;
+}
+@container (max-width: 599px) {
+  #play-shell #hud {
+    height: 82px;
+    padding: 30px 8px 6px;
+    gap: 10px;
+  }
+  #play-shell .hud-chapter {
+    position: absolute;
+    top: 6px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+  }
+  #play-shell .hud-chapter strong {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #play-shell .hud-energy {
+    width: auto;
+    flex: 1;
+  }
+  #play-shell #hud-lives {
+    font-size: 16px;
+  }
+}
+#play-shell.side-controls #hud {
+  height: 50px;
+  padding: 3px 8px;
+}
+#play-shell.side-controls .hud-chapter {
+  display: none;
+}
+#pause-settings .settings {
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+#pause-location {
+  color: var(--accent);
+}
+#play-shell #hud .language {
+  flex-shrink: 0;
+  margin: 0;
+}
+#play-shell #hud .language button {
+  min-width: 28px;
+  min-height: 28px;
+  font-size: 11px;
+  padding: 2px;
+}
+@container (max-width: 599px) {
+  #play-shell #hud .language {
+    position: absolute;
+    top: 3px;
+    right: 8px;
+  }
+  #play-shell .hud-chapter {
+    max-width: calc(100% - 92px);
+  }
+}
+#play-shell.side-controls #hud .language {
+  position: static;
+}

@@ -1,5 +1,7 @@
 # Seal Run image performance review — 2026-09-10
 
+> These SR-21 numbers describe the v6 delivery snapshot from 2026-09-10. SR-22 replaces only the grey/Weddell faces with v7 atlases; the chapter-lifecycle browser test still enforces the 20 MiB texture budget. See [current comfort review](seal-run-visual-comfort-review.md).
+
 ## Decision
 
 Keep realistic animals, vessels and environments as WebP delivery assets. Do not redraw them

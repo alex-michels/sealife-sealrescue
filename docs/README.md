@@ -27,6 +27,8 @@
 | [seal-run-anatomy-references.md](seal-run-anatomy-references.md) | Референсы пяти игровых тюленей и региональных акул/косаток Seal Run: морда, глаза, ласты и хвост; источники и ограничения |
 | [seal-run-image-performance-results.json](seal-run-image-performance-results.json) | SR-21: исходные размеры текстур, загрузки и время кадра в Chromium до/после |
 | [seal-run-image-performance.md](seal-run-image-performance.md) | SR-21: WebP-атласы, очистка текстур, мобильные панорамы и сравнение памяти до/после |
+| [seal-run-visual-comfort-review.md](seal-run-visual-comfort-review.md) | SR-22/23: визуальная читаемость, спокойный фон, UI, сравнение и ровный темп тренировки |
+| [seal-run-comfort-results.json](seal-run-comfort-results.json) | SR-22: четыре варианта UI/фона, размеры, плотность декора и время кадра |
 | [seal-run-current-comparison.json](seal-run-current-comparison.json) | Парное сравнение старой и новой физики течения: 780 пар на одинаковых трассах |
 | [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |

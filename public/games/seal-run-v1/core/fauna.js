@@ -40,14 +40,15 @@ export const FAUNA = Object.freeze({
     originY: 160 / 280,
   },
   'weddell-pup': {
+    artVersion: 'v7',
     scientific: 'Leptonychotes weddellii',
-    artVersion: 'v5',
     w: 196,
     h: 137.2,
     originX: 245 / 400,
     originY: 148 / 280,
   },
   'grey-seal': {
+    artVersion: 'v7',
     scientific: 'Halichoerus grypus',
     w: 196,
     h: 137.2,

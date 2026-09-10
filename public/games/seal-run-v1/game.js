@@ -34,8 +34,19 @@ let view = 'menu',
   submitted = false,
   busy = false
 let reduced = preference('seal_run_motion', 'system')
+const savedTempo = preference('seal_run_tempo', 'steady')
+let tempoChoice = ['steady', '0.35', '0.5', '0.75', '1'].includes(savedTempo)
+  ? savedTempo
+  : 'steady'
 const motionQuery = matchMedia('(prefers-reduced-motion: reduce)')
-const isReduced = () => (reduced === 'system' ? motionQuery.matches : reduced === 'true')
+const storedBackground = preference('seal_run_background', '')
+let backgroundChoice = ['calm', 'rich', 'minimum'].includes(storedBackground)
+  ? storedBackground
+  : null
+const background = () =>
+  backgroundChoice ??
+  ((reduced === 'system' ? motionQuery.matches : reduced === 'true') ? 'minimum' : 'calm')
+const isReduced = () => background() === 'minimum'
 const audio = new OceanAudio(false)
 let soundWanted = preference('seal_run_sound', 'false') === 'true'
 const input = { mode: 'none', targetY: null, keys: new Set(), direction: 0, burst: false }
@@ -48,6 +59,11 @@ const levels = () => rounds.filter((r) => r.phase === 'finished').length
 const total = (key) => rounds.reduce((sum, r) => sum + r[key], 0)
 
 function settings() {
+  document.querySelectorAll('[data-tempo]').forEach((select) => {
+    select.value = tempoChoice
+  })
+  $('tempo-pause-label').hidden = mode === 'weekly'
+  $('tempo-hint').hidden = mode === 'weekly'
   $('sound')
     .querySelector('path')
     .setAttribute(
@@ -59,6 +75,10 @@ function settings() {
   $('sound').setAttribute('aria-pressed', String(soundWanted))
   $('sound').title = t('sound') + ': ' + t(soundWanted ? 'on' : 'off')
   $('sound').setAttribute('aria-label', $('sound').title)
+  document.querySelectorAll('[data-background]').forEach((select) => {
+    select.value = background()
+  })
+  if (course) $('pause-location').textContent = BIOMES[course.biome].name[lang()]
   $('motion').setAttribute('aria-pressed', String(isReduced()))
   $('motion').title = t('motion') + ': ' + t(isReduced() ? 'on' : 'off')
 }
@@ -122,6 +142,14 @@ function currentCtrl() {
 }
 function setView(next, focus) {
   view = next
+  const settingsHome = next === 'pause' ? $('pause-settings') : document.querySelector('.topbar')
+  const settingsPanel = document.querySelector('.settings')
+  settingsHome.append(settingsPanel)
+  const languageHome = next === 'play' ? $('hud') : settingsPanel
+  languageHome.append(document.querySelector('.language'))
+  if (next === 'pause') settings()
+  $('app').dataset.view = next
+  $('play-shell').hidden = next === 'menu'
   clearInput()
   for (const [id, v] of [
     ['menu', 'menu'],
@@ -148,17 +176,23 @@ function setView(next, focus) {
 function fitPlayArea() {
   if (view !== 'play') return
   const wrap = $('stage-wrap').getBoundingClientRect()
-  const hud = $('hud').getBoundingClientRect()
-  const controls = $('play-controls').getBoundingClientRect()
-  const top = Math.max(0, hud.bottom - wrap.top + 10) + 'px'
-  const bottom = Math.max(0, wrap.bottom - controls.top + 10) + 'px'
-  if ($('stage').style.top !== top || $('stage').style.bottom !== bottom) {
-    $('stage').style.top = top
-    $('stage').style.bottom = bottom
-  }
+  const rails = wrap.width > wrap.height && wrap.height <= 540 && wrap.width >= 600
+  $('play-shell').classList.toggle('side-controls', rails)
+  const hudH = $('hud').getBoundingClientRect().height
+  const controlsH = rails ? 0 : 58
+  const statusH = 32
+  const availableW = Math.max(1, wrap.width - (rails ? 168 : 16))
+  const fieldH = Math.max(
+    1,
+    Math.min((availableW * WORLD_H) / FIELD_W, wrap.height - hudH - controlsH - statusH - 16),
+  )
+  const fieldW = (fieldH * FIELD_W) / WORLD_H
+  const shell = $('play-shell')
+  shell.style.width = fieldW + 'px'
+  shell.style.height = fieldH + hudH + statusH + controlsH + 'px'
+  shell.style.setProperty('--field-height', fieldH + 'px')
+  shell.style.setProperty('--hud-height', hudH + 'px')
   if (game) {
-    // refresh() fits against cached bounds before measuring its parent. A hidden
-    // menu leaves those bounds at 0x0; measure FIRST even if HUD offsets match.
     game.scale.getParentBounds()
     game.scale.refresh()
   }
@@ -261,7 +295,7 @@ async function beginRound() {
       ? generateRound(ticket.courseSeed, chapter)
       : {
           ...generateCourse(seed + ':' + chapter, biome),
-          speedMultiplier: roundSpeed(chapter) * ($('gentle').checked ? 0.8 : 1),
+          speedMultiplier: roundSpeed(chapter),
         }
   await Promise.all([loadOcean(biome), loadScenery(biome), loadHazardArt(biome)])
   state = createSim(course)
@@ -276,6 +310,8 @@ async function beginRound() {
     onEnd: finish,
     isPaused: () => view !== 'play',
     isReduced,
+    background,
+    tempo: () => (mode === 'explore' ? tempoChoice : '1'),
   })
   document.documentElement.style.setProperty('--accent', BIOMES[biome].accent)
   $('hud-chapter').textContent = t('chapter') + ' ' + (chapter + 1) + ' / ' + MAX_ROUNDS
@@ -496,10 +532,24 @@ $('sound').addEventListener('click', async () => {
   if (soundWanted) audio.play('fish')
 })
 $('motion').addEventListener('click', () => {
-  reduced = String(!isReduced())
-  savePreference('seal_run_motion', reduced)
+  backgroundChoice = isReduced() ? 'calm' : 'minimum'
+  savePreference('seal_run_background', backgroundChoice)
   settings()
 })
+document.querySelectorAll('[data-background]').forEach((select) =>
+  select.addEventListener('change', () => {
+    backgroundChoice = select.value
+    savePreference('seal_run_background', backgroundChoice)
+    settings()
+  }),
+)
+document.querySelectorAll('[data-tempo]').forEach((select) =>
+  select.addEventListener('change', () => {
+    tempoChoice = select.value
+    savePreference('seal_run_tempo', tempoChoice)
+    settings()
+  }),
+)
 motionQuery.addEventListener('change', settings)
 document
   .querySelectorAll('[data-lang]')
@@ -546,7 +596,7 @@ const dirs = { ArrowUp: -1, KeyW: -1, ArrowDown: 1, KeyS: 1 }
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Tab' && ['pause', 'result', 'board'].includes(view)) {
     const box = $(view === 'pause' ? 'paused' : view === 'result' ? 'over' : 'board')
-    const items = [...box.querySelectorAll('button,a[href],input')].filter(
+    const items = [...box.querySelectorAll('button,a[href],input,select')].filter(
       (el) => !el.disabled && !el.hidden && el.getClientRects().length,
     )
     const first = items[0],

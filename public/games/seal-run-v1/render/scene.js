@@ -4,14 +4,21 @@ import { SIM_DT, FIELD_W, SEAL_X } from '../core/balance.js'
 import { WATERLINE_Y } from '../core/theme.js'
 import { actorSize, faunaId } from '../core/fauna.js'
 import { buildExpeditionTextures } from './expedition.js'
-import { fishBob } from './motion.js'
+import { fishBob, playbackRate } from './motion.js'
 import { createScenery } from './scenery.js'
 import { buildHazardTextures, hazardFrame, hazardTexture, ROTOR_SIZE } from './hazards.js'
 const STEP_MS = SIM_DT * 1000
 
 export function createPlayScene(Phaser, hooks) {
   const { state, course, currentCtrl, updateHud, onEvents, onEnd, isPaused, isReduced } = hooks
-  const texSize = (kind) => actorSize(kind, course.biome)
+  const background = hooks.background ?? (() => (isReduced() ? 'minimum' : 'calm'))
+  const texSize = (kind) => {
+    const size = actorSize(kind, course.biome)
+    // Visual size only: collection radii and course geometry remain unchanged.
+    return kind === 'fish_small' || kind === 'fish_rare'
+      ? { ...size, w: size.w * 1.2, h: size.h * 1.2 }
+      : size
+  }
   const heroSize = texSize('seal')
   const generatedHero = faunaId('seal', course.biome)
   const heroKey = (time) =>
@@ -32,6 +39,7 @@ export function createPlayScene(Phaser, hooks) {
       this.pools = new Map()
       this.bound = new Map()
       this.acc = 0
+      this.pendingBurst = false
       this.prev = { y: state.y, d: state.d, worldD: state.worldD }
       this.sealFrame = 0
       this.seal = this.add
@@ -46,7 +54,7 @@ export function createPlayScene(Phaser, hooks) {
       this.seal.setDisplaySize(heroSize.w, heroSize.h)
 
       this.scenery = createScenery(this, course)
-      this.scenery.update(0, 0, isReduced())
+      this.scenery.update(0, 0, background())
     }
 
     acquire(kind) {
@@ -151,7 +159,13 @@ export function createPlayScene(Phaser, hooks) {
         if (f.x < left) continue
         if (f.x > right) break
         if (f.taken) continue
-        place('f' + i, f.type, f.x, f.y + fishBob(f, state.tMs, isReduced()), texSize(f.type))
+        place(
+          'f' + i,
+          f.type,
+          f.x,
+          f.y + fishBob(f, state.tMs, background() !== 'rich'),
+          texSize(f.type),
+        )
       }
       for (let i = 0; i < state.predators.length; i++) {
         const o = state.predators[i]
@@ -174,17 +188,19 @@ export function createPlayScene(Phaser, hooks) {
     }
 
     update(_t, deltaMs) {
-      this.scenery.setPaused(isPaused() || state.phase !== 'running', isReduced())
+      this.scenery.setPaused(isPaused() || state.phase !== 'running', background())
       if (this.completed) return
       if (isPaused()) {
+        this.pendingBurst = false
         this.acc = 0
         this.prev = { y: state.y, d: state.d, worldD: state.worldD }
         return
       }
       if (state.phase !== 'running') {
         this.exitMs += Math.min(deltaMs, 50)
-        const duration = state.phase === 'finished' && !isReduced() ? 950 : 180
-        if (state.phase === 'finished') {
+        const exitSwim = state.phase === 'finished' && !isReduced() && hooks.tempo?.() !== 'steady'
+        const duration = exitSwim ? 950 : 180
+        if (exitSwim) {
           const fromX = SEAL_X + state.d - state.worldD
           this.seal.x = fromX + (FIELD_W + 100 - fromX) * Math.min(1, this.exitMs / duration)
         }
@@ -197,16 +213,22 @@ export function createPlayScene(Phaser, hooks) {
       // Аккумулятор фикс-шага (спека §1.3); кламп дельты — после возврата вкладки
       // не наматываем «догоняющие» секунды.
       this.acc += Math.min(deltaMs, 100)
-      while (this.acc >= STEP_MS && state.phase === 'running') {
+      const ctrl = currentCtrl()
+      this.pendingBurst ||= Boolean(ctrl.burst)
+      const tempo = hooks.tempo?.() ?? '1'
+      let rate = playbackRate(state, tempo, this.pendingBurst)
+      while (this.acc >= STEP_MS / rate && state.phase === 'running') {
         this.prev.y = state.y
         this.prev.d = state.d
         this.prev.worldD = state.worldD
-        applyInput(state, currentCtrl())
+        applyInput(state, { ...ctrl, burst: this.pendingBurst })
+        this.pendingBurst = false
         step(state)
-        this.acc -= STEP_MS
+        this.acc -= STEP_MS / rate
+        rate = playbackRate(state, tempo)
       }
       onEvents(takeEvents(state))
-      const a = this.acc / STEP_MS
+      const a = Math.min(1, this.acc / (STEP_MS / rate))
       const y = this.prev.y + (state.y - this.prev.y) * a
       const d = this.prev.d + (state.d - this.prev.d) * a
       const worldD = this.prev.worldD + (state.worldD - this.prev.worldD) * a
@@ -222,7 +244,7 @@ export function createPlayScene(Phaser, hooks) {
         this.seal.setTexture(key, frame)
         this.seal.setDisplaySize(heroSize.w, heroSize.h)
       }
-      this.scenery.update(worldD, state.tMs, isReduced())
+      this.scenery.update(worldD, state.tMs, background())
       this.syncWorld(worldD)
       updateHud(state)
     }

@@ -53,7 +53,7 @@
       </header>
       <div id="stage-wrap">
         <canvas id="ocean-preview" aria-hidden="true"></canvas>
-        <div id="stage" aria-hidden="true"></div>
+
         <div id="coming-soon" hidden>
           <canvas id="coming-soon-bg" aria-hidden="true"></canvas
           ><span class="coming-soon-text" data-i18n="comingSoon">Coming soon</span>
@@ -82,9 +82,24 @@
                   <span data-i18n="play">Let’s swim</span><span aria-hidden="true">↗</span></button
                 ><button id="regenerate" class="secondary" data-label="regenerate">⟳</button>
               </div>
-              <label id="pace-label" class="pace"
-                ><input id="gentle" type="checkbox" /><span data-i18n="relaxed"></span
-              ></label>
+              <label id="pace-label" class="background-setting"
+                ><span data-i18n="practiceTempo"></span>
+                <select id="tempo-menu" data-tempo>
+                  <option value="steady" data-i18n="tempoSteady"></option>
+                  <option value="0.35">35%</option>
+                  <option value="0.5">50%</option>
+                  <option value="0.75">75%</option>
+                  <option value="1" data-i18n="tempoStandard"></option>
+                </select>
+              </label>
+              <label class="background-setting"
+                ><span data-i18n="background"></span>
+                <select id="background-menu" data-background>
+                  <option value="calm" data-i18n="backgroundCalm"></option>
+                  <option value="rich" data-i18n="backgroundRich"></option>
+                  <option value="minimum" data-i18n="backgroundMinimum"></option>
+                </select>
+              </label>
               <p id="start-error" class="error" role="alert" hidden></p>
               <details class="how">
                 <summary data-i18n="how"></summary>
@@ -112,40 +127,43 @@
             <span class="art-credit" data-i18n="artCredit"></span>
           </p>
         </section>
-        <section id="hud" hidden data-label="chapter">
-          <div class="hud-chapter">
-            <span id="hud-chapter"></span><strong id="hud-location"></strong>
-          </div>
-          <div class="hud-energy">
-            <div><span data-i18n="energy"></span><span id="hud-energy-value">100</span></div>
-            <div
-              id="hud-stamina"
-              role="meter"
-              data-label="energy"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-valuenow="100"
-            >
-              <div id="hud-stamina-fill"></div>
+        <div id="play-shell">
+          <section id="hud" hidden data-label="chapter">
+            <div class="hud-chapter">
+              <span id="hud-chapter"></span><strong id="hud-location"></strong>
             </div>
+            <div class="hud-energy">
+              <div><span data-i18n="energy"></span><span id="hud-energy-value">100</span></div>
+              <div
+                id="hud-stamina"
+                role="meter"
+                data-label="energy"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="100"
+              >
+                <div id="hud-stamina-fill"></div>
+              </div>
+            </div>
+            <span id="hud-lives" data-label="lives"></span>
+            <div class="hud-distance"><strong id="hud-dist">0 m</strong><span>/ 900 m</span></div>
+            <button id="pause-button" class="icon-button" data-label="pause">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14" /></svg>
+            </button>
+            <div class="course-progress"><div id="course-progress-fill"></div></div>
+          </section>
+          <div id="stage" aria-hidden="true"></div>
+          <p id="toast" class="toast" hidden role="status"></p>
+          <div id="play-controls" hidden>
+            <div class="touch-steering">
+              <button id="swim-up" class="secondary" data-label="up">↑</button
+              ><button id="swim-down" class="secondary" data-label="down">↓</button>
+            </div>
+            <p data-i18n="drag"></p>
+            <button id="burst" class="secondary">
+              <span data-i18n="burst"></span><kbd>Space</kbd>
+            </button>
           </div>
-          <span id="hud-lives" data-label="lives"></span>
-          <div class="hud-distance"><strong id="hud-dist">0 m</strong><span>/ 900 m</span></div>
-          <button id="pause-button" class="icon-button" data-label="pause">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14m8-14v14" /></svg>
-          </button>
-          <div class="course-progress"><div id="course-progress-fill"></div></div>
-        </section>
-        <p id="toast" class="toast" hidden role="status"></p>
-        <div id="play-controls" hidden>
-          <div class="touch-steering">
-            <button id="swim-up" class="secondary" data-label="up">↑</button
-            ><button id="swim-down" class="secondary" data-label="down">↓</button>
-          </div>
-          <p data-i18n="drag"></p>
-          <button id="burst" class="secondary">
-            <span data-i18n="burst"></span><kbd>Space</kbd>
-          </button>
         </div>
         <p id="portrait-tip" hidden data-i18n="portrait"></p>
         <section id="paused" class="modal-layer" hidden aria-labelledby="pause-title">
@@ -153,6 +171,28 @@
             <p class="eyebrow" data-i18n="pause"></p>
             <h2 id="pause-title" data-i18n="paused"></h2>
             <p data-i18n="pauseHint"></p>
+            <p id="pause-location"></p>
+            <div id="pause-settings"></div>
+            <label class="background-setting"
+              ><span data-i18n="background"></span>
+              <select id="background-pause" data-background>
+                <option value="calm" data-i18n="backgroundCalm"></option>
+                <option value="rich" data-i18n="backgroundRich"></option>
+                <option value="minimum" data-i18n="backgroundMinimum"></option>
+              </select>
+            </label>
+            <p class="background-hint" data-i18n="backgroundHint"></p>
+            <label id="tempo-pause-label" class="background-setting"
+              ><span data-i18n="practiceTempo"></span>
+              <select id="tempo-pause" data-tempo>
+                <option value="steady" data-i18n="tempoSteady"></option>
+                <option value="0.35">35%</option>
+                <option value="0.5">50%</option>
+                <option value="0.75">75%</option>
+                <option value="1" data-i18n="tempoStandard"></option>
+              </select>
+            </label>
+            <p id="tempo-hint" data-i18n="tempoHint"></p>
             <button id="resume" class="primary" data-i18n="resume"></button
             ><button id="end-swim" class="quiet" data-i18n="quit"></button>
           </div>
