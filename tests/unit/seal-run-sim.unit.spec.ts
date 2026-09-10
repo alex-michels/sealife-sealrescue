@@ -20,6 +20,9 @@ type SimState = {
   vy: number
   targetY: number
   d: number
+  worldD: number
+  worldSpeed: number
+  lag: number
   tMs: number
   effSpeed: number
   lives: number
@@ -60,6 +63,7 @@ type BalanceLib = {
     BUFF_STACK_MAX_MS: number
     FISH_SPEED_BUFF_MULT: number
     DEBRIS_SLOW_MULT: number
+    DEBRIS_LAG_LU: number
     MAX_COURSE_MS: number
     SCORE_PER_M: number
     SCORE_PER_LIFE: number
@@ -141,7 +145,7 @@ describe('SR-03: стамина/кислород + жизни (§5.2)', () => {
     expect(r.livesRemaining).toBe(0)
   })
 
-  it('в состоянии EXHAUSTED мир замедлен ×0.6', () => {
+  it('EXHAUSTED initially slows only the seal ×0.6', () => {
     const s = sim.createSim(empty())
     runUntil(s, 120 * 30, (st) => st.status === 'exhausted')
     sim.step(s)
@@ -174,14 +178,17 @@ describe('SR-03: рыба — очки, стамина, бафф длитель�
 })
 
 describe('SR-03: ярусы препятствий (§6)', () => {
-  it('хищник: −1 жизнь, мир стоит в хит-стане, отброс по Y, i-frames без двойного списания', () => {
+  it('predator: one life, current continues through stun, knockback and no double damage', () => {
     const s = sim.createSim({ ...empty(), obstacles: [{ type: 'shark_white', band: 2, atLu: 800 }] })
     const hitTick = runUntil(s, 120 * 10, (st) => st.lives < 3)
     expect(hitTick).toBeGreaterThan(0)
     const dAtHit = s.d
+    const worldAtHit = s.worldD
     const yAtHit = s.y
     for (let i = 0; i < Math.round(0.38 / bal.SIM_DT); i++) sim.step(s) // внутри стана (400 мс)
-    expect(s.d).toBe(dAtHit) // мир заморожен
+    expect(s.worldD).toBeGreaterThan(worldAtHit + 80)
+    expect(s.lag).toBeGreaterThan(80)
+    expect(s.d).toBeCloseTo(dAtHit, 5) // seal stunned while current advances
     expect(Math.abs(s.y - yAtHit)).toBeGreaterThan(30) // отброс ~40 lu
     // акула проходит сквозь бывшую позицию под i-frames — второго списания нет
     runUntil(s, 120 * 5, (st) => st.d > dAtHit + 900)
@@ -287,6 +294,7 @@ describe('SR-15/16: burst and frozen finish', () => {
  it('does not change state or score once the finish has been reached', () => {
   const s=sim.createSim(empty())
   s.d=35999
+  s.worldD=35999
   sim.step(s)
   expect(s.phase).toBe('finished')
   const before=structuredClone(s)
@@ -294,5 +302,41 @@ describe('SR-15/16: burst and frozen finish', () => {
   sim.step(s)
   expect(s).toEqual(before)
   expect(sim.getResult(s).distanceM).toBe(900)
+ })
+})
+
+// SR-03/18 regression: neither scrolling nor independent predator trajectories
+// inherit a net debuff; the player stays in view and regains position smoothly.
+describe('independent current and player-only drag', () => {
+ it('nets leave current, fish, hazards and predators at their ordinary pace', () => {
+  const free = sim.createSim(empty())
+  const caught = sim.createSim(empty())
+  caught.debrisUntilMs = 2000
+  const shark = {type:'shark_white', band:2, atLu:800}
+  const orca = {type:'orca', band:2, atLu:800, ampBands:1}
+  for (let i=0;i<180;i++) {
+   sim.applyInput(free,{targetY:30})
+   sim.applyInput(caught,{targetY:30})
+   sim.step(free); sim.step(caught)
+   expect(caught.worldD).toBe(free.worldD)
+   expect(sim.predatorPos(shark,caught.worldD)).toEqual(sim.predatorPos(shark,free.worldD))
+   expect(sim.predatorPos(orca,caught.worldD)).toEqual(sim.predatorPos(orca,free.worldD))
+   // Any stationary fish, net or motor at x=800 shares this camera projection.
+   expect(240+800-caught.worldD).toBe(240+800-free.worldD)
+   expect(caught.d).toBeLessThan(free.d)
+   expect(caught.lag).toBeLessThanOrEqual(bal.BAL.DEBRIS_LAG_LU)
+   if(i===20) expect(caught.y).toBeGreaterThan(free.y)
+  }
+  expect(caught.lag).toBe(bal.BAL.DEBRIS_LAG_LU)
+  caught.debrisUntilMs=0
+  for(let i=0;i<480;i++) {
+   const previousLag=caught.lag, previousD=caught.d
+   sim.step(caught)
+   expect(caught.lag).toBeLessThan(previousLag)
+   expect(caught.lag).toBeGreaterThanOrEqual(0)
+   expect(previousLag-caught.lag).toBeLessThan(caught.worldSpeed*bal.SIM_DT*0.36)
+   expect(caught.d).toBeGreaterThan(previousD)
+  }
+  expect(caught.lag).toBeLessThan(0.3)
  })
 })

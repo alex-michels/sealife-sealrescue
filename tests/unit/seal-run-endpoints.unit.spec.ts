@@ -1,3 +1,4 @@
+import { RULES_VERSION } from '../../public/games/seal-run-v1/core/biomes.js'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { PayloadRequest } from 'payload'
 import { leaderboardRead, leaderboardStart, leaderboardSubmit } from '@/endpoints/leaderboard'
@@ -64,7 +65,7 @@ describe('SR-10 endpoint dispatch and season boundary', () => {
           livesRemaining: 3,
           fishCollected: 0,
           levelsCompleted: 0,
-          courseSeed: 'expedition-2:' + data.season,
+          courseSeed: RULES_VERSION + ':' + data.season,
           season: data.season,
         }),
       }),

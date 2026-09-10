@@ -85,7 +85,13 @@ export const BAL = {
   SHARK_BIG_CHARGE_REL: 120,
 
   // — Мусор (антропогенный ярус, спека §6.3).
-  DEBRIS_SLOW_MULT: 0.4,
+  DEBRIS_SLOW_MULT: 0.4, // initial forward retention while lag builds
+  DEBRIS_AGILITY_MULT: 0.65,
+  DEBRIS_LAG_LU: 96,
+  HIT_LAG_LU: 110,
+  EXHAUSTED_LAG_LU: 64,
+  LAG_RECOVERY_TAU: 0.65,
+  LAG_RECOVERY_MULT: 0.35,
   DEBRIS_SLOW_MS: 1800,
   DEBRIS_STAMINA_DRAIN_MULT: 2.0,
 

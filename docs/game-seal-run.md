@@ -21,22 +21,21 @@ coastal prototype is now a five-chapter expedition (SR-07…SR-20).
   that result remains open. There is no persistent submission queue.
 
 The visual concept and verified biological references are in
-[game-seal-run-expedition.md](game-seal-run-expedition.md). Kelp coast and fantasy Atlantis
-use a harbour seal; Hawaii uses a Hawaiian monk seal; the Arctic a ringed seal; Antarctica
+[game-seal-run-expedition.md](game-seal-run-expedition.md). Kelp coast uses a harbour seal; fantasy Atlantis a generated chonky young grey seal; Hawaii uses a Hawaiian monk seal; the Arctic a ringed seal; Antarctica
 a Weddell seal. These are separate local encounters. Atlantis is explicitly fictional.
 Energy is an arcade resource; fish do not supply breathing air.
 
 ## Art and rendering
 
-Original Canvas2D animals produce Phaser textures at runtime. Five generated 3:1 panoramas
+Four player species use articulated Canvas2D-generated Phaser textures; Atlantis uses a four-frame generated grey-seal atlas. Regional predators use generated swim cycles. Five generated 3:1 panoramas
 and six transparent scenery cutouts supply the moving game environment; the original five
 plates and thumbnails serve the menu/fallback. All 21 WebP files total 1,549,098 bytes.
-Missing or slow artwork retains playable procedural fallback.
+Missing or slow scenery retains a procedural fallback. Missing collidable-animal or motor art stops loading with a retryable error.
 Asset prompts, provenance and extension guidance: [art manifest](../public/games/seal-run-v1/assets/README.md).
 `render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
 biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hindflippers,
 a separate short tail, short foreflippers with claws, small ear openings and no external pinnae distinguish seals from sea lions.
-`render/art.js` supplies the common fish, orca, shark and debris textures.
+`render/art.js` supplies common fish/debris and legacy texture helpers. `render/hazards.js` supplies the live generated regional fauna and full-length submerged hulls; `core/fauna.js` maps species and registered body origins.
 
 All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
 The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
@@ -47,7 +46,7 @@ The cover seal is a separate contained canvas, with its caption in a content-siz
 Pixel regressions check player and predator collision circles inside the visible bodies.
 The shortened tail blends into the rump without a closed root outline; the near eye moves
 forward and a partially visible far eye gives the muzzle a slight three-quarter view.
-[Photographic references for all four species](seal-run-anatomy-references.md) record the visual review.
+[Photographic references for all five playable species](seal-run-anatomy-references.md) record the visual review.
 The panorama pans from its left edge to its right edge over 900 m. Separate scenery moves
 at 0.16×, 0.40× and 0.72× world speed, with nearer props larger and clearer. Phaser TileSprite
 shimmer, subtle kelp sway and a ParticleEmitter capped at 36 motes add water motion.
@@ -76,7 +75,9 @@ The unchanged bot policy was measured across 52 seeds and three input cadences. 
 finish rates were **78.8%, 80.8%, 84.6%** (81.4% combined). The worst individual
 seed has a large cadence spread; the bot is a regression instrument, not proof of equal
 human difficulty. The 780 chapter runs are recorded in
-[seal-run-expedition-balance.json](seal-run-expedition-balance.json): the current expedition-2 rates are 80.0%, 83.5%, 85.4%.
+[seal-run-expedition-balance.json](seal-run-expedition-balance.json): the current expedition-3 rates are 78.1%, 82.3%, 86.5%.
+The separate [paired comparison](seal-run-current-comparison.json) holds the old courses fixed
+to isolate the current/drag change: 80.0→79.2%, 83.5→83.8%, 85.4→85.0%.
 Arctic surface ambushes make that chapter comparatively forgiving; higher speed does not
 imply every biome is harder. All 100 templates and 260 generated routes pass the conservative
 reachability, fish-budget and corridor checks.
@@ -127,3 +128,26 @@ DNS/TLS activation and the live redirect check remain part of the separately aut
 production launch (SR-12). No public deployment is performed by this change.
 
 Surface-hazard follow-up (SR-02/03/05/06/14/19): expedition-2 adds biome-specific generated motors with rotating propellers, spaced swimming polar bears and a distinct generated leopard seal. Course re-entry measures Phaser parent bounds before fitting, fixing the intermittent 0×0 canvas. Contracts, loading failure behaviour and verification are in [game-seal-run-expedition.md](game-seal-run-expedition.md).
+
+
+## Player-only drag, full hulls and regional fauna (SR-03/05/06/18/19)
+
+The current/camera advances on worldD while player distance is d = worldD − lag. Nets
+build up to 96 lu of visible lag and reduce vertical acceleration/speed to 65%; leaving
+releases the debuff after 1.8 s and restores position smoothly. Hitstun/exhaustion similarly
+lag only the player, capped at 110/64 lu. Fish, obstacles, predators and parallax keep moving.
+The same coordinates drive collisions, rendering and bot prediction. Existing fish/burst
+pace boosts remain; score and finish use actual player distance. Rules are expedition-3.
+
+All five boats show the entire submerged hull length at the surface. Only the outlined
+rotating propeller disc costs a life. The hull, shaft and fittings are decorative.
+Culling accounts for the whole hull so it remains visible after the motor leaves the frame.
+Atlantic hazard tiers show porbeagle/great white; Hawaii uses Galapagos/tiger sharks.
+Northern orcas share a cosmopolitan appearance; Antarctica uses a Type B1-inspired pattern.
+These are arcade encounters, not a distribution-density or diet model; see the linked
+[reference review](seal-run-anatomy-references.md).
+
+Mobile uses the same optimized WebP files, proportionally scaled with the fixed 960×540
+field. There is no mobile-specific download variant. New swim frames are 400×280 RGBA
+WebP; lower hulls are 1024×683; panoramas remain 2172×724. The generated grey-seal cover
+is contain-fitted separately, including its short tail between the hindflippers.

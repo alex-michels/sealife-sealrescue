@@ -19,8 +19,8 @@ export const BIOMES = Object.freeze({
   },
   atlantis: {
     name: { en: 'Lost Atlantis', ru: 'Затонувшая Атлантида' },
-    species: { en: 'Harbour seal · fantasy setting', ru: 'Обыкновенный тюлень · мир фантазии' },
-    scientific: 'Phoca vitulina',
+    species: { en: 'Young grey seal · fantasy setting', ru: 'Молодой тевяк · мир фантазии' },
+    scientific: 'Halichoerus grypus',
     accent: '#dfc99a',
     surface: '#4e7595',
     mid: '#263e67',
@@ -88,7 +88,7 @@ export const BIOMES = Object.freeze({
 })
 export const BIOME_IDS = Object.freeze(Object.keys(BIOMES))
 export const EXPEDITION = Object.freeze(['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic'])
-export const RULES_VERSION = 'expedition-2'
+export const RULES_VERSION = 'expedition-3'
 export const MAX_ROUNDS = EXPEDITION.length
 export const MAX_EXPEDITION_SCORE = 500_000
 export function roundSeed(season, index) {

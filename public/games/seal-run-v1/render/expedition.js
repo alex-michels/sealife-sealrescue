@@ -1,3 +1,5 @@
+import { loadGreyHero } from './hazards.js'
+const heroPreviews = new WeakMap()
 // SR-06/SR-19. Original articulated Canvas animals over generated environment plates.
 import { BIOMES } from '../core/biomes.js'
 import { buildTextures } from './art.js'
@@ -228,6 +230,17 @@ export function paintHero(canvas, biome) {
   canvas.height = 576
   const c = canvas.getContext('2d')
   c.clearRect(0, 0, canvas.width, canvas.height)
+  const token = {}
+  heroPreviews.set(canvas, token)
+  if (biome === 'atlantis') {
+    loadGreyHero().then(img => {
+      if (heroPreviews.get(canvas) !== token) return
+      c.clearRect(0, 0, canvas.width, canvas.height)
+      const scale = Math.min(994 / img.width, 530 / img.height)
+      c.drawImage(img, (1080 - img.width * scale) / 2, (576 - img.height * scale) / 2,
+        img.width * scale, img.height * scale)
+    }).catch(() => {}) // Play exposes the recoverable asset error.
+  }
   // 4% transparent margin contains every whisker/toe on narrow screens.
   c.save()
   c.translate(43, 23)

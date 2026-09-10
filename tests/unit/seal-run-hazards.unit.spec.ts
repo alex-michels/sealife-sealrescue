@@ -6,7 +6,15 @@ import {
   occupiesUpperWater,
 } from '../../public/games/seal-run-v1/core/course.js'
 
-type State = { y: number; targetY: number; d: number; tMs: number; lives: number; phase: string }
+type State = {
+  y: number
+  targetY: number
+  d: number
+  worldD: number
+  tMs: number
+  lives: number
+  phase: string
+}
 type Sim = {
   createSim(course: unknown): State
   step(state: State): void
@@ -63,7 +71,7 @@ describe('SR-02/03/19: surface hazards', () => {
     expect(sim.predatorPos(obstacle, 900)).toEqual(sim.predatorPos(obstacle, 0))
     const course = { ...generateCourse('propeller-contact'), obstacles: [obstacle], fish: [] }
     const hit = sim.createSim(course)
-    hit.d = 998
+    hit.d = hit.worldD = 998
     hit.y = 162
     hit.targetY = 162
     sim.step(hit)
@@ -73,8 +81,16 @@ describe('SR-02/03/19: surface hazards', () => {
     )
     for (let i = 0; i < 60; i++) sim.step(hit)
     expect(hit.lives).toBe(2)
+    // Decorative hull directly above the propeller and forward along its length.
+    for (const x of [1000, 1160, 1300]) {
+      const hull = sim.createSim(course)
+      hull.d = hull.worldD = x
+      hull.y = hull.targetY = 70
+      sim.step(hull)
+      expect(hull.lives).toBe(3)
+    }
     const diving = sim.createSim(course)
-    diving.d = 998
+    diving.d = diving.worldD = 998
     diving.y = 230
     diving.targetY = 230
     sim.step(diving)

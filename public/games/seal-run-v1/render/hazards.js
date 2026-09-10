@@ -1,13 +1,14 @@
+import { faunaId } from '../core/fauna.js'
 // SR-05/06/19: generated parts, registered swim cycles and precomposed rotors.
 // Phaser quads stay axis-aligned (moving + rotating quads can corrupt in Phaser 4).
 const images = new Map()
 const pending = new Map()
 const GEAR = {
-  coastal: [776, 607],
-  atlantis: [770, 605],
-  tropical: [770, 622],
-  arctic: [781, 571],
-  antarctic: [751, 610],
+  coastal: [218, 665, 0.41],
+  atlantis: [170, 650, 0.48],
+  tropical: [133, 650, 0.48],
+  arctic: [280, 695, 0.41],
+  antarctic: [219, 716, 0.37],
 }
 async function load(file) {
   if (images.has(file)) return images.get(file)
@@ -32,9 +33,13 @@ async function load(file) {
   return request
 }
 export async function loadHazardArt(biome) {
-  const files = ['boat-' + biome + '-v3-body.webp', 'boat-' + biome + '-v3-propeller.webp']
+  const files = ['boat-' + biome + '-v4-hull.webp', 'boat-' + biome + '-v3-propeller.webp']
   const animal = biome === 'arctic' ? 'polar-bear' : biome === 'antarctic' ? 'leopard-seal' : null
   if (animal) for (let i = 0; i < 4; i++) files.push(animal + '-v3-' + i + '.webp')
+  for (const kind of ['orca', 'shark_white', 'shark_big', 'seal']) {
+    const id = faunaId(kind, biome)
+    if (id) for (let i = 0; i < 4; i++) files.push(id + '-v4-' + i + '.webp')
+  }
   await Promise.all(files.map(load))
 }
 export function hazardFrame(kind, biome, time, reduced = false) {
@@ -42,6 +47,8 @@ export function hazardFrame(kind, biome, time, reduced = false) {
     return 'boat_' + biome + '_' + (reduced ? 0 : Math.floor(time / 50) % 8)
   if (kind === 'polar_bear' || kind.startsWith('leopard_seal'))
     return kind + '_' + (reduced ? 0 : Math.floor(time / 180) % 4)
+  const id = faunaId(kind, biome)
+  if (id) return id + '_' + (reduced ? 0 : Math.floor(time / 160) % 4)
   return kind
 }
 export function buildHazardTextures(scene, biome) {
@@ -51,26 +58,32 @@ export function buildHazardTextures(scene, biome) {
     scene.textures.addCanvas(key, canvas)
     owned.push(key)
   }
-  const body = images.get('boat-' + biome + '-v3-body.webp')
+  const body = images.get('boat-' + biome + '-v4-hull.webp')
   const rotor = images.get('boat-' + biome + '-v3-propeller.webp')
   if (!body || !rotor) throw new Error('Call loadHazardArt before starting a scene')
-  const [gx, gy] = GEAR[biome]
+  const [gx, gy, scale] = GEAR[biome]
   for (let i = 0; i < 8; i++) {
     const c = document.createElement('canvas')
     c.width = 800
-    c.height = 480
+    c.height = 220
     const ctx = c.getContext('2d')
-    ctx.scale(2, 2)
-    ctx.drawImage(body, 200 - gx * 0.28, 190 - gy * 0.28, body.width * 0.56, body.height * 0.56)
+    // Full submerged length. Anything above the waterline belongs outside this scene.
+    // Source coordinates use the original 1536px hull; delivery image is 1024px.
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(0, 10, 800, 210)
+    ctx.clip()
+    ctx.drawImage(body, 100 - gx * scale, 162 - gy * scale, 1536 * scale, 1024 * scale)
+    ctx.restore()
     // Ring marks the full swept disc, so stationary blades in reduced motion
     // still communicate the exact circular hazard. The shaft is decorative.
     ctx.strokeStyle = '#f5d798'
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.arc(200, 190, 36, 0, Math.PI * 2)
+    ctx.arc(100, 162, 36, 0, Math.PI * 2)
     ctx.stroke()
     ctx.save()
-    ctx.translate(200, 190)
+    ctx.translate(100, 162)
     ctx.rotate((i * Math.PI) / 12)
     ctx.drawImage(rotor, -44, -44, 88, 88)
     ctx.restore()
@@ -94,7 +107,25 @@ export function buildHazardTextures(scene, biome) {
       c.getContext('2d').drawImage(img, 0, 0)
       add(kind + '_' + i, c)
     }
+  for (const kind of ['orca', 'shark_white', 'shark_big', 'seal']) {
+    const id = faunaId(kind, biome)
+    if (!id) continue
+    for (let i = 0; i < 4; i++) {
+      const img = images.get(id + '-v4-' + i + '.webp')
+      if (!img) throw new Error('Missing fauna frame: ' + id)
+      const c = document.createElement('canvas')
+      c.width = img.width
+      c.height = img.height
+      c.getContext('2d').drawImage(img, 0, 0)
+      add(id + '_' + i, c)
+    }
+  }
   scene.events.once('shutdown', () => {
     for (const key of owned) scene.textures.remove(key)
   })
+}
+
+// Menu uses the same registered hero frame; failed artwork remains retryable on Play.
+export function loadGreyHero() {
+  return load('grey-seal-v4-0.webp')
 }

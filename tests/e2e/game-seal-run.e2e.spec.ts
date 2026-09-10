@@ -385,7 +385,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
     const { buildHazardTextures, loadHazardArt, hazardFrame } = await import(
       root + 'render/hazards.js'
     )
-    const { TEXTURES } = await import(root + 'core/theme.js')
+    const { actorSize, faunaId } = await import(root + 'core/fauna.js')
     const { OBSTACLE_DIMS } = await import(root + 'core/course.js')
     const textures = new Map<string, HTMLCanvasElement>()
     const scene = {
@@ -405,23 +405,27 @@ test('SR-06: every generated swim frame covers its collision circle and has real
       buildHazardTextures(scene, biome)
     }
     const missing: string[] = []
-    for (const kind of [
-      'orca',
-      'shark_white',
-      'shark_big',
-      'polar_bear',
-      'leopard_seal',
-      'leopard_seal_big',
+    for (const [kind, biome] of [
+      ['shark_white', 'coastal'],
+      ['shark_big', 'coastal'],
+      ['shark_white', 'tropical'],
+      ['shark_big', 'tropical'],
+      ['orca', 'coastal'],
+      ['orca', 'antarctic'],
+      ['seal', 'atlantis'],
+      ['polar_bear', 'arctic'],
+      ['leopard_seal', 'antarctic'],
+      ['leopard_seal_big', 'antarctic'],
     ]) {
-      const { w, h, originX = 0.5, originY = 0.5 } = TEXTURES[kind]
-      const radius = OBSTACLE_DIMS[kind].r
-      const frameCount = kind === 'polar_bear' || kind.startsWith('leopard') ? 4 : 1
+      const { w, h, originX = 0.5, originY = 0.5 } = actorSize(kind, biome)
+      const radius = kind === 'seal' ? 24 : OBSTACLE_DIMS[kind].r
+      const frameCount = 4
       for (let frame = 0; frame < frameCount; frame++) {
         const canvas = document.createElement('canvas')
         canvas.width = Math.ceil(w)
         canvas.height = Math.ceil(h)
         const c = canvas.getContext('2d')!
-        const key = frameCount > 1 ? kind + '_' + frame : kind
+        const key = (faunaId(kind, biome) ?? kind) + '_' + frame
         c.drawImage(textures.get(key)!, 0, 0, w, h)
         for (let i = 0; i < 32; i++) {
           const a = (i * Math.PI) / 16
@@ -506,6 +510,20 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
       game.loop.stop()
       const play = game.scene.getScene('play')
       const scenery = play.scenery
+      const worldBefore = state.worldD
+      state.debrisUntilMs = state.tMs + 2000
+      for (let tick = 0; tick < 120; tick++) play.update(0, 1000 / 120)
+      const playerDrifts =
+        play.seal.x < 160 &&
+        state.worldD > worldBefore + 230 &&
+        Math.abs(play.seal.x - (240 - state.lag)) < 3
+      const predators = state.predators
+      state.predators = [{ type: 'boat_propeller', atLu: 0, band: 1 }]
+      play.syncWorld(650)
+      const wholeHullRetained = play.bound.get('p0')?.spr.visible === true
+      state.predators = predators
+      state.debrisUntilMs = 0
+      state.lag = 0
       scenery.update(0, 0, false)
       const start = scenery.panorama.x
       const moving = scenery.props.filter((prop: { base: number }) => prop.base > 1000)
@@ -536,6 +554,7 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
       // Sweep the whole genuine 900 m course, including dynamically named biome rocks.
       for (let distance = 0; distance <= course.lengthLu; distance += 300) {
         state.d = distance
+        state.worldD = distance
         play.syncWorld(distance)
         scenery.update(distance, distance * 3, false)
         for (const rec of play.bound.values()) kinds.add(rec.kind)
@@ -550,6 +569,8 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
         released: false,
         endRight: scenery.panorama.x + scenery.panorama.displayWidth,
         panoramaWidth: scenery.panorama.displayWidth,
+        playerDrifts,
+        wholeHullRetained,
         particlesBounded: scenery.motes.maxParticles <= 36,
       })
       game.scene.stop('play')
@@ -571,6 +592,8 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
     expect(row.endRight).toBeCloseTo(960, 4)
     expect(row.reducedFrozen).toBe(true)
     expect(row.particlesBounded).toBe(true)
+    expect(row.playerDrifts).toBe(true)
+    expect(row.wholeHullRetained).toBe(true)
     expect(row.released).toBe(true)
     const byDepth = [-8, -6, -4].map(
       (depth) => row.shifts.find((s: { depth: number }) => s.depth === depth)!.shift,

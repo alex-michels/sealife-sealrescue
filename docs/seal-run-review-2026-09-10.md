@@ -98,7 +98,7 @@ before fitting on every Play entry. Regression coverage explicitly waits for the
 canvas to reach zero size, then checks six consecutive course selections, including two
 Antarctic starts on the same engine.
 
-SR-02/03/19 now use expedition-2 rules for surface motor hazards and deterministic bear
+The preceding SR-02/03/19 revision introduced expedition-2 rules for surface motor hazards and deterministic bear
 spacing. SR-05/06 include five generated vessel designs with independently animated rotors,
 left-facing paddling bears and a separate open-jawed leopard seal cycle. Every predator
 frame is checked against its collision circle; missing critical artwork prevents Play and
@@ -106,3 +106,28 @@ provides Retry. SR-14 covers that recovery plus full-course rendering with real 
 SR-12 remains partial pending operator rollout.
 
 Local validation of the surface-hazard revision: 45 Seal Run unit tests (including exhaustive lint/spacing on 260 weekly chapters), 16 browser cases with one production-only skip, TypeScript and lint (0 errors, 16 existing warnings). The 780-run expedition-2 report records finish rates of 80.0%, 83.5% and 85.4% for the three bot profiles. The embedded-browser Antarctic canvas now measures 1398×786.375 CSS pixels and has no console errors.
+
+
+## Follow-up: player-only drag and full submerged vessels
+
+SR-03/05 now distinguish worldD (current/camera) from d (player distance). Nets create
+bounded lag and reduced vertical manoeuvrability; enemies, fish and scenery keep moving.
+Hitstun/exhaustion also affect only the player. Registered sprites/collision projection and
+bot prediction share those coordinates. Rules version is expedition-3; older signed tickets
+cannot silently submit under changed physics.
+
+SR-06/19 replace the clipped stern fragments with five complete submerged hulls and separate
+rotors; only the disc costs a life. The renderer retains the long hull after its motor leaves
+the viewport. Four region-specific sharks, two orca appearances and an Atlantis grey juvenile
+use real-alpha WebP swim frames. Generated files with fake checkerboards were rejected.
+All animal frames pass opaque-body hit-circle checks. Mobile proportionally scales the same
+optimized files, with no separate mobile-resolution source. Sources/prompts are indexed in
+the anatomy review and asset manifest.
+
+SR-18: 780 paired bot runs use the exact old courses. Combined completion changes from
+82.95% to 82.69%, with profile changes of −0.77, +0.38 and −0.38 percentage points. This does
+not show a large difficulty regression and does not claim equal human difficulty. The
+separate new-seed expedition-3 matrix records 78.1/82.3/86.5% completion. SR-12 remains partial
+pending operator rollout. This change does not activate public services or apply a database migration.
+
+Local validation for the current/fauna revision: all 46 Seal Run unit contracts passed (including the corrected shared-version endpoint expectation), 16 static browser cases passed with one production-only skip, TypeScript passed, and lint reported 0 errors / 16 existing warnings. Browser assertions cover actual Phaser player drift, continued current, long-hull retention, all generated hit circles/alpha, full 900 m sweeps and six course re-entries. Temporary baseline/preview files were excluded from local lint. The 33 new v4 WebPs total 794,798 bytes.

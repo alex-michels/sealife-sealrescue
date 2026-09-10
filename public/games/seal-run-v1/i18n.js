@@ -20,7 +20,7 @@ const STRINGS = {
     howMove: 'Move your pointer or drag to choose a depth. You can also use ↑ ↓ or W S.',
     howFish:
       'Fish restore energy. Larger, orange fish are worth more. Seals breathe air; the energy meter is an arcade mechanic.',
-    howHazards: 'Dive below boat propellers and dodge predators. Nets slow you down. Solid rocks push you away.',
+    howHazards: 'Dive below boat propellers and dodge predators. Nets drag you back while the current keeps moving. Solid rocks push you away.',
     howBurst:
       'Space gives a short burst: it costs energy, so pick your moment. Escape or P pauses.',
     locations: 'Choose your waters',
@@ -118,7 +118,7 @@ const STRINGS = {
     howMove: 'Двигай указатель или веди пальцем, выбирая глубину. Можно нажимать ↑ ↓ или W S.',
     howFish:
       'Рыба восстанавливает энергию. Крупная оранжевая рыбка даёт больше очков. Тюлени дышат воздухом; шкала энергии — условность аркады.',
-    howHazards: 'Ныряй ниже лодочных винтов и уворачивайся от хищников. Сети замедляют. Камни отбрасывают.',
+    howHazards: 'Ныряй ниже лодочных винтов и уворачивайся от хищников. Сети тянут назад, течение продолжается. Камни отбрасывают.',
     howBurst: 'Пробел — короткий рывок за энергию. Выбирай момент. Escape или P — пауза.',
     locations: 'Выбери свой океан',
     sound: 'Звук',

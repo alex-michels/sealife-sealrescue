@@ -15,7 +15,7 @@ Movement follows the pointer or vertical keyboard input with acceleration and da
 | Chapter | Palette and scenery | Playable phocid | Hazard direction |
 | --- | --- | --- | --- |
 | Kelp coast | Slate-blue water, golden light shafts, layered kelp and stone arches | Harbour seal; spotted coat, compact head | Sharks, orcas, rock channels and lost fishing gear |
-| Atlantis | Deep indigo, oxidised copper, illuminated arches, columns and carved stone | Harbour seal; explicitly fictional ruins | Collapsed columns and offset passages; coastal predators |
+| Atlantis | Deep indigo, oxidised copper, illuminated arches, columns and carved stone | Chonky young grey seal with a distinct short tail; explicitly fictional ruins | Collapsed columns and offset passages; coastal predators |
 | Tropical islands | Clear cyan over deep blue, sunlit sand, coral fans and volcanic formations | Hawaiian monk seal; smooth grey/brown coat | Tropical sharks, reefs and gear; no polar wildlife |
 | Arctic | Ice-blue light, pale floes, dark under-ice gaps and distant icebergs | Ringed seal; light rings over a dark coat | Surface polar bears and orcas; no penguins or leopard seals |
 | Antarctic | Blue-violet water, towering ice shelves and drifting ice | Weddell seal; small head, mottled back and pale belly | Leopard seals and orcas; no polar bears |
@@ -29,7 +29,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. The procedural player and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. Four procedural player species, the generated Atlantis juvenile and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
 
@@ -53,7 +53,7 @@ including rocks/hazards, checks layered movement and texture release. A separate
 play test passes the first tropical rocks, where the user encountered the failure.
 
 The shortened tail blends into the rump without a closed root outline; the eye moves
-forward and a partial far eye supplies a slight three-quarter muzzle. The four species
+forward and a partial far eye supplies a slight three-quarter muzzle. The five playable species
 were checked against [photographic anatomy references](seal-run-anatomy-references.md).
 
 ## Source review
@@ -70,7 +70,7 @@ Checked 2026-09-10, high confidence for the limited anatomy/range facts used her
 
 ## Surface hazards and course-switch repair (SR-02/03/05/06/14/19)
 
-Rules version is now expedition-2: boat propellers are stationary circular hazards on
+Current rules are expedition-3 (surface hazards introduced in expedition-2): boat propellers are stationary circular hazards on
 band 1 (y=162, radius 32). Contact uses the shared one-life hit, stun and invulnerability
 rules; a clear dive below the swept disc is safe. The pictured shaft/hull is decorative.
 A steady ring makes the swept disc legible even with reduced motion. RU/EN instructions
@@ -83,7 +83,7 @@ clearance from threats occupying upper water and 150-unit clearance from fish on
 Seabed obstacles may coexist below. There are no extra random draws. Browser and server
 reconstruct the new version together; tokens issued for older rules are rejected.
 
-Five generated motor/boat designs use independently animated propeller parts. Four-frame
+Five generated full-length submerged hulls use independently animated propeller parts. The upper vessel is outside the underwater scene; the complete lower length fits its texture. Hulls are decorative and culling preserves their trailing length. Four-frame
 polar bears face the player and paddle; four-frame leopard seals have elongated heads,
 open mouths and prominent canines. Artwork loading is mandatory before starting a round;
 failure is retryable. Opaque-body pixel checks cover every generated swim frame.
@@ -94,3 +94,31 @@ refresh fits to cached parent bounds before measuring again. fitPlayArea now mea
 getParentBounds before refresh on every Play entry, even when HUD offsets are unchanged.
 A browser regression waits for the hidden canvas to shrink, then restarts all five courses
 and Antarctica again on the same Phaser instance, requiring a visible nonzero playfield.
+
+
+## Independent current and measured difficulty (expedition-3)
+
+Nets/trash reduce only the seal: it falls back by up to 96 lu and its vertical speed and
+acceleration limits become 65%. Scenery and all world actors follow worldD; collision and
+progress follow d = worldD − lag. Current also continues through hitstun and exhaustion.
+Recovery is eased (0.65 s time constant), capped at 35% of current speed. Pauses freeze
+both clocks. Fish/burst boosts retain their existing positive pace effect.
+
+The old expedition-2 courses were replayed unchanged for 780 paired runs using the same
+bot weights, horizon and input cadences. Only the predictor's coordinate changes to match
+the actual physics. Finish rates: 80.0→79.2%, 83.5→83.8%, 85.4→85.0%; combined 82.95→82.69%.
+No blanket difficulty reduction was applied: this diagnostic found no large deterioration.
+Net exposure can also become shorter as the current carries the seal through, so the
+change does not uniformly increase difficulty. Human playtesting is still distinct from
+this regression measurement. Full per-seed results: [paired report](seal-run-current-comparison.json).
+
+Reproduce by extracting core/ and tools/bot-lib.mjs from commit eed03b96 into an ignored
+baseline directory, then run current-comparison.mjs with that game directory as its sole
+argument. The current version's separate 780-run report uses expedition-3 seeds; its
+78.1/82.3/86.5% rates must not be interpreted as a paired effect of the debuff alone.
+
+Regional mappings and registered display sizes live in core/fauna.js. Porbeagle and white
+shark represent North Atlantic hazard tiers; Galapagos and tiger shark represent Hawaii.
+No sharks were added to the polar chapters. Antarctic orcas have a Type B1-inspired cape
+and larger cream eye patch; northern/general orcas use the shared black-and-white atlas.
+Atlantis now has its own generated four-frame chonky grey juvenile with short seal tail.

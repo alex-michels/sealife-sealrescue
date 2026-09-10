@@ -36,3 +36,24 @@ Exact prompts and delivery details are in [the asset manifest](../public/games/s
 The generated four-frame cycles are game illustrations rather than measured gait studies.
 The leopard seal mouth remains open to make this hazard visually distinct from the player;
 this is a readability choice, not a claim about its continuous swimming behaviour.
+
+
+## Regional sharks, orcas and Atlantis juvenile — checked 2026-09-10
+
+Primary sources were opened live. **High confidence** for named species/range and the
+limited diagnostic traits below; **medium confidence** for translating them into generated
+four-frame illustrations. Sprites are not specimen photographs or measured gait studies.
+
+| Region / sprite | Checked traits and source | Application / limit |
+| --- | --- | --- |
+| North Atlantic porbeagle, *Lamna nasus* | [COSEWIC species assessment](https://www.canada.ca/en/environment-climate-change/services/species-risk-public-registry/cosewic-assessments-status-reports/porbeagle-2014.html): dark dorsal surface, pale belly, diagnostic white patch at the **lower free rear tip** of the first dorsal fin; North Atlantic distribution. | Small hazard tier on coast/Atlantis. Rejected a generation with white on the fin apex. Contact hazard does not imply seal-specialist feeding. |
+| North Atlantic white shark, *Carcharodon carcharias* | [NOAA species profile](https://www.fisheries.noaa.gov/species/white-shark): gray upper body, white underside, robust form, broad distribution including the Atlantic. | Large coast/Atlantis tier. Natural triangular teeth and gill slits; no invented polar shark encounters. |
+| Hawaiian Galapagos shark, *Carcharhinus galapagensis* | [Hawaii DLNR identification guide](https://dlnr.hawaii.gov/sharks/hawaii-sharks/shark-identification-guide/): brown-gray back, white underside, dusky rather than black trailing tail edge, notably northwestern Hawaiian waters. | Small Hawaiian tier. [NOAA monk-seal survival research](https://www.fisheries.noaa.gov/pacific-islands/endangered-species-conservation/survival-research-and-enhancement-hawaiian-monk) describes concentrated pup predation at Lalo; this is not a claim that all sharks everywhere hunt seals. |
+| Hawaiian tiger shark, *Galeocerdo cuvier* | [Hawaii DLNR identification guide](https://dlnr.hawaii.gov/sharks/hawaii-sharks/shark-identification-guide/): broad rounded snout; juvenile spots become stripes that fade with age; coastal and pelagic habitat. | Large Hawaiian tier with recognizable flank bars. |
+| Northern/general orca, *Orcinus orca* | [NOAA killer whale profile](https://www.fisheries.noaa.gov/species/killer-whale), [NOAA illustrated type guide](https://media.fisheries.noaa.gov/2024-02/KillerWhalePoster-SWFSC-MMTD-UkoGorter-0.pdf): black/white pattern, eye patch and saddle, rounded pectorals, horizontal flukes. | Shared general female-like outline for northern waters; not labelled Pacific resident/Bigg's in the North Atlantic. The [2023 Pacific stock assessment](https://www.fisheries.noaa.gov/s3/2024-12/Pacific_SARs_Final_2023.pdf) describes orcas as rare around Hawaii; game encounter frequency is an arcade convention, not a population-density claim. |
+| Antarctic orca, *Orcinus orca*, large pack-ice Type B1-inspired | [NOAA illustrated type guide](https://media.fisheries.noaa.gov/2024-02/KillerWhalePoster-SWFSC-MMTD-UkoGorter-0.pdf): larger eye patch and dorsal cape. [Australian Antarctic Program](https://www.antarctica.gov.au/about-antarctica/animals/whales/killer-whale/): Antarctic distribution and possible yellow/brown diatom staining. | Separate gray-caped, cream-patched illustration. Avoids presenting the fish-specialist Type C as the seal-predation design. |
+| Atlantis young grey seal, *Halichoerus grypus* | [NOAA gray seal profile](https://www.fisheries.noaa.gov/species/gray-seal): North Atlantic species, external ear flaps absent. User photographs show round mottled juveniles and short foreflippers; the separate NOAA pinniped anatomy lesson above supports the small tail. | Four generated poses, silver/charcoal mottling, plump body, visible short triangular tail between paired hindflippers. Juvenile muzzle avoids the extreme adult-male profile. Atlantis remains explicitly fictional. |
+
+The legacy mechanical IDs shark_white/shark_big express hazard tiers; core/fauna.js maps
+them to the actual illustrated species per region. No generic sharks spawn in polar chapters.
+Game contact rules, scale, repeated encounters and swim-cycle exaggeration are design choices.

@@ -110,7 +110,7 @@ export const ENTITY = {
 // при хитбоксе 92) — тут исправлено; инвариант закреплён unit-тестом.
 // originY — где в текстуре лежит ЦЕНТР ТЕЛА (сим-координата): спинной плавник выше центра.
 export const TEXTURES = {
-  boat_propeller: { key: 'boat_propeller', w: 400, h: 240, bodyH: 64, originY: 190 / 240 },
+  boat_propeller: { key: 'boat_propeller', w: 800, h: 220, bodyH: 64, originX: 100 / 800, originY: 162 / 220 },
   polar_bear: { key: 'polar_bear', w: 336, h: 192.5, bodyH: 64, originX: 455 / 768, originY: 185 / 440 },
   leopard_seal: { key: 'leopard_seal', w: 336, h: 192.5, bodyH: 64, originX: 320 / 768, originY: 0.5 },
   leopard_seal_big: { key: 'leopard_seal_big', w: 470.4, h: 269.5, bodyH: 90, originX: 320 / 768, originY: 0.5 },

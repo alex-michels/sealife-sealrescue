@@ -1,15 +1,22 @@
 // SR-05/SR-16: renderer is a projection of the fixed-step simulation.
 import { applyInput, step, takeEvents, predatorPos } from '../core/sim.js'
 import { SIM_DT, FIELD_W, SEAL_X } from '../core/balance.js'
-import { TEXTURES, WATERLINE_Y } from '../core/theme.js'
+import { WATERLINE_Y } from '../core/theme.js'
+import { actorSize, faunaId } from '../core/fauna.js'
 import { buildExpeditionTextures } from './expedition.js'
 import { fishBob } from './motion.js'
 import { createScenery } from './scenery.js'
 import { buildHazardTextures, hazardFrame } from './hazards.js'
 const STEP_MS = SIM_DT * 1000
-const texSize = (kind) => TEXTURES[kind]
+
 export function createPlayScene(Phaser, hooks) {
   const { state, course, currentCtrl, updateHud, onEvents, onEnd, isPaused, isReduced } = hooks
+  const texSize = (kind) => actorSize(kind, course.biome)
+  const heroSize = texSize('seal')
+  const heroKey = (time) =>
+    faunaId('seal', course.biome)
+      ? hazardFrame('seal', course.biome, time, isReduced())
+      : 'seal_' + course.biome + '_' + (isReduced() ? 0 : Math.floor(time / 80) % 8)
   return class PlayScene extends Phaser.Scene {
     constructor() {
       super('play')
@@ -24,11 +31,11 @@ export function createPlayScene(Phaser, hooks) {
       this.pools = new Map()
       this.bound = new Map()
       this.acc = 0
-      this.prev = { y: state.y, d: state.d }
+      this.prev = { y: state.y, d: state.d, worldD: state.worldD }
       this.sealFrame = 0
-      this.seal = this.add.image(SEAL_X, state.y, 'seal_' + course.biome + '_0').setDepth(10)
-      this.seal.setOrigin(0.5, TEXTURES.seal.originY)
-      this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h)
+      this.seal = this.add.image(SEAL_X, state.y, heroKey(0)).setDepth(10)
+      this.seal.setOrigin(heroSize.originX ?? 0.5, heroSize.originY)
+      this.seal.setDisplaySize(heroSize.w, heroSize.h)
 
       this.scenery = createScenery(this, course)
       this.scenery.update(0, 0, isReduced())
@@ -46,7 +53,7 @@ export function createPlayScene(Phaser, hooks) {
         spr = this.add
           .image(0, 0, hazardFrame(kind, course.biome, state.tMs, isReduced()))
           .setDepth(kind === 'skerry_cap' ? 7 : 5)
-        const t = TEXTURES[kind] // Biome rocks use dimensions supplied by place().
+        const t = texSize(kind) // Biome rocks use dimensions supplied by place().
         if (t && t.originY) spr.setOrigin(t.originX ?? 0.5, t.originY) // центр ТЕЛА = сим-координата
       }
       spr.setVisible(true)
@@ -120,8 +127,13 @@ export function createPlayScene(Phaser, hooks) {
         const o = state.predators[i]
         if (o.atLu < renderD - 2 * FIELD_W) continue
         if (o.atLu > right) break
-        const p = predatorPos(o, state.d)
-        if (p.x < left || p.x > right) continue
+        const p = predatorPos(o, renderD)
+        const size = texSize(o.type)
+        if (
+          p.x + size.w * (1 - (size.originX ?? 0.5)) < left ||
+          p.x - size.w * (size.originX ?? 0.5) > right
+        )
+          continue
         place('p' + i, o.type, p.x, p.y, texSize(o.type))
       }
       for (const [key, rec] of this.bound) {
@@ -136,14 +148,16 @@ export function createPlayScene(Phaser, hooks) {
       if (this.completed) return
       if (isPaused()) {
         this.acc = 0
-        this.prev = { y: state.y, d: state.d }
+        this.prev = { y: state.y, d: state.d, worldD: state.worldD }
         return
       }
       if (state.phase !== 'running') {
         this.exitMs += Math.min(deltaMs, 50)
         const duration = state.phase === 'finished' && !isReduced() ? 950 : 180
-        if (state.phase === 'finished')
-          this.seal.x = SEAL_X + (FIELD_W + 100 - SEAL_X) * Math.min(1, this.exitMs / duration)
+        if (state.phase === 'finished') {
+          const fromX = SEAL_X + state.d - state.worldD
+          this.seal.x = fromX + (FIELD_W + 100 - fromX) * Math.min(1, this.exitMs / duration)
+        }
         if (this.exitMs >= duration) {
           this.completed = true
           onEnd(state)
@@ -156,6 +170,7 @@ export function createPlayScene(Phaser, hooks) {
       while (this.acc >= STEP_MS && state.phase === 'running') {
         this.prev.y = state.y
         this.prev.d = state.d
+        this.prev.worldD = state.worldD
         applyInput(state, currentCtrl())
         step(state)
         this.acc -= STEP_MS
@@ -164,18 +179,18 @@ export function createPlayScene(Phaser, hooks) {
       const a = this.acc / STEP_MS
       const y = this.prev.y + (state.y - this.prev.y) * a
       const d = this.prev.d + (state.d - this.prev.d) * a
-      this.seal.setPosition(SEAL_X, y)
+      const worldD = this.prev.worldD + (state.worldD - this.prev.worldD) * a
+      this.seal.setPosition(SEAL_X + d - worldD, y)
       this.seal.setAlpha(state.tMs < state.invulnUntilMs ? 0.55 : 1)
       // Phaser 4 WebGL can split moving, rotating quads (#7341).
       // Keep the quad axis-aligned; articulated flipper frames carry the swim motion.
-      const frame = isReduced() ? 0 : Math.floor(state.tMs / 80) % 8
-      if (frame !== this.sealFrame) {
-        this.sealFrame = frame
-        this.seal.setTexture('seal_' + course.biome + '_' + frame)
-        this.seal.setDisplaySize(TEXTURES.seal.w, TEXTURES.seal.h)
+      const frame = heroKey(state.tMs)
+      if (this.seal.texture.key !== frame) {
+        this.seal.setTexture(frame)
+        this.seal.setDisplaySize(heroSize.w, heroSize.h)
       }
-      this.scenery.update(d, state.tMs, isReduced())
-      this.syncWorld(d)
+      this.scenery.update(worldD, state.tMs, isReduced())
+      this.syncWorld(worldD)
       updateHud(state)
     }
   }

@@ -74,7 +74,7 @@ into an environment plate. Any generated seal must be checked against the anatom
 and retain the visible tail between its hindflippers; an animation atlas needs consistent
 anatomy and registration across every frame.
 
-## Surface hazards and predators (v3)
+## Surface hazards and predators (v3; hulls superseded by v4)
 
 Eighteen alpha-preserving WebP files (398,174 bytes) replace the
 procedural bear/leopard placeholders and add five distinct vessel/motor designs. Each
@@ -100,3 +100,34 @@ requests). Failure returns to the menu with Retry, rather than playing with invi
 hazards. Decorative scenery still has its procedural fallback. Scene shutdown releases
 the composed hazard textures. Reduced motion fixes both rotor and swim animation at frame
 zero while preserving the visible danger ring, course movement and collision rules.
+
+
+## Full submerged hulls and regional fauna (v4)
+
+33 new alpha-preserving WebPs total 794,798 bytes. Five 1024×683 lower hulls
+replace the v3 stern fragments in runtime and offline cache. Their complete submerged
+length is shown; any structure above water is clipped at the surface. V3 256×256 rotating
+propellers remain separate; only the outlined disc is collidable. Eight composed frames
+use 800×220 canvases and a registered propeller centre (100,162), avoiding moving rotated
+Phaser quads. Culling includes the full trailing hull width.
+
+Four sharks (porbeagle, white, Galapagos, tiger), two orca appearances (northern/general,
+Antarctic Type B1-inspired) and the Atlantis grey-seal juvenile each have four 400×280
+frames. All were generated with the built-in image_gen tool. Exact final prompts, source
+identifiers, frame shifts and file names are in [prompts-v4.json](prompts-v4.json).
+Original 2×2 atlases use 768×512 cells. Alpha bounds (>2) are copied with the recorded
+padding and registration shifts into transparent 800×560 canvases, then downsampled 2×.
+Exports use WebP quality 88 (hulls 87), alpha quality 100. No source photograph is shipped.
+Rejected opaque/checkerboard outputs and the incorrectly marked first porbeagle are unused.
+
+The owner's grey-seal photographs informed the plump juvenile proportions, spotted coat,
+short foreflippers and visible small tail between the hindflippers. The final alpha atlas
+was regenerated from that visual description. The same contained frame appears on the map;
+async painting is guarded against a later course selection. Animal hit circles are fully
+inside the opaque body on all frames, with species-specific registered origins in core/fauna.js.
+
+On mobile, Phaser proportionally scales the same fixed 960×540 field and WebP textures.
+There is no alternate lower-resolution mobile download. Only the selected chapter's critical
+art is decoded for Play (deduplicated 8-second requests); failures return a retryable error.
+GPU textures are released on chapter shutdown; decoded sprite files form a finite cache.
+AI provenance remains visible in the RU/EN menu.
