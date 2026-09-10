@@ -27,6 +27,11 @@ export function createPlayScene(Phaser, hooks) {
 
     create() {
       buildExpeditionTextures(this, course.biome)
+      // Only one chapter is active. Release large background canvases and GPU textures.
+      this.events.once('shutdown', () => {
+        for (const layer of ['water', 'far', 'mid'])
+          this.textures.remove('ocean_' + course.biome + '_' + layer)
+      })
       this.exitMs = 0
       this.completed = false
       // Пул спрайтов на тип + карта «сущность → спрайт» (object pooling, Roadmap SR-05)

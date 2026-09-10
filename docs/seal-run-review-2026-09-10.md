@@ -31,7 +31,9 @@ texture. The seal now stays axis-aligned and swims through articulated flipper f
 This is consistent with [Phaser issue #7341](https://github.com/phaserjs/phaser/issues/7341),
 checked 2026-09-10; the exact internal engine cause is not asserted. WebGL remains enabled.
 Initial layout now sizes the parent before Phaser starts and explicitly refreshes its scale
-manager when interface bounds change. Real mobile touch input was also exercised.
+manager when interface bounds change. Real mobile touch input was also exercised. Large background canvases now use 1× logical
+resolution and are released on chapter shutdown; the five-chapter flow does not retain all
+15 large background textures.
 
 ## Task-by-task assessment
 

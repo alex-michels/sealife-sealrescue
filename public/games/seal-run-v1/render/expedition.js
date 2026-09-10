@@ -425,13 +425,13 @@ export function paintPreview(canvas, biome, hero = false) {
 }
 export function buildExpeditionTextures(scene, biome) {
   buildTextures(scene)
-  const add = (key, w, h, draw) => {
+  const add = (key, w, h, draw, resolution = 2) => {
     if (scene.textures.exists(key)) return
     const canvas = document.createElement('canvas')
-    canvas.width = w * 2
-    canvas.height = h * 2
+    canvas.width = w * resolution
+    canvas.height = h * resolution
     const c = canvas.getContext('2d')
-    c.scale(2, 2)
+    c.scale(resolution, resolution)
     draw(c, w, h)
     scene.textures.addCanvas(key, canvas)
   }
@@ -440,7 +440,13 @@ export function buildExpeditionTextures(scene, biome) {
       drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
     )
   for (const layer of ['water', 'far', 'mid'])
-    add('ocean_' + biome + '_' + layer, 1200, 675, (c, w, h) => paintOcean(c, w, h, biome, layer))
+    add(
+      'ocean_' + biome + '_' + layer,
+      1200,
+      675,
+      (c, w, h) => paintOcean(c, w, h, biome, layer),
+      1,
+    )
   // Predators reuse the phocid anatomy at sizes that contain their full collision circles.
   for (const [key, w, h] of [
     ['leopard_seal', 118, 78],

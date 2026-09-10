@@ -44,6 +44,8 @@ The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad cor
 flipper frames provide its swimming motion (see the SR review for the upstream report).
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
 Pixel regressions check player and predator collision circles inside the visible bodies.
+Background canvases use 1× logical resolution and are released when a chapter shuts down,
+keeping their raw RGBA storage at about 9.7 MB for the active chapter (excluding GPU copies).
 Two background particle layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
 frame animation. Invulnerability uses steady transparency instead of flashing.
