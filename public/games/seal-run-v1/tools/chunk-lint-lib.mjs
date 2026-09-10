@@ -57,7 +57,7 @@ const CHUNK_EDGE_MARGIN = 120; // препятствия не ближе к гр
 const MAX_CHUNK_FISH_POINTS = Math.floor(FISH_POINTS_BUDGET_MAX / (COURSE_LENGTH_LU / CHUNK_LEN_LU)); // 13
 
 const PREDATORS = new Set(['orca', 'shark_white', 'shark_big', 'polar_bear', 'leopard_seal', 'leopard_seal_big']);
-const KNOWN = new Set(['rock', ...PREDATORS, 'ghost_net', 'plastic_cluster']);
+const KNOWN = new Set(['boat_propeller', 'rock', ...PREDATORS, 'ghost_net', 'plastic_cluster']);
 
 /** Вертикальный диапазон тела угрозы (lu). null — мусор (не смертелен). */
 function threatYRange(o) {
@@ -69,6 +69,8 @@ function threatYRange(o) {
       const r = OBSTACLE_DIMS.orca.r;
       return [yc - o.ampBands * BAND_STEP - r, yc + o.ampBands * BAND_STEP + r];
     }
+    case 'boat_propeller':
+      return [yc - OBSTACLE_DIMS.boat_propeller.r, yc + OBSTACLE_DIMS.boat_propeller.r];
     case 'polar_bear':
     case 'leopard_seal':
     case 'shark_white': {

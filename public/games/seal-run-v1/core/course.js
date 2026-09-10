@@ -42,6 +42,7 @@ export const OBSTACLE_DIMS = {
   shark_white: { r: 30 },
   shark_big: { r: 42 },
   polar_bear: { r: 30 },
+  boat_propeller: { r: 32 },
   leopard_seal: { r: 30 },
   leopard_seal_big: { r: 42 },
 };
@@ -150,9 +151,42 @@ export function generateCourse(seedStr, biome = 'coastal', registry = ALL_CHUNKS
     chunkIds: picked.map((p) => p.chunk.id),
     chunkStarts: picked.map((p) => p.startLu),
     difficulties: picked.map((p) => p.chunk.difficulty),
-    obstacles,
+    obstacles: spaceSurfaceHazards(obstacles, fish, registry === ALL_CHUNKS),
     fish,
   };
+}
+
+// Keep the entire 336-lu bear sprite separate, including across chunk boundaries.
+// No extra RNG draws: placement remains identical in browser and server.
+export const SURFACE_ACTOR_GAP = 420;
+export function occupiesUpperWater(o) {
+  const radius = o.type === 'rock' ? o.h / 2
+    : o.type === 'ghost_net' ? 100 : o.type === 'plastic_cluster' ? 60
+    : (OBSTACLE_DIMS[o.type]?.r ?? 0) +
+      (o.type === 'orca' ? o.ampBands * BAND_STEP : o.type === 'shark_big' || o.type === 'leopard_seal_big' ? BAND_STEP / 2 : 0);
+  return bandY(o.band) - radius < 220;
+}
+function spaceSurfaceHazards(obstacles, fish, withBoats) {
+  let lastBear = -Infinity;
+  const spaced = [...obstacles].sort((a, b) => a.atLu - b.atLu).filter((o) => {
+    if (o.type !== 'polar_bear') return true;
+    if (o.atLu - lastBear < SURFACE_ACTOR_GAP) return false;
+    lastBear = o.atLu;
+    return true;
+  });
+  if (withBoats) {
+    // One opportunity per 150 m, after the guided opening. Only place in clear
+    // water, away from existing obstacles and fish on the propeller's lane.
+    for (let start = 3600; start < COURSE_LENGTH_LU - 2400; start += 6000) {
+      for (let atLu = start + 480; atLu < start + 2880; atLu += 120) {
+        if (spaced.some((o) => occupiesUpperWater(o) && Math.abs(o.atLu - atLu) < SURFACE_ACTOR_GAP)) continue;
+        if (fish.some((f) => f.band === 1 && Math.abs(f.atLu - atLu) < 150)) continue;
+        spaced.push({ type: 'boat_propeller', band: 1, atLu });
+        break;
+      }
+    }
+  }
+  return spaced.sort((a, b) => a.atLu - b.atLu);
 }
 
 /** Server and browser use the same chapter mapping, seed and speed. */

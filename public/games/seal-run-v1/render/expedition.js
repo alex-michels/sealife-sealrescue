@@ -433,27 +433,6 @@ export function buildExpeditionTextures(scene, biome) {
     add('seal_' + biome + '_' + frame, 180, 96, (c, w, h) =>
       drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
     )
-  // Predators reuse the phocid anatomy at sizes that contain their full collision circles.
-  for (const [key, w, h] of [
-    ['leopard_seal', 118, 78],
-    ['leopard_seal_big', 150, 102],
-  ])
-    add(key, w, h, (c, w, h) => {
-      c.save()
-      c.translate(w, 0)
-      c.scale(-1, 1)
-      drawPhocid(c, w, h, 'weddell', 0.2)
-      c.restore()
-    })
-  add('polar_bear', 118, 86, (c) => {
-    ellipse(c, 55, 45, 49, 27, '#e1e8db')
-    ellipse(c, 99, 36, 17, 18, '#edf0df')
-    ellipse(c, 107, 46, 13, 8, '#e1e8db')
-    ellipse(c, 94, 22, 5, 6, '#e1e8db')
-    ellipse(c, 105, 32, 2, 2, '#19384a')
-    ellipse(c, 115, 43, 3, 3, '#19384a')
-    for (const x of [29, 76]) ellipse(c, x, 69, 10, 15, '#c5d3cf', -0.3)
-  })
   const b = BIOMES[biome]
   add('rock_' + biome, 120, 120, (c) => {
     const icy = biome === 'arctic' || biome === 'antarctic',

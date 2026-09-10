@@ -5,6 +5,7 @@ import { TEXTURES, WATERLINE_Y } from '../core/theme.js'
 import { buildExpeditionTextures } from './expedition.js'
 import { fishBob } from './motion.js'
 import { createScenery } from './scenery.js'
+import { buildHazardTextures, hazardFrame } from './hazards.js'
 const STEP_MS = SIM_DT * 1000
 const texSize = (kind) => TEXTURES[kind]
 export function createPlayScene(Phaser, hooks) {
@@ -16,6 +17,7 @@ export function createPlayScene(Phaser, hooks) {
 
     create() {
       buildExpeditionTextures(this, course.biome)
+      buildHazardTextures(this, course.biome)
       this.exitMs = 0
       this.completed = false
       // Пул спрайтов на тип + карта «сущность → спрайт» (object pooling, Roadmap SR-05)
@@ -41,9 +43,11 @@ export function createPlayScene(Phaser, hooks) {
       let spr = pool.pop()
       if (!spr) {
         // Декор-оверлеи (макушки кекуров) — НАД пеной (7 > 6), геймплей-спрайты — под ней.
-        spr = this.add.image(0, 0, kind).setDepth(kind === 'skerry_cap' ? 7 : 5)
+        spr = this.add
+          .image(0, 0, hazardFrame(kind, course.biome, state.tMs, isReduced()))
+          .setDepth(kind === 'skerry_cap' ? 7 : 5)
         const t = TEXTURES[kind] // Biome rocks use dimensions supplied by place().
-        if (t && t.originY) spr.setOrigin(0.5, t.originY) // центр ТЕЛА = сим-координата
+        if (t && t.originY) spr.setOrigin(t.originX ?? 0.5, t.originY) // центр ТЕЛА = сим-координата
       }
       spr.setVisible(true)
       return spr
@@ -67,6 +71,11 @@ export function createPlayScene(Phaser, hooks) {
           rec.spr.setDisplaySize(dsz.w, dsz.h)
           rec.spr.setFlipX(flipX)
           this.bound.set(key, rec)
+        }
+        const frame = hazardFrame(kind, course.biome, state.tMs, isReduced())
+        if (rec.spr.texture.key !== frame) {
+          rec.spr.setTexture(frame)
+          rec.spr.setDisplaySize(dsz.w, dsz.h)
         }
         rec.spr.setPosition(sx(x), y)
       }

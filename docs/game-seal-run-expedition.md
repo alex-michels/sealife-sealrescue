@@ -29,7 +29,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. Procedural animals use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. The procedural player and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
 
@@ -67,3 +67,30 @@ Checked 2026-09-10, high confidence for the limited anatomy/range facts used her
 - [NOAA — ringed seal](https://www.fisheries.noaa.gov/species/ringed-seal): Arctic habitat, coat and polar-bear predation.
 - [Australian Antarctic Program — Weddell seal](https://www.antarctica.gov.au/about-antarctica/animals/seals/weddell-seal/): Antarctic habitat, proportions and mottled countershading.
 - [Xbox Accessibility Guidelines](https://learn.microsoft.com/en-us/xbox/accessibility/guidelines): input choice, difficulty options, object clarity, UI focus and reduced visual distraction. Applied as design guidance; this is not an accessibility certification or a claim that a spatial action game is fully playable without vision.
+
+## Surface hazards and course-switch repair (SR-02/03/05/06/14/19)
+
+Rules version is now expedition-2: boat propellers are stationary circular hazards on
+band 1 (y=162, radius 32). Contact uses the shared one-life hit, stun and invulnerability
+rules; a clear dive below the swept disc is safe. The pictured shaft/hull is decorative.
+A steady ring makes the swept disc legible even with reduced motion. RU/EN instructions
+and a propeller-specific collision hint explain the response.
+
+The deterministic post-processing pass keeps surface bears at least 420 logical units
+apart, including chunk boundaries; duplicate crowding from sharks mapped onto band 0 is
+removed. Motors are attempted once per 6000 units after the guided opening, with 420-unit
+clearance from threats occupying upper water and 150-unit clearance from fish on band 1.
+Seabed obstacles may coexist below. There are no extra random draws. Browser and server
+reconstruct the new version together; tokens issued for older rules are rejected.
+
+Five generated motor/boat designs use independently animated propeller parts. Four-frame
+polar bears face the player and paddle; four-frame leopard seals have elongated heads,
+open mouths and prominent canines. Artwork loading is mandatory before starting a round;
+failure is retryable. Opaque-body pixel checks cover every generated swim frame.
+
+The reported intermittent Antarctic blank screen was reproduced in the embedded browser:
+the simulation/HUD advanced, while canvas CSS remained 0×0 after the hidden menu. Phaser
+refresh fits to cached parent bounds before measuring again. fitPlayArea now measures
+getParentBounds before refresh on every Play entry, even when HUD offsets are unchanged.
+A browser regression waits for the hidden canvas to shrink, then restarts all five courses
+and Antarctica again on the same Phaser instance, requiring a visible nonzero playfield.

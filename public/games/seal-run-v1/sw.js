@@ -1,8 +1,26 @@
 // SR-11: only this game's immutable assets. Never cache APIs, cookies or scores.
-const VERSION = 'seal-run-expedition-motion-2'
+const VERSION = 'seal-run-expedition-hazards-4'
 const ROOT = new URL('./', self.location.href).pathname
 const FILES = [
   'index.html',
+  'assets/boat-coastal-v3-body.webp',
+  'assets/boat-coastal-v3-propeller.webp',
+  'assets/boat-atlantis-v3-body.webp',
+  'assets/boat-atlantis-v3-propeller.webp',
+  'assets/boat-tropical-v3-body.webp',
+  'assets/boat-tropical-v3-propeller.webp',
+  'assets/boat-arctic-v3-body.webp',
+  'assets/boat-arctic-v3-propeller.webp',
+  'assets/boat-antarctic-v3-body.webp',
+  'assets/boat-antarctic-v3-propeller.webp',
+  'assets/polar-bear-v3-0.webp',
+  'assets/polar-bear-v3-1.webp',
+  'assets/polar-bear-v3-2.webp',
+  'assets/polar-bear-v3-3.webp',
+  'assets/leopard-seal-v3-0.webp',
+  'assets/leopard-seal-v3-1.webp',
+  'assets/leopard-seal-v3-2.webp',
+  'assets/leopard-seal-v3-3.webp',
   'assets/coastal-panorama-v2.webp',
   'assets/atlantis-panorama-v2.webp',
   'assets/tropical-panorama-v2.webp',
@@ -59,6 +77,7 @@ const FILES = [
   'render/expedition.js',
   'render/scene.js',
   'render/scenery.js',
+  'render/hazards.js',
   'render/motion.js',
   'vendor/phaser.esm.js',
 ]

@@ -424,7 +424,7 @@ durationMs равен сумме длительностей с допуском 
 ## 15. Экспедиции, рывок и представление (SR-15…SR-20)
 
 Пять биомов: coastal → atlantis → tropical (Hawaii) → arctic → antarctic.
-Сид главы: `expedition-1:ISO-week:index`; скорость `1 + index × 0.035`.
+Сид главы: `expedition-2:ISO-week:index`; скорость `1 + index × 0.035`.
 Тренировка выбирает любую стартовую локацию и seed; gentle pace умножает скорость на 0.8.
 Space: стоимость 18 энергии, множитель скорости 1.35 на 800 мс, cooldown 4000 мс.
 Пауза не двигает sim-время. После 900 м sim заморожена, выход спрайта длится 950 мс
@@ -432,3 +432,12 @@ Space: стоимость 18 энергии, множитель скорости
 и 100 энергии. Таймаут 150 с завершает главу как dead без levelsCompleted.
 Боб рыбы — render-only: small ±5 lu, rare ±8 lu; при reduced motion 0.
 Актуальные арт/UX/хранение и отчёт баланса: [game-seal-run.md](game-seal-run.md).
+
+### Surface hazard revision — expedition-2
+
+boat_propeller: stationary band-1 circle, center y=162, radius 32 lu. Collision removes
+one life with the same stun/i-frames as predators; the swept disc is outlined in the art.
+The hull/shaft is decorative. Placement is deterministic after flattening chunks, with
+420 lu clearance from other upper-water threats and 150 lu from band-1 fish. Surface bear
+centers are separated by at least 420 lu across chunk boundaries. The generator consumes
+no extra RNG draws; these changes are shared by server and browser under the new version.

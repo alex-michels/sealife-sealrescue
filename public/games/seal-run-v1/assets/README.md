@@ -35,14 +35,14 @@ exported into individual alpha-preserving WebPs (quality 82, alpha quality 100, 
 Each object fits its cell; three-pixel padding remains around its visible alpha bounds.
 Rejected atlas edits with a baked checkerboard were not shipped.
 
-The **11 v2 assets total 867,870 bytes**; all 21 delivered images total **1,549,098 bytes**.
+The **11 v2 assets total 867,870 bytes**; the combined 21 v1/v2 images total **1,549,098 bytes**.
 The selected final prompts and source identifiers are in [prompts-v2.json](prompts-v2.json).
 No third-party reference photography is distributed.
 
 ## Composition and loading
 
 `render/expedition.js` loads same-origin versioned assets and keeps the procedural ocean
-as a fallback. Missing or slow artwork cannot prevent practice: image loading has a six-second
+as a fallback. Missing or slow background artwork cannot prevent practice: image loading has a six-second
 limit. The menu fetches the selected plate and small cards; subsequent chapters load their
 plate before the scene is built. A download after Play caches all five for offline practice.
 
@@ -73,3 +73,30 @@ Keep collision edges readable, preserve actual alpha, and do not bake animals, t
 into an environment plate. Any generated seal must be checked against the anatomy reference
 and retain the visible tail between its hindflippers; an animation atlas needs consistent
 anatomy and registration across every frame.
+
+## Surface hazards and predators (v3)
+
+Eighteen alpha-preserving WebP files (398,174 bytes) replace the
+procedural bear/leopard placeholders and add five distinct vessel/motor designs. Each
+vessel has a separate body/shaft and face-on propeller. The coastal industrial motor,
+fictional antique Atlantis mechanism, improvised tropical canoe motor, Arctic icebreaker
+and Antarctic research vessel have individual generated designs. These are game concepts,
+not engineering diagrams or a claim that ancient ships had motor propellers.
+
+Polar bear and leopard seal have four registered swimming frames each. Bears face left
+and paddle their front paws beneath the torso. Leopard seals have a long head, open jaws,
+visible canines and long foreflippers, distinct from the playable Weddell seal. The supplied
+leopard photograph was used as an image-generation reference, not redistributed.
+
+Exact prompts, original generation identifiers and frame registration are in
+[prompts-v3.json](prompts-v3.json). Built-in image_gen was used for all seven source assets.
+The delivery pipeline crops/registers the parts, preserves alpha and exports WebP at
+quality 86–88, alpha quality 100. Rotor exports are padded around the hub to 256×256;
+animal frames are 384×220. Runtime canvas composition makes eight rotor frames, so the
+moving Phaser sprite itself never rotates. A steady ring outlines the swept danger disc.
+
+Critical hazard images load before the chapter starts (8-second deadline, deduplicated
+requests). Failure returns to the menu with Retry, rather than playing with invisible
+hazards. Decorative scenery still has its procedural fallback. Scene shutdown releases
+the composed hazard textures. Reduced motion fixes both rotor and swim animation at frame
+zero while preserving the visible danger ring, course movement and collision rules.

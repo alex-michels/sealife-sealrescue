@@ -1,0 +1,173 @@
+{
+  "version": 3,
+  "tool": "Built-in image_gen",
+  "generatedAt": "2026-09-10",
+  "purpose": "Biome surface motors and animated predators",
+  "assets": [
+    {
+      "id": "boat-coastal-v3",
+      "prompt": "Use case: stylized-concept. Production game sprite asset for a realistic underwater side-scrolling browser game. One vessel stern and submerged motor assembly, strict SIDE VIEW, isolated genuine transparent PNG alpha (no background, no water, no checkerboard, no ground, no words). Entire compact stern assembly fully in frame with margin, detailed realistic materials and natural soft light. Composition: landscape 1536x1024 canvas. In the upper 700 pixels: boat stern at top, a vertical engine shaft descending to a round gearbox at bottom, gearbox centered horizontally at x=768, y=570. Do NOT attach any propeller blades to that gearbox. In the lower 300 pixels: ONE separate matching three-bladed marine propeller viewed FACE ON, centered at x=768,y=860, diameter220px, with a solid round central hub. The separate propeller will be animated and mounted on the gearbox in code. Transparent gap between these two parts. No duplicate objects or panels or labels. Subject: weathered ordinary small utility fishing boat stern, teal painted steel, robust dark industrial outboard motor shaft",
+      "outputs": [
+        "boat-coastal-v3-body.webp",
+        "boat-coastal-v3-propeller.webp"
+      ],
+      "registration": {
+        "gear": [
+          776,
+          607
+        ],
+        "rotor": [
+          770,
+          856
+        ],
+        "split": 696
+      },
+      "generationFile": "exec-0246a763-19b8-4744-bd60-546f62b65667.png"
+    },
+    {
+      "id": "boat-atlantis-v3",
+      "prompt": "Use case: stylized-concept. Production game sprite asset for a realistic underwater side-scrolling browser game. One vessel stern and submerged motor assembly, strict SIDE VIEW, isolated genuine transparent PNG alpha (no background, no water, no checkerboard, no ground, no words). Entire compact stern assembly fully in frame with margin, detailed realistic materials and natural soft light. Composition: landscape 1536x1024 canvas. In the upper 700 pixels: boat stern at top, a vertical engine shaft descending to a round gearbox at bottom, gearbox centered horizontally at x=768, y=570. Do NOT attach any propeller blades to that gearbox. In the lower 300 pixels: ONE separate matching three-bladed marine propeller viewed FACE ON, centered at x=768,y=860, diameter220px, with a solid round central hub. The separate propeller will be animated and mounted on the gearbox in code. Transparent gap between these two parts. No duplicate objects or panels or labels. Subject: fantasy ancient Greek wooden ship stern, dark weathered carved wood with antique bronze scrollwork, an invented antique bronze mechanical motor shaft with patinated metal, clearly fictional ancient technology",
+      "outputs": [
+        "boat-atlantis-v3-body.webp",
+        "boat-atlantis-v3-propeller.webp"
+      ],
+      "registration": {
+        "gear": [
+          770,
+          605
+        ],
+        "rotor": [
+          771,
+          855
+        ],
+        "split": 686
+      },
+      "generationFile": "exec-b94be9e1-bfe9-4494-ab50-69ea61e6f88d.png"
+    },
+    {
+      "id": "boat-tropical-v3",
+      "prompt": "Use case: stylized-concept. Production game sprite asset for a realistic underwater side-scrolling browser game. One vessel stern and submerged motor assembly, strict SIDE VIEW, isolated genuine transparent PNG alpha (no background, no water, no checkerboard, no ground, no words). Entire compact stern assembly fully in frame with margin, detailed realistic materials and natural soft light. Composition: landscape 1536x1024 canvas. In the upper 700 pixels: boat stern at top, a vertical engine shaft descending to a round gearbox at bottom, gearbox centered horizontally at x=768, y=570. Do NOT attach any propeller blades to that gearbox. In the lower 300 pixels: ONE separate matching three-bladed marine propeller viewed FACE ON, centered at x=768,y=860, diameter220px, with a solid round central hub. The separate propeller will be animated and mounted on the gearbox in code. Transparent gap between these two parts. No duplicate objects or panels or labels. Subject: Hawaiian small handmade wooden outrigger fishing canoe stern, warm wood, turquoise lashings, improvised small recycled metal motor shaft",
+      "outputs": [
+        "boat-tropical-v3-body.webp",
+        "boat-tropical-v3-propeller.webp"
+      ],
+      "registration": {
+        "gear": [
+          770,
+          622
+        ],
+        "rotor": [
+          770,
+          869
+        ],
+        "split": 696
+      },
+      "generationFile": "exec-469da25e-94f9-4144-bd1c-ef09a44c2ae9.png"
+    },
+    {
+      "id": "boat-arctic-v3",
+      "prompt": "Use case: stylized-concept. Production game sprite asset for a realistic underwater side-scrolling browser game. One vessel stern and submerged motor assembly, strict SIDE VIEW, isolated genuine transparent PNG alpha (no background, no water, no checkerboard, no ground, no words). Entire compact stern assembly fully in frame with margin, detailed realistic materials and natural soft light. Composition: landscape 1536x1024 canvas. In the upper 700 pixels: boat stern at top, a vertical engine shaft descending to a round gearbox at bottom, gearbox centered horizontally at x=768, y=570. Do NOT attach any propeller blades to that gearbox. In the lower 300 pixels: ONE separate matching three-bladed marine propeller viewed FACE ON, centered at x=768,y=860, diameter220px, with a solid round central hub. The separate propeller will be animated and mounted on the gearbox in code. Transparent gap between these two parts. No duplicate objects or panels or labels. Subject: icebreaker stern, heavy red and black reinforced steel hull, rugged ice-class propulsion shaft in pale worn steel",
+      "outputs": [
+        "boat-arctic-v3-body.webp",
+        "boat-arctic-v3-propeller.webp"
+      ],
+      "registration": {
+        "gear": [
+          781,
+          571
+        ],
+        "rotor": [
+          779,
+          847
+        ],
+        "split": 665
+      },
+      "generationFile": "exec-2102b328-d811-4c94-be2a-d2e9c03f90fc.png"
+    },
+    {
+      "id": "boat-antarctic-v3",
+      "prompt": "Use case: stylized-concept. Production game sprite asset for a realistic underwater side-scrolling browser game. One vessel stern and submerged motor assembly, strict SIDE VIEW, isolated genuine transparent PNG alpha (no background, no water, no checkerboard, no ground, no words). Entire compact stern assembly fully in frame with margin, detailed realistic materials and natural soft light. Composition: landscape 1536x1024 canvas. In the upper 700 pixels: boat stern at top, a vertical engine shaft descending to a round gearbox at bottom, gearbox centered horizontally at x=768, y=570. Do NOT attach any propeller blades to that gearbox. In the lower 300 pixels: ONE separate matching three-bladed marine propeller viewed FACE ON, centered at x=768,y=860, diameter220px, with a solid round central hub. The separate propeller will be animated and mounted on the gearbox in code. Transparent gap between these two parts. No duplicate objects or panels or labels. Subject: Antarctic motor research vessel stern, deep navy hull with a warm orange stripe, white superstructure fragment, robust modern marine motor shaft",
+      "outputs": [
+        "boat-antarctic-v3-body.webp",
+        "boat-antarctic-v3-propeller.webp"
+      ],
+      "registration": {
+        "gear": [
+          751,
+          610
+        ],
+        "rotor": [
+          750,
+          855
+        ],
+        "split": 687
+      },
+      "generationFile": "exec-cc18a863-010c-49e6-b2e8-6bbe835bb19b.png"
+    },
+    {
+      "id": "polar-bear-v3",
+      "prompt": "Use case: scientific-educational. Production animation sprite sheet for realistic underwater game. Genuine TRANSPARENT PNG alpha, absolutely no water or background or checkerboard. Exactly FOUR frames in a 2x2 grid, canvas1536x1024, each cell768x512. Each cell contains the SAME realistic adult polar bear swimming horizontally to the LEFT, long neck and black nose facing left, head at left x130, rump at right x650, body center y200 within each cell. Full body including ALL paws and short tail, generous transparent margins. Dense wet ivory fur, natural proportions, small rounded ears, visible black nose and eye, soft cool daylight. Body and head register at identical position and scale in every cell. Four successive phases of a dog-paddle swimming cycle: front paws reaching forward, pulling down, sweeping back, recovering; hind paws trail as steering rudders. Visible paws always UNDER the horizontal body, never walking on ground. No water line, ice, reflections, text, labels or borders. Natural realistic zoological reconstruction with clear readable paws, not a cartoon, not a teddy bear.",
+      "outputs": [
+        "polar-bear-v3-0.webp",
+        "polar-bear-v3-1.webp",
+        "polar-bear-v3-2.webp",
+        "polar-bear-v3-3.webp"
+      ],
+      "registration": {
+        "cropTops": [
+          80,
+          80,
+          542,
+          543
+        ],
+        "cropLefts": [
+          0,
+          758,
+          0,
+          758
+        ],
+        "cropWidth": 768,
+        "cropHeight": 440,
+        "commonOpaqueCircle": {
+          "r": 77,
+          "x": 455,
+          "y": 185
+        }
+      },
+      "generationFile": "exec-98132d1c-110f-49bf-bed9-2d43a1f72caf.png"
+    },
+    {
+      "id": "leopard-seal-v3",
+      "prompt": "Use case: scientific-educational. Production game sprite sheet of a leopard seal predator (Hydrurga leptonyx). Input photo is a biological reference for elongated reptilian head, wide-open jaws and distinct long canines; do not copy the snow scene. Genuine transparent PNG alpha, no background, no checkerboard. Canvas1536x1024, exactly FOUR equal frames in 2x2 grid, each cell768x512. Same entire leopard seal swimming horizontally LEFT in all frames, nose left x80, paired hind flippers right x710. Long muscular streamlined slender body with dark charcoal back, pale silver mottled underside, large elongated low reptilian head, eyes near snout, no external ears. Mouth wide open with visible pink interior and natural prominent pointed upper and lower canines (not tusks), fierce recognizable silhouette. Long fore-flippers. Head and body identical registration across all four frames, body center x420,y230. Four phases of fore-flipper/hind-flipper swimming motion, mouth remains open. Full body and flippers completely in every cell, generous alpha margins. Detailed realistic wet fur and natural cool daylight. Not a round harbor seal or Weddell seal, not a shark, not a cartoon, no water or ground or gore, no text, labels or borders.",
+      "reference": "User-provided leopard seal photograph",
+      "outputs": [
+        "leopard-seal-v3-0.webp",
+        "leopard-seal-v3-1.webp",
+        "leopard-seal-v3-2.webp",
+        "leopard-seal-v3-3.webp"
+      ],
+      "registration": {
+        "cropTops": [
+          50,
+          49,
+          532,
+          531
+        ],
+        "cropLefts": [
+          0,
+          758,
+          0,
+          758
+        ],
+        "cropWidth": 768,
+        "cropHeight": 440,
+        "commonOpaqueCircle": {
+          "r": 77,
+          "x": 320,
+          "y": 220
+        }
+      },
+      "generationFile": "exec-ad9d461e-c6e7-4daf-8f81-59bb225dd454.png"
+    }
+  ]
+}

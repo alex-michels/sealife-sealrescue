@@ -72,11 +72,11 @@ The difficulty ceiling reaches 5 at 300 m. A floor rises from 1 to 2 at 300 m an
 `1 + index × 0.035` (1.00…1.14). Burst is optional; the conservative route linter checks
 reachability at the fastest chapter speed without requiring burst.
 
-The unchanged bot policy was measured across 52 seeds and three input cadences:
-the coastal baseline finishes **78.8%, 80.8%, 84.6%** (81.4% combined). The worst individual
+The unchanged bot policy was measured across 52 seeds and three input cadences. In the earlier pre-motor coastal baseline,
+finish rates were **78.8%, 80.8%, 84.6%** (81.4% combined). The worst individual
 seed has a large cadence spread; the bot is a regression instrument, not proof of equal
 human difficulty. The 780 chapter runs are recorded in
-[seal-run-expedition-balance.json](seal-run-expedition-balance.json): 85.8%, 88.8%, 93.8%.
+[seal-run-expedition-balance.json](seal-run-expedition-balance.json): the current expedition-2 rates are 80.0%, 83.5%, 85.4%.
 Arctic surface ambushes make that chapter comparatively forgiving; higher speed does not
 imply every biome is harder. All 100 templates and 260 generated routes pass the conservative
 reachability, fish-budget and corridor checks.
@@ -125,3 +125,5 @@ The existing generic Next game page and RU/EN seed instructions embed the game.
 `sealrun.sealife.info`, kept commented while the public sites are shut down.
 DNS/TLS activation and the live redirect check remain part of the separately authorised
 production launch (SR-12). No public deployment is performed by this change.
+
+Surface-hazard follow-up (SR-02/03/05/06/14/19): expedition-2 adds biome-specific generated motors with rotating propellers, spaced swimming polar bears and a distinct generated leopard seal. Course re-entry measures Phaser parent bounds before fitting, fixing the intermittent 0×0 canvas. Contracts, loading failure behaviour and verification are in [game-seal-run-expedition.md](game-seal-run-expedition.md).

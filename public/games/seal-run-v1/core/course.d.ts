@@ -10,3 +10,6 @@ export const LU_PER_M: number;
 export const COURSE_LENGTH_LU: number;
 
 export const FISH_REACH_SLACK_LU: number;
+
+export const SURFACE_ACTOR_GAP: number;
+export function occupiesUpperWater(obstacle: CourseObstacle): boolean;

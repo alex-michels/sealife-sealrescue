@@ -64,7 +64,7 @@ describe('SR-10 endpoint dispatch and season boundary', () => {
           livesRemaining: 3,
           fishCollected: 0,
           levelsCompleted: 0,
-          courseSeed: 'expedition-1:' + data.season,
+          courseSeed: 'expedition-2:' + data.season,
           season: data.season,
         }),
       }),

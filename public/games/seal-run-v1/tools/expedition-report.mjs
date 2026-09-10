@@ -1,5 +1,6 @@
 // SR-18/20: reproducible benchmark; policy is unchanged in bot-lib.
 import { writeFileSync } from 'node:fs'
+import { RULES_VERSION } from '../core/biomes.js'
 import { generateRound } from '../core/course.js'
 import { PROFILES, runBot, summarize, seasonSeeds } from './bot-lib.mjs'
 const seasons = 52,
@@ -10,7 +11,7 @@ const matrix = PROFILES.map((profile) => ({
   runs: courses.map((course) => runBot(course, profile)),
 }))
 const report = {
-  version: 'expedition-1',
+  version: RULES_VERSION,
   seasons,
   runs: courses.length * PROFILES.length,
   profiles: matrix.map(({ profile, runs }) => ({ name: profile.name, ...summarize(runs) })),

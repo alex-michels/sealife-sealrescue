@@ -88,7 +88,7 @@ export const BIOMES = Object.freeze({
 })
 export const BIOME_IDS = Object.freeze(Object.keys(BIOMES))
 export const EXPEDITION = Object.freeze(['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic'])
-export const RULES_VERSION = 'expedition-1'
+export const RULES_VERSION = 'expedition-2'
 export const MAX_ROUNDS = EXPEDITION.length
 export const MAX_EXPEDITION_SCORE = 500_000
 export function roundSeed(season, index) {

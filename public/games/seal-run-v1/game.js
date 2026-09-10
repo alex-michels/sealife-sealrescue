@@ -12,6 +12,7 @@ import { FIELD_W, WORLD_H, BAL } from './core/balance.js'
 import { createPlayScene } from './render/scene.js'
 import { paintPreview, paintHero, loadOcean } from './render/expedition.js'
 import { loadScenery } from './render/scenery.js'
+import { loadHazardArt } from './render/hazards.js'
 import { renderName } from './core/alias.js'
 import { t, lang, setLanguage, preference, savePreference } from './i18n.js'
 import { OceanAudio } from './audio.js'
@@ -154,7 +155,12 @@ function fitPlayArea() {
   if ($('stage').style.top !== top || $('stage').style.bottom !== bottom) {
     $('stage').style.top = top
     $('stage').style.bottom = bottom
-    game?.scale.refresh()
+  }
+  if (game) {
+    // refresh() fits against cached bounds before measuring its parent. A hidden
+    // menu leaves those bounds at 0x0; measure FIRST even if HUD offsets match.
+    game.scale.getParentBounds()
+    game.scale.refresh()
   }
 }
 const playLayout = new ResizeObserver(() => requestAnimationFrame(fitPlayArea))
@@ -197,7 +203,7 @@ function updateHud(s) {
 function onEvents(events) {
   for (const event of events) {
     audio.play(event.type)
-    if (event.type === 'life-lost') toast('hit')
+    if (event.type === 'life-lost') toast(event.cause === 'boat_propeller' ? 'propellerHit' : 'hit')
     if (event.type === 'debris-enter') toast('net')
   }
 }
@@ -257,7 +263,7 @@ async function beginRound() {
           ...generateCourse(seed + ':' + chapter, biome),
           speedMultiplier: roundSpeed(chapter) * ($('gentle').checked ? 0.8 : 1),
         }
-  await Promise.all([loadOcean(biome), loadScenery(biome)])
+  await Promise.all([loadOcean(biome), loadScenery(biome), loadHazardArt(biome)])
   state = createSim(course)
   announcedLow = false
   const Phaser = (await import('./vendor/phaser.esm.js')).default
@@ -290,7 +296,7 @@ async function beginRound() {
     game.scene.stop('play')
     game.scene.remove('play')
     game.scene.add('play', Play, true)
-    game.scale.refresh()
+    fitPlayArea()
   }
   updateHud(state)
   toast('firstMove')

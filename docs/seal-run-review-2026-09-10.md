@@ -87,4 +87,22 @@ local TypeScript and lint pass (16 existing warnings). The original 12 static-pr
 pass under both the normal and CI tsx loaders; the thirteenth scenario targets the production
 directory redirect. Final full-workflow status is attached to [PR #126](https://github.com/alex-michels/sealife-sealrescue/pull/126/checks).
 
-The follow-up expands the suite to 15 cases (14 static-preview cases plus the production-only directory redirect). Current results are recorded on the PR checks.
+The current follow-up expands the suite to 17 cases (16 static-preview cases plus the production-only directory redirect). Current results are recorded on the PR checks.
+
+## Follow-up: blank canvas, surface motors and generated predators
+
+Reproduced the user's Antarctic blank screen in the embedded browser: logical canvas
+960×540, CSS canvas 0×0, visible stage 1398×973, HUD advancing and no console exception.
+The engine's cached parent size survived the hidden menu. The fix measures parent bounds
+before fitting on every Play entry. Regression coverage explicitly waits for the hidden
+canvas to reach zero size, then checks six consecutive course selections, including two
+Antarctic starts on the same engine.
+
+SR-02/03/19 now use expedition-2 rules for surface motor hazards and deterministic bear
+spacing. SR-05/06 include five generated vessel designs with independently animated rotors,
+left-facing paddling bears and a separate open-jawed leopard seal cycle. Every predator
+frame is checked against its collision circle; missing critical artwork prevents Play and
+provides Retry. SR-14 covers that recovery plus full-course rendering with real boat hazards.
+SR-12 remains partial pending operator rollout.
+
+Local validation of the surface-hazard revision: 45 Seal Run unit tests (including exhaustive lint/spacing on 260 weekly chapters), 16 browser cases with one production-only skip, TypeScript and lint (0 errors, 16 existing warnings). The 780-run expedition-2 report records finish rates of 80.0%, 83.5% and 85.4% for the three bot profiles. The embedded-browser Antarctic canvas now measures 1398×786.375 CSS pixels and has no console errors.

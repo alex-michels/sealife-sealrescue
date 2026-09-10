@@ -26,3 +26,13 @@ remain small, with no external ear flaps. All eight frames share the same torso 
 
 Generated environment pictures are decorative artwork, not anatomical or habitat evidence.
 Exact prompts and delivery details are in [the asset manifest](../public/games/seal-run-v1/assets/prompts-v2.json).
+
+## Generated predators — checked 2026-09-10
+
+- [Australian Antarctic Program: leopard seal](https://www.antarctica.gov.au/about-antarctica/animals/seals/leopard-seal/): slender body, long foreflippers, large head and widely opening jaws with long canines. High confidence for these limited anatomical traits. The user's supplied photograph additionally guides head shape, dark dorsal coat and mottled pale underside; it is a reference, not a shipped asset.
+- [American Museum of Natural History: polar bear](https://www.amnh.org/explore/ology/ology-cards/288-polar-bear?view=modal): front paws paddle and hind paws steer. High confidence for the swimming-motion choice.
+- [Polar Bears International: adaptations](https://polarbearsinternational.org/polar-bears/polar-bear-facts/adaptations-characteristics/): paw and fur traits cross-check. High confidence for the large swimming paws and layered fur.
+
+The generated four-frame cycles are game illustrations rather than measured gait studies.
+The leopard seal mouth remains open to make this hazard visually distinct from the player;
+this is a readability choice, not a claim about its continuous swimming behaviour.

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { RULES_VERSION } from '../../public/games/seal-run-v1/core/biomes.js'
 import { generateRound, courseHash } from '../../public/games/seal-run-v1/core/course.js'
 
 const origin = process.env.SEAL_RUN_STATIC ? 'http://127.0.0.1:4173' : 'http://localhost:3000'
@@ -196,7 +197,7 @@ test('SR-09/10: weekly result sends derived chapter stats and retries a failed s
         seed: 42,
         season: '2026-W36',
         courseSeed: '2026-W36',
-        rulesVersion: 'expedition-1',
+        rulesVersion: RULES_VERSION,
         parts: { noun: 0 },
       },
     }),
@@ -373,31 +374,37 @@ test('SR-12: directory entry reaches the game and preserves explicit language', 
   await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
 })
 
-test('SR-06: predator collision circles stay inside visible bodies', async ({ page }) => {
+test('SR-06: every generated swim frame covers its collision circle and has real transparency', async ({
+  page,
+}) => {
+  await config(page)
   await page.goto(url)
-  const gaps = await page.evaluate(async () => {
-    const { buildExpeditionTextures } = await import(
-      location.origin + '/games/seal-run-v1/render/expedition.js'
+  const report = await page.evaluate(async () => {
+    const root = location.origin + '/games/seal-run-v1/'
+    const { buildExpeditionTextures } = await import(root + 'render/expedition.js')
+    const { buildHazardTextures, loadHazardArt, hazardFrame } = await import(
+      root + 'render/hazards.js'
     )
-    const { TEXTURES } = await import(location.origin + '/games/seal-run-v1/core/theme.js')
-    const { OBSTACLE_DIMS } = await import(location.origin + '/games/seal-run-v1/core/course.js')
+    const { TEXTURES } = await import(root + 'core/theme.js')
+    const { OBSTACLE_DIMS } = await import(root + 'core/course.js')
     const textures = new Map<string, HTMLCanvasElement>()
-    buildExpeditionTextures(
-      {
-        textures: {
-          exists(key: string) {
-            return textures.has(key)
-          },
-          addCanvas(key: string, canvas: HTMLCanvasElement) {
-            textures.set(key, canvas)
-          },
+    const scene = {
+      textures: {
+        exists(key: string) {
+          return textures.has(key)
+        },
+        addCanvas(key: string, canvas: HTMLCanvasElement) {
+          textures.set(key, canvas)
         },
       },
-      'antarctic',
-    )
+      events: { once() {} },
+    }
+    buildExpeditionTextures(scene, 'antarctic')
+    for (const biome of ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic']) {
+      await loadHazardArt(biome)
+      buildHazardTextures(scene, biome)
+    }
     const missing: string[] = []
-    const canvas = document.createElement('canvas')
-    const c = canvas.getContext('2d')!
     for (const kind of [
       'orca',
       'shark_white',
@@ -406,27 +413,45 @@ test('SR-06: predator collision circles stay inside visible bodies', async ({ pa
       'leopard_seal',
       'leopard_seal_big',
     ]) {
-      const { w, h, originY = 0.5 } = TEXTURES[kind]
-      const r = OBSTACLE_DIMS[kind].r
-      canvas.width = w
-      canvas.height = h
-      c.drawImage(textures.get(kind)!, 0, 0, w, h)
-      for (let i = 0; i < 32; i++) {
-        const a = (i * Math.PI * 2) / 32
-        if (
-          c.getImageData(
-            Math.round(w / 2 + r * Math.cos(a)),
-            Math.round(h * originY + r * Math.sin(a)),
-            1,
-            1,
-          ).data[3] < 128
-        )
-          missing.push(kind + ':' + i)
+      const { w, h, originX = 0.5, originY = 0.5 } = TEXTURES[kind]
+      const radius = OBSTACLE_DIMS[kind].r
+      const frameCount = kind === 'polar_bear' || kind.startsWith('leopard') ? 4 : 1
+      for (let frame = 0; frame < frameCount; frame++) {
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.ceil(w)
+        canvas.height = Math.ceil(h)
+        const c = canvas.getContext('2d')!
+        const key = frameCount > 1 ? kind + '_' + frame : kind
+        c.drawImage(textures.get(key)!, 0, 0, w, h)
+        for (let i = 0; i < 32; i++) {
+          const a = (i * Math.PI) / 16
+          if (
+            c.getImageData(
+              Math.round(w * originX + radius * Math.cos(a)),
+              Math.round(h * originY + radius * Math.sin(a)),
+              1,
+              1,
+            ).data[3] < 128
+          )
+            missing.push(key + ':' + i)
+        }
+        if (c.getImageData(0, 0, 1, 1).data[3] > 8) missing.push(key + ':opaque-background')
       }
     }
-    return missing
+    const distinct = new Set(
+      ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic'].map((b) =>
+        textures.get('boat_' + b + '_0')!.toDataURL(),
+      ),
+    ).size
+    const animated = ['polar_bear', 'leopard_seal', 'boat_arctic'].every(
+      (k) => textures.get(k + '_0')!.toDataURL() !== textures.get(k + '_1')!.toDataURL(),
+    )
+    const reduced =
+      hazardFrame('boat_propeller', 'arctic', 1000, true) === 'boat_arctic_0' &&
+      hazardFrame('polar_bear', 'arctic', 1000, true) === 'polar_bear_0'
+    return { missing, distinct, animated, reduced }
   })
-  expect(gaps).toEqual([])
+  expect(report).toEqual({ missing: [], distinct: 5, animated: true, reduced: true })
 })
 
 test('SR-05/14: every full-length biome renders its rocks and hazards without stopping', async ({
@@ -444,11 +469,12 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
     const { generateCourse } = await import(root + 'core/course.js')
     const { createSim } = await import(root + 'core/sim.js')
     const { loadScenery } = await import(root + 'render/scenery.js')
+    const { loadHazardArt } = await import(root + 'render/hazards.js')
     const host = document.createElement('div')
     document.body.replaceChildren(host)
     const results = []
     for (const biome of ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic']) {
-      await loadScenery(biome)
+      await Promise.all([loadScenery(biome), loadHazardArt(biome)])
       const course = generateCourse('renderer-regression', biome)
       const state = createSim(course)
       const Play = createPlayScene(Phaser, {
@@ -538,6 +564,7 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
   expect(errors).toEqual([])
   for (const row of report) {
     expect(row.kinds).toContain('rock_' + row.biome)
+    expect(row.kinds).toContain('boat_propeller')
     expect(row.kinds.some((kind: string) => kind.startsWith('fish_'))).toBe(true)
     expect(row.start).toBeCloseTo(0, 4)
     expect(row.panoramaWidth).toBeGreaterThan(1500)
@@ -570,4 +597,47 @@ test('SR-14: tropical play keeps advancing after the first rocks enter the viewp
   await page.locator('#pause-button').click()
   await expect(page.locator('#resume')).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test('SR-14: returning from a hidden menu restores the canvas on every course', async ({
+  page,
+}) => {
+  test.setTimeout(90000)
+  await config(page)
+  await page.goto(url)
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  for (const biome of ['antarctic', 'arctic', 'tropical', 'atlantis', 'coastal', 'antarctic']) {
+    await page.locator('[data-biome="' + biome + '"]').click()
+    await page.locator('#start').click()
+    await expect(page.locator('#stage canvas')).toBeVisible()
+    await expect
+      .poll(async () => (await page.locator('#stage canvas').boundingBox())?.width ?? 0)
+      .toBeGreaterThan(300)
+    await page.waitForFunction(() => (window.SealRun?.state?.d ?? 0) > 60)
+    await page.keyboard.press('Escape')
+    await page.locator('#end-swim').click()
+    await page.locator('#back-map').click()
+    // Wait for Phaser's parent-size polling to observe the hidden stage. This
+    // is the prerequisite for the reported 0x0 canvas on the following start.
+    await page.waitForFunction(
+      () => (document.querySelector('#stage canvas') as HTMLCanvasElement)?.style.width === '0px',
+    )
+  }
+  expect(errors).toEqual([])
+})
+
+test('SR-11: missing predator artwork shows a retryable load failure', async ({ page }) => {
+  await config(page)
+  await page.route('**/assets/leopard-seal-v3-*.webp', (route) => route.abort())
+  await page.goto(url)
+  await page.locator('[data-biome="antarctic"]').click()
+  await page.locator('#start').click()
+  await expect(page.locator('#menu')).toBeVisible()
+  await expect(page.locator('#start')).toBeEnabled()
+  await expect(page.locator('#start-error')).toBeVisible()
+  expect(await page.evaluate(() => window.SealRun?.view)).toBe('menu')
+  await page.unroute('**/assets/leopard-seal-v3-*.webp')
+  await page.locator('#start').click()
+  await expect(page.locator('#stage canvas')).toBeVisible()
 })

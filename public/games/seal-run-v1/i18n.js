@@ -20,7 +20,7 @@ const STRINGS = {
     howMove: 'Move your pointer or drag to choose a depth. You can also use ↑ ↓ or W S.',
     howFish:
       'Fish restore energy. Larger, orange fish are worth more. Seals breathe air; the energy meter is an arcade mechanic.',
-    howHazards: 'Dodge predators. Nets slow you down. Solid rocks push you away.',
+    howHazards: 'Dive below boat propellers and dodge predators. Nets slow you down. Solid rocks push you away.',
     howBurst:
       'Space gives a short burst: it costs energy, so pick your moment. Escape or P pauses.',
     locations: 'Choose your waters',
@@ -70,7 +70,7 @@ const STRINGS = {
     swimmer: 'Swimmer',
     levels: 'Chapters',
     best: 'Your weekly best',
-    artCredit: 'AI-generated environments',
+    artCredit: 'AI-generated artwork',
     loadError: 'The game could not load. Please try again.',
     startError: 'The weekly route could not be loaded. Try again or choose Explore.',
     submitError:
@@ -83,6 +83,7 @@ const STRINGS = {
     firstFish: 'Follow the silver trail for energy',
     firstHazard: 'Open water is your safe route',
     lowEnergy: 'Low energy — look for fish',
+    propellerHit: 'Propeller strike. Dive below the motor.',
     hit: 'Life lost. Find clear water.',
     net: 'Caught in debris — keep moving',
     boostReady: 'Burst ready',
@@ -117,7 +118,7 @@ const STRINGS = {
     howMove: 'Двигай указатель или веди пальцем, выбирая глубину. Можно нажимать ↑ ↓ или W S.',
     howFish:
       'Рыба восстанавливает энергию. Крупная оранжевая рыбка даёт больше очков. Тюлени дышат воздухом; шкала энергии — условность аркады.',
-    howHazards: 'Уворачивайся от хищников. Сети замедляют. Камни отбрасывают.',
+    howHazards: 'Ныряй ниже лодочных винтов и уворачивайся от хищников. Сети замедляют. Камни отбрасывают.',
     howBurst: 'Пробел — короткий рывок за энергию. Выбирай момент. Escape или P — пауза.',
     locations: 'Выбери свой океан',
     sound: 'Звук',
@@ -166,7 +167,7 @@ const STRINGS = {
     swimmer: 'Пловец',
     levels: 'Главы',
     best: 'Твой рекорд недели',
-    artCredit: 'Окружение создано с ИИ',
+    artCredit: 'Графика создана с ИИ',
     loadError: 'Не удалось загрузить игру. Попробуй ещё раз.',
     startError: 'Не удалось загрузить трассу недели. Повтори или выбери «Исследовать».',
     submitError: 'Очки не сохранены. Проверь соединение и повтори, пока открыт результат.',
@@ -178,6 +179,7 @@ const STRINGS = {
     firstFish: 'Серебристая рыбка — твоя энергия',
     firstHazard: 'Открытая вода — безопасный путь',
     lowEnergy: 'Мало энергии — ищи рыбу',
+    propellerHit: 'Удар винта. Ныряй ниже мотора.',
     hit: 'Потеряна жизнь. Ищи чистую воду.',
     net: 'Мусор замедляет — двигайся дальше',
     boostReady: 'Рывок готов',

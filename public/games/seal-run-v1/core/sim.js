@@ -48,6 +48,8 @@ export function predatorPos(o, d) {
         y: yc + o.ampBands * BAND_STEP * sin((2 * PI * (d - o.atLu)) / BAL.ORCA_PERIOD_LU),
         r: OBSTACLE_DIMS.orca.r,
       };
+    case 'boat_propeller':
+      return { x: o.atLu, y: yc, r: OBSTACLE_DIMS.boat_propeller.r };
     case 'polar_bear':
       return { x: o.atLu, y: yc, r: OBSTACLE_DIMS.polar_bear.r };
     case 'leopard_seal':
