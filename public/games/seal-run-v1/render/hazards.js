@@ -1,4 +1,4 @@
-import { faunaId } from '../core/fauna.js'
+import { faunaId, faunaFile } from '../core/fauna.js'
 // SR-05/06/19: generated parts, registered swim cycles and precomposed rotors.
 // Phaser quads stay axis-aligned (moving + rotating quads can corrupt in Phaser 4).
 const images = new Map()
@@ -38,7 +38,7 @@ export async function loadHazardArt(biome) {
   if (animal) for (let i = 0; i < 4; i++) files.push(animal + '-v3-' + i + '.webp')
   for (const kind of ['orca', 'shark_white', 'shark_big', 'seal']) {
     const id = faunaId(kind, biome)
-    if (id) for (let i = 0; i < 4; i++) files.push(id + '-v4-' + i + '.webp')
+    if (id) for (let i = 0; i < 4; i++) files.push(faunaFile(id, i))
   }
   await Promise.all(files.map(load))
 }
@@ -111,7 +111,7 @@ export function buildHazardTextures(scene, biome) {
     const id = faunaId(kind, biome)
     if (!id) continue
     for (let i = 0; i < 4; i++) {
-      const img = images.get(id + '-v4-' + i + '.webp')
+      const img = images.get(faunaFile(id, i))
       if (!img) throw new Error('Missing fauna frame: ' + id)
       const c = document.createElement('canvas')
       c.width = img.width
@@ -126,6 +126,7 @@ export function buildHazardTextures(scene, biome) {
 }
 
 // Menu uses the same registered hero frame; failed artwork remains retryable on Play.
-export function loadGreyHero() {
-  return load('grey-seal-v4-0.webp')
+export function loadGeneratedHero(biome) {
+  const id = faunaId('seal', biome)
+  return id ? load(faunaFile(id)) : Promise.resolve(null)
 }

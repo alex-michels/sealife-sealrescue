@@ -1,0 +1,179 @@
+{
+  "tool": "image_gen built-in",
+  "generatedAt": "2026-09-10",
+  "provenance": "AI-generated game illustration; visually reviewed, not a measured gait reconstruction",
+  "assets": [
+    {
+      "id": "weddell-pup",
+      "prompt": "Realistic game sprite sheet of one chonky juvenile Weddell seal, FOUR swim poses in a precise 2x2 grid on a 1536x1024 TRANSPARENT RGBA PNG. Each 768x512 cell contains a complete right-facing pup with identical head/body placement, neutral lighting. Big plump oval body, round short face with folds, soft fine wet silver-gray mottled fur, pale cream cheeks and belly, glossy dark eyes near blunt dark nose, whiskers, short front flippers, no ear flaps. Rear anatomy MUST visibly have THREE DISTINCT PARTS: two broad vertical webbed hind flippers AND a small pointed triangular TAIL between them. The tail is a light-gray tapered wedge extending left from rump only 35 pixels, its tip surrounded by clear transparent gaps above and below, unoutlined root, NOT a rod. Each hindflipper extends 100 pixels back and is a broad upright fan with five webbed toes; the two fan surfaces are parallel, near/far depth planes, slightly offset so they can both be seen. This is NOT one bifurcated tail; the short third central wedge MUST be visible in every pose. Subtle side-to-side stroke changes the apparent widths of the two rear paddles across the four frames; torso and head are fixed, never turning up or down. Swimming side view, with slight three-quarter perspective. Frame animal extents x40..720 y110..415. Entire animal within each cell, generous margins. Scientific naturalistic illustration with photoreal fur. Genuinely transparent background, ALPHA ZERO outside the animal. Absolutely no checkerboard, water, sky, snow, ground, backdrop, gradient, shadow, gridlines, text or marks.",
+      "sourceImage": "exec-f41119aa-5950-4622-8941-5fdf64506a43.png",
+      "referenceUse": "User Weddell pup photographs informed round head, neck folds, grey/cream coat. Underwater photographs and the cropped paired feet informed paddle orientation and short central tail. Generated from visual description; no reference photograph is shipped.",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            16,
+            0
+          ],
+          [
+            0,
+            42
+          ],
+          [
+            16,
+            34
+          ]
+        ]
+      },
+      "files": [
+        "weddell-pup-v5-0.webp",
+        "weddell-pup-v5-1.webp",
+        "weddell-pup-v5-2.webp",
+        "weddell-pup-v5-3.webp"
+      ]
+    },
+    {
+      "id": "galapagos-shark",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Galapagos shark (Carcharhinus galapagensis). Streamlined brownish-gray back white belly, moderately rounded broad snout, tall first dorsal fin, long pointed pectorals, asymmetrical vertical caudal fin with long upper lobe. Dusky trailing tail edge, NOT black fin tips. Five gill slits. Slimmer than great white. Subtle lateral tail stroke.",
+      "sourceImage": "exec-cb47805e-31c7-4857-86a4-031379897cf5.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            8,
+            -2
+          ],
+          [
+            0,
+            33
+          ],
+          [
+            8,
+            29
+          ]
+        ],
+        "cellInsets": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            22,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            22,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "files": [
+        "galapagos-shark-v5-0.webp",
+        "galapagos-shark-v5-1.webp",
+        "galapagos-shark-v5-2.webp",
+        "galapagos-shark-v5-3.webp"
+      ],
+      "deliveryFix": "Right-column extraction starts 22 source pixels inside the cell to exclude the previous frame tail. All retained RGBA pixels and registration are unchanged."
+    },
+    {
+      "id": "orca-northern",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Adult female killer whale (Orcinus orca), North Atlantic/general cosmopolitan morphology, glossy black back white belly, white oval eye patch behind and above tiny dark eye, gray saddle behind moderately tall curved dorsal fin, broad rounded pectoral flippers, horizontal paired tail flukes. Do not give shark gills or shark vertical tail. Four phases of gentle up-and-down tail stroke. Authentic proportions, round blunt head, no dolphin beak.",
+      "sourceImage": "exec-966f52cb-ee6c-458a-955a-f232b264af3b.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            0,
+            64
+          ],
+          [
+            8,
+            64
+          ]
+        ],
+        "cellInsets": [
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            12,
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            0
+          ],
+          [
+            12,
+            0,
+            0,
+            0
+          ]
+        ]
+      },
+      "files": [
+        "orca-northern-v5-0.webp",
+        "orca-northern-v5-1.webp",
+        "orca-northern-v5-2.webp",
+        "orca-northern-v5-3.webp"
+      ],
+      "deliveryFix": "Right-column extraction starts 12 source pixels inside the cell to exclude the previous frame tail. All retained RGBA pixels and registration are unchanged."
+    }
+  ]
+}

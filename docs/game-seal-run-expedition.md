@@ -18,7 +18,7 @@ Movement follows the pointer or vertical keyboard input with acceleration and da
 | Atlantis | Deep indigo, oxidised copper, illuminated arches, columns and carved stone | Chonky young grey seal with a distinct short tail; explicitly fictional ruins | Collapsed columns and offset passages; coastal predators |
 | Tropical islands | Clear cyan over deep blue, sunlit sand, coral fans and volcanic formations | Hawaiian monk seal; smooth grey/brown coat | Tropical sharks, reefs and gear; no polar wildlife |
 | Arctic | Ice-blue light, pale floes, dark under-ice gaps and distant icebergs | Ringed seal; light rings over a dark coat | Surface polar bears and orcas; no penguins or leopard seals |
-| Antarctic | Blue-violet water, towering ice shelves and drifting ice | Weddell seal; small head, mottled back and pale belly | Leopard seals and orcas; no polar bears |
+| Antarctic | Blue-violet water, towering ice shelves and drifting ice | Generated Weddell pup; round head, neck folds, plump mottled grey body and cream cheeks/belly | Leopard seals and orcas; no polar bears |
 
 The tropical concept uses the living Hawaiian monk seal in its actual region rather than placing it in the Caribbean. Atlantis is labelled fantasy. Chapters are separate encounters with local species, not a story claiming that one seal migrates between both poles. Fish icons represent arcade food classes, not a claim that all depicted prey occur everywhere.
 
@@ -29,7 +29,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. Four procedural player species, the generated Atlantis juvenile and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. Three procedural player species, the generated Atlantis grey juvenile and Antarctic Weddell pup and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
 
@@ -122,3 +122,19 @@ shark represent North Atlantic hazard tiers; Galapagos and tiger shark represent
 No sharks were added to the polar chapters. Antarctic orcas have a Type B1-inspired cape
 and larger cream eye patch; northern/general orcas use the shared black-and-white atlas.
 Atlantis now has its own generated four-frame chonky grey juvenile with short seal tail.
+
+## Weddell pup and atlas boundaries (SR-06/14/19)
+
+Antarctica uses four registered 400×280 WebP frames (80,016 bytes) of a young Weddell seal,
+including a short tapered tail between two webbed hind feet. The cover loads the same
+first frame, with the existing stale-selection guard. The procedural harbour/monk/ringed
+models now vary the projected breadth of near/far upright paddles during the lateral stroke.
+The generated grey juvenile remains the Atlantis player. This is an illustrated stroke,
+not a measured 3D gait reconstruction; see the [anatomy review](seal-run-anatomy-references.md).
+
+Two right-column frames in each of the original northern-orca and Galapagos-shark atlases
+contained the tip of the previous column's tail. V5 delivery uses a left
+inset of 12 source pixels for the orca and 22 for the shark when extracting those cells, retaining the complete intended animal, alpha and
+registration. Other predator atlases were checked too. Source and export details are in
+[prompts-v5.json](../public/games/seal-run-v1/assets/prompts-v5.json). The offline cache
+references the corrected versions. Simulation, hit radii and expedition-3 rules are unchanged.

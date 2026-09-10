@@ -10,6 +10,7 @@ export const FAUNA = Object.freeze({
     originY: 140 / 280,
   },
   'galapagos-shark': {
+    artVersion: 'v5',
     scientific: 'Carcharhinus galapagensis',
     w: 340,
     h: 238,
@@ -24,6 +25,7 @@ export const FAUNA = Object.freeze({
     originY: 150 / 280,
   },
   'orca-northern': {
+    artVersion: 'v5',
     scientific: 'Orcinus orca',
     w: 420,
     h: 294,
@@ -37,6 +39,14 @@ export const FAUNA = Object.freeze({
     originX: 184 / 400,
     originY: 160 / 280,
   },
+  'weddell-pup': {
+    scientific: 'Leptonychotes weddellii',
+    artVersion: 'v5',
+    w: 196,
+    h: 137.2,
+    originX: 245 / 400,
+    originY: 148 / 280,
+  },
   'grey-seal': {
     scientific: 'Halichoerus grypus',
     w: 196,
@@ -46,7 +56,8 @@ export const FAUNA = Object.freeze({
   },
 })
 export function faunaId(kind, biome) {
-  if (kind === 'seal') return biome === 'atlantis' ? 'grey-seal' : null
+  if (kind === 'seal')
+    return biome === 'atlantis' ? 'grey-seal' : biome === 'antarctic' ? 'weddell-pup' : null
   if (kind === 'orca') return biome === 'antarctic' ? 'orca-antarctic' : 'orca-northern'
   if (biome === 'arctic' || biome === 'antarctic') return null
   if (kind === 'shark_white') return biome === 'tropical' ? 'galapagos-shark' : 'porbeagle'
@@ -55,4 +66,9 @@ export function faunaId(kind, biome) {
 }
 export function actorSize(kind, biome) {
   return FAUNA[faunaId(kind, biome)] ?? TEXTURES[kind]
+}
+
+// Versioned delivery files are shared by menu previews and Phaser textures.
+export function faunaFile(id, frame = 0) {
+  return id + '-' + (FAUNA[id].artVersion ?? 'v4') + '-' + frame + '.webp'
 }

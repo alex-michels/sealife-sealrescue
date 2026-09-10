@@ -131,3 +131,30 @@ separate new-seed expedition-3 matrix records 78.1/82.3/86.5% completion. SR-12 
 pending operator rollout. This change does not activate public services or apply a database migration.
 
 Local validation for the current/fauna revision: all 46 Seal Run unit contracts passed (including the corrected shared-version endpoint expectation), 16 static browser cases passed with one production-only skip, TypeScript passed, and lint reported 0 errors / 16 existing warnings. Browser assertions cover actual Phaser player drift, continued current, long-hull retention, all generated hit circles/alpha, full 900 m sweeps and six course re-entries. Temporary baseline/preview files were excluded from local lint. The 33 new v4 WebPs total 794,798 bytes.
+
+## Follow-up: Weddell pup and neighbouring-frame fragments
+
+Antarctica now uses a generated four-frame Weddell pup with rounded head, grey/cream coat
+and a short triangular tail between paired webbed feet. The three procedural player models
+use upright near/far paddle shapes and lateral breadth changes. The generated grey juvenile
+remains in Atlantis. Menu and game share versioned hero files; the offline cache was bumped.
+
+The owner's speck-before-the-orca report reproduced as detached alpha components: 25 pixels
+in northern-orca frame 1, and 77/63 pixels in Galapagos frames 1/3 at alpha >8 (plus a smaller
+fragment in orca frame 3). Source inspection showed the previous column's tail crossing the
+768px cell boundary. Right-column extraction now insets by 12 source pixels for the orca
+and 22 for the shark; other poses, complete intended sprites and origins are retained.
+The new browser scan checks the entire alpha plane of all 24 regional predator frames,
+in addition to collision-circle coverage. The original corner-only transparency check
+could not detect these isolated fragments.
+
+Validation: 16 static browser tests passed, one production-only redirect case skipped;
+TypeScript passed; lint reported 0 errors and 16 existing warnings. The six-size RU menu
+check now exercises the generated Antarctic cover. Tail separation passes every procedural
+frame; generated Weddell frames cover the unchanged collision radius and reduced motion
+uses frame zero. All five full-length rendering sweeps and course re-entries pass.
+No physics/balance changes were made in this revision.
+
+The subsequent image-performance analysis recommends keeping WebP and prioritizing unused
+textures, their lifetime and duplicate hull/rotor frames. Measurements and limits are in
+[the performance review](seal-run-image-performance.md); those optimizations are not yet implemented.

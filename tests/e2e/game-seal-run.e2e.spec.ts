@@ -266,6 +266,8 @@ test('SR-07: RU menu contains the entire seal and separates its caption from rou
   await config(page)
   await page.goto(url.replace('lang=en', 'lang=ru'))
   await expect(page.locator('#start')).toBeEnabled()
+  await page.getByRole('button', { name: '05 / Синяя Антарктида', exact: true }).click()
+  await expect(page.locator('.location-note')).toContainText('Малыш Уэдделла')
   for (const size of [
     { width: 1440, height: 900 },
     { width: 1238, height: 1267 },
@@ -328,27 +330,33 @@ test('SR-06: distinct tail remains between webbed hindflippers throughout the st
   const samples = await page.evaluate(async () => {
     const { drawPhocid } = await import(location.origin + '/games/seal-run-v1/render/expedition.js')
     const canvas = document.createElement('canvas')
-    canvas.width = 180
-    canvas.height = 96
+    canvas.width = 360
+    canvas.height = 192
     const c = canvas.getContext('2d')!
     return Array.from({ length: 8 }, (_, i) => {
-      c.clearRect(0, 0, 180, 96)
-      drawPhocid(c, 180, 96, 'spotted', i / 8)
-      return {
-        tail: c.getImageData(28, 51, 1, 1).data[3],
-        above: Math.min(
-          ...Array.from(c.getImageData(15, 46, 1, 4).data).filter((_, i) => i % 4 === 3),
-        ),
-        below: Math.min(
-          ...Array.from(c.getImageData(15, 55, 1, 8).data).filter((_, i) => i % 4 === 3),
-        ),
+      c.clearRect(0, 0, 360, 192)
+      drawPhocid(c, 360, 192, 'spotted', i / 8)
+      // A cross-section through the short tail tip must show three distinct
+      // silhouettes: far webbed foot, tail, near webbed foot, separated by water.
+      const runs: number[][] = []
+      let start = -1
+      for (let y = 5; y < 91; y++) {
+        const opaque = c.getImageData(52, y * 2, 1, 1).data[3] > 128
+        if (opaque && start < 0) start = y
+        if (!opaque && start >= 0) {
+          runs.push([start, y - 1])
+          start = -1
+        }
       }
+      return runs
     })
   })
-  for (const sample of samples) {
-    expect(sample.tail).toBeGreaterThanOrEqual(128)
-    expect(sample.above).toBeLessThan(128)
-    expect(sample.below).toBeLessThan(128)
+  for (const runs of samples) {
+    expect(runs).toHaveLength(3)
+    expect(runs[1][0]).toBeLessThanOrEqual(51)
+    expect(runs[1][1]).toBeGreaterThanOrEqual(51)
+    expect(runs[1][1] - runs[1][0]).toBeLessThan(runs[0][1] - runs[0][0])
+    expect(runs[1][1] - runs[1][0]).toBeLessThan(runs[2][1] - runs[2][0])
   }
 })
 
@@ -413,6 +421,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
       ['orca', 'coastal'],
       ['orca', 'antarctic'],
       ['seal', 'atlantis'],
+      ['seal', 'antarctic'],
       ['polar_bear', 'arctic'],
       ['leopard_seal', 'antarctic'],
       ['leopard_seal_big', 'antarctic'],
@@ -426,7 +435,45 @@ test('SR-06: every generated swim frame covers its collision circle and has real
         canvas.height = Math.ceil(h)
         const c = canvas.getContext('2d')!
         const key = (faunaId(kind, biome) ?? kind) + '_' + frame
-        c.drawImage(textures.get(key)!, 0, 0, w, h)
+        const source = textures.get(key)!
+        c.drawImage(source, 0, 0, w, h)
+        if (faunaId(kind, biome) && kind !== 'seal') {
+          // Corner transparency alone misses a neighbouring atlas frame's tail
+          // leaking ahead of the snout. Inspect the complete source alpha plane.
+          const pixels = source
+            .getContext('2d')!
+            .getImageData(0, 0, source.width, source.height).data
+          const seen = new Uint8Array(source.width * source.height)
+          const components: number[] = []
+          for (let p = 0; p < seen.length; p++) {
+            if (seen[p] || pixels[p * 4 + 3] <= 8) continue
+            const queue = [p]
+            seen[p] = 1
+            for (let j = 0; j < queue.length; j++) {
+              const x = queue[j] % source.width,
+                y = Math.floor(queue[j] / source.width)
+              for (let dy = -1; dy <= 1; dy++)
+                for (let dx = -1; dx <= 1; dx++) {
+                  const xx = x + dx,
+                    yy = y + dy,
+                    n = yy * source.width + xx
+                  if (
+                    xx < 0 ||
+                    yy < 0 ||
+                    xx >= source.width ||
+                    yy >= source.height ||
+                    seen[n] ||
+                    pixels[n * 4 + 3] <= 8
+                  )
+                    continue
+                  seen[n] = 1
+                  queue.push(n)
+                }
+            }
+            if (queue.length > 2) components.push(queue.length)
+          }
+          if (components.length !== 1) missing.push(key + ':stray-alpha:' + components.join(','))
+        }
         for (let i = 0; i < 32; i++) {
           const a = (i * Math.PI) / 16
           if (
@@ -447,12 +494,13 @@ test('SR-06: every generated swim frame covers its collision circle and has real
         textures.get('boat_' + b + '_0')!.toDataURL(),
       ),
     ).size
-    const animated = ['polar_bear', 'leopard_seal', 'boat_arctic'].every(
+    const animated = ['polar_bear', 'leopard_seal', 'boat_arctic', 'weddell-pup'].every(
       (k) => textures.get(k + '_0')!.toDataURL() !== textures.get(k + '_1')!.toDataURL(),
     )
     const reduced =
       hazardFrame('boat_propeller', 'arctic', 1000, true) === 'boat_arctic_0' &&
-      hazardFrame('polar_bear', 'arctic', 1000, true) === 'polar_bear_0'
+      hazardFrame('polar_bear', 'arctic', 1000, true) === 'polar_bear_0' &&
+      hazardFrame('seal', 'antarctic', 1000, true) === 'weddell-pup_0'
     return { missing, distinct, animated, reduced }
   })
   expect(report).toEqual({ missing: [], distinct: 5, animated: true, reduced: true })

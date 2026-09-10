@@ -70,7 +70,7 @@ export const BIOMES = Object.freeze({
   },
   antarctic: {
     name: { en: 'Antarctic blue', ru: 'Синяя Антарктида' },
-    species: { en: 'Weddell seal', ru: 'Тюлень Уэдделла' },
+    species: { en: 'Weddell seal pup', ru: 'Малыш Уэдделла' },
     scientific: 'Leptonychotes weddellii',
     accent: '#c7d3ff',
     surface: '#637da8',

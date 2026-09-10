@@ -2,7 +2,8 @@
 
 Reviewed visually and against live species sources on **2026-09-10**. The four photographs below
 were opened at full size in the browser. They inform the original canvas drawing; none is copied
-into the game's assets. Atlantis uses the same harbour seal, in an explicitly fictional setting.
+into the game's assets. Atlantis uses a generated grey juvenile in an explicitly fictional setting;
+Antarctica uses a generated Weddell pup. Their additional references are recorded below.
 Search results that mixed grey/harbour seals or Baikal/ringed seals were not used for species claims.
 
 | Species | Photograph inspected | Visual observations used | Species check |
@@ -57,3 +58,21 @@ four-frame illustrations. Sprites are not specimen photographs or measured gait 
 The legacy mechanical IDs shark_white/shark_big express hazard tiers; core/fauna.js maps
 them to the actual illustrated species per region. No generic sharks spawn in polar chapters.
 Game contact rules, scale, repeated encounters and swim-cycle exaggeration are design choices.
+
+## Weddell pup and hindfoot stroke — checked 2026-09-10
+
+The owner's new photographs inform the rounded juvenile head, neck folds, soft grey/cream
+coat and plump torso. The close-up pair of feet is used for general phocid anatomy only;
+its species identity is not independently established. Photographs carrying attribution
+or watermarks are visual references only and are not incorporated into game assets.
+
+- [Australian Antarctic Program: Weddell seal](https://www.antarctica.gov.au/about-antarctica/animals/seals/weddell-seal/): Antarctic distribution and mottled grey/black back with pale underside; pups begin learning to swim at about one week. Confidence: high for these limited facts.
+- [Fish (1992), Aquatic Locomotion, pp. 37–38](https://www.wcupa.edu/sciences-mathematics/biology/fFish/documents/1992Aquatic%20locomotion.pdf): phocids undulate the posterior body laterally, moving the paired hindflippers in the horizontal plane. Confidence: high for lateral propulsion, not a dorsoventral dolphin-like stroke.
+
+In the illustrated side/three-quarter projection, the webbed paddle surfaces are upright
+near/far planes; their apparent width and overlap change through the stroke. They are
+separate feet with a short central tail, not upper/lower lobes of one fish tail.
+Angles and toe spreading need not remain fixed throughout real swimming. Confidence: medium
+for translating those moving 3D structures into a compact four-frame 2D animation.
+The three procedural player models use the same distinction in their eight-frame cycles.
+The Weddell-pup atlas is newly generated with built-in image_gen; no photo is shipped.

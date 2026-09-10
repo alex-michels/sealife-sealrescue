@@ -131,3 +131,28 @@ There is no alternate lower-resolution mobile download. Only the selected chapte
 art is decoded for Play (deduplicated 8-second requests); failures return a retryable error.
 GPU textures are released on chapter shutdown; decoded sprite files form a finite cache.
 AI provenance remains visible in the RU/EN menu.
+
+## Weddell pup and corrected atlas extraction (v5)
+
+The Antarctic player and cover now use four new 400×280 true-alpha WebPs of a Weddell
+seal pup (80,016 bytes), generated with built-in image_gen from the owner's visual
+references. Rounded head, neck folds, grey/cream coat, two webbed hind feet and a short
+central tail distinguish it from the adult leopard-seal hazards. Upright near/far paddles
+change their projected breadth during the illustrated lateral stroke. The three procedural
+player models use corresponding eight-frame paddle geometry; Atlantis retains its grey juvenile.
+
+Two frames each of the v4 northern orca and Galapagos shark accidentally included a small
+part of the left neighbour's tail during atlas slicing. Their v5 exports inset the right
+column by 12 (orca) or 22 (shark) source pixels before compositing, without painting, masking, shifting or
+cropping the intended animal. Frames 0 and 2 are byte-identical copies; frames 1 and 3
+are re-extracted from the original generated RGBA atlases. The four other predator atlases
+passed the same complete-alpha scan. The browser regression now detects detached opaque
+fragments larger than two pixels, beyond checking only transparent corners.
+
+All 12 v5 files total 178,954 bytes. Exact prompts, source filenames, frame
+registration, extraction insets and export filenames: [prompts-v5.json](prompts-v5.json).
+The Weddell atlas uses the same 2×2 / 800×560 registration and 400×280 WebP quality 88,
+alpha quality 100 pipeline as v4. Mobile downloads the same files and scales them
+proportionally; no separate resolution variant. Menu loads are guarded against stale
+course selection, critical Play loads remain retryable, reduced motion fixes frame zero,
+and the versioned offline cache uses the new files.

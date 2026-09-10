@@ -1,4 +1,4 @@
-import { loadGreyHero } from './hazards.js'
+import { loadGeneratedHero } from './hazards.js'
 const heroPreviews = new WeakMap()
 // SR-06/SR-19. Original articulated Canvas animals over generated environment plates.
 import { BIOMES } from '../core/biomes.js'
@@ -34,29 +34,24 @@ export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
   fin.addColorStop(0, '#607b85')
   fin.addColorStop(0.5, '#91a7a9')
   fin.addColorStop(1, '#455e6a')
-  // The broad lobes are curved, webbed feet (as in Seal Hunter), not angular fins.
+  // Near/far webbed feet occupy parallel upright planes. A lateral stroke
+  // changes their projected breadth; it does not kick two tail lobes up/down.
   function hind(near) {
     c.save()
     c.translate(35, 51)
-    c.rotate(beat * (near ? 0.13 : -0.08))
+    const depth = near ? 18 : -18
+    const root = near ? 6 : -6
+    c.scale(1 + beat * (near ? 0.13 : -0.13), 1)
     c.fillStyle = fin
     c.beginPath()
-    c.moveTo(5, near ? 4 : -2)
-    if (near) {
-      c.bezierCurveTo(-8, 7, -20, 15, -29, 22)
-      c.quadraticCurveTo(-32, 27, -25, 28)
-      c.quadraticCurveTo(-27, 32, -19, 31)
-      c.quadraticCurveTo(-20, 35, -13, 32)
-      c.quadraticCurveTo(-12, 36, -6, 30)
-      c.bezierCurveTo(2, 25, 9, 15, 9, 9)
-    } else {
-      c.bezierCurveTo(-6, -6, -21, -27, -29, -25)
-      c.quadraticCurveTo(-33, -24, -28, -20)
-      c.quadraticCurveTo(-34, -20, -30, -15)
-      c.quadraticCurveTo(-34, -14, -28, -10)
-      c.quadraticCurveTo(-31, -8, -22, -5)
-      c.bezierCurveTo(-15, -1, -5, 5, 5, 5)
-    }
+    c.moveTo(5, root - 2)
+    c.bezierCurveTo(-5, root - 3, -15, depth - 14, -24, depth - 14)
+    c.quadraticCurveTo(-28, depth - 14, -26, depth - 10)
+    c.quadraticCurveTo(-31, depth - 11, -28, depth - 5)
+    c.quadraticCurveTo(-33, depth - 6, -29, depth + 1)
+    c.quadraticCurveTo(-33, depth + 3, -28, depth + 8)
+    c.quadraticCurveTo(-29, depth + 14, -23, depth + 14)
+    c.bezierCurveTo(-14, depth + 13, -5, root + 3, 5, root + 2)
     c.closePath()
     c.fill()
     c.strokeStyle = 'rgba(18,43,55,.6)'
@@ -64,8 +59,8 @@ export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
     c.stroke()
     for (let i = 0; i < 4; i++) {
       c.beginPath()
-      c.moveTo(1, near ? 9 : 0)
-      c.quadraticCurveTo(-8, near ? 18 : -4, -25 + i * 5, near ? 26 + i : -20 + i * 4)
+      c.moveTo(0, root)
+      c.quadraticCurveTo(-11, depth, -25, depth - 10 + i * 6)
       c.stroke()
     }
     c.restore()
@@ -232,14 +227,21 @@ export function paintHero(canvas, biome) {
   c.clearRect(0, 0, canvas.width, canvas.height)
   const token = {}
   heroPreviews.set(canvas, token)
-  if (biome === 'atlantis') {
-    loadGreyHero().then(img => {
-      if (heroPreviews.get(canvas) !== token) return
-      c.clearRect(0, 0, canvas.width, canvas.height)
-      const scale = Math.min(994 / img.width, 530 / img.height)
-      c.drawImage(img, (1080 - img.width * scale) / 2, (576 - img.height * scale) / 2,
-        img.width * scale, img.height * scale)
-    }).catch(() => {}) // Play exposes the recoverable asset error.
+  if (biome === 'atlantis' || biome === 'antarctic') {
+    loadGeneratedHero(biome)
+      .then((img) => {
+        if (!img || heroPreviews.get(canvas) !== token) return
+        c.clearRect(0, 0, canvas.width, canvas.height)
+        const scale = Math.min(994 / img.width, 530 / img.height)
+        c.drawImage(
+          img,
+          (1080 - img.width * scale) / 2,
+          (576 - img.height * scale) / 2,
+          img.width * scale,
+          img.height * scale,
+        )
+      })
+      .catch(() => {}) // Play exposes the recoverable asset error.
   }
   // 4% transparent margin contains every whisker/toe on narrow screens.
   c.save()

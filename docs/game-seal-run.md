@@ -22,19 +22,19 @@ coastal prototype is now a five-chapter expedition (SR-07…SR-20).
 
 The visual concept and verified biological references are in
 [game-seal-run-expedition.md](game-seal-run-expedition.md). Kelp coast uses a harbour seal; fantasy Atlantis a generated chonky young grey seal; Hawaii uses a Hawaiian monk seal; the Arctic a ringed seal; Antarctica
-a Weddell seal. These are separate local encounters. Atlantis is explicitly fictional.
+a generated Weddell seal pup. These are separate local encounters. Atlantis is explicitly fictional.
 Energy is an arcade resource; fish do not supply breathing air.
 
 ## Art and rendering
 
-Four player species use articulated Canvas2D-generated Phaser textures; Atlantis uses a four-frame generated grey-seal atlas. Regional predators use generated swim cycles. Five generated 3:1 panoramas
+Three player species use articulated Canvas2D-generated Phaser textures; Atlantis and Antarctica use four-frame generated grey-seal and Weddell-pup atlases. Regional predators use generated swim cycles. Five generated 3:1 panoramas
 and six transparent scenery cutouts supply the moving game environment; the original five
 plates and thumbnails serve the menu/fallback. All 21 WebP files total 1,549,098 bytes.
 Missing or slow scenery retains a procedural fallback. Missing collidable-animal or motor art stops loading with a retryable error.
 Asset prompts, provenance and extension guidance: [art manifest](../public/games/seal-run-v1/assets/README.md).
 `render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
 biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hindflippers,
-a separate short tail, short foreflippers with claws, small ear openings and no external pinnae distinguish seals from sea lions.
+a separate short tail, upright near/far webbed feet whose projected breadth changes with the lateral stroke, short foreflippers with claws, small ear openings and no external pinnae distinguish seals from sea lions.
 `render/art.js` supplies common fish/debris and legacy texture helpers. `render/hazards.js` supplies the live generated regional fauna and full-length submerged hulls; `core/fauna.js` maps species and registered body origins.
 
 All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
@@ -43,7 +43,7 @@ not run a second physics engine. Sprites are pooled and simulation positions are
 The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad corruption;
 flipper frames provide its swimming motion (see the SR review for the upstream report).
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
-Pixel regressions check player and predator collision circles inside the visible bodies.
+Pixel regressions check player and predator collision circles inside the visible bodies, and scan complete regional predator alpha planes for stray neighbouring-frame fragments.
 The shortened tail blends into the rump without a closed root outline; the near eye moves
 forward and a partially visible far eye gives the muzzle a slight three-quarter view.
 [Photographic references for all five playable species](seal-run-anatomy-references.md) record the visual review.
