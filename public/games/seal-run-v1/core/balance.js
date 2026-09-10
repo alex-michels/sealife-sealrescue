@@ -29,7 +29,7 @@ export {
   bandY,
 } from './course.js';
 
-import { RAMP_DISTANCE_LU } from './course.js';
+import { RAMP_DISTANCE_LU, FISH_PICKUP_R } from './course.js';
 
 // — Шаг симуляции (спека §1.3): фиксированный, рендер-слой держит accumulator. НЕ тюнинг.
 export const SIM_DT = 1 / 120; // c
@@ -65,7 +65,7 @@ export const BAL = {
   FISH_SPEED_BUFF_MULT: 1.15,
   FISH_SPEED_BUFF_MS: 1500,
   BUFF_STACK_MAX_MS: 6000, // баффы складываются длительностью, с потолком
-  FISH_PICKUP_R: 12, // lu (эффективный радиус подбора = SEAL_R + это)
+  FISH_PICKUP_R, // lu (эффективный радиус подбора = SEAL_R + это)
   BURST_MULT: 1.35,
   BURST_MS: 800,
   BURST_COST: 18,

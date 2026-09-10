@@ -1,11 +1,21 @@
 // SR-11: only this game's immutable assets. Never cache APIs, cookies or scores.
-const VERSION = 'seal-run-expedition-1'
+const VERSION = 'seal-run-expedition-art-2'
 const ROOT = new URL('./', self.location.href).pathname
 const FILES = [
-  '',
   'index.html',
+  'assets/coastal-v1.webp',
+  'assets/coastal-v1-thumb.webp',
+  'assets/atlantis-v1.webp',
+  'assets/atlantis-v1-thumb.webp',
+  'assets/tropical-v1.webp',
+  'assets/tropical-v1-thumb.webp',
+  'assets/arctic-v1.webp',
+  'assets/arctic-v1-thumb.webp',
+  'assets/antarctic-v1.webp',
+  'assets/antarctic-v1-thumb.webp',
   'style.css',
   'game.js',
+  'boot.js',
   'i18n.js',
   'audio.js',
   'core/alias.js',

@@ -1,6 +1,6 @@
 # Seal Run — ocean expeditions
 
-Seal Run is a browser-only Phaser 4.2.0 runner at `/games/seal-run-v1/`, embedded by
+Seal Run is a browser-only Phaser 4.2.0 runner at `/games/seal-run-v1/index.html` (the directory entry redirects here), embedded by
 `/[locale]/games/seal-run`. RU and EN are the only game languages. The original
 coastal prototype is now a five-chapter expedition (SR-07…SR-20).
 
@@ -28,16 +28,21 @@ Energy is an arcade resource; fish do not supply breathing air.
 
 ## Art and rendering
 
-Original Canvas2D artwork produces Phaser textures at runtime, with no external asset requests.
+Original Canvas2D animals produce Phaser textures at runtime. Five separately generated,
+local WebP environment plates supply realistic backgrounds; failed artwork loads retain the
+procedural fallback. The ten delivery images (including thumbnails) total 681,228 bytes.
+Asset prompts, provenance and extension guidance: [art manifest](../public/games/seal-run-v1/assets/README.md).
 `render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
 biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hindflippers,
-short foreflippers, small ear openings and no external pinnae distinguish seals from sea lions.
+a separate short tail, short foreflippers with claws, small ear openings and no external pinnae distinguish seals from sea lions.
 `render/art.js` supplies the common fish, orca, shark and debris textures.
 
 All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
 The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
 not run a second physics engine. Sprites are pooled and simulation positions are interpolated.
-Two background layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
+The cover seal is a separate contained canvas, with its caption in a content-sized grid.
+Pixel regressions check player and predator collision circles inside the visible bodies.
+Two background particle layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
 rotation/frame animation. Invulnerability uses steady transparency instead of flashing.
 

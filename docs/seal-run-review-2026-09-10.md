@@ -1,0 +1,55 @@
+# Seal Run — SR review, 2026-09-10
+
+Review of PR #126, including failed CI run
+[34425436107](https://github.com/alex-michels/sealife-sealrescue/actions/runs/34425436107).
+The unit/integration/coverage job succeeded; the browser job reported **151 passed, 6 failed**.
+This review concerns repository implementation. Production rollout is separate.
+
+## Findings and corrections
+
+| Priority | Finding | Correction / evidence |
+| --- | --- | --- |
+| P1 | The new suite opened the public directory URL. Next's locale proxy redirected it to a localized 404, so six tests never saw the game. | Canonical test entry is `index.html`; exact directory entry redirects there preserving query. A production browser regression exercises that redirect. SW no longer pre-caches the ambiguous directory URL. |
+| P1 | A legitimate catch near the front of the seal could fail the server budget after distance was floored to integer metres. | Shared reach slack is seal radius + fish radius + one metre (24 + 12 + 40 = 76 lu). Regression validates actual simulated pickups on early partial runs. |
+| P2 | A cover-fit canvas cropped the seal on narrow/tall windows. Location caption used absolute percentage positioning and overlapped route cards. | Separate contained character and content-sized menu grid. RU layout checks cover 1440×900, 1238×1267, 900×1200, 390×844, 320×740 and 844×390. |
+| P2 | Phocid tail was absent; hindflippers were angular polygons. | Separate short tail between two curved webbed hindflippers, five foreflipper claws, finer coat/fur and muzzle detail; shared cover/game drawing. Tail separation and torso pixels are tested. |
+| P2 | Declared predator body sizes did not guarantee that the rasterized contour contained its collision circle. | Revised visible contours/dimensions, with pixel checks for all six predator variants. Physics and course difficulty remain unchanged. |
+| P2 | Weekly start errors persisted after switching to Explore; practice engine errors incorrectly blamed the weekly API. | Clear the error on mode change; separate localized asset-load error. Both paths have browser regressions. |
+| P2 | Flat environment art did not meet the requested realistic presentation. | Five separately generated WebP environment plates, small thumbnails, procedural fallback and explicit AI provenance. Prompts and extension contract live beside assets. |
+| P2 | A returning player could mix a fresh HTML menu with old cache-first modules during an asset upgrade. | A new bootstrap refreshes an existing worker before importing the controller; fresh visitors still install only after Play. Cache version and complete asset list advance together. |
+
+The revised loader also keeps controls inert until handlers and standalone configuration are ready;
+a loading/retry state covers module failures. HUD and touch controls bound the playable canvas,
+so no route geometry disappears under interface chrome.
+
+## Task-by-task assessment
+
+| Tasks | Repository status and evidence |
+| --- | --- |
+| SR-01 | Current design/spec defines five chapters, energy, input, scoring and browser/server boundary. |
+| SR-02 | Shared deterministic generator, seeded chapter course and hash; Node/browser parity tests. |
+| SR-03 | Pure 120 Hz simulation; collision, energy, burst, scoring, timeout and frozen finish tests. |
+| SR-04 | Headless linter and cadence bots; reproducible reports, not a claim of human playtest certification. |
+| SR-05 | Lazy Phaser renderer with pooled sprites and fixed logical field. |
+| SR-06 | Revised articulated seal, separate tail, six predator silhouette checks, generated plates and documented provenance. |
+| SR-07 | Responsive menu/HUD, keyboard/touch, modal focus, explicit resume and reduced motion; corrected reported layouts. |
+| SR-08 | Seed/embed and RU/EN game instructions present. Existing database content still follows the normal operator seed/update process. |
+| SR-09 | Optional score fields, generated types and reviewed additive migration. The migration is prepared, not applied to a live database. |
+| SR-10 | Signed per-game token, season/identity pinning, reconstructed per-chapter budgets and derived score; partial-distance regression added. This is plausibility checking, not replay verification. |
+| SR-11 | RU/EN, explicit UI preferences only, server-owned weekly best, recoverable errors and offline practice. |
+| SR-12 | **Partial:** repository route/embed/vanity redirect code exists. DNS, TLS, enabling public services and verifying live 301 remain operator rollout work. |
+| SR-13 | Privacy describes preferences, functional cookie, server score and static cache. German legal text retained. |
+| SR-14 | Expanded browser suite covers the reported failures; replacement production CI must pass before release readiness is claimed. |
+| SR-15 | Opt-in synthesized SFX, default mute, gesture-bound AudioContext. |
+| SR-16 | Frozen finish and five result/next transitions. Short browser fixture checks UI flow; full-length runs are exercised in simulation. |
+| SR-17 | Render-only fish bob, disabled with reduced motion. |
+| SR-18 | Rising difficulty floor, recovery sections, 100 templates/260 linted routes; 780 chapter runs. Arctic remains intentionally forgiving. |
+| SR-19 | Five local-species chapters with distinct plates/palettes/hazards. Layout registries adapt shared proven patterns; they are not 100 unrelated handcrafted levels. |
+| SR-20 | Five fresh-resource chapters, increasing speed, bank/continue and server-derived aggregate results. |
+
+## Release boundaries
+
+No public service, DNS or database migration was activated by this review.
+Existing deployment prerequisites remain in [DEPLOYMENT.md](DEPLOYMENT.md).
+The interface has keyboard/focus/motion/size checks; no claim of complete nonvisual gameplay
+or a full WCAG certification is made. Background plates are illustrative, not biological evidence.

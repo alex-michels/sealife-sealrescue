@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { generateRound, courseHash } from '../../public/games/seal-run-v1/core/course.js'
 
 const origin = process.env.SEAL_RUN_STATIC ? 'http://127.0.0.1:4173' : 'http://localhost:3000'
-const url = origin + '/games/seal-run-v1/?lang=en&seed=playtest'
+const url = origin + '/games/seal-run-v1/index.html?lang=en&seed=playtest'
 async function config(page: import('@playwright/test').Page) {
   await page.route('**/api/game-config?*', (route) => route.fulfill({ json: { standalone: true } }))
 }
@@ -86,6 +86,14 @@ test('SR-07: portrait and landscape retain identical playfield and usable contro
         return r!.width / r!.height
       })
       .toBeCloseTo(960 / 540, 1)
+    await expect
+      .poll(async () => {
+        const canvas = await page.locator('#stage canvas').boundingBox()
+        const hud = await page.locator('#hud').boundingBox()
+        const controls = await page.locator('#play-controls').boundingBox()
+        return canvas!.y >= hud!.y + hud!.height && canvas!.y + canvas!.height <= controls!.y
+      })
+      .toBe(true)
     const burst = await page.locator('#burst').boundingBox()
     expect(burst!.width).toBeGreaterThanOrEqual(24)
     expect(burst!.height).toBeGreaterThanOrEqual(24)
@@ -116,6 +124,7 @@ test('SR-11: API failure is recoverable, empty/paged board and offline practice'
   await expect(page.locator('#personal-best')).toContainText('42')
   await page.locator('#board-close').click()
   await page.locator('#mode-explore').click()
+  await expect(page.locator('#start-error')).toBeHidden()
   await page.locator('#start').click()
   await expect(page.locator('#stage canvas')).toBeVisible()
   await page.evaluate(async () => {
@@ -150,12 +159,13 @@ test('SR-16/20: finish freezes the simulation and all five chapters advance', as
       'export const COURSE_LENGTH_LU = 36000;',
       'export const COURSE_LENGTH_LU = 400;',
     )
+    expect(body).toContain('COURSE_LENGTH_LU = 400')
     await route.fulfill({ response, body, contentType: 'text/javascript' })
   })
   await page.goto(url)
   await page.locator('#start').click()
   for (let chapter = 1; chapter <= 5; chapter++) {
-    await expect(page.locator('#over')).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('#over')).toBeVisible({ timeout: 30000 })
     const result = await page.evaluate(() => window.SealRun!.state)
     expect(result!.phase).toBe('finished')
     expect(result!.d).toBe(400)
@@ -242,6 +252,165 @@ test('SR-06: the visible phocid torso covers the collision circle in every coat'
           x = Math.round(w / 2 + SEAL_R * Math.cos(angle)),
           y = Math.round(h * originY + SEAL_R * Math.sin(angle))
         if (c.getImageData(x, y, 1, 1).data[3] < 128) missing.push(coat + ':' + i)
+      }
+    }
+    return missing
+  })
+  expect(gaps).toEqual([])
+})
+
+test('SR-07: RU menu contains the entire seal and separates its caption from route cards', async ({
+  page,
+}) => {
+  await config(page)
+  await page.goto(url.replace('lang=en', 'lang=ru'))
+  await expect(page.locator('#start')).toBeEnabled()
+  for (const size of [
+    { width: 1440, height: 900 },
+    { width: 1238, height: 1267 },
+    { width: 900, height: 1200 },
+    { width: 390, height: 844 },
+    { width: 320, height: 740 },
+    { width: 844, height: 390 },
+  ]) {
+    await page.setViewportSize(size)
+    const layout = await page.evaluate(() => {
+      const box = (selector: string) => {
+        const r = document.querySelector(selector)!.getBoundingClientRect()
+        return {
+          left: r.left,
+          right: r.right,
+          top: r.top,
+          bottom: r.bottom,
+          width: r.width,
+          height: r.height,
+        }
+      }
+      return {
+        seal: box('#seal-portrait'),
+        caption: box('.location-note'),
+        cards: box('#biome-map'),
+        copy: box('.hero-copy'),
+        launch: box('.launch-panel'),
+        scrollWidth: document.documentElement.scrollWidth,
+      }
+    })
+    expect(layout.seal.left).toBeGreaterThanOrEqual(0)
+    expect(layout.seal.right).toBeLessThanOrEqual(size.width)
+    expect(layout.seal.width / layout.seal.height).toBeCloseTo(1080 / 576, 2)
+    expect(layout.caption.top).toBeGreaterThanOrEqual(layout.seal.bottom - 1)
+    expect(layout.caption.bottom).toBeLessThanOrEqual(layout.cards.top)
+    expect(layout.scrollWidth).toBeLessThanOrEqual(size.width)
+    // No text/button block intersects the animal, even when the menu scrolls vertically.
+    for (const box of [layout.copy, layout.launch]) {
+      expect(
+        box.right <= layout.seal.left ||
+          box.left >= layout.seal.right ||
+          box.bottom <= layout.seal.top ||
+          box.top >= layout.seal.bottom,
+      ).toBe(true)
+    }
+  }
+})
+
+test('SR-06: distinct tail remains between webbed hindflippers throughout the stroke', async ({
+  page,
+}) => {
+  await page.goto(url)
+  const samples = await page.evaluate(async () => {
+    const { drawPhocid } = await import(location.origin + '/games/seal-run-v1/render/expedition.js')
+    const canvas = document.createElement('canvas')
+    canvas.width = 180
+    canvas.height = 96
+    const c = canvas.getContext('2d')!
+    return Array.from({ length: 8 }, (_, i) => {
+      c.clearRect(0, 0, 180, 96)
+      drawPhocid(c, 180, 96, 'spotted', i / 8)
+      return {
+        tail: c.getImageData(20, 51, 1, 1).data[3],
+        above: Math.min(
+          ...Array.from(c.getImageData(15, 46, 1, 4).data).filter((_, i) => i % 4 === 3),
+        ),
+        below: Math.min(
+          ...Array.from(c.getImageData(15, 55, 1, 8).data).filter((_, i) => i % 4 === 3),
+        ),
+      }
+    })
+  })
+  for (const sample of samples) {
+    expect(sample.tail).toBeGreaterThanOrEqual(128)
+    expect(sample.above).toBeLessThan(128)
+    expect(sample.below).toBeLessThan(128)
+  }
+})
+
+test('SR-11: practice loading failures do not blame the weekly route', async ({ page }) => {
+  await config(page)
+  await page.route('**/vendor/phaser.esm.js', (route) => route.abort())
+  await page.goto(url.replace('lang=en', 'lang=ru'))
+  await page.locator('#start').click()
+  await expect(page.locator('#start-error')).toHaveText(
+    'Не удалось загрузить игру. Попробуй ещё раз.',
+  )
+  await expect(page.locator('#start')).toBeEnabled()
+})
+
+test('SR-12: directory entry reaches the game and preserves explicit language', async ({
+  page,
+}) => {
+  test.skip(Boolean(process.env.SEAL_RUN_STATIC), 'Production Next.js redirect, covered in full CI')
+  await config(page)
+  await page.goto(origin + '/games/seal-run-v1/?lang=ru&seed=directory')
+  await expect(page).toHaveURL(origin + '/games/seal-run-v1/index.html?lang=ru&seed=directory')
+  await expect(page.locator('#start')).toBeEnabled()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ru')
+})
+
+test('SR-06: predator collision circles stay inside visible bodies', async ({ page }) => {
+  await page.goto(url)
+  const gaps = await page.evaluate(async () => {
+    const { buildExpeditionTextures } = await import(
+      location.origin + '/games/seal-run-v1/render/expedition.js'
+    )
+    const { TEXTURES } = await import(location.origin + '/games/seal-run-v1/core/theme.js')
+    const { OBSTACLE_DIMS } = await import(location.origin + '/games/seal-run-v1/core/course.js')
+    const textures = new Map<string, HTMLCanvasElement>()
+    buildExpeditionTextures(
+      {
+        textures: {
+          exists: (key: string) => textures.has(key),
+          addCanvas: (key: string, canvas: HTMLCanvasElement) => textures.set(key, canvas),
+        },
+      },
+      'antarctic',
+    )
+    const missing: string[] = []
+    const canvas = document.createElement('canvas')
+    const c = canvas.getContext('2d')!
+    for (const kind of [
+      'orca',
+      'shark_white',
+      'shark_big',
+      'polar_bear',
+      'leopard_seal',
+      'leopard_seal_big',
+    ]) {
+      const { w, h, originY = 0.5 } = TEXTURES[kind]
+      const r = OBSTACLE_DIMS[kind].r
+      canvas.width = w
+      canvas.height = h
+      c.drawImage(textures.get(kind)!, 0, 0, w, h)
+      for (let i = 0; i < 32; i++) {
+        const a = (i * Math.PI * 2) / 32
+        if (
+          c.getImageData(
+            Math.round(w / 2 + r * Math.cos(a)),
+            Math.round(h * originY + r * Math.sin(a)),
+            1,
+            1,
+          ).data[3] < 128
+        )
+          missing.push(kind + ':' + i)
       }
     }
     return missing

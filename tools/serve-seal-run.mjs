@@ -10,6 +10,9 @@ const types = {
   '.mjs': 'text/javascript',
   '.css': 'text/css',
   '.json': 'application/json',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.png': 'image/png',
   '.svg': 'image/svg+xml',
 }
 http

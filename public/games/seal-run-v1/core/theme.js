@@ -110,10 +110,13 @@ export const ENTITY = {
 // при хитбоксе 92) — тут исправлено; инвариант закреплён unit-тестом.
 // originY — где в текстуре лежит ЦЕНТР ТЕЛА (сим-координата): спинной плавник выше центра.
 export const TEXTURES = {
+  polar_bear: { key: "polar_bear", w: 142, h: 104, bodyH: 65, originY: 45 / 86 },
+  leopard_seal: { key: "leopard_seal", w: 205, h: 120, bodyH: 63, originY: .515 },
+  leopard_seal_big: { key: "leopard_seal_big", w: 287, h: 168, bodyH: 88, originY: .515 },
   seal: { frames: ['seal_0', 'seal_1'], w: 164, h: 96, bodyH: 50, originY: 0.515 },
-  orca: { key: 'orca', w: 170, h: 120, bodyH: 92, originY: 0.6 },
-  shark_white: { key: 'shark_white', w: 118, h: 78, bodyH: 60, originY: 0.615 },
-  shark_big: { key: 'shark_big', w: 150, h: 102, bodyH: 84, originY: 0.57 },
+  orca: { key: 'orca', w: 170, h: 136, bodyH: 100, originY: 0.6 },
+  shark_white: { key: 'shark_white', w: 156, h: 104, bodyH: 70, originY: 0.615 },
+  shark_big: { key: 'shark_big', w: 204, h: 144, bodyH: 98, originY: 0.57 },
   fish_small: { key: 'fish_small', w: 28, h: 18 },
   fish_rare: { key: 'fish_rare', w: 38, h: 26 },
   rock: { key: 'rock', w: 120, h: 120 }, // растягивается под габарит конкретного камня

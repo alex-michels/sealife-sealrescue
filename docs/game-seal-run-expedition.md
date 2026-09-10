@@ -4,7 +4,7 @@ Implementation design, 2026-09-10. This replaces the single-biome prototype dire
 
 ## Experience
 
-An illustrated ocean map leads to five 900 m chapters: kelp coast, Atlantis, tropical islands, Arctic and Antarctic. The weekly expedition fixes every chapter to a server-signed season and rules version. Finishing a chapter is a success moment: input stops, the seal swims out, then the player chooses whether to continue or bank the expedition. Each chapter begins with three lives and full energy; a small speed increase creates progression without carrying a depleted resource into an unfair opening. Total score is the sum of completed chapters and the final attempt, capped at 500,000. No scores or submissions are stored in localStorage.
+An ocean map with generated environment plates leads to five 900 m chapters: kelp coast, Atlantis, tropical islands, Arctic and Antarctic. The weekly expedition fixes every chapter to a server-signed season and rules version. Finishing a chapter is a success moment: input stops, the seal swims out, then the player chooses whether to continue or bank the expedition. Each chapter begins with three lives and full energy; a small speed increase creates progression without carrying a depleted resource into an unfair opening. Total score is the sum of completed chapters and the final attempt, capped at 500,000. No scores or submissions are stored in localStorage.
 
 Practice lets players choose any location and regenerate a route without a network connection. A relaxed pace option is available in practice. Practice never submits to the weekly board. Ranked mode displays network errors honestly and can fall back to practice only through an explicit choice. Pausing, tab visibility changes and focus loss stop simulation time and clear held input. Retry is immediate; result submission is an explicit action and shows pending/success/error states.
 
@@ -29,7 +29,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. Procedural vector-like textures are rendered into reusable canvases and pooled Phaser objects. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. Procedural animals and five local generated plates are rendered into reusable canvases and pooled Phaser objects. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
 
@@ -37,6 +37,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 
 Checked 2026-09-10, high confidence for the limited anatomy/range facts used here:
 
+- [NOAA pinniped anatomy lesson](https://www.fisheries.noaa.gov/s3/2024-09/nfs-mhs-l1-3-afsc.pdf): small tail, phocid foreflippers and hindflipper propulsion.
 - [NOAA — harbour seal](https://www.fisheries.noaa.gov/species/harbor-seal): short foreflippers, absent external ear flaps, coat and range.
 - [NOAA observer training manual](https://www.fisheries.noaa.gov/s3/2021-07/Southwest-Region-Observer-Program-Training-Manual.pdf): phocid hind-flipper propulsion.
 - [NOAA — Hawaiian monk seal](https://www.fisheries.noaa.gov/species/hawaiian-monk-seal): Hawaiian habitat and species appearance.

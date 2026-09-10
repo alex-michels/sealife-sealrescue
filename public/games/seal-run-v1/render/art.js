@@ -186,14 +186,14 @@ function drawOrca(ctx, w, h) {
   ctx.closePath();
   ctx.fill();
 
-  // Тело (bodyH=92 накрывает хитбокс r=46)
+  // Тело: контур с запасом вокруг r=46, проверяется растеризацией
   const body = new Path2D();
   body.moveTo(4, cy + 2);
-  body.quadraticCurveTo(20, cy - 44, 70, cy - 46);
-  body.quadraticCurveTo(120, cy - 46, 148, cy - 18);
+  body.quadraticCurveTo(20, cy - 50, 70, cy - 52);
+  body.quadraticCurveTo(120, cy - 52, 148, cy - 18);
   body.quadraticCurveTo(160, cy, 148, cy + 16);
-  body.quadraticCurveTo(118, cy + 46, 66, cy + 44);
-  body.quadraticCurveTo(20, cy + 40, 4, cy + 2);
+  body.quadraticCurveTo(118, cy + 58, 66, cy + 51);
+  body.quadraticCurveTo(20, cy + 49, 4, cy + 2);
   body.closePath();
   ctx.fill(body);
 
@@ -251,7 +251,7 @@ function drawOrca(ctx, w, h) {
 
 function drawShark(ctx, w, h, E, blunt) {
   const cy = h * (blunt ? 0.57 : 0.615);
-  const ry = blunt ? 42 : 30;
+  const ry = blunt ? 54 : 39;
 
   // Хвост-полумесяц справа (верхняя лопасть больше)
   ctx.fillStyle = E.back;

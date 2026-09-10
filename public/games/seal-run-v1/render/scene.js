@@ -5,12 +5,7 @@ import { TEXTURES, WATERLINE_Y } from '../core/theme.js'
 import { buildExpeditionTextures } from './expedition.js'
 import { fishBob } from './motion.js'
 const STEP_MS = SIM_DT * 1000
-const EXTRA = {
-  polar_bear: { w: 118, h: 86 },
-  leopard_seal: { w: 118, h: 78 },
-  leopard_seal_big: { w: 150, h: 102 },
-}
-const texSize = (kind) => TEXTURES[kind] || EXTRA[kind]
+const texSize = (kind) => TEXTURES[kind]
 function addScrollLayer(scene, key, factor, depth) {
   const w = 1200
   const a = scene.add.image(0, 0, key).setOrigin(0, 0).setDisplaySize(w, WORLD_H).setDepth(depth)

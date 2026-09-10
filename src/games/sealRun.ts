@@ -5,6 +5,7 @@ import {
   fishCountBudget,
   fishPointsBudget,
   LU_PER_M,
+  FISH_REACH_SLACK_LU,
 } from '../../public/games/seal-run-v1/core/course.js'
 import { BAL, computeScore } from '../../public/games/seal-run-v1/core/balance.js'
 import { MAX_ROUNDS, RULES_VERSION } from '../../public/games/seal-run-v1/core/biomes.js'
@@ -36,7 +37,7 @@ export function validateRun(rounds: RunRound[], season: string, score: number, d
     const fastest =
       BAL.SPEED_MAX * BAL.FISH_SPEED_BUFF_MULT * BAL.BURST_MULT * (course.speedMultiplier ?? 1)
     if (round.durationMs + 100 < (d / fastest) * 1000 || round.durationMs < 3000) return null
-    const reachable = course.fish.filter((f) => f.atLu <= d + 50)
+    const reachable = course.fish.filter((f) => f.atLu <= d + FISH_REACH_SLACK_LU)
     const rare = reachable.filter((f) => f.points === 4).length
     const small = reachable.length - rare
     const rareCaught = (round.fishPoints - round.fishCollected) / 3

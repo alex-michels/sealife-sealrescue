@@ -10,7 +10,7 @@ import {
 import { createSim, getResult } from './core/sim.js'
 import { FIELD_W, WORLD_H, BAL } from './core/balance.js'
 import { createPlayScene } from './render/scene.js'
-import { paintPreview } from './render/expedition.js'
+import { paintPreview, paintHero, loadOcean } from './render/expedition.js'
 import { renderName } from './core/alias.js'
 import { t, lang, setLanguage, preference, savePreference } from './i18n.js'
 import { OceanAudio } from './audio.js'
@@ -75,6 +75,7 @@ function drawMenu() {
   $('regenerate').hidden = mode === 'weekly'
   $('pace-label').hidden = mode === 'weekly'
   paintPreview($('ocean-preview'), selected, true)
+  paintHero($('seal-portrait'), selected)
   $('biome-map').replaceChildren(
     ...BIOME_IDS.map((id, i) => {
       const button = document.createElement('button')
@@ -133,6 +134,7 @@ function setView(next, focus) {
   $('portrait-tip').hidden = !playing
   $('ocean-preview').hidden = next !== 'menu'
   $('stage').hidden = next === 'menu'
+  if (playing) requestAnimationFrame(fitPlayArea)
   const modal = ['pause', 'result', 'board'].includes(next)
   document.querySelector('.topbar').inert = modal
   document.querySelector('.bar').inert = modal
@@ -140,6 +142,18 @@ function setView(next, focus) {
   if (next !== 'play') $('toast').hidden = true
   if (focus) $(focus).focus({ preventScroll: true })
 }
+
+function fitPlayArea() {
+  if (view !== 'play') return
+  const wrap = $('stage-wrap').getBoundingClientRect()
+  const hud = $('hud').getBoundingClientRect()
+  const controls = $('play-controls').getBoundingClientRect()
+  $('stage').style.top = Math.max(0, hud.bottom - wrap.top + 10) + 'px'
+  $('stage').style.bottom = Math.max(0, wrap.bottom - controls.top + 10) + 'px'
+}
+const playLayout = new ResizeObserver(() => requestAnimationFrame(fitPlayArea))
+for (const id of ['stage-wrap', 'hud', 'play-controls']) playLayout.observe($(id))
+
 function pause() {
   if (view === 'play' && state?.phase === 'running') {
     setView('pause', 'resume')
@@ -204,6 +218,7 @@ async function start() {
   $('start').disabled = true
   $('start-error').hidden = true
   $('start').querySelector('[data-i18n]').textContent = t('loading')
+  ticket = null
   try {
     // Audio activation must happen in the user's gesture, before awaiting the network.
     if (soundWanted) await audio.setEnabled(true)
@@ -216,7 +231,7 @@ async function start() {
     await beginRound()
   } catch {
     setView('menu', 'start')
-    $('start-error').textContent = t('startError')
+    $('start-error').textContent = t(mode === 'weekly' && !ticket ? 'startError' : 'loadError')
     $('start-error').hidden = false
   } finally {
     busy = false
@@ -236,6 +251,7 @@ async function beginRound() {
           ...generateCourse(seed + ':' + chapter, biome),
           speedMultiplier: roundSpeed(chapter) * ($('gentle').checked ? 0.8 : 1),
         }
+  await loadOcean(biome)
   state = createSim(course)
   announcedLow = false
   const Phaser = (await import('./vendor/phaser.esm.js')).default
@@ -437,10 +453,12 @@ $('brand').addEventListener('click', (e) => {
 })
 $('mode-explore').addEventListener('click', () => {
   mode = 'explore'
+  $('start-error').hidden = true
   drawMenu()
 })
 $('mode-weekly').addEventListener('click', () => {
   mode = 'weekly'
+  $('start-error').hidden = true
   selected = 'coastal'
   drawMenu()
 })
@@ -641,6 +659,12 @@ window.SealRun = {
 drawMenu()
 setView('menu')
 
+function readyInterface() {
+  $('app').inert = false
+  $('app').removeAttribute('aria-busy')
+  $('boot-status')?.remove()
+  $('start').disabled = false
+}
 const standalone = (() => {
   try {
     return self === top
@@ -663,6 +687,6 @@ if (standalone) {
     .catch(() => {})
     .finally(() => {
       document.body.classList.remove('cfg-pending')
-      $('start').disabled = false
+      readyInterface()
     })
-}
+} else readyInterface()

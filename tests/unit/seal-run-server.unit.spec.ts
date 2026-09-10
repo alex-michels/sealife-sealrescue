@@ -126,3 +126,42 @@ describe('SR-17/18/19: all biomes retain route and visual-motion invariants', ()
     expect(fish.y).toBe(270)
   })
 })
+
+it('SR-10: accepts honest early-bank snapshots when metre rounding hides a just-caught fish', async () => {
+  type State = { tMs: number; phase: string; fishCollected: number }
+  const sim = (await import(
+    new URL('../../public/games/seal-run-v1/core/sim.js', import.meta.url).href
+  )) as {
+    createSim: (course: unknown) => State
+    step: (state: State) => void
+    applyInput: (state: State, ctrl: { targetY: number }) => void
+    getResult: (state: State) => RunRound & { score: number }
+  }
+  const { decide } = (await import(
+    new URL('../../public/games/seal-run-v1/tools/bot-lib.mjs', import.meta.url).href
+  )) as { decide: (state: unknown) => number }
+  let checked = 0
+  for (const season of ['2026-W01', '2026-W02', '2026-W03']) {
+    const state = sim.createSim(generateRound(season, 0))
+    let lastFish = 0,
+      nextInput = 0,
+      target = 270
+    while (state.phase === 'running' && state.tMs < 15000) {
+      if (state.tMs >= nextInput) {
+        target = decide(state)
+        nextInput = state.tMs + 160
+      }
+      sim.applyInput(state, { targetY: target })
+      sim.step(state)
+      if (state.tMs >= 3000 && state.fishCollected !== lastFish) {
+        const result = sim.getResult(state)
+        expect(
+          validateRun([fields(result)], season, result.score, result.durationMs),
+        ).not.toBeNull()
+        checked++
+      }
+      lastFish = state.fishCollected
+    }
+  }
+  expect(checked).toBeGreaterThan(10)
+})

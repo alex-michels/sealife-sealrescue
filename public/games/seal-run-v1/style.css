@@ -1185,3 +1185,196 @@ kbd {
     margin-bottom: 12px;
   }
 }
+
+/* SR-07: content-sized grid. Water may crop; the animal and its caption never do. */
+.menu {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.9fr) minmax(0, 1.1fr);
+  grid-template-areas: 'copy portrait' 'launch portrait' 'map map' 'route route';
+  grid-template-rows: repeat(4, max-content);
+  align-content: center;
+  gap: 0 28px;
+  padding: 110px 4.5vw 32px;
+  background: linear-gradient(
+    90deg,
+    rgba(6, 24, 39, 0.92),
+    rgba(6, 24, 39, 0.66) 35%,
+    rgba(6, 24, 39, 0.1) 75%
+  );
+}
+.intro-panel {
+  display: contents;
+}
+.hero-copy {
+  grid-area: copy;
+  min-width: 0;
+}
+.launch-panel {
+  grid-area: launch;
+  min-width: 0;
+}
+.expedition-portrait {
+  grid-area: portrait;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  gap: 12px;
+}
+#seal-portrait {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 15 / 8;
+  max-width: 660px;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 18px 25px var(--shadow));
+}
+.location-note {
+  position: static;
+  display: flex;
+  margin: 0;
+  max-width: 100%;
+  padding: 0 16px;
+  gap: 16px;
+}
+.location-note h2 {
+  overflow-wrap: anywhere;
+}
+.location-note p {
+  max-width: none;
+}
+.biome-map {
+  grid-area: map;
+  min-width: 0;
+  margin-top: 30px;
+}
+.route-note {
+  grid-area: route;
+  display: flex;
+}
+.biome-card span {
+  right: 10px;
+}
+@media (min-width: 761px) and (max-height: 800px) {
+  .menu {
+    align-content: start;
+    padding-top: 100px;
+  }
+}
+@media (max-width: 760px) {
+  .menu {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'copy' 'portrait' 'launch' 'map' 'route';
+    grid-template-rows: repeat(5, max-content);
+    align-content: start;
+    gap: 16px;
+    padding: 95px 23px 30px;
+    background: linear-gradient(
+      180deg,
+      rgba(6, 24, 39, 0.68),
+      rgba(6, 24, 39, 0.34) 30%,
+      rgba(6, 24, 39, 0.87) 65%
+    );
+  }
+  .hero-copy h1 {
+    font-size: clamp(34px, 8.3vw, 52px);
+    margin-bottom: 12px;
+  }
+  .hero-copy .intro {
+    margin: 0;
+    max-width: 390px;
+  }
+  .hero-copy .eyebrow {
+    margin-bottom: 10px;
+  }
+  #seal-portrait {
+    width: min(100%, 340px);
+  }
+  .expedition-portrait {
+    gap: 0;
+  }
+  .location-note {
+    padding: 0;
+    gap: 10px;
+    align-self: start;
+  }
+  .location-note > span {
+    font-size: 36px;
+  }
+  .location-note h2 {
+    font-size: 17px;
+  }
+  .biome-map {
+    margin: 0;
+  }
+  .route-note {
+    margin: 0;
+  }
+  .mode-hint {
+    min-height: 0;
+  }
+}
+@media (max-height: 540px) and (orientation: landscape) {
+  .menu {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: 'copy portrait' 'launch portrait' 'map map' 'route route';
+    grid-template-rows: repeat(4, max-content);
+    padding: 64px 25px 20px;
+    gap: 12px 24px;
+    align-content: start;
+  }
+  .hero-copy h1 {
+    font-size: 34px;
+  }
+  #seal-portrait {
+    width: 100%;
+  }
+  .location-note {
+    display: flex;
+  }
+  .location-note > span {
+    font-size: 32px;
+  }
+  .location-note h2 {
+    font-size: 16px;
+  }
+  .biome-map {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    margin: 0;
+  }
+  .biome-card:last-child {
+    grid-column: auto;
+  }
+  .biome-card span {
+    font-size: 10px;
+    left: 8px;
+    bottom: 8px;
+  }
+}
+
+.route-note {
+  flex-wrap: wrap;
+}
+.art-credit {
+  letter-spacing: 0;
+  opacity: 0.9;
+}
+
+#boot-status {
+  position: fixed;
+  z-index: 100;
+  top: 45%;
+  left: 10%;
+  right: 10%;
+  text-align: center;
+  padding: 24px;
+  background: var(--panel);
+  border-radius: 16px;
+}
+#boot-status button {
+  background: var(--accent);
+  color: var(--on-accent);
+}

@@ -1,4 +1,4 @@
-// SR-06/SR-19. Original Canvas artwork: no downloaded assets or runtime image requests.
+// SR-06/SR-19. Original articulated Canvas animals over generated environment plates.
 import { BIOMES } from '../core/biomes.js'
 import { buildTextures } from './art.js'
 
@@ -16,112 +16,247 @@ const polygon = (c, points, colour) => {
   c.fill()
 }
 
-// Phocid silhouette: small head, no external ear pinnae, short foreflippers,
-// tapering trunk, two separately articulated hindflippers. No cetacean tail fluke.
+// SR-06: a phocid, with two webbed hindflippers and a separate short tail.
 export function drawPhocid(c, w, h, coat = 'spotted', phase = 0) {
   c.save()
   c.scale(w / 180, h / 96)
-  const stroke = Math.sin(phase * Math.PI * 2),
-    dark = coat === 'monk' ? '#536875' : '#516775'
-  const body = c.createLinearGradient(0, 17, 0, 80)
-  body.addColorStop(0, coat === 'weddell' ? '#5e7485' : '#81959f')
-  body.addColorStop(0.42, '#b5c7cc')
-  body.addColorStop(1, '#e5e9dc')
-  // Far hindflipper, then trunk, then nearer hindflipper.
-  polygon(
-    c,
-    [
-      [43, 49],
-      [10, 28 + stroke * 9],
-      [3, 34 + stroke * 7],
-      [9, 44 + stroke * 5],
-      [34, 59],
-    ],
-    dark,
-  )
-  c.fillStyle = body
-  c.beginPath()
-  c.moveTo(30, 48)
-  c.bezierCurveTo(55, 13, 106, 10, 138, 34)
-  c.bezierCurveTo(147, 36, 153, 43, 153, 51)
-  c.bezierCurveTo(146, 76, 79, 88, 48, 66)
-  c.quadraticCurveTo(38, 58, 30, 48)
-  c.fill()
-  // Small, blunt, continuous head-neck profile.
-  ellipse(c, 143, 44, 24, 19, body, -0.1)
-  ellipse(c, 159, 51, 13, 10, '#d7dfd8')
-  // Hindflipper fingers fan out from the tapered pelvis, never a central tail.
-  polygon(
-    c,
-    [
-      [42, 53],
-      [12, 62 + stroke * 8],
-      [3, 72 + stroke * 10],
-      [13, 76 + stroke * 9],
-      [45, 64],
-    ],
-    '#728a94',
-  )
-  c.strokeStyle = '#476371'
-  c.lineWidth = 1
-  for (let i = 0; i < 3; i++) {
+  c.lineJoin = 'round'
+  c.lineCap = 'round'
+  const beat = Math.sin(phase * Math.PI * 2)
+  const body = c.createLinearGradient(0, 16, 0, 79)
+  body.addColorStop(0, coat === 'weddell' ? '#405766' : '#657e88')
+  body.addColorStop(0.35, coat === 'monk' ? '#8b9b9b' : '#9eafb3')
+  body.addColorStop(0.7, '#ccd5cd')
+  body.addColorStop(1, '#e8e9d8')
+  const fin = c.createLinearGradient(0, 28, 30, 76)
+  fin.addColorStop(0, '#607b85')
+  fin.addColorStop(0.5, '#91a7a9')
+  fin.addColorStop(1, '#455e6a')
+  // The broad lobes are curved, webbed feet (as in Seal Hunter), not angular fins.
+  function hind(near) {
+    c.save()
+    c.translate(35, 51)
+    c.rotate(beat * (near ? 0.13 : -0.08))
+    c.fillStyle = fin
     c.beginPath()
-    c.moveTo(38, 59)
-    c.lineTo(10 + i * 4, 69 + stroke * 9 + i * 2)
+    c.moveTo(5, near ? 4 : -2)
+    if (near) {
+      c.bezierCurveTo(-8, 7, -20, 15, -29, 22)
+      c.quadraticCurveTo(-32, 27, -25, 28)
+      c.quadraticCurveTo(-27, 32, -19, 31)
+      c.quadraticCurveTo(-20, 35, -13, 32)
+      c.quadraticCurveTo(-12, 36, -6, 30)
+      c.bezierCurveTo(2, 25, 9, 15, 9, 9)
+    } else {
+      c.bezierCurveTo(-6, -6, -21, -27, -29, -25)
+      c.quadraticCurveTo(-33, -24, -28, -20)
+      c.quadraticCurveTo(-34, -20, -30, -15)
+      c.quadraticCurveTo(-34, -14, -28, -10)
+      c.quadraticCurveTo(-31, -8, -22, -5)
+      c.bezierCurveTo(-15, -1, -5, 5, 5, 5)
+    }
+    c.closePath()
+    c.fill()
+    c.strokeStyle = 'rgba(18,43,55,.6)'
+    c.lineWidth = 0.65
     c.stroke()
+    for (let i = 0; i < 4; i++) {
+      c.beginPath()
+      c.moveTo(1, near ? 9 : 0)
+      c.quadraticCurveTo(-8, near ? 18 : -4, -25 + i * 5, near ? 26 + i : -20 + i * 4)
+      c.stroke()
+    }
+    c.restore()
   }
-  // Short foreflipper folded alongside the body; hindquarters provide propulsion.
-  c.fillStyle = '#647d89'
-  c.beginPath()
-  c.moveTo(119, 59)
-  c.quadraticCurveTo(121, 70, 102, 82 + stroke * 2)
-  c.quadraticCurveTo(93, 82, 100, 73)
-  c.lineTo(108, 58)
+  hind(false)
+  // Far foreflipper remains short and close to the shoulder.
+  ellipse(c, 117, 50, 16, 5, '#4b6571', -0.35)
+  const trunk = () => {
+    c.beginPath()
+    c.moveTo(30, 48)
+    c.bezierCurveTo(55, 13, 106, 10, 138, 34)
+    c.bezierCurveTo(147, 36, 153, 43, 153, 51)
+    c.bezierCurveTo(146, 76, 79, 88, 48, 66)
+    c.quadraticCurveTo(38, 58, 30, 48)
+    c.closePath()
+  }
+  trunk()
+  c.fillStyle = body
   c.fill()
-  if (coat !== 'monk') {
-    for (let i = 0; i < 52; i++) {
-      const x = 49 + ((((Math.sin(i * 127.1 + 41) * 43758.5453) % 1) + 1) % 1) * 81,
-        y = 27 + ((((Math.sin(i * 311.7 + 19) * 23711.231) % 1) + 1) % 1) * 44
-      if (((x - 88) / 48) ** 2 + ((y - 48) / 28) ** 2 > 1) continue
-      if (coat === 'ringed') {
-        c.strokeStyle = '#dfdfcd'
-        c.lineWidth = 1.5
-        c.beginPath()
-        c.ellipse(x, y, 3.8, 2.8, -0.25, 0, Math.PI * 2)
-        c.stroke()
-      } else
-        ellipse(
-          c,
-          x,
-          y,
-          coat === 'weddell' ? 3.2 : 1.9,
-          coat === 'weddell' ? 1.7 : 1.3,
-          coat === 'weddell' ? '#d7dfd8' : '#6b818b',
-          -0.2,
-        )
+  c.strokeStyle = 'rgba(14,39,52,.55)'
+  c.lineWidth = 0.7
+  c.stroke()
+  ellipse(c, 143, 44, 24, 19, body, -0.1)
+  // Stable, fine mottling and short fur strokes clipped to the torso.
+  c.save()
+  trunk()
+  c.clip()
+  const rnd = (i) => {
+    const n = Math.sin(i * 127.1 + 19.7) * 43758.5453
+    return n - Math.floor(n)
+  }
+  for (let i = 0; i < 95; i++) {
+    const x = 35 + rnd(i) * 118,
+      y = 20 + rnd(i + 150) * 49
+    const r = 0.7 + rnd(i + 320) * 2
+    if (coat === 'ringed') {
+      c.strokeStyle = 'rgba(223,232,219,.6)'
+      c.lineWidth = 0.6
+      c.beginPath()
+      c.ellipse(x, y, r * 1.5, r, -0.3, 0, Math.PI * 2)
+      c.stroke()
+    } else if (coat !== 'monk') {
+      ellipse(
+        c,
+        x,
+        y,
+        r * 1.3,
+        r * 0.75,
+        coat === 'weddell' ? 'rgba(226,231,216,.38)' : 'rgba(45,66,75,.34)',
+        -0.3,
+      )
     }
   }
-  // Tiny ear opening behind the eye, never an external flap.
-  ellipse(c, 132, 42, 1.2, 1.6, '#667b83')
-  ellipse(c, 151, 41, 3.1, 3.5, '#152f3c')
-  ellipse(c, 152, 40, 1, 1, '#fbf5df')
-  ellipse(c, 169, 48, 3.2, 2.4, '#243e49')
-  c.strokeStyle = '#4b6670'
-  c.lineWidth = 0.8
-  for (let i = 0; i < 4; i++) {
+  c.strokeStyle = 'rgba(233,242,227,.17)'
+  c.lineWidth = 0.28
+  for (let i = 0; i < 700; i++) {
+    const x = 32 + rnd(i + 1000) * 130,
+      y = 17 + rnd(i + 2000) * 62
     c.beginPath()
-    c.moveTo(161, 53 + i * 0.8)
-    c.quadraticCurveTo(170, 52 + i * 2, 178, 49 + i * 4)
+    c.moveTo(x, y)
+    c.lineTo(x + 1.5, y - 0.5)
     c.stroke()
   }
+  c.restore()
+  hind(true)
+  // Small fleshy tail, visibly BETWEEN the two hindflippers; never a whale fluke.
+  c.fillStyle = '#b1c2bd'
   c.beginPath()
-  c.moveTo(158, 57)
-  c.quadraticCurveTo(164, 59, 169, 54)
+  c.moveTo(35, 46)
+  c.bezierCurveTo(29, 46, 20, 46, 17, 50)
+  c.quadraticCurveTo(16, 53, 22, 54)
+  c.quadraticCurveTo(30, 55, 38, 55)
+  c.closePath()
+  c.fill()
+  c.strokeStyle = '#496572'
+  c.lineWidth = 0.7
   c.stroke()
+  c.strokeStyle = 'rgba(226,237,221,.6)'
+  c.beginPath()
+  c.moveTo(21, 49)
+  c.quadraticCurveTo(27, 48, 33, 49)
+  c.stroke()
+  // Near foreflipper: compact rounded paw, five short blunt claws.
+  c.save()
+  c.translate(117, 59)
+  c.rotate(beat * 0.07)
+  c.fillStyle = fin
+  c.beginPath()
+  c.moveTo(2, -2)
+  c.bezierCurveTo(-5, 0, -18, 9, -23, 16)
+  c.bezierCurveTo(-25, 22, -17, 24, -8, 19)
+  c.quadraticCurveTo(9, 10, 2, -2)
+  c.fill()
+  c.strokeStyle = 'rgba(27,50,59,.65)'
+  c.lineWidth = 0.6
+  c.stroke()
+  for (let i = 0; i < 5; i++) {
+    c.beginPath()
+    c.moveTo(-21 + i * 2.6, 18.5 + Math.sin(i * 0.7) * 2)
+    c.lineTo(-22 + i * 2.6, 20.5 + Math.sin(i * 0.7) * 2)
+    c.stroke()
+  }
+  c.restore()
+  // Ear opening (no external ear flap), glossy eye, blunt muzzle and whisker follicles.
+  ellipse(c, 133, 40, 0.8, 1.3, '#526972')
+  ellipse(c, 151, 40.5, 3.4, 3.8, '#203b47', -0.2)
+  ellipse(c, 152, 39.3, 0.9, 0.9, '#e5f5ef')
+  ellipse(c, 160, 51, 12, 8.5, '#c7d1c5')
+  ellipse(c, 156, 53, 7, 5.5, '#dce0cd')
+  ellipse(c, 165, 49, 3.4, 2.7, '#233e47')
+  c.strokeStyle = '#536a6c'
+  c.lineWidth = 0.6
+  c.beginPath()
+  c.moveTo(164, 52)
+  c.quadraticCurveTo(160, 57, 155, 55)
+  c.stroke()
+  for (let i = 0; i < 9; i++)
+    ellipse(c, 154 + (i % 3) * 2.6, 49 + Math.floor(i / 3) * 2.2, 0.36, 0.36, '#526b70')
+  c.strokeStyle = 'rgba(234,241,219,.88)'
+  c.lineWidth = 0.45
+  for (let i = 0; i < 5; i++) {
+    c.beginPath()
+    c.moveTo(157, 50 + i * 1.4)
+    c.quadraticCurveTo(168, 48 + i * 2.3, 178, 45 + i * 3.8)
+    c.stroke()
+  }
+  c.restore()
+}
+
+const oceanImages = new Map()
+const pendingImages = new Map()
+const previews = new WeakMap()
+// All paths are local, versioned art. A missing image leaves the procedural scene playable.
+export function loadOcean(biome, thumbnail = false) {
+  const key = biome + (thumbnail ? ':thumb' : '')
+  if (oceanImages.has(key)) return Promise.resolve(oceanImages.get(key))
+  if (pendingImages.has(key)) return pendingImages.get(key)
+  const pending = new Promise((resolve) => {
+    const img = new Image()
+    let done = false
+    const finish = (ok) => {
+      if (done) return
+      done = true
+      clearTimeout(timer)
+      if (ok) oceanImages.set(key, img)
+      pendingImages.delete(key)
+      resolve(ok ? img : null)
+    }
+    const timer = setTimeout(() => finish(false), 6000)
+    img.onload = () => finish(true)
+    img.onerror = () => finish(false)
+    img.src = new URL(
+      '../assets/' + biome + '-v1' + (thumbnail ? '-thumb' : '') + '.webp',
+      import.meta.url,
+    ).href
+  })
+  pendingImages.set(key, pending)
+  return pending
+}
+function drawPlate(c, img, w, h) {
+  const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+  const sw = w / scale,
+    sh = h / scale
+  c.drawImage(img, (img.naturalWidth - sw) / 2, img.naturalHeight - sh, sw, sh, 0, 0, w, h)
+}
+export function paintHero(canvas, biome) {
+  canvas.width = 1080
+  canvas.height = 576
+  const c = canvas.getContext('2d')
+  c.clearRect(0, 0, canvas.width, canvas.height)
+  // 4% transparent margin contains every whisker/toe on narrow screens.
+  c.save()
+  c.translate(43, 23)
+  drawPhocid(c, 994, 530, BIOMES[biome].coat, 0.15)
   c.restore()
 }
 
 export function paintOcean(c, w, h, biome, layer = 'all') {
+  const image = oceanImages.get(biome)
+  if (image) {
+    if (layer === 'all' || layer === 'water') drawPlate(c, image, w, h)
+    else {
+      c.save()
+      c.globalAlpha = layer === 'far' ? 0.12 : 0.22
+      for (let i = 0; i < 24; i++) {
+        const x = (((i * 137 + (layer === 'mid' ? 61 : 0)) % 1200) / 1200) * w
+        const y = (((i * 79 + 29) % 675) / 675) * h
+        ellipse(c, x, y, layer === 'far' ? 1 : 1.5, 1, BIOMES[biome].light)
+      }
+      c.restore()
+    }
+    return
+  }
   const b = BIOMES[biome] || BIOMES.coastal
   c.save()
   c.scale(w / 1200, h / 675)
@@ -278,23 +413,15 @@ export function paintOcean(c, w, h, biome, layer = 'all') {
   c.restore()
 }
 export function paintPreview(canvas, biome, hero = false) {
-  const ratio = hero ? 2 : 1
-  canvas.width = 1200 * ratio
-  canvas.height = 675 * ratio
+  canvas.width = hero ? 1600 : 320
+  canvas.height = hero ? 900 : 180
   const c = canvas.getContext('2d')
   paintOcean(c, canvas.width, canvas.height, biome)
-  if (hero) {
-    c.save()
-    c.translate(canvas.width * 0.56, canvas.height * 0.28)
-    c.rotate(-0.09)
-    drawPhocid(c, canvas.width * 0.37, canvas.height * 0.35, BIOMES[biome].coat, 0.15)
-    c.restore()
-    for (let i = 0; i < 7; i++) {
-      const x = canvas.width * (0.77 + i * 0.025),
-        y = canvas.height * (0.66 + Math.sin(i) * 0.025)
-      ellipse(c, x, y, 9, 3, BIOMES[biome].light)
-    }
-  }
+  const token = {}
+  previews.set(canvas, token)
+  loadOcean(biome, !hero).then((img) => {
+    if (img && previews.get(canvas) === token) drawPlate(c, img, canvas.width, canvas.height)
+  })
 }
 export function buildExpeditionTextures(scene, biome) {
   buildTextures(scene)
@@ -309,12 +436,12 @@ export function buildExpeditionTextures(scene, biome) {
     scene.textures.addCanvas(key, canvas)
   }
   for (let frame = 0; frame < 8; frame++)
-    add('seal_' + biome + '_' + frame, 100, 56, (c, w, h) =>
+    add('seal_' + biome + '_' + frame, 180, 96, (c, w, h) =>
       drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
     )
   for (const layer of ['water', 'far', 'mid'])
     add('ocean_' + biome + '_' + layer, 1200, 675, (c, w, h) => paintOcean(c, w, h, biome, layer))
-  // Predatory leopard seals use an elongated phocid profile with a larger head.
+  // Predators reuse the phocid anatomy at sizes that contain their full collision circles.
   for (const [key, w, h] of [
     ['leopard_seal', 118, 78],
     ['leopard_seal_big', 150, 102],

@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-09-10",
+  "tool": "built-in imagegen",
+  "provenance": "AI-generated illustrative environments; not photographs of documented locations",
+  "assets": [
+    {
+      "asset": "coastal-v1",
+      "prompt": "Create a finished photorealistic underwater environment plate for the browser game Seal Run. Asset: coastal-v1, a northern Atlantic kelp coast. Wide landscape 1536x1024 composition. View entirely underwater, looking horizontally into deep clear teal water. Soft natural sunlight from upper right, silver caustics, believable suspended particles and atmospheric depth. Detailed weathered coastal rocks, muted olive kelp and pebbles restricted mainly to the bottom 20% and extreme sides. The middle 65% is spacious, low-contrast open water for readable moving game characters. Top edge muted blue teal, bottom edge deep navy. Premium ocean documentary photography, natural restrained colors, realistic material textures, calm mysterious mood. No seals, fish, animals, humans, boats, text, logos, UI, borders or bright foreground objects. This is a reusable background layer; game characters and animated plants are separate. The full frame must be an uninterrupted underwater scene, not a collage."
+    },
+    {
+      "asset": "atlantis-v1",
+      "prompt": "Create a finished photorealistic underwater environment plate for browser game Seal Run. Asset atlantis-v1. A fictional sunken ancient stone city, explicitly fantasy environmental art, rendered with ocean documentary realism. Wide landscape 1536x1024. Entirely underwater horizontal camera. Deep indigo teal sea, shafts of cool sunlight from upper right. Eroded limestone arches, broken fluted columns and encrusted carved stone masonry grouped along bottom 20% and far left/right edges; mysterious distant monumental arch at lower right, believable marine patina. Middle 65% spacious low-contrast open blue water for readable moving characters. Rich realistic material details, suspended particles, photographic atmospheric depth, restrained natural colors, no neon or magic glow. No animals, fish, seals, people, text, logos, UI, borders, collage. Top edge muted blue, bottom deep navy. A reusable background layer with separate game characters, calm premium visual mood."
+    },
+    {
+      "asset": "tropical-v1",
+      "prompt": "Create a finished photorealistic underwater environment plate for browser game Seal Run. Asset tropical-v1. Hawaiian volcanic island reef, clear azure turquoise water, entirely underwater horizontal camera, wide landscape 1536x1024. Soft sun shafts from upper right and rippling water surface, warm light on white sand and weathered black lava rock, restrained living reef details at bottom 20% and extreme edges. Middle 65% spacious low-contrast open water for moving characters. Premium ocean documentary photography, natural materials and believable underwater atmospheric depth, detailed but restrained colors, green-blue shallows graduating into deep blue distance, deep navy lower edge. No seals, fish, animals, people, boats, kelp forest, text, logo, UI, borders, collage. Continuous full-frame environment background, animated characters are separate."
+    },
+    {
+      "asset": "arctic-v1",
+      "prompt": "Create a finished photorealistic underwater environment plate for browser game Seal Run. Asset arctic-v1. Arctic coastal sea beneath seasonal sea ice, entirely underwater horizontal camera, wide landscape 1536x1024. Translucent rough pale blue ice underside confined to upper 15%, a narrow luminous opening at upper right sending delicate sun shafts into cold muted teal water. Low rounded glacial rocks, gravel and subdued sparse cold-water benthic detail restricted to bottom 18% and far edges. Middle 65% spacious low-contrast open water for readable moving game characters. Ocean documentary photography, real materials, soft atmospheric depth and suspended particles. Restrained gray turquoise and silver color palette, dark navy bottom edge. No seals, bears, fish, animals, humans, kelp forest, buildings, text, logos, UI, border or collage. Calm premium background layer; all animated creatures are separate."
+    },
+    {
+      "asset": "antarctic-v1",
+      "prompt": "Create a finished photorealistic underwater environment plate for browser game Seal Run. Asset antarctic-v1. The cold Southern Ocean below the edge of an immense Antarctic ice shelf. Wide landscape 1536x1024, entirely underwater, horizontal camera. Sculptural translucent blue glacial ice cliffs along far right edge and upper edge, deep cobalt-to-navy open water and delicate cold light filtering through ice from upper right. A distant low dark stony seabed at bottom 15%. Middle 65% spacious, low-contrast open water for moving game characters. Distinct majestic Antarctic mood, deeper bluer and more monumental ice than the Arctic. Fine natural ice fractures, bubbles trapped in ice, realistic material textures, suspended marine particles and cinematic atmospheric depth, premium ocean documentary photography. No seals, penguins, fish, animals, humans, vegetation, text, logos, UI, border or collage. Continuous reusable environment plate; game characters are separate."
+    }
+  ]
+}

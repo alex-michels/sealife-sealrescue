@@ -8,3 +8,5 @@ export function fishPointsBudget(course: Course, distance: number): number;
 export function courseHash(course: Course): number;
 export const LU_PER_M: number;
 export const COURSE_LENGTH_LU: number;
+
+export const FISH_REACH_SLACK_LU: number;

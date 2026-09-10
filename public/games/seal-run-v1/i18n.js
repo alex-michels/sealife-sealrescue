@@ -70,6 +70,8 @@ const STRINGS = {
     swimmer: 'Swimmer',
     levels: 'Chapters',
     best: 'Your weekly best',
+    artCredit: 'AI-generated environments',
+    loadError: 'The game could not load. Please try again.',
     startError: 'The weekly route could not be loaded. Try again or choose Explore.',
     submitError:
       'Your score was not saved. Check the connection and retry while this result is open.',
@@ -164,6 +166,8 @@ const STRINGS = {
     swimmer: 'Пловец',
     levels: 'Главы',
     best: 'Твой рекорд недели',
+    artCredit: 'Окружение создано с ИИ',
+    loadError: 'Не удалось загрузить игру. Попробуй ещё раз.',
     startError: 'Не удалось загрузить трассу недели. Повтори или выбери «Исследовать».',
     submitError: 'Очки не сохранены. Проверь соединение и повтори, пока открыт результат.',
     usedToken: 'Этот заплыв уже отправлен. Обнови таблицу, чтобы проверить результат.',

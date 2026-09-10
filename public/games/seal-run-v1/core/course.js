@@ -30,7 +30,9 @@ export const FISH_POINTS = { fish_small: 1, fish_rare: 4 };
 export const FISH_POINTS_BUDGET_MAX = 400;
 // Зазор досягаемости для серверной сверки бюджета: рыба считается собираемой,
 // если её atLu ≤ дистанция + этот запас (радиус подбора + округление метров).
-export const FISH_REACH_SLACK_LU = 50;
+export const FISH_PICKUP_R = 12;
+// A submitted whole metre can lag actual distance by almost LU_PER_M.
+export const FISH_REACH_SLACK_LU = SEAL_R + FISH_PICKUP_R + LU_PER_M;
 
 // Габариты препятствий без параметров в данных чанка (спека §6).
 export const OBSTACLE_DIMS = {
