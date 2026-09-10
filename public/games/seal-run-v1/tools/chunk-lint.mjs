@@ -5,7 +5,7 @@
 //
 // Логика — в chunk-lint-lib.mjs (её же гоняет CI: tests/unit/seal-run-course.unit.spec.ts).
 
-import { CHUNKS } from '../core/chunks/index.js';
+import { ALL_CHUNKS as CHUNKS } from '../core/chunks/biomes.js';
 import { runLint } from './chunk-lint-lib.mjs';
 
 const n = Math.max(1, Math.min(500, parseInt(process.argv[2] ?? '52', 10) || 52));

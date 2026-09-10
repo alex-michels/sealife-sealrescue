@@ -720,6 +720,11 @@ export interface GameScore {
     | null;
   score: number;
   durationMs: number;
+  distance?: number | null;
+  livesRemaining?: number | null;
+  fishCollected?: number | null;
+  courseSeed?: string | null;
+  levelsCompleted?: number | null;
   /**
    * ISO-неделя (YYYY-Www) — для еженедельного сброса доски.
    */
@@ -1251,6 +1256,11 @@ export interface GameScoresSelect<T extends boolean = true> {
   nameParts?: T;
   score?: T;
   durationMs?: T;
+  distance?: T;
+  livesRemaining?: T;
+  fishCollected?: T;
+  courseSeed?: T;
+  levelsCompleted?: T;
   season?: T;
   updatedAt?: T;
   createdAt?: T;

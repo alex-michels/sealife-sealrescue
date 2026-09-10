@@ -256,11 +256,11 @@ export const gamesSeed: GameSeed[] = [
       ru: 'Seal Run — заплыв тюленя',
       en: 'Seal Run',    },
     excerpt: {
-      ru: 'Раннер: проплыви 900 метров прибрежной воды, уворачиваясь от хищников, сетей и камней.',
-      en: 'A runner: swim 900 metres of coastal water, dodging predators, nets and rocks.',    },
+      ru: 'Пять морей, настоящие тюлени и новые трассы: тренировка в своём темпе или экспедиция недели.',
+      en: 'Five ocean worlds, true seals and generated routes. Explore at your pace or take on the weekly expedition.',    },
     how: {
-      ru: 'Веди тюленя по глубине: палец или мышь задают цель, ↑/↓ или W/S — с клавиатуры. Рыба даёт очки и дыхание (метр падает сам — ешь, чтобы плыть). Хищники отнимают жизнь, сети и пластик замедляют и душат, камни отбрасывают. Трасса недели одна на всех — дистанция решает.',
-      en: 'Steer the seal by depth: finger or mouse sets the target, ↑/↓ or W/S on the keyboard. Fish give points and breath (the meter drains on its own — eat to keep swimming). Predators cost a life, nets and plastic slow and choke you, rocks knock you back. One weekly course for everyone — distance decides.',    },
+      ru: 'Выбирай глубину мышью, пальцем, ↑/↓ или W/S. Пробел — рывок за энергию; Escape/P — пауза. Рыба восстанавливает энергию (это аркада: тюлени дышат воздухом). Избегай хищников, сетей и камней. После 900 м переходи к новым берегам. Тренировка работает без сети; пять глав экспедиции недели общие для всех.',
+      en: 'Choose a depth with the pointer, touch, ↑/↓ or W/S. Space spends energy for a burst; Escape/P pauses. Fish restore energy (an arcade mechanic: seals breathe air). Avoid predators, nets and rocks. Reach 900 metres to enter the next waters. Practice works offline; the five weekly chapters are shared by everyone.',    },
     embed: '/games/seal-run-v1/index.html',
     showCover: false,
     order: 1,

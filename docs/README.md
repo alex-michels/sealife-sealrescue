@@ -21,8 +21,14 @@
 | [agents.md](agents.md) | RBAC-роли, очередь `agent-proposals`, audit `agent-runs`, хуки, human-in-the-loop, безопасность |
 | [game-seal-hunter.md](game-seal-hunter.md) | Игра «Seal The Hunter»: структура, fairness, service worker, лидерборд, анти-чит, **статический бэкдроп + анимированная сцена**, финальный interstitial |
 | [game-seal-hunter-worklog.md](game-seal-hunter-worklog.md) | Журнал работ: full-screen + 2:1 clamp (PR #25), fairness-харнесс, prey-решение (PR #26), **визуал-цикл: leaderboard-фиксы (#28–31) + статический бэкдроп (#32)** |
-| [game-seal-run.md](game-seal-run.md) | Игра «Seal Run»: side-scroll Phaser 4-раннер, свободный Y + banded-контент, сид-детерминированная трасса, лидерборд, SR-01..SR-15 |
+| [game-seal-run.md](game-seal-run.md) | Игра «Seal Run»: side-scroll Phaser 4-раннер, свободный Y + banded-контент, сид-детерминированная трасса, лидерборд, SR-01..SR-20 |
 | [game-seal-run-spec.md](game-seal-run-spec.md) | Нормативная спека механик Seal Run v1 (SR-01): единицы/детерминизм, физика free-Y, полосы, ярусы препятствий, автомат стамины, формат чанков + `generateCourse`, формула очков, серверные проверки |
+| [game-seal-run-expedition.md](game-seal-run-expedition.md) | Seal Run: пять биомов, арт-концепт, источники биологии, управление и мульти-раунды |
+| [seal-run-anatomy-references.md](seal-run-anatomy-references.md) | Референсы пяти игровых тюленей и региональных акул/косаток Seal Run: морда, глаза, ласты и хвост; источники и ограничения |
+| [seal-run-image-performance-results.json](seal-run-image-performance-results.json) | SR-21: исходные размеры текстур, загрузки и время кадра в Chromium до/после |
+| [seal-run-image-performance.md](seal-run-image-performance.md) | SR-21: WebP-атласы, очистка текстур, мобильные панорамы и сравнение памяти до/после |
+| [seal-run-current-comparison.json](seal-run-current-comparison.json) | Парное сравнение старой и новой физики течения: 780 пар на одинаковых трассах |
+| [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |
 
 ## Стратегические / governance доки
@@ -30,6 +36,7 @@
 | Док | О чём |
 | --- | --- |
 | [Roadmap.md](Roadmap.md) | Задачи по ID (M0/M1/M2…), статусы `[ ]`/`[x]`/`[~]`/`[!]`; сквозные треки SEC/EU/**BIO**/DESIGN/QA. Сверен с кодом аудитом 2026-07-26 — приписки «— **аудит 2026-07-26:**» в задачах |
+| [seal-run-review-2026-09-10.md](seal-run-review-2026-09-10.md) | SR-аудит: причина CI failure, исправления UI/графики/валидации, проверка задач и границы rollout |
 | [DESIGN_BRIEF.md](DESIGN_BRIEF.md) | Дизайн-направление (Foggy Coastal Utility), токены, типографика, компоненты |
 | [COMPLIANCE_EU_DE.md](COMPLIANCE_EU_DE.md) | EU/DE-комплаенс: Impressum, GDPR/TDDDG, DSA, AI Act |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Хостинг (Contabo VPS), CI-деплой из `main` (Next standalone → Caddy + systemd), окружения (Neon dev / self-hosted prod), публичный alpha игры. Инфра-конфиги — [`deploy/`](../deploy/) |

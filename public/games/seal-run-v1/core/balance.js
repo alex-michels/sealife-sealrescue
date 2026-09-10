@@ -29,7 +29,7 @@ export {
   bandY,
 } from './course.js';
 
-import { RAMP_DISTANCE_LU } from './course.js';
+import { RAMP_DISTANCE_LU, FISH_PICKUP_R } from './course.js';
 
 // — Шаг симуляции (спека §1.3): фиксированный, рендер-слой держит accumulator. НЕ тюнинг.
 export const SIM_DT = 1 / 120; // c
@@ -65,7 +65,11 @@ export const BAL = {
   FISH_SPEED_BUFF_MULT: 1.15,
   FISH_SPEED_BUFF_MS: 1500,
   BUFF_STACK_MAX_MS: 6000, // баффы складываются длительностью, с потолком
-  FISH_PICKUP_R: 12, // lu (эффективный радиус подбора = SEAL_R + это)
+  FISH_PICKUP_R, // lu (эффективный радиус подбора = SEAL_R + это)
+  BURST_MULT: 1.35,
+  BURST_MS: 800,
+  BURST_COST: 18,
+  BURST_COOLDOWN_MS: 4000,
 
   // — Хищники (спека §6.2/§6.4).
   PREDATOR_LIFE_COST: 1,
@@ -81,7 +85,13 @@ export const BAL = {
   SHARK_BIG_CHARGE_REL: 120,
 
   // — Мусор (антропогенный ярус, спека §6.3).
-  DEBRIS_SLOW_MULT: 0.4,
+  DEBRIS_SLOW_MULT: 0.4, // initial forward retention while lag builds
+  DEBRIS_AGILITY_MULT: 0.65,
+  DEBRIS_LAG_LU: 96,
+  HIT_LAG_LU: 110,
+  EXHAUSTED_LAG_LU: 64,
+  LAG_RECOVERY_TAU: 0.65,
+  LAG_RECOVERY_MULT: 0.35,
   DEBRIS_SLOW_MS: 1800,
   DEBRIS_STAMINA_DRAIN_MULT: 2.0,
 

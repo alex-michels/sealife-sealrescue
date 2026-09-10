@@ -1,6 +1,7 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 import { z } from 'zod'
 import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
+import { RULES_VERSION, runRoundsSchema, runIdentity, validateRun } from '../games/sealRun'
 
 /**
  * Server-authoritative лидерборд (SH-06/07). Публичный клиент НЕ пишет в БД напрямую —
@@ -25,34 +26,132 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from 'crypto'
 // ⚠️ KEEP IN SYNC (порядок/длина списков, PATTERNS, mulberry32, порядок бросков) с
 // public/games/seal-hunt-v1/core/alias.js — иначе имя на старте разойдётся с доской.
 const ADJ_EN = [
-  'Salty', 'Brave', 'Sleepy', 'Cosy', 'Misty', 'Sunny', 'Plump', 'Swift',
-  'Gentle', 'Jolly', 'Bold', 'Lucky', 'Mellow', 'Nimble', 'Quiet', 'Shiny',
-  'Snug', 'Tidal', 'Wavy', 'Zippy', 'Pebbly', 'Breezy', 'Frosty', 'Glossy',
-  'Hardy', 'Merry', 'Splashy', 'Whiskered', 'Mighty', 'Deep', 'Ancient', 'Pearly',
-  'Amber', 'Spotted', 'Prickly', 'Slippery', 'Foamy', 'Grumpy', 'Royal', 'Curious',
+  'Salty',
+  'Brave',
+  'Sleepy',
+  'Cosy',
+  'Misty',
+  'Sunny',
+  'Plump',
+  'Swift',
+  'Gentle',
+  'Jolly',
+  'Bold',
+  'Lucky',
+  'Mellow',
+  'Nimble',
+  'Quiet',
+  'Shiny',
+  'Snug',
+  'Tidal',
+  'Wavy',
+  'Zippy',
+  'Pebbly',
+  'Breezy',
+  'Frosty',
+  'Glossy',
+  'Hardy',
+  'Merry',
+  'Splashy',
+  'Whiskered',
+  'Mighty',
+  'Deep',
+  'Ancient',
+  'Pearly',
+  'Amber',
+  'Spotted',
+  'Prickly',
+  'Slippery',
+  'Foamy',
+  'Grumpy',
+  'Royal',
+  'Curious',
 ]
 const MOD_EN = [
-  'Chonky', 'Fluffy', 'Round', 'Smol', 'Beeg', 'Derpy', 'Sandy', 'Pudgy',
-  'Floofy', 'Squishy', 'Blubbery', 'Cuddly',
+  'Chonky',
+  'Fluffy',
+  'Round',
+  'Smol',
+  'Beeg',
+  'Derpy',
+  'Sandy',
+  'Pudgy',
+  'Floofy',
+  'Squishy',
+  'Blubbery',
+  'Cuddly',
 ]
 const NOUN_EN = [
-  'Seal', 'Walrus', 'Whale', 'Dolphin', 'Narwhal', 'Spermwhale', 'Crab', 'Octopus',
-  'Squid', 'Lobster', 'Anchovy', 'Salmon', 'Burbot', 'Perch', 'Eel', 'Ray',
-  'Seahorse', 'Krill', 'Coral', 'Kraken', 'Triton', 'Merman', 'Catfish', 'Bubble',
-  'Buoy', 'Anchor', 'Reef', 'Beacon', 'Cormorant', 'Puffin', 'Penguin', 'Sturgeon',
-  'Halibut', 'Marlin', 'Sprat', 'Pollock', 'Tuna', 'Crayfish', 'Urchin', 'Mollusk',
-  'Scallop', 'Leviathan', 'Serpent', 'Pelican',
+  'Seal',
+  'Walrus',
+  'Whale',
+  'Dolphin',
+  'Narwhal',
+  'Spermwhale',
+  'Crab',
+  'Octopus',
+  'Squid',
+  'Lobster',
+  'Anchovy',
+  'Salmon',
+  'Burbot',
+  'Perch',
+  'Eel',
+  'Ray',
+  'Seahorse',
+  'Krill',
+  'Coral',
+  'Kraken',
+  'Triton',
+  'Merman',
+  'Catfish',
+  'Bubble',
+  'Buoy',
+  'Anchor',
+  'Reef',
+  'Beacon',
+  'Cormorant',
+  'Puffin',
+  'Penguin',
+  'Sturgeon',
+  'Halibut',
+  'Marlin',
+  'Sprat',
+  'Pollock',
+  'Tuna',
+  'Crayfish',
+  'Urchin',
+  'Mollusk',
+  'Scallop',
+  'Leviathan',
+  'Serpent',
+  'Pelican',
   // — милые/умилительные (M-DE-NAMES); локализация рода/слов — на клиенте (alias.js), здесь канонический EN.
-  'Sealie', 'Chonker', 'Toughie', 'Nixie', 'Gobbler', 'Zucchini', 'Sea Cucumber', 'Spud',
-  'Submarine', 'Donut', 'Dumplet',
+  'Sealie',
+  'Chonker',
+  'Toughie',
+  'Nixie',
+  'Gobbler',
+  'Zucchini',
+  'Sea Cucumber',
+  'Spud',
+  'Submarine',
+  'Donut',
+  'Dumplet',
 ]
 const PREFIX_EN = ['Seal', 'Pup', 'Selkie', 'Walrus']
 const SUFFIX_EN = ['Bun', 'Loaf', 'Blob', 'Bean', 'Pud']
 
 // Шаблоны имени: какие части участвуют (noun есть всегда).
 const PATTERNS: Array<{ adj?: boolean; mod?: boolean; pref?: boolean; suf?: boolean }> = [
-  {}, { adj: true }, { mod: true }, { adj: true, mod: true },
-  { pref: true }, { adj: true, pref: true }, { suf: true }, { adj: true, suf: true },
+  {},
+  { adj: true },
+  { mod: true },
+  { adj: true, mod: true },
+  { pref: true },
+  { adj: true, pref: true },
+  { suf: true },
+  { adj: true, suf: true },
 ]
 
 type NameParts = { adj?: number; mod?: number; noun: number; pref?: number; suf?: number }
@@ -117,7 +216,13 @@ export function currentSeason(d = new Date()): string {
   date.setUTCDate(date.getUTCDate() - dayNum + 3)
   const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4))
   const week =
-    1 + Math.round(((date.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7)
+    1 +
+    Math.round(
+      ((date.getTime() - firstThursday.getTime()) / 86400000 -
+        3 +
+        ((firstThursday.getUTCDay() + 6) % 7)) /
+        7,
+    )
   return `${date.getUTCFullYear()}-W${String(week).padStart(2, '0')}`
 }
 
@@ -137,7 +242,20 @@ async function pruneOldSeasons(req: PayloadRequest, season: string): Promise<voi
   if (now - lastPrune < 3_600_000) return
   lastPrune = now
   try {
-    await req.payload.delete({ collection: 'game-scores', where: { season: { not_equals: season } } })
+    await req.payload.delete({
+      collection: 'game-scores',
+      where: {
+        and: [
+          { season: { not_equals: season } },
+          {
+            or: [
+              { season: { not_equals: currentSeason(new Date(now - 604_800_000)) } },
+              { createdAt: { less_than: new Date(now - 3_600_000).toISOString() } },
+            ],
+          },
+        ],
+      },
+    })
   } catch {
     /* best-effort */
   }
@@ -169,12 +287,22 @@ const TOKEN_TTL_MS = 1_800_000 // 30 мин — окно валидности т
 const MIN_PLAY_MS = 40_000
 // В теле токена нет поля board (снято): старые токены с лишним `b` остаются валидными
 // на окно деплоя — подпись цела, а лишнее поле просто игнорируется.
-type TokenData = { g: string; t: number; n: string }
+type TokenData = {
+  g: string
+  t: number
+  n: string
+  s?: string
+  cs?: string
+  rv?: string
+  p?: number
+}
 function tokenSecret(): string {
   return process.env.PAYLOAD_SECRET || 'seal-dev-secret'
 }
-function signToken(game: string): string {
-  const body = Buffer.from(JSON.stringify({ g: game, t: Date.now(), n: randomBytes(9).toString('hex') })).toString('base64url')
+function signToken(game: string, extra: Partial<TokenData> = {}): string {
+  const body = Buffer.from(
+    JSON.stringify({ ...extra, g: game, t: Date.now(), n: randomBytes(9).toString('hex') }),
+  ).toString('base64url')
   const sig = createHmac('sha256', tokenSecret()).update(body).digest('base64url')
   return `${body}.${sig}`
 }
@@ -184,7 +312,8 @@ function verifyToken(token: string): TokenData | null {
   const body = token.slice(0, dot)
   const sig = token.slice(dot + 1)
   const expect = createHmac('sha256', tokenSecret()).update(body).digest('base64url')
-  const a = Buffer.from(sig), b = Buffer.from(expect)
+  const a = Buffer.from(sig),
+    b = Buffer.from(expect)
   if (a.length !== b.length || !timingSafeEqual(a, b)) return null
   try {
     const d = JSON.parse(Buffer.from(body, 'base64url').toString()) as TokenData
@@ -205,13 +334,16 @@ function consumeNonce(n: string): boolean {
 
 // `board` в теле старых клиентов Zod молча отбрасывает (unknown keys strip) — обратная
 // совместимость на окно деплоя.
-const SubmitBody = z.object({
-  game: z.string().min(1).max(64),
-  score: z.number().int().min(0).max(100_000),
-  durationMs: z.number().int().min(0).max(600_000),
-  seed: z.number().int().min(0).max(4_294_967_295),
-  token: z.string().min(10).max(512),
-})
+const SubmitBody = z
+  .object({
+    game: z.string().min(1).max(64),
+    score: z.number().int().min(0).max(500_000),
+    durationMs: z.number().int().min(0).max(750_050),
+    seed: z.number().int().min(0).max(4_294_967_295),
+    token: z.string().min(10).max(512),
+    rounds: runRoundsSchema.optional(),
+  })
+  .refine((d) => d.game === 'seal-run' || (d.score <= 100_000 && d.durationMs <= 600_000))
 
 const PAGE_SIZE = 50
 const MAX_LIMIT = 100
@@ -249,6 +381,14 @@ async function page(
     parts: d.nameParts as NameParts,
     suffix: (d.suffix as number) ?? 0,
     score: d.score as number,
+    ...(d.distance != null
+      ? {
+          distance: d.distance,
+          fishCollected: d.fishCollected,
+          livesRemaining: d.livesRemaining,
+          levelsCompleted: d.levelsCompleted,
+        }
+      : {}),
   }))
   return { top, total: res.totalDocs, page: pageNum, hasMore: res.hasNextPage }
 }
@@ -280,25 +420,39 @@ export const leaderboardSubmit: Endpoint = {
       return Response.json({ error: 'invalid_token' }, { status: 401 })
     }
     const elapsed = Date.now() - tok.t
-    if (elapsed < MIN_PLAY_MS || elapsed > TOKEN_TTL_MS) {
+    const isRun = slug === 'seal-run'
+    if (elapsed < (isRun ? 3000 : MIN_PLAY_MS) || elapsed > TOKEN_TTL_MS) {
       return Response.json({ error: 'token_age' }, { status: 422 })
     }
     // Заявленная длительность не может превышать реально прошедшее время + запас на задержку
     // выдачи токена (см. MIN_PLAY_MS). 20с покрывает холодный старт `/start`, не пропуская читы.
-    if (durationMs > elapsed + 20_000) {
+    if (durationMs > elapsed + (isRun ? 1000 : 20_000)) {
       return Response.json({ error: 'duration_mismatch' }, { status: 422 })
     }
 
     // — Анти-чит: длительность раунда фиксирована (~60с) и счёт правдоподобен.
     // CATCH_PER_SEC_CAP — потолок «пойманных в секунду». Запас над реальным человеком;
     // подстраивать по анонимизированному распределению очков, когда появится трафик (SH-08).
-    if (durationMs < 50_000 || durationMs > 70_000) {
-      return Response.json({ error: 'implausible_duration' }, { status: 422 })
-    }
-    const CATCH_PER_SEC_CAP = 3
-    const maxScore = Math.ceil((durationMs / 1000) * CATCH_PER_SEC_CAP) + 8
-    if (score > maxScore) {
-      return Response.json({ error: 'implausible_score' }, { status: 422 })
+    let runStats: ReturnType<typeof validateRun> = null
+    if (isRun) {
+      if (!tok.s || tok.cs !== tok.s || tok.rv !== RULES_VERSION || tok.p !== seed) {
+        return Response.json({ error: 'invalid_course_token' }, { status: 401 })
+      }
+      if (
+        !parsed.data.rounds ||
+        !(runStats = validateRun(parsed.data.rounds, tok.cs, score, durationMs))
+      ) {
+        return Response.json({ error: 'implausible_run' }, { status: 422 })
+      }
+    } else {
+      if (durationMs < 50_000 || durationMs > 70_000) {
+        return Response.json({ error: 'implausible_duration' }, { status: 422 })
+      }
+      const CATCH_PER_SEC_CAP = 3
+      const maxScore = Math.ceil((durationMs / 1000) * CATCH_PER_SEC_CAP) + 8
+      if (score > maxScore) {
+        return Response.json({ error: 'implausible_score' }, { status: 422 })
+      }
     }
 
     if (!consumeNonce(tok.n)) {
@@ -310,7 +464,7 @@ export const leaderboardSubmit: Endpoint = {
       return Response.json({ error: 'unknown_game' }, { status: 404 })
     }
 
-    const season = currentSeason()
+    const season = isRun ? tok.s! : currentSeason()
     const parts = makeParts(seed, slug)
     const baseAlias = renderEn(parts)
     const playerKey = playerKeyFor(seed, slug, season)
@@ -375,14 +529,18 @@ export const leaderboardSubmit: Endpoint = {
             alias,
             nameParts: parts,
             score: best,
-            ...(score > (mine.score as number) ? { durationMs } : {}),
+            ...(score > (mine.score as number) ? { durationMs, ...runStats } : {}),
           },
         })
       } else {
         alias = mine.alias as string
         suffix = (mine.suffix as number) ?? 0
         if (score > (mine.score as number)) {
-          await req.payload.update({ collection: 'game-scores', id: mine.id, data: { score, durationMs } })
+          await req.payload.update({
+            collection: 'game-scores',
+            id: mine.id,
+            data: { score, durationMs, ...runStats },
+          })
         }
       }
     } else {
@@ -399,7 +557,18 @@ export const leaderboardSubmit: Endpoint = {
       alias = suffix >= 2 ? `${baseAlias} ${suffix}` : baseAlias
       await req.payload.create({
         collection: 'game-scores',
-        data: { game, playerKey, baseAlias, suffix, alias, nameParts: parts, score, durationMs, season },
+        data: {
+          game,
+          playerKey,
+          baseAlias,
+          suffix,
+          alias,
+          nameParts: parts,
+          score,
+          durationMs,
+          season,
+          ...runStats,
+        },
       })
     }
 
@@ -416,14 +585,14 @@ export const leaderboardSubmit: Endpoint = {
     const first = await page(req, game, season, 1, PAGE_SIZE)
     const percentile = first.total > 0 ? Math.max(1, Math.round((rank / first.total) * 100)) : 100
 
-    void pruneOldSeasons(req, season)
+    void pruneOldSeasons(req, currentSeason())
 
     return Response.json({
       alias,
       parts,
       suffix,
       season,
-      resetAt: seasonEnd().toISOString(),
+      resetAt: seasonEnd(new Date(tok.t)).toISOString(),
       score: best,
       submitted: score,
       improved: !mine || score > (mine.score as number),
@@ -444,7 +613,10 @@ export const leaderboardRead: Endpoint = {
     const url = new URL(req.url ?? '')
     const slug = url.searchParams.get('game') ?? ''
     const pageNum = Math.max(1, parseInt(url.searchParams.get('page') ?? '1', 10) || 1)
-    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(url.searchParams.get('limit') ?? String(PAGE_SIZE), 10) || PAGE_SIZE))
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(1, parseInt(url.searchParams.get('limit') ?? String(PAGE_SIZE), 10) || PAGE_SIZE),
+    )
     const season = currentSeason()
 
     const resetAt = seasonEnd().toISOString()
@@ -453,7 +625,26 @@ export const leaderboardRead: Endpoint = {
       return Response.json({ season, resetAt, total: 0, page: pageNum, hasMore: false, top: [] })
     }
     const res = await page(req, game, season, pageNum, limit)
-    return Response.json({ season, resetAt, ...res })
+    const identity = slug === 'seal-run' ? runIdentity(req.headers, season) : null
+    let personalBest = null
+    if (identity) {
+      const mine = await req.payload.find({
+        collection: 'game-scores',
+        depth: 0,
+        limit: 1,
+        where: {
+          game: { equals: game },
+          season: { equals: season },
+          playerKey: { equals: playerKeyFor(identity.seed, slug, season) },
+        },
+        sort: '-score',
+      })
+      personalBest = mine.docs[0]?.score ?? null
+    }
+    return Response.json(
+      { season, resetAt, ...res, ...(slug === 'seal-run' ? { personalBest } : {}) },
+      { headers: { 'Cache-Control': 'no-store' } },
+    )
   },
 }
 
@@ -465,6 +656,25 @@ export const leaderboardStart: Endpoint = {
     const url = new URL(req.url ?? '')
     const slug = url.searchParams.get('game') ?? ''
     if (!slug) return Response.json({ error: 'bad_request' }, { status: 400 })
-    return Response.json({ token: signToken(slug) })
+    if (slug === 'seal-run') {
+      if (rateLimited(clientIp(req), 60))
+        return Response.json({ error: 'rate_limited' }, { status: 429 })
+      const season = currentSeason()
+      const identity = runIdentity(req.headers, season, true)!
+      const headers = new Headers({ 'Cache-Control': 'no-store' })
+      if (identity.cookie) headers.set('Set-Cookie', identity.cookie)
+      return Response.json(
+        {
+          token: signToken(slug, { s: season, cs: season, rv: RULES_VERSION, p: identity.seed }),
+          season,
+          courseSeed: season,
+          rulesVersion: RULES_VERSION,
+          seed: identity.seed,
+          parts: makeParts(identity.seed, slug),
+        },
+        { headers },
+      )
+    }
+    return Response.json({ token: signToken(slug) }, { headers: { 'Cache-Control': 'no-store' } })
   },
 }

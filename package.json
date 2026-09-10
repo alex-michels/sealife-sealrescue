@@ -22,7 +22,8 @@
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts --project int",
     "test:unit": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts --project unit",
-    "typecheck": "cross-env NODE_OPTIONS=--no-deprecation tsc --noEmit"
+    "typecheck": "cross-env NODE_OPTIONS=--no-deprecation tsc --noEmit",
+    "test:seal-run": "cross-env SEAL_RUN_STATIC=1 playwright test --config=playwright.seal-run.config.ts"
   },
   "dependencies": {
     "@langchain/core": "1.1.48",

@@ -25,3 +25,10 @@
 # 	encode zstd gzip
 # 	reverse_proxy 127.0.0.1:3000
 # }
+
+# SR-12: enable only with the canonical sealife.info launch (same-origin game storage).
+# sealrun.sealife.info {
+#     @russian path /ru /ru/*
+#     redir @russian https://sealife.info/ru/games/seal-run 301
+#     redir https://sealife.info/en/games/seal-run 301
+# }

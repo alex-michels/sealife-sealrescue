@@ -71,7 +71,7 @@ export function decide(state) {
     if (o.atLu < d - 2 * FIELD_W) continue;
     if (o.atLu > d + LOOK + 2 * FIELD_W) break;
     for (let s = 0; s <= LOOK; s += SAMPLE_LU) {
-      const p = predatorPos(o, d + s);
+      const p = predatorPos(o, state.worldD + s);
       if (Math.abs(p.x - (d + s)) > p.r + SEAL_R + PRED_PAD) continue;
       for (let k = 0; k < N_BANDS; k++) {
         if (Math.abs(bandY(k) - p.y) <= p.r + SEAL_R + BAND_PAD)

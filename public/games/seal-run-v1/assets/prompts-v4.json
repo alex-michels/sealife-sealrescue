@@ -1,0 +1,320 @@
+{
+  "tool": "image_gen built-in",
+  "generatedAt": "2026-09-10",
+  "provenance": "AI-generated; visually reviewed, not scientific measurements",
+  "assets": [
+    {
+      "id": "porbeagle",
+      "prompt": "Realistic production game sprite atlas with TRUE TRANSPARENT BACKGROUND, RGBA PNG. FOUR same porbeagle sharks (Lamna nasus), LEFT-facing full side profiles, 2x2 grid on 1536x1024. Each 768x512 cell has whole animal including all fins within x40..730,y80..430. Four subtle lateral tail swim phases, torso and head locked at same local position. Dark bluish-gray muscular torpedo-shaped body, white belly, conical snout, 5 gill slits, crescent-shaped vertical caudal fin with secondary keel. Anatomical identification CRITICAL: first dorsal fin is a tall swept triangle with dark TOP APEX; the diagnostic WHITE PATCH is ONLY on its LOW REAR FREE TIP, the thin little point projecting right along the back at the BASE of the fin, NOT at the top apex. Upper fin apex must remain DARK. Slightly open natural mouth. Photorealistic texture, neutral diffuse light, ample transparent margins. No sea, backdrop, shadow, checkerboard, grid lines or text.",
+      "sourceImage": "exec-987344a2-cf27-4df2-8be1-02af24aeb0c3.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ]
+      },
+      "files": [
+        "porbeagle-v4-0.webp",
+        "porbeagle-v4-1.webp",
+        "porbeagle-v4-2.webp",
+        "porbeagle-v4-3.webp"
+      ]
+    },
+    {
+      "id": "white-shark",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Great white shark (Carcharodon carcharias). Broad muscular body, conical snout, gray dorsum sharply white ventral surface, triangular first dorsal, large pointed pectoral fins, vertical crescent caudal fin, five gill slits. Slightly open jaw with small visible serrated triangular teeth, no exaggerated monster mouth. Subtle lateral tail stroke.",
+      "sourceImage": "exec-5996e229-ba22-4bb1-b0a8-865269f71e21.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            12,
+            0
+          ],
+          [
+            0,
+            16
+          ],
+          [
+            8,
+            16
+          ]
+        ]
+      },
+      "files": [
+        "white-shark-v4-0.webp",
+        "white-shark-v4-1.webp",
+        "white-shark-v4-2.webp",
+        "white-shark-v4-3.webp"
+      ]
+    },
+    {
+      "id": "galapagos-shark",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Galapagos shark (Carcharhinus galapagensis). Streamlined brownish-gray back white belly, moderately rounded broad snout, tall first dorsal fin, long pointed pectorals, asymmetrical vertical caudal fin with long upper lobe. Dusky trailing tail edge, NOT black fin tips. Five gill slits. Slimmer than great white. Subtle lateral tail stroke.",
+      "sourceImage": "exec-cb47805e-31c7-4857-86a4-031379897cf5.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            8,
+            -2
+          ],
+          [
+            0,
+            33
+          ],
+          [
+            8,
+            29
+          ]
+        ]
+      },
+      "files": [
+        "galapagos-shark-v4-0.webp",
+        "galapagos-shark-v4-1.webp",
+        "galapagos-shark-v4-2.webp",
+        "galapagos-shark-v4-3.webp"
+      ]
+    },
+    {
+      "id": "tiger-shark",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Tiger shark (Galeocerdo cuvier). Broad blunt rounded snout, thick grey-brown body pale belly, characteristic dark vertical tiger stripes along flanks, large upper lobe of vertical heterocercal tail, low swept first dorsal, five gill slits. Slightly open normal mouth. Subtle lateral tail stroke.",
+      "sourceImage": "exec-ab4f5c14-6272-4d22-8470-7d7bf4f91a55.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            22
+          ],
+          [
+            2,
+            20
+          ]
+        ]
+      },
+      "files": [
+        "tiger-shark-v4-0.webp",
+        "tiger-shark-v4-1.webp",
+        "tiger-shark-v4-2.webp",
+        "tiger-shark-v4-3.webp"
+      ]
+    },
+    {
+      "id": "orca-northern",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Adult female killer whale (Orcinus orca), North Atlantic/general cosmopolitan morphology, glossy black back white belly, white oval eye patch behind and above tiny dark eye, gray saddle behind moderately tall curved dorsal fin, broad rounded pectoral flippers, horizontal paired tail flukes. Do not give shark gills or shark vertical tail. Four phases of gentle up-and-down tail stroke. Authentic proportions, round blunt head, no dolphin beak.",
+      "sourceImage": "exec-966f52cb-ee6c-458a-955a-f232b264af3b.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            8,
+            0
+          ],
+          [
+            0,
+            64
+          ],
+          [
+            8,
+            64
+          ]
+        ]
+      },
+      "files": [
+        "orca-northern-v4-0.webp",
+        "orca-northern-v4-1.webp",
+        "orca-northern-v4-2.webp",
+        "orca-northern-v4-3.webp"
+      ]
+    },
+    {
+      "id": "orca-antarctic",
+      "prompt": "Use case: scientific-educational realistic game sprite atlas. Genuine transparent PNG alpha, NO background, water, ground shadow, checkerboard, labels or grid. 1536x1024, exactly FOUR complete animals arranged in a precise 2x2 grid of 768x512 cells. All FOUR show the SAME individual in successive phases of one subtle swimming cycle, consistent scale and colors; body and head locked at identical local positions, only fins/tail move. Strict side view, swimming LEFT. Entire animal including all fins and tail inside each cell x50..720 y80..420, generous transparent margins. Photorealistic natural texture and soft neutral lighting, sharp readable silhouette. Do not crop any part. Antarctic large pack-ice Type B1 killer whale (Orcinus orca). Robust body, dark gray back with clearly lighter gray DORSAL CAPE, notably LARGE oval cream eye patch parallel to body axis, white belly with subtle yellowish diatom tint. Curved dorsal fin, broad rounded pectorals and horizontal paired flukes. No gills or vertical shark tail. Blunt rounded head. Four phases of gentle vertical fluke stroke.",
+      "sourceImage": "exec-caa18a1f-c335-456b-b4aa-d1874e56538d.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            0
+          ],
+          [
+            0,
+            13
+          ],
+          [
+            0,
+            12
+          ]
+        ]
+      },
+      "files": [
+        "orca-antarctic-v4-0.webp",
+        "orca-antarctic-v4-1.webp",
+        "orca-antarctic-v4-2.webp",
+        "orca-antarctic-v4-3.webp"
+      ]
+    },
+    {
+      "id": "grey-seal",
+      "prompt": "Create a realistic game sprite atlas on a TRUE TRANSPARENT BACKGROUND, RGBA PNG. Exactly four full young grey seals (Halichoerus grypus) swimming RIGHT in a 2x2 grid on 1536x1024. Same individual in 4 swimming phases. Identical registered body and head positions; each seal within local x45..720,y95..425 of its 768x512 cell. Whole round chunky grey juvenile, plump belly and neck folds, silver-grey short fur with irregular dark charcoal mottling. Head on RIGHT, two dark eyes in soft three-quarter view, short grey-seal muzzle, dark nostrils and long pale whiskers. No external ears. Two SHORT paddle-shaped front flippers with tiny claws, NOT long otariid flippers. Back of body on LEFT has TWO WEBBED FAN-SHAPED hind flippers with a clearly visible SHORT TRIANGULAR TAIL protruding between their bases. Tail a natural small tapering fleshy wedge continuous with rump, not a stick. Four poses of gentle lateral hind flipper movement and short foreflipper paddling. Very chonky young seal, endearing but biologically realistic. Natural detailed photographic texture, soft neutral light. Transparent cutout ONLY, no environment, no floor, no cast shadow, no grid lines, no lettering. Keep generous empty transparent margins.",
+      "sourceImage": "exec-2ee143e9-005c-4f56-bcbb-96a28aa05967.png",
+      "registration": {
+        "canvas": [
+          800,
+          560
+        ],
+        "padding": [
+          16,
+          24
+        ],
+        "shifts": [
+          [
+            0,
+            0
+          ],
+          [
+            13,
+            -14
+          ],
+          [
+            -3,
+            26
+          ],
+          [
+            5,
+            28
+          ]
+        ]
+      },
+      "files": [
+        "grey-seal-v4-0.webp",
+        "grey-seal-v4-1.webp",
+        "grey-seal-v4-2.webp",
+        "grey-seal-v4-3.webp"
+      ]
+    },
+    {
+      "id": "hull-coastal",
+      "prompt": "Use case: realistic underwater side-scrolling game sprite. Genuine transparent PNG alpha, no water, background, sky, checkerboard, shadow or labels. Wide 1536x1024 composition. Show ONLY the submerged LOWER HULL of a boat, absolutely its ENTIRE LENGTH from stern on LEFT to bow on RIGHT. No deck, cabin or mast; clean horizontal waterline across upper edge of hull at y260. Long unbroken hull extends x180..1410, curving to a complete bow at right and complete stern at left; keel bottom around y450. A visible stern engine shaft descends on LEFT near x330 to a small round gearbox centered x330,y620. NO propeller blades: separate rotating blade sprite will attach to gearbox. No cross-section or sliced ends, whole underwater hull visible with margins. Detailed realistic material, wear, natural underwater blue-tinted lighting. Subject: modest fishing workboat, weathered teal paint, dark red antifouling bottom, rugged industrial steel stern drive.",
+      "sourceImage": "exec-e2f6e41a-c88a-4638-9554-2f3fa71d8a9a.png",
+      "files": [
+        "boat-coastal-v4-hull.webp"
+      ]
+    },
+    {
+      "id": "hull-atlantis",
+      "prompt": "Use case: realistic underwater side-scrolling game sprite. Genuine transparent PNG alpha, no water, background, sky, checkerboard, shadow or labels. Wide 1536x1024 composition. Show ONLY the submerged LOWER HULL of a boat, absolutely its ENTIRE LENGTH from stern on LEFT to bow on RIGHT. No deck, cabin or mast; clean horizontal waterline across upper edge of hull at y260. Long unbroken hull extends x180..1410, curving to a complete bow at right and complete stern at left; keel bottom around y450. A visible stern engine shaft descends on LEFT near x330 to a small round gearbox centered x330,y620. NO propeller blades: separate rotating blade sprite will attach to gearbox. No cross-section or sliced ends, whole underwater hull visible with margins. Detailed realistic material, wear, natural underwater blue-tinted lighting. Subject: fantasy ancient Greek wooden ship, curved wooden keel, patinated bronze bands, ancient ornamental bronze stern drive. Fictional antique propulsion.",
+      "sourceImage": "exec-863c043f-195b-4f71-addb-0e8ece939771.png",
+      "files": [
+        "boat-atlantis-v4-hull.webp"
+      ]
+    },
+    {
+      "id": "hull-tropical",
+      "prompt": "Use case: realistic underwater side-scrolling game sprite. Genuine transparent PNG alpha, no water, background, sky, checkerboard, shadow or labels. Wide 1536x1024 composition. Show ONLY the submerged LOWER HULL of a boat, absolutely its ENTIRE LENGTH from stern on LEFT to bow on RIGHT. No deck, cabin or mast; clean horizontal waterline across upper edge of hull at y260. Long unbroken hull extends x180..1410, curving to a complete bow at right and complete stern at left; keel bottom around y450. A visible stern engine shaft descends on LEFT near x330 to a small round gearbox centered x330,y620. NO propeller blades: separate rotating blade sprite will attach to gearbox. No cross-section or sliced ends, whole underwater hull visible with margins. Detailed realistic material, wear, natural underwater blue-tinted lighting. Subject: Hawaiian wooden outrigger canoe lower hull with adjacent slim outrigger float, weathered warm wood, turquoise lashings, improvised small metal stern motor.",
+      "sourceImage": "exec-96bb4133-f504-4836-aa73-6392a97c106f.png",
+      "files": [
+        "boat-tropical-v4-hull.webp"
+      ]
+    },
+    {
+      "id": "hull-arctic",
+      "prompt": "Use case: realistic underwater side-scrolling game sprite. Genuine transparent PNG alpha, no water, background, sky, checkerboard, shadow or labels. Wide 1536x1024 composition. Show ONLY the submerged LOWER HULL of a boat, absolutely its ENTIRE LENGTH from stern on LEFT to bow on RIGHT. No deck, cabin or mast; clean horizontal waterline across upper edge of hull at y260. Long unbroken hull extends x180..1410, curving to a complete bow at right and complete stern at left; keel bottom around y450. A visible stern engine shaft descends on LEFT near x330 to a small round gearbox centered x330,y620. NO propeller blades: separate rotating blade sprite will attach to gearbox. No cross-section or sliced ends, whole underwater hull visible with margins. Detailed realistic material, wear, natural underwater blue-tinted lighting. Subject: Arctic icebreaker lower hull, reinforced red black steel bow, scuffed rugged keel, heavy ice-class shaft and gearbox.",
+      "sourceImage": "exec-fe3f26ae-56bb-4bc4-be9d-c892be53feaa.png",
+      "files": [
+        "boat-arctic-v4-hull.webp"
+      ]
+    },
+    {
+      "id": "hull-antarctic",
+      "prompt": "Use case: realistic underwater side-scrolling game sprite. Genuine transparent PNG alpha, no water, background, sky, checkerboard, shadow or labels. Wide 1536x1024 composition. Show ONLY the submerged LOWER HULL of a boat, absolutely its ENTIRE LENGTH from stern on LEFT to bow on RIGHT. No deck, cabin or mast; clean horizontal waterline across upper edge of hull at y260. Long unbroken hull extends x180..1410, curving to a complete bow at right and complete stern at left; keel bottom around y450. A visible stern engine shaft descends on LEFT near x330 to a small round gearbox centered x330,y620. NO propeller blades: separate rotating blade sprite will attach to gearbox. No cross-section or sliced ends, whole underwater hull visible with margins. Detailed realistic material, wear, natural underwater blue-tinted lighting. Subject: Antarctic motor research ship lower hull, navy blue with orange strip and red antifouling keel, modern steel stern propulsion shaft.",
+      "sourceImage": "exec-6536ced9-07a0-4f44-a3e2-a65a8c39f4c1.png",
+      "files": [
+        "boat-antarctic-v4-hull.webp"
+      ]
+    }
+  ]
+}

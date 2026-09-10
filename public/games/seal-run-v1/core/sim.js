@@ -6,9 +6,8 @@
 // ресурсов, §6 препятствия, §8 порядок тика, §10 завершение/очки).
 //
 // Детерминизм (спека §1.3): фиксированный шаг SIM_DT (accumulator — в рендер-слое), НОЛЬ
-// RNG в рантайме — движение хищников суть чистые функции мировой X. Чарджеры (акулы)
-// выражены дистанционным отношением CHARGE_REL/BAL.SPEED_MAX, а не wall-clock: замедленный
-// игрок встречает ТОТ ЖЕ мир в тех же мировых координатах.
+// RNG в рантайме: хищники следуют независимой координате течения worldD.
+// Дистанция игрока d = worldD - lag; дебафф меняет только тюленя.
 
 // Тюнинги — через мутируемый BAL (читается В МОМЕНТ обращения — так compare-variants
 // может подменять значения между прогонами без пере-импорта модулей).
@@ -36,7 +35,7 @@ const Y_MAX = WORLD_H - SEAL_R;
 const clampY = (y) => max(Y_MIN, min(Y_MAX, y));
 
 /**
- * Позиция хищника как чистая функция мировой X тюленя `d` (спека §6.2). Экспорт — рендеру
+ * Позиция хищника как чистая функция координаты течения `d` (спека §6.2). Экспорт — рендеру
  * (SR-05) и харнессу (SR-04): спрайты рисуются ИЗ этой функции, никакой второй физики.
  */
 export function predatorPos(o, d) {
@@ -48,10 +47,16 @@ export function predatorPos(o, d) {
         y: yc + o.ampBands * BAND_STEP * sin((2 * PI * (d - o.atLu)) / BAL.ORCA_PERIOD_LU),
         r: OBSTACLE_DIMS.orca.r,
       };
+    case 'boat_propeller':
+      return { x: o.atLu, y: yc, r: OBSTACLE_DIMS.boat_propeller.r };
+    case 'polar_bear':
+      return { x: o.atLu, y: yc, r: OBSTACLE_DIMS.polar_bear.r };
+    case 'leopard_seal':
     case 'shark_white': {
       const adv = max(0, d - (o.atLu - HORIZON_LU)); // активируется, войдя в горизонт
       return { x: o.atLu - (BAL.SHARK_CHARGE_REL / BAL.SPEED_MAX) * adv, y: yc, r: OBSTACLE_DIMS.shark_white.r };
     }
+    case 'leopard_seal_big':
     case 'shark_big': {
       const adv = max(0, d - (o.atLu - HORIZON_LU));
       return {
@@ -96,9 +101,15 @@ export function createSim(course) {
     targetY: WORLD_H / 2,
     // — мир
     d: 0, // мировая X тюленя = пройденная дистанция, lu
+    worldD: 0, // независимый путь течения/камеры, lu
+    lag: 0, // ограниченное отставание тюленя от камеры, lu
+    worldSpeed: 0,
     lengthLu: course.lengthLu ?? COURSE_LENGTH_LU,
     tMs: 0,
     effSpeed: 0, // скорость последнего тика (для HUD/рендера)
+    speedMultiplier: course.speedMultiplier ?? 1,
+    burstUntilMs: 0,
+    burstReadyMs: 0,
     // — ресурсы и статусы (спека §5.2): status — ресурсный автомат; хит-стан/i-frames —
     // независимые таймеры (множители §4.2 ортогональны); phase — жизненный цикл раунда.
     lives: BAL.STARTING_LIVES,
@@ -135,6 +146,12 @@ export function createSim(course) {
 export function applyInput(state, ctrl, dt = SIM_DT) {
   if (state.phase !== 'running') return;
   if (ctrl == null) return;
+  if (ctrl.burst && state.tMs >= state.burstReadyMs && state.stamina >= BAL.BURST_COST) {
+    state.stamina -= BAL.BURST_COST;
+    state.burstUntilMs = state.tMs + BAL.BURST_MS;
+    state.burstReadyMs = state.tMs + BAL.BURST_COOLDOWN_MS;
+    emit(state, 'burst');
+  }
   if (typeof ctrl.targetY === 'number') state.targetY = clampY(ctrl.targetY);
   else if (typeof ctrl.pointerY === 'number') state.targetY = clampY(ctrl.pointerY);
   else if (ctrl.keyDir === -1 || ctrl.keyDir === 1)
@@ -166,6 +183,8 @@ export function step(state, dt = SIM_DT) {
   if (state.phase !== 'running') return;
   state.tMs += dt * 1000;
   const inHitstun = state.tMs < state.hitstunUntilMs;
+  const slowed = state.tMs < state.debrisUntilMs;
+  const agility = slowed ? BAL.DEBRIS_AGILITY_MULT : 1;
   const S = BAL.SURFACE.water; // v1: единственная среда (спека §1.6)
 
   // 1) Физика Y — 1D ARRIVE (спека §2.2); в хит-стане ввод игнорируется, действует отброс.
@@ -173,22 +192,35 @@ export function step(state, dt = SIM_DT) {
     state.y = clampY(state.y + state.knockVy * dt);
     state.vy = 0;
   } else {
-    const vyDes = max(-S.VY_MAX, min(S.VY_MAX, (state.targetY - state.y) / S.TAU_Y));
-    state.vy += max(-S.AY_MAX * dt, min(S.AY_MAX * dt, vyDes - state.vy));
+    const vyDes = max(-S.VY_MAX * agility, min(S.VY_MAX * agility, (state.targetY - state.y) / S.TAU_Y));
+    state.vy += max(-S.AY_MAX * agility * dt, min(S.AY_MAX * agility * dt, vyDes - state.vy));
     state.y = clampY(state.y + state.vy * dt);
   }
 
-  // 2) Скролл мира (спека §4.2): множители независимы; в хит-стане мир стоит.
+  // 2) Current keeps moving during player debuffs. Positive pace boosts retain
+  // their existing effect; nets, exhaustion and hitstun never slow the world.
   const buffed = state.buffLeftMs > 0;
-  const slowed = state.tMs < state.debrisUntilMs;
-  const effSpeed = inHitstun
-    ? 0
-    : baseSpeed(state.d) *
-      (buffed ? BAL.FISH_SPEED_BUFF_MULT : 1) *
-      (slowed ? BAL.DEBRIS_SLOW_MULT : 1) *
-      (state.status === 'exhausted' ? BAL.STAMINA_EMPTY_SLOW_MULT : 1);
-  state.effSpeed = effSpeed;
-  state.d += effSpeed * dt;
+  const worldSpeed = baseSpeed(state.worldD) * state.speedMultiplier *
+    (state.tMs < state.burstUntilMs ? BAL.BURST_MULT : 1) *
+    (buffed ? BAL.FISH_SPEED_BUFF_MULT : 1);
+  const targetLag = inHitstun ? BAL.HIT_LAG_LU : slowed ? BAL.DEBRIS_LAG_LU :
+    state.status === 'exhausted' ? BAL.EXHAUSTED_LAG_LU : 0;
+  const retention = inHitstun ? 0 : slowed ? BAL.DEBRIS_SLOW_MULT :
+    state.status === 'exhausted' ? BAL.STAMINA_EMPTY_SLOW_MULT : 1;
+  const previousD = state.d;
+  if (state.lag < targetLag) {
+    state.lag = min(targetLag, state.lag + worldSpeed * (1 - retention) * dt);
+  } else {
+    // Bounded catch-up: no teleport, overshoot, backward world motion or lost visibility.
+    state.lag = max(targetLag, state.lag - min(
+      (state.lag - targetLag) / BAL.LAG_RECOVERY_TAU,
+      worldSpeed * BAL.LAG_RECOVERY_MULT,
+    ) * dt);
+  }
+  state.worldSpeed = worldSpeed;
+  state.worldD += worldSpeed * dt;
+  state.d = state.worldD - state.lag;
+  state.effSpeed = (state.d - previousD) / dt;
   if (buffed) state.buffLeftMs = max(0, state.buffLeftMs - dt * 1000);
 
   const d = state.d;
@@ -235,7 +267,7 @@ export function step(state, dt = SIM_DT) {
     for (let i = C.pred; i < state.predators.length; i++) {
       const o = state.predators[i];
       if (o.atLu > d + FIELD_W) break; // ещё за горизонтом
-      const p = predatorPos(o, d);
+      const p = predatorPos(o, state.worldD);
       if (p.x < d - 200) continue; // уже прошёл мимо
       if (hypot(d - p.x, state.y - p.y) >= p.r + SEAL_R) continue;
       loseLife(state, o.type);
@@ -279,7 +311,7 @@ export function step(state, dt = SIM_DT) {
     }
   }
 
-  // 4) Ресурсы: пассивный расход дыхания (в хит-стане продолжается — мир стоит, дыхание нет).
+  // 4) Ресурсы: пассивный расход дыхания (в хит-стане продолжается вместе с течением).
   const drain = BAL.STAMINA_DRAIN_PER_SEC * (state.tMs < state.debrisUntilMs ? BAL.DEBRIS_STAMINA_DRAIN_MULT : 1) * dt;
   state.stamina = max(0, state.stamina - drain);
   if (state.status === 'normal' && state.stamina <= 0) {
@@ -299,9 +331,9 @@ export function step(state, dt = SIM_DT) {
     state.phase = 'finished';
     emit(state, 'finished');
   } else if (state.tMs >= BAL.MAX_COURSE_MS) {
-    state.phase = 'finished';
+    state.phase = 'dead';
     state.finishedByTimeout = true;
-    emit(state, 'finished', { timeout: true });
+    emit(state, 'dead', { timeout: true });
   }
 }
 

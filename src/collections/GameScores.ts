@@ -70,6 +70,11 @@ export const GameScores: CollectionConfig = {
     },
     { name: 'score', type: 'number', required: true, min: 0 },
     { name: 'durationMs', type: 'number', required: true },
+    { name: 'distance', type: 'number', min: 0, max: 4500 },
+    { name: 'livesRemaining', type: 'number', min: 0, max: 3 },
+    { name: 'fishCollected', type: 'number', min: 0, max: 2000 },
+    { name: 'courseSeed', type: 'text' },
+    { name: 'levelsCompleted', type: 'number', min: 0, max: 5 },
     {
       name: 'season',
       type: 'text',

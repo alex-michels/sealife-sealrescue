@@ -50,6 +50,13 @@ export function pickLocale(req: NextRequest): string {
 export function proxy(req: NextRequest) {
   const { pathname, searchParams } = req.nextUrl
 
+  // SR-12: a public directory has no implicit index in Next.js. Preserve query/locale.
+  if (pathname === '/games/seal-run-v1' || pathname === '/games/seal-run-v1/') {
+    const url = new URL(req.url)
+    url.pathname = '/games/seal-run-v1/index.html'
+    return NextResponse.redirect(url)
+  }
+
   const siteOverride = searchParams.get('site') ?? req.cookies.get('site')?.value
   const siteId = resolveSiteId(req.headers.get('host'), siteOverride)
 

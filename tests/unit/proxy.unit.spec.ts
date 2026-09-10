@@ -159,3 +159,17 @@ describe('CR-16: legal-only paths are rejected before list streaming', () => {
     },
   )
 })
+
+describe('SR-12: static game directory entry', () => {
+  it.each(['/games/seal-run-v1', '/games/seal-run-v1/'])(
+    'redirects %s to index and preserves explicit language/seed',
+    (path) => {
+      const res = proxy(req(path + '?lang=ru&seed=route', { 'accept-language': 'de' }))
+      expect(res.status).toBe(307)
+      expect(res.headers.get('location')).toBe(
+        'http://localhost:3000/games/seal-run-v1/index.html?lang=ru&seed=route',
+      )
+      expect(res.headers.has('x-middleware-rewrite')).toBe(false)
+    },
+  )
+})

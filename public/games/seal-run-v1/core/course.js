@@ -9,7 +9,8 @@
 //
 // Нормативная спека: docs/game-seal-run-spec.md §1, §4.3, §9.
 
-import { CHUNKS } from './chunks/index.js';
+import { ALL_CHUNKS } from './chunks/biomes.js';
+import { EXPEDITION, MAX_ROUNDS, roundSeed, roundSpeed } from './biomes.js';
 
 // — Константы мира/трассы (спека §1, §14). Физика/баланс тюленя — SR-03 (core/balance.js).
 export const WORLD_H = 540;            // lu; 0 = поверхность, 540 = дно
@@ -29,7 +30,9 @@ export const FISH_POINTS = { fish_small: 1, fish_rare: 4 };
 export const FISH_POINTS_BUDGET_MAX = 400;
 // Зазор досягаемости для серверной сверки бюджета: рыба считается собираемой,
 // если её atLu ≤ дистанция + этот запас (радиус подбора + округление метров).
-export const FISH_REACH_SLACK_LU = 50;
+export const FISH_PICKUP_R = 12;
+// A submitted whole metre can lag actual distance by almost LU_PER_M.
+export const FISH_REACH_SLACK_LU = SEAL_R + FISH_PICKUP_R + LU_PER_M;
 
 // Габариты препятствий без параметров в данных чанка (спека §6).
 export const OBSTACLE_DIMS = {
@@ -38,6 +41,10 @@ export const OBSTACLE_DIMS = {
   orca: { r: 46 },
   shark_white: { r: 30 },
   shark_big: { r: 42 },
+  polar_bear: { r: 30 },
+  boat_propeller: { r: 32 },
+  leopard_seal: { r: 30 },
+  leopard_seal_big: { r: 42 },
 };
 
 /** Центр полосы k (0 — у поверхности, N_BANDS-1 — у дна). Спека §3. */
@@ -78,6 +85,11 @@ export function difficultyCeil(d) {
   return 1 + Math.floor(4 * Math.min(1, d / RAMP_DISTANCE_LU));
 }
 
+/** Rising baseline; recovery chunks after an intense pattern are an intentional exception. */
+export function difficultyFloor(d) {
+  return 1 + Math.min(2, Math.floor(3 * d / COURSE_LENGTH_LU));
+}
+
 // После intense-чанка — принудительно «дыхание» (спека §4.3).
 const EASY_AFTER_INTENSE_MAX = 2;
 
@@ -89,7 +101,7 @@ const EASY_AFTER_INTENSE_MAX = 2;
  * @param {string} biome    v1: только 'coastal'
  * @param {Array}  registry реестр чанков (инъекция для тестов/линта; по умолчанию CHUNKS)
  */
-export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
+export function generateCourse(seedStr, biome = 'coastal', registry = ALL_CHUNKS) {
   const pool = registry.filter((c) => c.biome === biome);
   if (pool.length === 0) throw new Error(`no chunks for biome ${biome}`);
   const seedU32 = seedU32For(seedStr);
@@ -104,6 +116,7 @@ export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
     let eligible = pool.filter(
       (c) =>
         c.difficulty <= ceil &&
+        (afterIntense || c.difficulty >= difficultyFloor(total)) &&
         (last === null || c.id !== last.id) &&
         (!afterIntense || (c.difficulty <= EASY_AFTER_INTENSE_MAX && !c.intense)),
     );
@@ -137,9 +150,50 @@ export function generateCourse(seedStr, biome = 'coastal', registry = CHUNKS) {
     lengthLu: COURSE_LENGTH_LU,
     chunkIds: picked.map((p) => p.chunk.id),
     chunkStarts: picked.map((p) => p.startLu),
-    obstacles,
+    difficulties: picked.map((p) => p.chunk.difficulty),
+    obstacles: spaceSurfaceHazards(obstacles, fish, registry === ALL_CHUNKS),
     fish,
   };
+}
+
+// Keep the entire 336-lu bear sprite separate, including across chunk boundaries.
+// No extra RNG draws: placement remains identical in browser and server.
+export const SURFACE_ACTOR_GAP = 420;
+export function occupiesUpperWater(o) {
+  const radius = o.type === 'rock' ? o.h / 2
+    : o.type === 'ghost_net' ? 100 : o.type === 'plastic_cluster' ? 60
+    : (OBSTACLE_DIMS[o.type]?.r ?? 0) +
+      (o.type === 'orca' ? o.ampBands * BAND_STEP : o.type === 'shark_big' || o.type === 'leopard_seal_big' ? BAND_STEP / 2 : 0);
+  return bandY(o.band) - radius < 220;
+}
+function spaceSurfaceHazards(obstacles, fish, withBoats) {
+  let lastBear = -Infinity;
+  const spaced = [...obstacles].sort((a, b) => a.atLu - b.atLu).filter((o) => {
+    if (o.type !== 'polar_bear') return true;
+    if (o.atLu - lastBear < SURFACE_ACTOR_GAP) return false;
+    lastBear = o.atLu;
+    return true;
+  });
+  if (withBoats) {
+    // One opportunity per 150 m, after the guided opening. Only place in clear
+    // water, away from existing obstacles and fish on the propeller's lane.
+    for (let start = 3600; start < COURSE_LENGTH_LU - 2400; start += 6000) {
+      for (let atLu = start + 480; atLu < start + 2880; atLu += 120) {
+        if (spaced.some((o) => occupiesUpperWater(o) && Math.abs(o.atLu - atLu) < SURFACE_ACTOR_GAP)) continue;
+        if (fish.some((f) => f.band === 1 && Math.abs(f.atLu - atLu) < 150)) continue;
+        spaced.push({ type: 'boat_propeller', band: 1, atLu });
+        break;
+      }
+    }
+  }
+  return spaced.sort((a, b) => a.atLu - b.atLu);
+}
+
+/** Server and browser use the same chapter mapping, seed and speed. */
+export function generateRound(season, index) {
+  if (!Number.isInteger(index) || index < 0 || index >= MAX_ROUNDS) throw new Error('invalid round');
+  return { ...generateCourse(roundSeed(season, index), EXPEDITION[index]), roundIndex: index,
+    speedMultiplier: roundSpeed(index) };
 }
 
 /**

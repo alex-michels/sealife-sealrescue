@@ -1,0 +1,112 @@
+{
+  "generatedAt": "2026-09-10",
+  "tool": "built-in imagegen",
+  "provenance": "AI-generated illustrative environments and scenery; not photographs of documented locations",
+  "panoramas": [
+    {
+      "asset": "coastal-panorama-v2.webp",
+      "source": "exec-642565da-8575-4f5a-b21e-5aecfbe2fad1.png",
+      "prompt": "Use case: photorealistic wide scrolling game environment. Asset coastal-panorama-v2. Create a seamless continuous panoramic underwater landscape, EXTREMELY WIDE 4:1 composition, ideally 4096x1024. The camera travels horizontally across this panorama during a browser swimming marathon. North Atlantic kelp coast: weathered pebbles and boulders below, sparse olive kelp at seabed edges, distant rocky reef receding into teal haze. Left starts by a sheltered stony bay; right gradually reveals an open kelp channel. Entirely underwater horizontal side-on view, premium ocean documentary photographic realism, consistent cool sunlight from upper right. Keep the full middle 65 percent vertically as spacious low contrast open water across the ENTIRE width for legible game characters. Environmental detail confined to bottom 20 percent and top 12 percent, with gentle gradual variation from left to right. Strong atmospheric depth, restrained colors, believable rocks, water and material textures. Continuous scene, no panels or collage, no humans, animals, fish, text, logos, UI or borders. Do not bake foreground plants into central swimming space; close scenery will be separate animated sprites.",
+      "deliveredSize": [
+        2172,
+        724
+      ],
+      "webp": {
+        "quality": 80,
+        "effort": 5
+      }
+    },
+    {
+      "asset": "atlantis-panorama-v2.webp",
+      "source": "exec-6ab567b4-7553-4fe3-91c1-8c2ded5e4b58.png",
+      "prompt": "Use case: photorealistic wide scrolling game environment. Asset atlantis-panorama-v2. Create a seamless continuous panoramic underwater landscape, EXTREMELY WIDE 4:1 composition, ideally 4096x1024. The camera travels horizontally across this panorama during a browser swimming marathon. Fictional sunken Atlantis: eroded limestone arches and fragmented columns on a sandy seabed, distant monumental ruins in deep indigo haze. Left starts by scattered stone fragments; right reveals the far silhouette of an ancient archway. Entirely underwater horizontal side-on view, premium ocean documentary photographic realism, consistent cool sunlight from upper right. Keep the full middle 65 percent vertically as spacious low contrast open water across the ENTIRE width for legible game characters. Environmental detail confined to bottom 20 percent and top 12 percent, with gentle gradual variation from left to right. Strong atmospheric depth, restrained colors, believable rocks, water and material textures. Continuous scene, no panels or collage, no humans, animals, fish, text, logos, UI or borders. Do not bake foreground plants into central swimming space; close scenery will be separate animated sprites.",
+      "deliveredSize": [
+        2172,
+        724
+      ],
+      "webp": {
+        "quality": 80,
+        "effort": 5
+      }
+    },
+    {
+      "asset": "tropical-panorama-v2.webp",
+      "source": "exec-06cb685f-8bea-48ef-a769-398b75c309e6.png",
+      "prompt": "Use case: photorealistic wide scrolling game environment. Asset tropical-panorama-v2. Create a seamless continuous panoramic underwater landscape, EXTREMELY WIDE 4:1 composition, ideally 4096x1024. The camera travels horizontally across this panorama during a browser swimming marathon. Hawaiian volcanic coast: white sand, black lava rocks, restrained reef details, clear azure water. Left starts beside a low lava ledge; right reveals open sandy channels and a distant volcanic reef. Entirely underwater horizontal side-on view, premium ocean documentary photographic realism, consistent cool sunlight from upper right. Keep the full middle 65 percent vertically as spacious low contrast open water across the ENTIRE width for legible game characters. Environmental detail confined to bottom 20 percent and top 12 percent, with gentle gradual variation from left to right. Strong atmospheric depth, restrained colors, believable rocks, water and material textures. Continuous scene, no panels or collage, no humans, animals, fish, text, logos, UI or borders. Do not bake foreground plants into central swimming space; close scenery will be separate animated sprites.",
+      "deliveredSize": [
+        2172,
+        724
+      ],
+      "webp": {
+        "quality": 80,
+        "effort": 5
+      }
+    },
+    {
+      "asset": "arctic-panorama-v2.webp",
+      "source": "exec-b9ec091a-507c-4d22-a759-07624503c67b.png",
+      "prompt": "Use case: photorealistic wide scrolling game environment. Asset arctic-panorama-v2. Create a seamless continuous panoramic underwater landscape, EXTREMELY WIDE 4:1 composition, ideally 4096x1024. The camera travels horizontally across this panorama during a browser swimming marathon. Arctic seasonal sea ice: cold muted turquoise water under a low ceiling of pale blue sea ice, glacial gravel and rounded low stones. Left starts below rough ice; right reveals a faintly brighter breathing-hole opening far above. No kelp forest. Entirely underwater horizontal side-on view, premium ocean documentary photographic realism, consistent cool sunlight from upper right. Keep the full middle 65 percent vertically as spacious low contrast open water across the ENTIRE width for legible game characters. Environmental detail confined to bottom 20 percent and top 12 percent, with gentle gradual variation from left to right. Strong atmospheric depth, restrained colors, believable rocks, water and material textures. Continuous scene, no panels or collage, no humans, animals, fish, text, logos, UI or borders. Do not bake foreground plants into central swimming space; close scenery will be separate animated sprites.",
+      "deliveredSize": [
+        2172,
+        724
+      ],
+      "webp": {
+        "quality": 80,
+        "effort": 5
+      }
+    },
+    {
+      "asset": "antarctic-panorama-v2.webp",
+      "source": "exec-4fc21a20-e855-4071-968f-32df5cd782f9.png",
+      "prompt": "Use case: photorealistic wide scrolling game environment. Asset antarctic-panorama-v2. Create a seamless continuous panoramic underwater landscape, EXTREMELY WIDE 4:1 composition, ideally 4096x1024. The camera travels horizontally across this panorama during a browser swimming marathon. Southern Ocean below Antarctic ice shelf: deep cobalt water, immense blue glacial formations in far distance, a low dark stony seabed, majestic cold light through ice. Left starts under sculpted ice shelf; right reveals a distant blue glacial wall. No vegetation. Entirely underwater horizontal side-on view, premium ocean documentary photographic realism, consistent cool sunlight from upper right. Keep the full middle 65 percent vertically as spacious low contrast open water across the ENTIRE width for legible game characters. Environmental detail confined to bottom 20 percent and top 12 percent, with gentle gradual variation from left to right. Strong atmospheric depth, restrained colors, believable rocks, water and material textures. Continuous scene, no panels or collage, no humans, animals, fish, text, logos, UI or borders. Do not bake foreground plants into central swimming space; close scenery will be separate animated sprites.",
+      "deliveredSize": [
+        2172,
+        724
+      ],
+      "webp": {
+        "quality": 80,
+        "effort": 5
+      }
+    }
+  ],
+  "sceneryAtlas": {
+    "source": "exec-cdeb8cd1-1b88-4aa6-bdca-1bc1d8342c89.png",
+    "prompt": "Transparent-background game sprite sheet, genuine PNG alpha transparency. Six SMALL independent photorealistic underwater objects, 3 columns by 2 rows, 1536x1024. Each whole object centered in its own 512x512 cell, maximum object dimensions 350x350, leaving LARGE EMPTY TRANSPARENT GUTTERS between every object and the edges. Top row left: olive ribbon kelp plant rooted on a pebble; middle: cluster of three encrusted rounded boulders; right: ancient eroded stone arch with barnacles, fictional Atlantis. Bottom row left: small black lava reef rock with sparse coral and sea grass; middle: irregular pale turquoise sea-ice slab with jagged underside; right: blue glacial ice shard. Realistic ocean documentary material textures, restrained natural color, consistent soft cool light from upper right, side-on view. Isolated cutouts, no water or scene backdrop, no ground outside objects, no background, no checkerboard, no text, no animals. Keep every tip, frond and rock wholly within its cell. The objects must be relatively SMALL with much more empty space than object area across the atlas. Transparent PNG asset.",
+    "sourceSize": [
+      1536,
+      1024
+    ],
+    "layout": "3 columns × 2 rows, 512px cells; alpha-bound crop with 3px padding, no object recoloring",
+    "webp": {
+      "quality": 82,
+      "alphaQuality": 100,
+      "effort": 5
+    },
+    "props": [
+      {
+        "asset": "scenery-kelp-v2.webp",
+        "cell": 0
+      },
+      {
+        "asset": "scenery-boulders-v2.webp",
+        "cell": 1
+      },
+      {
+        "asset": "scenery-arch-v2.webp",
+        "cell": 2
+      },
+      {
+        "asset": "scenery-reef-v2.webp",
+        "cell": 3
+      },
+      {
+        "asset": "scenery-sea-ice-v2.webp",
+        "cell": 4
+      },
+      {
+        "asset": "scenery-glacier-v2.webp",
+        "cell": 5
+      }
+    ]
+  }
+}

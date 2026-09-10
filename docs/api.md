@@ -23,7 +23,7 @@ Server-authoritative: публичный клиент НЕ пишет в БД н
 
 ### `GET /api/leaderboard/start?game=<slug>`
 Выдаёт **play-token** на старте раунда (анти-чит). Токен — подписанный HMAC, привязан к game,
-с временной меткой. ⚠️ Этот endpoint сам по себе БЕЗ rate-limit (только `POST /api/leaderboard` его
+с временной меткой. Для Hunter этот endpoint сам по себе БЕЗ rate-limit (только `POST /api/leaderboard` его
 проверяет) — риск смягчён тем, что токен нужно ещё «прожить» ≥ `MIN_PLAY_MS` и израсходовать один раз.
 → `{ token: string }`
 
@@ -145,3 +145,26 @@ JSON-LD (`WebSite` на главных, `Article`/`NewsArticle` на матер�
 - [localization.md](localization.md) — как proxy.ts строит маршруты
 - [game-seal-hunter.md](game-seal-hunter.md) — клиент лидерборда и анти-чит
 - [DEPLOYMENT.md](DEPLOYMENT.md) — allowlist маршрутов для публичного теста
+
+## Seal Run expedition API (SR-09…SR-20)
+
+For `game=seal-run`, GET start returns `token, season, courseSeed, rulesVersion, seed, parts`
+and `Cache-Control: no-store`. The signed ticket pins the issued week, rules and player.
+A functional HttpOnly `seal_run_player` cookie is issued only on this explicit weekly start.
+This branch is rate limited to 60 starts/minute per transient IP bucket; POST retains 30/minute.
+
+POST retains `game, score, durationMs, seed, token` and requires `rounds` (1…5) for Run.
+Each round has integer `distanceM, fishCollected, fishPoints, livesRemaining, durationMs`.
+The server regenerates each pinned course and checks time bounds, reachable fish by type,
+exact derived score and consecutive finished chapters. Aggregate cap: 500000 points and
+750050 ms; per-round cap 150010 ms. Early runs need at least 3000 ms. A living partial
+last round can be banked. Hunter still uses its 50–70 second round and original score caps.
+
+Run results are stored against the ticket's week, including a run crossing Monday 00:00 UTC.
+The previous season has a one-hour grace period before lazy pruning; older seasons are
+removed on a later successful submission. In-process nonce consumption retains the existing
+single-server limitation. Plausibility checking is not a replay-based anti-cheat guarantee.
+
+GET leaderboard adds `personalBest` for a valid Run cookie and optional row fields
+`distance, fishCollected, livesRemaining, levelsCompleted`. Personalized reads are no-store.
+No account, email, persistent IP log or client-side score storage is introduced.
