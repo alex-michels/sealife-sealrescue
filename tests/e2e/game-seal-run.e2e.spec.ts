@@ -275,7 +275,14 @@ test('SR-07: RU menu contains the entire seal and separates its caption from rou
   ]) {
     await page.setViewportSize(size)
     const layout = await page.evaluate(() => {
-      const box = (selector: string) => {
+      // Anonymous callbacks survive the CI tsx/esbuild serialization boundary.
+      const [seal, caption, cards, copy, launch] = [
+        '#seal-portrait',
+        '.location-note',
+        '#biome-map',
+        '.hero-copy',
+        '.launch-panel',
+      ].map((selector) => {
         const r = document.querySelector(selector)!.getBoundingClientRect()
         return {
           left: r.left,
@@ -285,13 +292,13 @@ test('SR-07: RU menu contains the entire seal and separates its caption from rou
           width: r.width,
           height: r.height,
         }
-      }
+      })
       return {
-        seal: box('#seal-portrait'),
-        caption: box('.location-note'),
-        cards: box('#biome-map'),
-        copy: box('.hero-copy'),
-        launch: box('.launch-panel'),
+        seal,
+        caption,
+        cards,
+        copy,
+        launch,
         scrollWidth: document.documentElement.scrollWidth,
       }
     })
@@ -378,8 +385,12 @@ test('SR-06: predator collision circles stay inside visible bodies', async ({ pa
     buildExpeditionTextures(
       {
         textures: {
-          exists: (key: string) => textures.has(key),
-          addCanvas: (key: string, canvas: HTMLCanvasElement) => textures.set(key, canvas),
+          exists(key: string) {
+            return textures.has(key)
+          },
+          addCanvas(key: string, canvas: HTMLCanvasElement) {
+            textures.set(key, canvas)
+          },
         },
       },
       'antarctic',

@@ -584,12 +584,13 @@
     эта работа не включает их запуск. Один origin, отдельного game-origin нет.
   * [x] **SR-13** Privacy RU/EN/DE дополнена точными ключами настроек, cookie,
     серверным рекордом и статическим SW-кэшем. Прежние немецкие legal-тексты сохранены.
-  * [~] **SR-14** Browser suite: lazy engine, RU/EN, Node↔browser course hashes,
+  * [x] **SR-14** Browser suite: lazy engine, RU/EN, Node↔browser course hashes,
     keyboard/touch/layout, pause/focus, API failure/offline, weekly save/retry и пять переходов.
     Короткая browser fixture проверяет finish-переходы; полные 900 м и бюджеты
     проверяются sim/server suite и 780 bot chapter-runs.
     **Ревью 2026-09-10:** исправлены directory→404 и startup race; расширенный
-    suite включает 13 сценариев. Ожидается повторный production CI.
+    suite включает 13 сценариев; локальные проверки проходят и с CI-загрузчиком tsx.
+    Production-редирект проверяется полным CI-гейтом перед merge.
     Подробно: [SR-аудит](seal-run-review-2026-09-10.md).
   * [x] **SR-15** Локально синтезируемые SFX: рыба, рывок, удар, мусор, финиш/проигрыш.
     По умолчанию mute, opt-in и сохранение только после действия пользователя.

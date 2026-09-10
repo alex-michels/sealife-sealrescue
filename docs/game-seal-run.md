@@ -40,11 +40,13 @@ a separate short tail, short foreflippers with claws, small ear openings and no 
 All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
 The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
 not run a second physics engine. Sprites are pooled and simulation positions are interpolated.
+The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad corruption;
+flipper frames provide its swimming motion (see the SR review for the upstream report).
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
 Pixel regressions check player and predator collision circles inside the visible bodies.
 Two background particle layers scroll at 0.12× and 0.35×. Fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
-rotation/frame animation. Invulnerability uses steady transparency instead of flashing.
+frame animation. Invulnerability uses steady transparency instead of flashing.
 
 The engine is imported only after Play. HTML owns the menu, HUD, instructions, pause, result
 and leaderboard. Visible focus, modal focus trapping, safe-area padding and controls at least

@@ -134,7 +134,7 @@ function setView(next, focus) {
   $('portrait-tip').hidden = !playing
   $('ocean-preview').hidden = next !== 'menu'
   $('stage').hidden = next === 'menu'
-  if (playing) requestAnimationFrame(fitPlayArea)
+  if (playing) fitPlayArea()
   const modal = ['pause', 'result', 'board'].includes(next)
   document.querySelector('.topbar').inert = modal
   document.querySelector('.bar').inert = modal
@@ -148,8 +148,13 @@ function fitPlayArea() {
   const wrap = $('stage-wrap').getBoundingClientRect()
   const hud = $('hud').getBoundingClientRect()
   const controls = $('play-controls').getBoundingClientRect()
-  $('stage').style.top = Math.max(0, hud.bottom - wrap.top + 10) + 'px'
-  $('stage').style.bottom = Math.max(0, wrap.bottom - controls.top + 10) + 'px'
+  const top = Math.max(0, hud.bottom - wrap.top + 10) + 'px'
+  const bottom = Math.max(0, wrap.bottom - controls.top + 10) + 'px'
+  if ($('stage').style.top !== top || $('stage').style.bottom !== bottom) {
+    $('stage').style.top = top
+    $('stage').style.bottom = bottom
+    game?.scale.refresh()
+  }
 }
 const playLayout = new ResizeObserver(() => requestAnimationFrame(fitPlayArea))
 for (const id of ['stage-wrap', 'hud', 'play-controls']) playLayout.observe($(id))

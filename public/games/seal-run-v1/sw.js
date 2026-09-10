@@ -1,5 +1,5 @@
 // SR-11: only this game's immutable assets. Never cache APIs, cookies or scores.
-const VERSION = 'seal-run-expedition-art-2'
+const VERSION = 'seal-run-expedition-art-3'
 const ROOT = new URL('./', self.location.href).pathname
 const FILES = [
   'index.html',

@@ -177,7 +177,8 @@ export function createPlayScene(Phaser, hooks) {
       const d = this.prev.d + (state.d - this.prev.d) * a
       this.seal.setPosition(SEAL_X, y)
       this.seal.setAlpha(state.tMs < state.invulnUntilMs ? 0.55 : 1)
-      this.seal.setRotation(isReduced() ? 0 : Math.atan2(state.vy, 300) * 0.28)
+      // Phaser 4 WebGL can split moving, rotating quads (#7341).
+      // Keep the quad axis-aligned; articulated flipper frames carry the swim motion.
       const frame = isReduced() ? 0 : Math.floor(state.tMs / 80) % 8
       if (frame !== this.sealFrame) {
         this.sealFrame = frame

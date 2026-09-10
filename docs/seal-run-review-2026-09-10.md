@@ -22,6 +22,17 @@ The revised loader also keeps controls inert until handlers and standalone confi
 a loading/retry state covers module failures. HUD and touch controls bound the playable canvas,
 so no route geometry disappears under interface chrome.
 
+The next CI run (34483875178) reached **160 browser passes**, with two test-only failures:
+the CI tsx/esbuild loader injected a name helper into serialized browser callbacks.
+Anonymous callbacks and method shorthand remove that hidden bundle dependency.
+
+Manual steering reproduced moving/rotating WebGL quad corruption with an intact source
+texture. The seal now stays axis-aligned and swims through articulated flipper frames.
+This is consistent with [Phaser issue #7341](https://github.com/phaserjs/phaser/issues/7341),
+checked 2026-09-10; the exact internal engine cause is not asserted. WebGL remains enabled.
+Initial layout now sizes the parent before Phaser starts and explicitly refreshes its scale
+manager when interface bounds change. Real mobile touch input was also exercised.
+
 ## Task-by-task assessment
 
 | Tasks | Repository status and evidence |
@@ -39,7 +50,7 @@ so no route geometry disappears under interface chrome.
 | SR-11 | RU/EN, explicit UI preferences only, server-owned weekly best, recoverable errors and offline practice. |
 | SR-12 | **Partial:** repository route/embed/vanity redirect code exists. DNS, TLS, enabling public services and verifying live 301 remain operator rollout work. |
 | SR-13 | Privacy describes preferences, functional cookie, server score and static cache. German legal text retained. |
-| SR-14 | Expanded browser suite covers the reported failures; replacement production CI must pass before release readiness is claimed. |
+| SR-14 | Expanded browser suite covers the reported failures; callbacks also pass locally under the CI tsx loader. The full production CI remains the merge gate. |
 | SR-15 | Opt-in synthesized SFX, default mute, gesture-bound AudioContext. |
 | SR-16 | Frozen finish and five result/next transitions. Short browser fixture checks UI flow; full-length runs are exercised in simulation. |
 | SR-17 | Render-only fish bob, disabled with reduced motion. |
@@ -53,3 +64,8 @@ No public service, DNS or database migration was activated by this review.
 Existing deployment prerequisites remain in [DEPLOYMENT.md](DEPLOYMENT.md).
 The interface has keyboard/focus/motion/size checks; no claim of complete nonvisual gameplay
 or a full WCAG certification is made. Background plates are illustrative, not biological evidence.
+
+Validation record: the reviewed server CI job passed 689 unit/integration tests with its coverage gate;
+local TypeScript and lint pass (16 existing warnings). All 12 static-preview browser scenarios
+pass under both the normal and CI tsx loaders; the thirteenth scenario targets the production
+directory redirect. Final full-workflow status is attached to [PR #126](https://github.com/alex-michels/sealife-sealrescue/pull/126/checks).
