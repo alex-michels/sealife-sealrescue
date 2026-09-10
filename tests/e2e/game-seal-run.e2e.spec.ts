@@ -976,15 +976,20 @@ test('SR-22: calm scenery clears the target corridor and preset/boost transition
         ).length
       }
       const noEffects = !scenery.shimmer.visible && !scenery.motes.visible
-      const positions = () => [
-        scenery.panorama.x,
-        ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
-      ]
-      const frozen = positions()
+      // Method shorthand stays self-contained when CI's tsx loader serializes evaluate().
+      const snapshot = {
+        positions() {
+          return [
+            scenery.panorama.x,
+            ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
+          ]
+        },
+      }
+      const frozen = snapshot.positions()
       scenery.update(36100, 120100, 'minimum')
-      const freezes = JSON.stringify(frozen) === JSON.stringify(positions())
+      const freezes = JSON.stringify(frozen) === JSON.stringify(snapshot.positions())
       scenery.update(36100, 120100, 'rich')
-      const switchContinuous = JSON.stringify(frozen) === JSON.stringify(positions())
+      const switchContinuous = JSON.stringify(frozen) === JSON.stringify(snapshot.positions())
       // Once moving steadily, a 35% speed boost must not hit decor as a one-frame step.
       let d = 36100,
         t = 120100
@@ -1055,13 +1060,21 @@ test('SR-23: slow clocks preserve simulation state and steady practice holds cur
       const Play = createPlayScene(Phaser, {
         state,
         course,
-        currentCtrl: () => ({ keyDir: 1, burst }),
+        currentCtrl() {
+          return { keyDir: 1, burst }
+        },
         updateHud() {},
         onEvents() {},
         onEnd() {},
-        isPaused: () => false,
-        isReduced: () => true,
-        tempo: () => tempo,
+        isPaused() {
+          return false
+        },
+        isReduced() {
+          return true
+        },
+        tempo() {
+          return tempo
+        },
       })
       const game = new Phaser.Game({
         type: Phaser.WEBGL,
