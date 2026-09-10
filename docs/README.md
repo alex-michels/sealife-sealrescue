@@ -25,7 +25,8 @@
 | [game-seal-run-spec.md](game-seal-run-spec.md) | Нормативная спека механик Seal Run v1 (SR-01): единицы/детерминизм, физика free-Y, полосы, ярусы препятствий, автомат стамины, формат чанков + `generateCourse`, формула очков, серверные проверки |
 | [game-seal-run-expedition.md](game-seal-run-expedition.md) | Seal Run: пять биомов, арт-концепт, источники биологии, управление и мульти-раунды |
 | [seal-run-anatomy-references.md](seal-run-anatomy-references.md) | Референсы пяти игровых тюленей и региональных акул/косаток Seal Run: морда, глаза, ласты и хвост; источники и ограничения |
-| [seal-run-image-performance.md](seal-run-image-performance.md) | SR: WebP/SVG, измеренный инвентарь текстур и приоритеты оптимизации памяти |
+| [seal-run-image-performance-results.json](seal-run-image-performance-results.json) | SR-21: исходные размеры текстур, загрузки и время кадра в Chromium до/после |
+| [seal-run-image-performance.md](seal-run-image-performance.md) | SR-21: WebP-атласы, очистка текстур, мобильные панорамы и сравнение памяти до/после |
 | [seal-run-current-comparison.json](seal-run-current-comparison.json) | Парное сравнение старой и новой физики течения: 780 пар на одинаковых трассах |
 | [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |

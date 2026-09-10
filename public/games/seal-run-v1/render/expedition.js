@@ -1,6 +1,7 @@
 import { loadGeneratedHero } from './hazards.js'
 const heroPreviews = new WeakMap()
 // SR-06/SR-19. Original articulated Canvas animals over generated environment plates.
+import { faunaId } from '../core/fauna.js'
 import { BIOMES } from '../core/biomes.js'
 import { buildTextures } from './art.js'
 
@@ -434,6 +435,10 @@ export function paintPreview(canvas, biome, hero = false) {
 }
 export function buildExpeditionTextures(scene, biome) {
   buildTextures(scene)
+  const owned = []
+  scene.events.once('shutdown', () => {
+    for (const key of owned) scene.textures.remove(key)
+  })
   const add = (key, w, h, draw, resolution = 2) => {
     if (scene.textures.exists(key)) return
     const canvas = document.createElement('canvas')
@@ -443,11 +448,13 @@ export function buildExpeditionTextures(scene, biome) {
     c.scale(resolution, resolution)
     draw(c, w, h)
     scene.textures.addCanvas(key, canvas)
+    owned.push(key)
   }
-  for (let frame = 0; frame < 8; frame++)
-    add('seal_' + biome + '_' + frame, 180, 96, (c, w, h) =>
-      drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
-    )
+  if (!faunaId('seal', biome))
+    for (let frame = 0; frame < 8; frame++)
+      add('seal_' + biome + '_' + frame, 180, 96, (c, w, h) =>
+        drawPhocid(c, w, h, BIOMES[biome].coat, frame / 8),
+      )
   const b = BIOMES[biome]
   add('rock_' + biome, 120, 120, (c) => {
     const icy = biome === 'arctic' || biome === 'antarctic',

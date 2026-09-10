@@ -27,9 +27,9 @@ Energy is an arcade resource; fish do not supply breathing air.
 
 ## Art and rendering
 
-Three player species use articulated Canvas2D-generated Phaser textures; Atlantis and Antarctica use four-frame generated grey-seal and Weddell-pup atlases. Regional predators use generated swim cycles. Five generated 3:1 panoramas
+Three player species use articulated Canvas2D-generated Phaser textures; Atlantis and Antarctica use four-frame generated grey-seal and Weddell-pup atlases. Regional predators use trimmed, padded four-frame WebP atlases; both leopard-seal sizes share one atlas. Five generated 3:1 panoramas
 and six transparent scenery cutouts supply the moving game environment; the original five
-plates and thumbnails serve the menu/fallback. All 21 WebP files total 1,549,098 bytes.
+plates and thumbnails serve the menu/fallback. The 21 original environment WebPs total 1,549,098 bytes; five 1620×540 compact panorama derivatives serve viewports whose shorter side is at most 600px. The desktop variants remain 2172×724.
 Missing or slow scenery retains a procedural fallback. Missing collidable-animal or motor art stops loading with a retryable error.
 Asset prompts, provenance and extension guidance: [art manifest](../public/games/seal-run-v1/assets/README.md).
 `render/expedition.js` provides eight phocid swimming frames, spotted/ringed/monk/Weddell coats,
@@ -39,7 +39,7 @@ a separate short tail, upright near/far webbed feet whose projected breadth chan
 
 All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
 The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
-not run a second physics engine. Sprites are pooled and simulation positions are interpolated.
+not run a second physics engine. Sprites are pooled and simulation positions are interpolated. The hull and rotor are paired pooled images: a static hull and a compact eight-frame rotor atlas keep the same collision origin.
 The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad corruption;
 flipper frames provide its swimming motion (see the SR review for the upstream report).
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
@@ -50,8 +50,7 @@ forward and a partially visible far eye gives the muzzle a slight three-quarter 
 The panorama pans from its left edge to its right edge over 900 m. Separate scenery moves
 at 0.16×, 0.40× and 0.72× world speed, with nearer props larger and clearer. Phaser TileSprite
 shimmer, subtle kelp sway and a ParticleEmitter capped at 36 motes add water motion.
-Chapter panorama/prop GPU textures are released on shutdown; at most two decoded panoramas
-are cached. Tiny shimmer/mote textures are shared. Fish bob by at most 8 lu in rendering only;
+Chapter panorama/prop/animal/procedural-player GPU textures are released on shutdown; decoded loaders retain only the current chapter assets. Generated players do not allocate procedural game frames. Only common fish, debris, rock-cap and tiny shimmer/mote textures are shared. Obsolete generic predators and background layers are no longer built. Fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
 frame animation, and hides shimmer/motes. Pause/finish freeze scenery and particles. Invulnerability uses steady transparency instead of flashing.
 
@@ -151,3 +150,8 @@ Mobile uses the same optimized WebP files, proportionally scaled with the fixed 
 field. There is no mobile-specific download variant. New swim frames are 400×280 RGBA
 WebP; lower hulls are 1024×683; panoramas remain 2172×724. The generated grey-seal cover
 is contain-fitted separately, including its short tail between the hindflippers.
+
+Image delivery and resource budgets (SR-21): [performance review](seal-run-image-performance.md).
+Offline installation caches compact panoramas and live atlases. Larger desktop panoramas
+are cached on demand, with compact offline fallback. Logical field, hit radii and simulation
+rules do not change with image resolution.

@@ -6,16 +6,17 @@ import { actorSize, faunaId } from '../core/fauna.js'
 import { buildExpeditionTextures } from './expedition.js'
 import { fishBob } from './motion.js'
 import { createScenery } from './scenery.js'
-import { buildHazardTextures, hazardFrame } from './hazards.js'
+import { buildHazardTextures, hazardFrame, hazardTexture, ROTOR_SIZE } from './hazards.js'
 const STEP_MS = SIM_DT * 1000
 
 export function createPlayScene(Phaser, hooks) {
   const { state, course, currentCtrl, updateHud, onEvents, onEnd, isPaused, isReduced } = hooks
   const texSize = (kind) => actorSize(kind, course.biome)
   const heroSize = texSize('seal')
+  const generatedHero = faunaId('seal', course.biome)
   const heroKey = (time) =>
-    faunaId('seal', course.biome)
-      ? hazardFrame('seal', course.biome, time, isReduced())
+    generatedHero
+      ? hazardTexture('seal', course.biome)
       : 'seal_' + course.biome + '_' + (isReduced() ? 0 : Math.floor(time / 80) % 8)
   return class PlayScene extends Phaser.Scene {
     constructor() {
@@ -33,7 +34,14 @@ export function createPlayScene(Phaser, hooks) {
       this.acc = 0
       this.prev = { y: state.y, d: state.d, worldD: state.worldD }
       this.sealFrame = 0
-      this.seal = this.add.image(SEAL_X, state.y, heroKey(0)).setDepth(10)
+      this.seal = this.add
+        .image(
+          SEAL_X,
+          state.y,
+          heroKey(0),
+          generatedHero ? hazardFrame('seal', course.biome, 0) : undefined,
+        )
+        .setDepth(10)
       this.seal.setOrigin(heroSize.originX ?? 0.5, heroSize.originY)
       this.seal.setDisplaySize(heroSize.w, heroSize.h)
 
@@ -51,16 +59,36 @@ export function createPlayScene(Phaser, hooks) {
       if (!spr) {
         // Декор-оверлеи (макушки кекуров) — НАД пеной (7 > 6), геймплей-спрайты — под ней.
         spr = this.add
-          .image(0, 0, hazardFrame(kind, course.biome, state.tMs, isReduced()))
+          .image(
+            0,
+            0,
+            hazardTexture(kind, course.biome),
+            kind === 'boat_propeller'
+              ? undefined
+              : hazardFrame(kind, course.biome, state.tMs, isReduced()),
+          )
           .setDepth(kind === 'skerry_cap' ? 7 : 5)
         const t = texSize(kind) // Biome rocks use dimensions supplied by place().
         if (t && t.originY) spr.setOrigin(t.originX ?? 0.5, t.originY) // центр ТЕЛА = сим-координата
       }
+      if (kind === 'boat_propeller' && !spr.rotor) {
+        spr.rotor = this.add
+          .image(
+            0,
+            0,
+            'rotor_' + course.biome,
+            hazardFrame(kind, course.biome, state.tMs, isReduced()),
+          )
+          .setDepth(5.01)
+          .setDisplaySize(ROTOR_SIZE, ROTOR_SIZE)
+      }
       spr.setVisible(true)
+      spr.rotor?.setVisible(true)
       return spr
     }
     release(kind, spr) {
       spr.setVisible(false)
+      spr.rotor?.setVisible(false)
       this.pools.get(kind).push(spr)
     }
 
@@ -80,8 +108,10 @@ export function createPlayScene(Phaser, hooks) {
           this.bound.set(key, rec)
         }
         const frame = hazardFrame(kind, course.biome, state.tMs, isReduced())
-        if (rec.spr.texture.key !== frame) {
-          rec.spr.setTexture(frame)
+        if (rec.spr.rotor) {
+          rec.spr.rotor.setFrame(frame).setPosition(sx(x), y)
+        } else if (rec.spr.frame.name !== frame) {
+          rec.spr.setFrame(frame)
           rec.spr.setDisplaySize(dsz.w, dsz.h)
         }
         rec.spr.setPosition(sx(x), y)
@@ -184,9 +214,12 @@ export function createPlayScene(Phaser, hooks) {
       this.seal.setAlpha(state.tMs < state.invulnUntilMs ? 0.55 : 1)
       // Phaser 4 WebGL can split moving, rotating quads (#7341).
       // Keep the quad axis-aligned; articulated flipper frames carry the swim motion.
-      const frame = heroKey(state.tMs)
-      if (this.seal.texture.key !== frame) {
-        this.seal.setTexture(frame)
+      const key = heroKey(state.tMs)
+      const frame = generatedHero
+        ? hazardFrame('seal', course.biome, state.tMs, isReduced())
+        : '__BASE'
+      if (this.seal.texture.key !== key || this.seal.frame.name !== frame) {
+        this.seal.setTexture(key, frame)
         this.seal.setDisplaySize(heroSize.w, heroSize.h)
       }
       this.scenery.update(worldD, state.tMs, isReduced())

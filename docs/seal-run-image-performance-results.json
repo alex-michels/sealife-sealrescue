@@ -1,0 +1,6647 @@
+{
+  "date": "2026-09-10",
+  "baseline": "e7d5e252",
+  "method": "Desktop headless Chromium WebGL, 60 frames after 10 warm-up frames per chapter, fixed seed and middle-course position, six chapter replacements. Mobile is viewport emulation, not a physical phone. Local no-store HTTP transfers. RGBA8 base-level estimates exclude copies/driver/render-target overhead; submission is CPU wall time, not GPU execution time.",
+  "results": [
+    {
+      "version": "before",
+      "profile": "desktop",
+      "errors": [],
+      "chapters": [
+        {
+          "biome": "coastal",
+          "loadMs": 112.59999999776483,
+          "createMs": 1289,
+          "textureCount": 53,
+          "rgbaBytes": 30507252,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            }
+          ],
+          "imageRequests": 21,
+          "imageBytes": 616130,
+          "frameIntervalMs": {
+            "p50": 122.80000000074506,
+            "p95": 140.79999999701977
+          },
+          "renderSubmissionMs": {
+            "p50": 1.300000000745058,
+            "p95": 5.5
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "atlantis",
+          "loadMs": 364.29999999701977,
+          "createMs": 749.6999999992549,
+          "textureCount": 67,
+          "rgbaBytes": 35192292,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_atlantis_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_atlantis",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_arch",
+              "width": 350,
+              "height": 322
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 303720,
+          "frameIntervalMs": {
+            "p50": 123.40000000223517,
+            "p95": 143.80000000074506
+          },
+          "renderSubmissionMs": {
+            "p50": 0.9000000022351742,
+            "p95": 2.300000000745058
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "tropical",
+          "loadMs": 381.8999999985099,
+          "createMs": 596,
+          "textureCount": 71,
+          "rgbaBytes": 35299136,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_tropical_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_tropical",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_reef",
+              "width": 287,
+              "height": 293
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 11,
+          "imageBytes": 357292,
+          "frameIntervalMs": {
+            "p50": 125.19999999925494,
+            "p95": 152.09999999776483
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 2.5
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "arctic",
+          "loadMs": 425.4000000022352,
+          "createMs": 660.1000000014901,
+          "textureCount": 77,
+          "rgbaBytes": 35855024,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_arctic_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_arctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 290222,
+          "frameIntervalMs": {
+            "p50": 120.10000000149012,
+            "p95": 152.80000000074506
+          },
+          "renderSubmissionMs": {
+            "p50": 0.8999999985098839,
+            "p95": 16
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "antarctic",
+          "loadMs": 568.1999999992549,
+          "createMs": 804,
+          "textureCount": 94,
+          "rgbaBytes": 41440944,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_antarctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_antarctic_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "orca-antarctic_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_antarctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 15,
+          "imageBytes": 403062,
+          "frameIntervalMs": {
+            "p50": 122.40000000223517,
+            "p95": 139.40000000223517
+          },
+          "renderSubmissionMs": {
+            "p50": 1.0999999977648258,
+            "p95": 2.800000000745058
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "coastal",
+          "loadMs": 528.6999999992549,
+          "createMs": 410.0999999977648,
+          "textureCount": 89,
+          "rgbaBytes": 40276212,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_antarctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 1,
+          "imageBytes": 162576,
+          "frameIntervalMs": {
+            "p50": 124.90000000223517,
+            "p95": 144.19999999925494
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 2.300000000745058
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "profile": "mobile-viewport",
+      "errors": [],
+      "chapters": [
+        {
+          "biome": "coastal",
+          "loadMs": 134.20000000298023,
+          "createMs": 1647,
+          "textureCount": 53,
+          "rgbaBytes": 30507252,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            }
+          ],
+          "imageRequests": 21,
+          "imageBytes": 616130,
+          "frameIntervalMs": {
+            "p50": 119.10000000149012,
+            "p95": 137.5
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 3.599999997764826
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "atlantis",
+          "loadMs": 237.70000000298023,
+          "createMs": 707.2000000029802,
+          "textureCount": 67,
+          "rgbaBytes": 35192292,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_atlantis_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_atlantis_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "grey-seal_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_atlantis",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_arch",
+              "width": 350,
+              "height": 322
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 303720,
+          "frameIntervalMs": {
+            "p50": 124.60000000149012,
+            "p95": 145.69999999552965
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 2.5
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "tropical",
+          "loadMs": 404.19999999552965,
+          "createMs": 643.7999999970198,
+          "textureCount": 71,
+          "rgbaBytes": 35299136,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_tropical_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_tropical_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "galapagos-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "tiger-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_tropical",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_reef",
+              "width": 287,
+              "height": 293
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 11,
+          "imageBytes": 357292,
+          "frameIntervalMs": {
+            "p50": 124.10000000149012,
+            "p95": 149.89999999850988
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 2.100000001490116
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "arctic",
+          "loadMs": 265.20000000298023,
+          "createMs": 651.2999999970198,
+          "textureCount": 77,
+          "rgbaBytes": 35855024,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_arctic_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_arctic_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "polar_bear_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_arctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 290222,
+          "frameIntervalMs": {
+            "p50": 119.70000000298023,
+            "p95": 136.39999999850988
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1000000014901161,
+            "p95": 3.9000000059604645
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "antarctic",
+          "loadMs": 457.69999999552965,
+          "createMs": 769.2000000029802,
+          "textureCount": 94,
+          "rgbaBytes": 41440944,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_antarctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_antarctic_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_antarctic_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_0",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_1",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_2",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "leopard_seal_big_3",
+              "width": 384,
+              "height": 220
+            },
+            {
+              "key": "orca-antarctic_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-antarctic_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "weddell-pup_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_antarctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 15,
+          "imageBytes": 403062,
+          "frameIntervalMs": {
+            "p50": 116.09999999403954,
+            "p95": 137.5
+          },
+          "renderSubmissionMs": {
+            "p50": 1.2000000029802322,
+            "p95": 3.399999998509884
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "coastal",
+          "loadMs": 374.20000000298023,
+          "createMs": 387,
+          "textureCount": 89,
+          "rgbaBytes": 40276212,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "seal_0",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "seal_1",
+              "width": 328,
+              "height": 192
+            },
+            {
+              "key": "orca",
+              "width": 340,
+              "height": 272
+            },
+            {
+              "key": "shark_white",
+              "width": 312,
+              "height": 208
+            },
+            {
+              "key": "shark_big",
+              "width": 408,
+              "height": 288
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "rock",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "bg_water",
+              "width": 960,
+              "height": 540
+            },
+            {
+              "key": "bg_far",
+              "width": 1280,
+              "height": 540
+            },
+            {
+              "key": "bg_mid",
+              "width": 880,
+              "height": 540
+            },
+            {
+              "key": "foam",
+              "width": 240,
+              "height": 20
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_atlantis_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_atlantis_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "seal_antarctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_antarctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_0",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_1",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_2",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_3",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_4",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_5",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_6",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "boat_coastal_7",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "orca-northern_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "orca-northern_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "porbeagle_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_0",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_1",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_2",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "white-shark_3",
+              "width": 400,
+              "height": 280
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 1,
+          "imageBytes": 162576,
+          "frameIntervalMs": {
+            "p50": 123.89999999850988,
+            "p95": 147
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1000000014901161,
+            "p95": 4.299999997019768
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "profile": "desktop",
+      "errors": [],
+      "chapters": [
+        {
+          "biome": "coastal",
+          "loadMs": 60.900000005960464,
+          "createMs": 1051.2999999970198,
+          "textureCount": 28,
+          "rgbaBytes": 15474724,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_coastal",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            }
+          ],
+          "imageRequests": 8,
+          "imageBytes": 500498,
+          "frameIntervalMs": {
+            "p50": 118.10000000149012,
+            "p95": 130.60000000149012
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1000000014901161,
+            "p95": 4.600000001490116
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "atlantis",
+          "loadMs": 243.89999999850988,
+          "createMs": 439.70000000298023,
+          "textureCount": 22,
+          "rgbaBytes": 14771764,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_atlantis_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_atlantis",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "grey-seal",
+              "width": 778,
+              "height": 340
+            },
+            {
+              "key": "panorama_atlantis",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_arch",
+              "width": 350,
+              "height": 322
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 5,
+          "imageBytes": 345830,
+          "frameIntervalMs": {
+            "p50": 125.89999999850988,
+            "p95": 141.29999999701977
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1999999955296516,
+            "p95": 2.7000000029802322
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "tropical",
+          "loadMs": 380.5,
+          "createMs": 482.5,
+          "textureCount": 28,
+          "rgbaBytes": 15538128,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_tropical_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_tropical",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "galapagos-shark",
+              "width": 752,
+              "height": 520
+            },
+            {
+              "key": "tiger-shark",
+              "width": 746,
+              "height": 246
+            },
+            {
+              "key": "panorama_tropical",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_reef",
+              "width": 287,
+              "height": 293
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 396380,
+          "frameIntervalMs": {
+            "p50": 129.30000000447035,
+            "p95": 157.5
+          },
+          "renderSubmissionMs": {
+            "p50": 1.2000000029802322,
+            "p95": 3.399999998509884
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "arctic",
+          "loadMs": 285.30000000447035,
+          "createMs": 666,
+          "textureCount": 28,
+          "rgbaBytes": 14901760,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_arctic_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_arctic",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "polar_bear",
+              "width": 758,
+              "height": 434
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "panorama_arctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 340202,
+          "frameIntervalMs": {
+            "p50": 123.80000000447035,
+            "p95": 141.19999999552965
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1000000014901161,
+            "p95": 2.7000000029802322
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "antarctic",
+          "loadMs": 403.6000000014901,
+          "createMs": 404.6000000014901,
+          "textureCount": 21,
+          "rgbaBytes": 13250816,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_antarctic_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_antarctic",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "leopard_seal",
+              "width": 766,
+              "height": 448
+            },
+            {
+              "key": "orca-antarctic",
+              "width": 730,
+              "height": 354
+            },
+            {
+              "key": "weddell-pup",
+              "width": 728,
+              "height": 308
+            },
+            {
+              "key": "panorama_antarctic",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 409042,
+          "frameIntervalMs": {
+            "p50": 118.10000000149012,
+            "p95": 135.60000000149012
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1000000014901161,
+            "p95": 2.2999999970197678
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "coastal",
+          "loadMs": 539.6999999955297,
+          "createMs": 661.6999999955297,
+          "textureCount": 28,
+          "rgbaBytes": 15474724,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_coastal",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 2172,
+              "height": 724
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 468174,
+          "frameIntervalMs": {
+            "p50": 124.39999999850988,
+            "p95": 151.60000000149012
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 2.2999999970197678
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "profile": "mobile-viewport",
+      "errors": [],
+      "chapters": [
+        {
+          "biome": "coastal",
+          "loadMs": 65.5,
+          "createMs": 1317.6000000014901,
+          "textureCount": 28,
+          "rgbaBytes": 12683812,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_coastal",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            }
+          ],
+          "imageRequests": 8,
+          "imageBytes": 456708,
+          "frameIntervalMs": {
+            "p50": 122.20000000298023,
+            "p95": 143
+          },
+          "renderSubmissionMs": {
+            "p50": 1.2999999970197678,
+            "p95": 4
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "atlantis",
+          "loadMs": 355.79999999701977,
+          "createMs": 481,
+          "textureCount": 22,
+          "rgbaBytes": 11980852,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "rock_atlantis",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_atlantis_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_atlantis",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "grey-seal",
+              "width": 778,
+              "height": 340
+            },
+            {
+              "key": "panorama_atlantis",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_arch",
+              "width": 350,
+              "height": 322
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 5,
+          "imageBytes": 317258,
+          "frameIntervalMs": {
+            "p50": 130.60000000149012,
+            "p95": 157.79999999701977
+          },
+          "renderSubmissionMs": {
+            "p50": 1.2000000029802322,
+            "p95": 3.2999999970197678
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "tropical",
+          "loadMs": 369.6000000014901,
+          "createMs": 646.5,
+          "textureCount": 28,
+          "rgbaBytes": 12747216,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_tropical_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_tropical_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_tropical",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_tropical_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_tropical",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "galapagos-shark",
+              "width": 752,
+              "height": 520
+            },
+            {
+              "key": "tiger-shark",
+              "width": 746,
+              "height": 246
+            },
+            {
+              "key": "panorama_tropical",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_reef",
+              "width": 287,
+              "height": 293
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 348920,
+          "frameIntervalMs": {
+            "p50": 128.10000000149012,
+            "p95": 152.89999999850988
+          },
+          "renderSubmissionMs": {
+            "p50": 1.2999999970197678,
+            "p95": 6.5
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "arctic",
+          "loadMs": 449.80000000447035,
+          "createMs": 773.8000000044703,
+          "textureCount": 28,
+          "rgbaBytes": 12110848,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_arctic_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_arctic_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_arctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_arctic_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_arctic",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "polar_bear",
+              "width": 758,
+              "height": 434
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "panorama_arctic",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 305800,
+          "frameIntervalMs": {
+            "p50": 123.69999999552965,
+            "p95": 140.60000000149012
+          },
+          "renderSubmissionMs": {
+            "p50": 1.1999999955296516,
+            "p95": 5.799999997019768
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "antarctic",
+          "loadMs": 514.6999999955297,
+          "createMs": 420.80000000447035,
+          "textureCount": 21,
+          "rgbaBytes": 10459904,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "rock_antarctic",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_antarctic_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_antarctic",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "leopard_seal",
+              "width": 766,
+              "height": 448
+            },
+            {
+              "key": "orca-antarctic",
+              "width": 730,
+              "height": 354
+            },
+            {
+              "key": "weddell-pup",
+              "width": 728,
+              "height": 308
+            },
+            {
+              "key": "panorama_antarctic",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_glacier",
+              "width": 243,
+              "height": 346
+            },
+            {
+              "key": "scenery_sea-ice",
+              "width": 395,
+              "height": 219
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            }
+          ],
+          "imageRequests": 6,
+          "imageBytes": 377312,
+          "frameIntervalMs": {
+            "p50": 119,
+            "p95": 139.20000000298023
+          },
+          "renderSubmissionMs": {
+            "p50": 1.0999999940395355,
+            "p95": 2.7000000029802322
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        },
+        {
+          "biome": "coastal",
+          "loadMs": 408.69999999552965,
+          "createMs": 622.3000000044703,
+          "textureCount": 28,
+          "rgbaBytes": 12683812,
+          "textures": [
+            {
+              "key": "__NORMAL",
+              "width": 1,
+              "height": 1
+            },
+            {
+              "key": "__DEFAULT",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__MISSING",
+              "width": 32,
+              "height": 32
+            },
+            {
+              "key": "__WHITE",
+              "width": 4,
+              "height": 4
+            },
+            {
+              "key": "fish_small",
+              "width": 56,
+              "height": 36
+            },
+            {
+              "key": "fish_rare",
+              "width": 76,
+              "height": 52
+            },
+            {
+              "key": "skerry_cap",
+              "width": 240,
+              "height": 88
+            },
+            {
+              "key": "ghost_net",
+              "width": 320,
+              "height": 400
+            },
+            {
+              "key": "plastic_cluster",
+              "width": 280,
+              "height": 240
+            },
+            {
+              "key": "ocean_shimmer",
+              "width": 512,
+              "height": 256
+            },
+            {
+              "key": "ocean_mote",
+              "width": 16,
+              "height": 16
+            },
+            {
+              "key": "seal_coastal_0",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_1",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_2",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_3",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_4",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_5",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_6",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "seal_coastal_7",
+              "width": 360,
+              "height": 192
+            },
+            {
+              "key": "rock_coastal",
+              "width": 240,
+              "height": 240
+            },
+            {
+              "key": "boat_coastal_hull",
+              "width": 800,
+              "height": 220
+            },
+            {
+              "key": "rotor_coastal",
+              "width": 384,
+              "height": 192
+            },
+            {
+              "key": "orca-northern",
+              "width": 762,
+              "height": 468
+            },
+            {
+              "key": "porbeagle",
+              "width": 754,
+              "height": 364
+            },
+            {
+              "key": "white-shark",
+              "width": 746,
+              "height": 350
+            },
+            {
+              "key": "panorama_coastal",
+              "width": 1620,
+              "height": 540
+            },
+            {
+              "key": "scenery_boulders",
+              "width": 318,
+              "height": 254
+            },
+            {
+              "key": "scenery_kelp",
+              "width": 280,
+              "height": 383
+            }
+          ],
+          "imageRequests": 7,
+          "imageBytes": 424384,
+          "frameIntervalMs": {
+            "p50": 124.5,
+            "p95": 141
+          },
+          "renderSubmissionMs": {
+            "p50": 1,
+            "p95": 3.2999999970197678
+          },
+          "drawCalls": {
+            "p50": 3,
+            "p95": 3
+          }
+        }
+      ]
+    }
+  ]
+}

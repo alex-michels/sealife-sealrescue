@@ -29,7 +29,7 @@ Seal silhouettes have no pinnae or dolphin flukes. The paired hind flippers driv
 - Five biome registries adapt proven traversable patterns and add location-specific layouts. Difficulty has a rising floor as well as a ceiling, with explicitly marked recovery sections after intense patterns. Verify all biomes with chunk lint and the cadence fairness matrix.
 - `generateRound(season, roundIndex)` defines the course, biome and speed multiplier once for browser and Node. Versioned signed tokens pin season/course and pseudonymous player identity; server reconstruction bounds each round's distance, catches, fish points, lives, duration and derived score. This is plausibility validation, not proof of a replayed input trace.
 - Fullscreen is a user gesture. HTML owns menus, instructions, score, leaderboard, pause, loading and errors. Safe-area padding, visible focus, at least 24 px controls (44–50 px primary/touch controls), scalable text, no forced orientation and independently usable mute/motion settings.
-- Phaser remains lazy-loaded on Play. Three procedural player species, the generated Atlantis grey juvenile and Antarctic Weddell pup and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded panoramas are capped at two. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
+- Phaser remains lazy-loaded on Play. Three procedural player species, the generated Atlantis grey juvenile and Antarctic Weddell pup and generated predators use reusable textures; five 3:1 generated panoramas pan from left to right over chapter distance. Separate transparent kelp, rocks, ruins, reef and ice occupy three depth/speed planes. Phaser TileSprite shimmer and a bounded ParticleEmitter add water movement. Chapter GPU textures are released; decoded loaders retain the current habitat only. A contained cover character never shares background cropping. Cache only same-origin game assets, never API responses; first offline play requires a completed asset download.
 - Browser tests cover keyboard/touch, pause/resume, finish/next chapter, language persistence, offline practice, failure/retry and browser/Node course parity. Endpoint contract tests cover signed course/season, score derivation, per-round budgets, token reuse and Hunter compatibility.
 - The canonical Next game route keeps the site's legal footer. A prepared vanity redirect belongs to the existing deployment setup; activating public DNS/services is a separate operator rollout, not a claim of a live deployment.
 
@@ -138,3 +138,20 @@ inset of 12 source pixels for the orca and 22 for the shark when extracting thos
 registration. Other predator atlases were checked too. Source and export details are in
 [prompts-v5.json](../public/games/seal-run-v1/assets/prompts-v5.json). The offline cache
 references the corrected versions. Simulation, hit radii and expedition-3 rules are unchanged.
+
+## Texture budgets (SR-21)
+
+Only live common fish/debris/cap art is built at startup. Procedural hero frames and biome
+rocks are chapter-owned; generated heroes skip procedural frame creation. All ten generated
+species/appearances use trimmed four-frame WebP atlases with 2px edge extrusion and original
+source-size/offset metadata. Normal and large leopard hazards share their atlas.
+
+Each vessel uses one full-length static hull plus a 384×192 atlas of eight 96×96 rotor
+frames. Both sprites stay axis-aligned, pool together and retain the same propeller center.
+Only habitat-specific props load. Compact 1620×540 panoramas are chosen at chapter load
+when the viewport's shorter side is at most 600px; other views use the original 2172×724.
+Resize does not swap textures mid-run. Offline cache installation uses compact panoramas,
+with on-demand desktop caching and compact fallback. Neither variant changes the playfield.
+
+Rebuild delivery files with tools/pack-art.mjs. Measure resources and renderer timing with
+tools/profile-art.mjs; see [measurements and limits](seal-run-image-performance.md).

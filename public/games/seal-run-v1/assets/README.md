@@ -127,9 +127,11 @@ async painting is guarded against a later course selection. Animal hit circles a
 inside the opaque body on all frames, with species-specific registered origins in core/fauna.js.
 
 On mobile, Phaser proportionally scales the same fixed 960×540 field and WebP textures.
-There is no alternate lower-resolution mobile download. Only the selected chapter's critical
+At this v4 stage there was no alternate lower-resolution mobile download (v6 below adds
+compact panoramas). Only the selected chapter's critical
 art is decoded for Play (deduplicated 8-second requests); failures return a retryable error.
-GPU textures are released on chapter shutdown; decoded sprite files form a finite cache.
+Animal GPU textures are released on chapter shutdown; v6 below also bounds procedural-frame
+and decoded-image retention.
 AI provenance remains visible in the RU/EN menu.
 
 ## Weddell pup and corrected atlas extraction (v5)
@@ -152,7 +154,33 @@ fragments larger than two pixels, beyond checking only transparent corners.
 All 12 v5 files total 178,954 bytes. Exact prompts, source filenames, frame
 registration, extraction insets and export filenames: [prompts-v5.json](prompts-v5.json).
 The Weddell atlas uses the same 2×2 / 800×560 registration and 400×280 WebP quality 88,
-alpha quality 100 pipeline as v4. Mobile downloads the same files and scales them
-proportionally; no separate resolution variant. Menu loads are guarded against stale
+alpha quality 100 pipeline as v4. The v5 mobile renderer used the same files and scaled them
+proportionally; current v6 delivery below adds compact panorama variants. Menu loads are guarded against stale
 course selection, critical Play loads remain retryable, reduced motion fixes frame zero,
 and the versioned offline cache uses the new files.
+
+## Packed delivery and compact panoramas (v6 / SR-21)
+
+Ten four-frame animal atlases are exported from the versioned v3–v5 WebP frames by
+[tools/pack-art.mjs](../tools/pack-art.mjs). Every nonzero-alpha pixel is retained. Cropped
+frames have two extruded edge pixels on every side and remain non-rotated. Phaser
+sourceSize/spriteSourceSize metadata in [atlas-data.js](../render/atlas-data.js) preserves
+the original 400×280 / 384×220 registration and collision origin. Encoding is WebP quality
+90 with alpha quality 100. No new artwork was generated for this delivery-only optimization.
+
+The two leopard hazard sizes share the same atlas; display size controls their size.
+Menu hero canvases restore the first atlas frame into its original source rectangle.
+Critical atlas loads remain deduplicated/retryable and previous chapter decoded images
+are released from loader caches after new assets load. GPU textures are chapter-owned.
+
+Five compact panorama files are 1620×540, quality 86: the native logical field height.
+At chapter load, a viewport shorter side ≤600px chooses compact; larger views choose
+the original 2172×724 plates. Animal resolution is unchanged. Only required habitat props
+load. The service worker precaches compact panoramas and live atlases; desktop panoramas
+are cached as requested and can fall back to compact versions offline.
+
+Each hull is composed once into an 800×220 canvas; eight padded 96×96 propeller frames
+share one 384×192 atlas. Ring/propeller center stays aligned to the hull origin (100,162).
+No moving Phaser sprite rotates and only the propeller collision disc causes damage.
+Historical individual frames and prompts remain source assets, outside the live offline
+manifest. Delivery sizes and runtime budgets are recorded in the performance review.

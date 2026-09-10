@@ -6,7 +6,7 @@ import { paintOcean } from './expedition.js'
 
 const images = new Map()
 const pending = new Map()
-const PROP_IDS = ['kelp', 'boulders', 'arch', 'reef', 'sea-ice', 'glacier']
+const selectedPanoramas = new Map()
 const HABITAT = {
   coastal: ['boulders', 'kelp', 'boulders', 'kelp'],
   atlantis: ['arch', 'boulders', 'arch', 'kelp'],
@@ -46,12 +46,16 @@ function loadImage(file) {
   pending.set(file, promise)
   return promise
 }
-export function loadScenery(biome) {
-  return Promise.all([
-    loadImage(biome + '-panorama-v2.webp'),
-    ...PROP_IDS.map((id) => loadImage('scenery-' + id + '-v2.webp')),
-  ])
+export async function loadScenery(biome) {
+  const compact = Math.min(window.innerWidth, window.innerHeight) <= 600
+  const panorama = biome + (compact ? '-panorama-mobile-v6.webp' : '-panorama-v2.webp')
+  const files = [panorama, ...new Set(HABITAT[biome].map((id) => 'scenery-' + id + '-v2.webp'))]
+  await Promise.all(files.map(loadImage))
+  selectedPanoramas.set(biome, panorama)
+  // Old scene sources stay alive until its shutdown; the loader retains only this habitat.
+  for (const file of images.keys()) if (!files.includes(file)) images.delete(file)
 }
+
 function canvasTexture(scene, key, width, height, draw) {
   if (scene.textures.exists(key)) return
   const canvas = document.createElement('canvas')
@@ -95,10 +99,10 @@ export function createScenery(scene, course) {
   const palette = BIOMES[biome]
   const owned = []
   const panoramaKey = 'panorama_' + biome
-  const panoramaImage = images.get(biome + '-panorama-v2.webp')
+  const panoramaImage = images.get(selectedPanoramas.get(biome))
   if (panoramaImage) scene.textures.addImage(panoramaKey, panoramaImage)
   else
-    canvasTexture(scene, panoramaKey, 2400, 600, (c, w, h) => paintOcean(c, w, h, biome, 'water'))
+    canvasTexture(scene, panoramaKey, 1620, 540, (c, w, h) => paintOcean(c, w, h, biome, 'water'))
   owned.push(panoramaKey)
   const source = scene.textures.get(panoramaKey).getSourceImage()
   const panoramaWidth = Math.max(FIELD_W, (source.width / source.height) * WORLD_H)

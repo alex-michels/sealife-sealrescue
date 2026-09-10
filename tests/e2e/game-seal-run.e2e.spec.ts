@@ -390,7 +390,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
   const report = await page.evaluate(async () => {
     const root = location.origin + '/games/seal-run-v1/'
     const { buildExpeditionTextures } = await import(root + 'render/expedition.js')
-    const { buildHazardTextures, loadHazardArt, hazardFrame } = await import(
+    const { buildHazardTextures, loadHazardArt, hazardFrame, hazardTexture } = await import(
       root + 'render/hazards.js'
     )
     const { actorSize, faunaId } = await import(root + 'core/fauna.js')
@@ -403,6 +403,31 @@ test('SR-06: every generated swim frame covers its collision circle and has real
         },
         addCanvas(key: string, canvas: HTMLCanvasElement) {
           textures.set(key, canvas)
+        },
+        addAtlas(
+          _key: string,
+          image: CanvasImageSource,
+          data: {
+            frames: Record<
+              string,
+              {
+                frame: { x: number; y: number; w: number; h: number }
+                sourceSize?: { w: number; h: number }
+                spriteSourceSize?: { x: number; y: number; w: number; h: number }
+              }
+            >
+          },
+        ) {
+          for (const [key, entry] of Object.entries(data.frames)) {
+            const f = entry.frame,
+              size = entry.sourceSize ?? f
+            const trim = entry.spriteSourceSize ?? { x: 0, y: 0, w: f.w, h: f.h }
+            const c = document.createElement('canvas')
+            c.width = size.w
+            c.height = size.h
+            c.getContext('2d')!.drawImage(image, f.x, f.y, f.w, f.h, trim.x, trim.y, trim.w, trim.h)
+            textures.set(key, c)
+          }
         },
       },
       events: { once() {} },
@@ -434,7 +459,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
         canvas.width = Math.ceil(w)
         canvas.height = Math.ceil(h)
         const c = canvas.getContext('2d')!
-        const key = (faunaId(kind, biome) ?? kind) + '_' + frame
+        const key = hazardTexture(kind, biome) + '_' + frame
         const source = textures.get(key)!
         c.drawImage(source, 0, 0, w, h)
         if (faunaId(kind, biome) && kind !== 'seal') {
@@ -491,7 +516,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
     }
     const distinct = new Set(
       ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic'].map((b) =>
-        textures.get('boat_' + b + '_0')!.toDataURL(),
+        textures.get('boat_' + b + '_hull')!.toDataURL(),
       ),
     ).size
     const animated = ['polar_bear', 'leopard_seal', 'boat_arctic', 'weddell-pup'].every(
@@ -568,7 +593,10 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
       const predators = state.predators
       state.predators = [{ type: 'boat_propeller', atLu: 0, band: 1 }]
       play.syncWorld(650)
-      const wholeHullRetained = play.bound.get('p0')?.spr.visible === true
+      const boat = play.bound.get('p0')?.spr
+      const wholeHullRetained = boat?.visible === true && boat.rotor?.visible === true
+      const rotorAligned =
+        boat && boat.x === boat.rotor.x && boat.y === boat.rotor.y && boat.rotor.displayWidth === 96
       state.predators = predators
       state.debrisUntilMs = 0
       state.lag = 0
@@ -619,6 +647,7 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
         panoramaWidth: scenery.panorama.displayWidth,
         playerDrifts,
         wholeHullRetained,
+        rotorAligned,
         particlesBounded: scenery.motes.maxParticles <= 36,
       })
       game.scene.stop('play')
@@ -642,6 +671,7 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
     expect(row.particlesBounded).toBe(true)
     expect(row.playerDrifts).toBe(true)
     expect(row.wholeHullRetained).toBe(true)
+    expect(row.rotorAligned).toBe(true)
     expect(row.released).toBe(true)
     const byDepth = [-8, -6, -4].map(
       (depth) => row.shifts.find((s: { depth: number }) => s.depth === depth)!.shift,
@@ -700,7 +730,7 @@ test('SR-14: returning from a hidden menu restores the canvas on every course', 
 
 test('SR-11: missing predator artwork shows a retryable load failure', async ({ page }) => {
   await config(page)
-  await page.route('**/assets/leopard-seal-v3-*.webp', (route) => route.abort())
+  await page.route('**/assets/leopard-seal-atlas-v6.webp', (route) => route.abort())
   await page.goto(url)
   await page.locator('[data-biome="antarctic"]').click()
   await page.locator('#start').click()
@@ -708,7 +738,144 @@ test('SR-11: missing predator artwork shows a retryable load failure', async ({ 
   await expect(page.locator('#start')).toBeEnabled()
   await expect(page.locator('#start-error')).toBeVisible()
   expect(await page.evaluate(() => window.SealRun?.view)).toBe('menu')
-  await page.unroute('**/assets/leopard-seal-v3-*.webp')
+  await page.unroute('**/assets/leopard-seal-atlas-v6.webp')
   await page.locator('#start').click()
   await expect(page.locator('#stage canvas')).toBeVisible()
+})
+
+test('SR-21: chapter replacement has a stable texture budget and shared leopard frames', async ({
+  page,
+}) => {
+  await config(page)
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(url)
+  const report = await page.evaluate(async () => {
+    const root = '/games/seal-run-v1/'
+    const Phaser = (await import(root + 'vendor/phaser.esm.js')).default
+    const { createPlayScene } = await import(root + 'render/scene.js')
+    const { createSim } = await import(root + 'core/sim.js')
+    const { generateCourse } = await import(root + 'core/course.js')
+    const { loadScenery } = await import(root + 'render/scenery.js')
+    const { loadHazardArt } = await import(root + 'render/hazards.js')
+    document.body.replaceChildren()
+    const host = document.createElement('div')
+    document.body.append(host)
+    const rows = []
+    const game = new Phaser.Game({
+      type: Phaser.WEBGL,
+      parent: host,
+      width: 960,
+      height: 540,
+      audio: { noAudio: true },
+      scene: [],
+    })
+    await new Promise((resolve) => game.events.once('ready', resolve))
+    for (const biome of ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic', 'coastal']) {
+      await Promise.all([loadScenery(biome), loadHazardArt(biome)])
+      const course = generateCourse('texture-lifetime', biome),
+        state = createSim(course)
+      const Play = createPlayScene(Phaser, {
+        state,
+        course,
+        currentCtrl() {
+          return {}
+        },
+        updateHud() {},
+        onEvents() {},
+        onEnd() {},
+        isPaused() {
+          return false
+        },
+        isReduced() {
+          return false
+        },
+      })
+      if (rows.length) {
+        game.scene.stop('play')
+        game.scene.remove('play')
+      }
+      game.scene.add('play', Play, true)
+      await new Promise((resolve) => game.events.once('postrender', resolve))
+      const keys = Object.keys(game.textures.list)
+      const textures = keys.flatMap((key) =>
+        game.textures
+          .get(key)
+          .source.map((s: { width: number; height: number }) => s.width * s.height * 4),
+      )
+      const play = game.scene.getScene('play')
+      let leopardShared = true
+      if (biome === 'antarctic') {
+        state.predators = [
+          { type: 'leopard_seal', atLu: 420, band: 3 },
+          { type: 'leopard_seal_big', atLu: 690, band: 3 },
+        ]
+        play.syncWorld(400)
+        const normal = play.bound.get('p0')!.spr,
+          big = play.bound.get('p1')!.spr
+        leopardShared = normal.texture === big.texture && big.displayWidth > normal.displayWidth
+      }
+      rows.push({
+        biome,
+        bytes: textures.reduce((n: number, b: number) => n + b, 0),
+        count: keys.length,
+        legacy: keys.filter((k) =>
+          [
+            'seal_0',
+            'seal_1',
+            'orca',
+            'shark_white',
+            'shark_big',
+            'rock',
+            'bg_water',
+            'bg_far',
+            'bg_mid',
+            'foam',
+          ].includes(k),
+        ),
+        procedural: keys.filter((k) => /^seal_\w+_\d+$/.test(k)),
+        rocks: keys.filter((k) => k.startsWith('rock_')),
+        panorama: play.scenery.panorama.texture.getSourceImage().width,
+        leopardShared,
+      })
+    }
+    game.destroy(true)
+    return rows
+  })
+  for (const row of report) {
+    expect(row.bytes).toBeLessThan(20 * 1024 * 1024)
+    expect(row.legacy).toEqual([])
+    expect(row.rocks).toEqual(['rock_' + row.biome])
+    expect(row.procedural).toHaveLength(['atlantis', 'antarctic'].includes(row.biome) ? 0 : 8)
+    expect(row.panorama).toBe(1620)
+    expect(row.leopardShared).toBe(true)
+  }
+  expect(report.at(-1)!.bytes).toBe(report[0].bytes)
+  expect(report.at(-1)!.count).toBe(report[0].count)
+})
+
+test('SR-21: offline cache serves a compact panorama when the desktop variant was never loaded', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ serviceWorkers: 'allow' })
+  try {
+    const page = await context.newPage()
+    await config(page)
+    await page.goto(url)
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.register('/games/seal-run-v1/sw.js')
+      await navigator.serviceWorker.ready
+    })
+    await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller))
+    await context.setOffline(true)
+    const size = await page.evaluate(async () => {
+      const response = await fetch('/games/seal-run-v1/assets/antarctic-panorama-v2.webp')
+      const image = await createImageBitmap(await response.blob())
+      const result = [image.width, image.height]
+      image.close()
+      return result
+    })
+    expect(size).toEqual([1620, 540])
+  } finally {
+    await context.close()
+  }
 })

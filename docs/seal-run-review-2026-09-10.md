@@ -120,8 +120,8 @@ SR-06/19 replace the clipped stern fragments with five complete submerged hulls 
 rotors; only the disc costs a life. The renderer retains the long hull after its motor leaves
 the viewport. Four region-specific sharks, two orca appearances and an Atlantis grey juvenile
 use real-alpha WebP swim frames. Generated files with fake checkerboards were rejected.
-All animal frames pass opaque-body hit-circle checks. Mobile proportionally scales the same
-optimized files, with no separate mobile-resolution source. Sources/prompts are indexed in
+All animal frames pass opaque-body hit-circle checks. That revision proportionally scaled
+the same files on mobile; SR-21 below adds compact panorama sources. Sources/prompts are indexed in
 the anatomy review and asset manifest.
 
 SR-18: 780 paired bot runs use the exact old courses. Combined completion changes from
@@ -155,6 +155,24 @@ frame; generated Weddell frames cover the unchanged collision radius and reduced
 uses frame zero. All five full-length rendering sweeps and course re-entries pass.
 No physics/balance changes were made in this revision.
 
-The subsequent image-performance analysis recommends keeping WebP and prioritizing unused
-textures, their lifetime and duplicate hull/rotor frames. Measurements and limits are in
-[the performance review](seal-run-image-performance.md); those optimizations are not yet implemented.
+## Follow-up: image delivery and texture lifetime (SR-21)
+
+Recommendations 1–4 are implemented: obsolete textures are no longer created; chapter-owned
+procedural frames are released; vessels use one static hull with a compact rotor atlas;
+animals use trimmed, extruded WebP atlases and small viewports receive 1620×540 panoramas.
+Both leopard sizes share one atlas. Habitat loading/decoded caches are limited to the current
+chapter. Full desktop panoramas are cached on demand and fall back to compact art offline.
+
+Six consecutive scene measurements reduce peak RGBA8 base texture-source estimates from
+39.52 to 14.82 MiB on desktop and 12.16 MiB with a mobile viewport. Coastal returns to its
+initial 28 sources and 14.76/12.10 MiB instead of accumulating previous chapters. First
+Coastal image requests fall from 21 to 8. There is no demonstrated FPS improvement in this
+headless sample; draw-call p95 remains 3. The mobile result is viewport emulation, not a phone.
+Raw dimensions and timings are in [the performance review](seal-run-image-performance.md)
+and its linked JSON.
+
+Validation: 18 static browser cases passed with one production-only redirect skip; the two
+new lifecycle/offline regressions passed again after the final fixture type cleanup.
+TypeScript passes and lint reports 0 errors / 16 pre-existing warnings. Existing alpha,
+collision, rotor alignment, hull visibility, full-course and re-entry regressions pass.
+Rules, simulation balance and operator rollout boundaries are unchanged.

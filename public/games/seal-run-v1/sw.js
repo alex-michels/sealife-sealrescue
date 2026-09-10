@@ -1,41 +1,20 @@
 // SR-11: only this game's immutable assets. Never cache APIs, cookies or scores.
-const VERSION = 'seal-run-expedition-weddell-alpha-6'
+const VERSION = 'seal-run-expedition-packed-art-7'
 const ROOT = new URL('./', self.location.href).pathname
 const FILES = [
   'index.html',
   'core/fauna.js',
-  'assets/weddell-pup-v5-0.webp',
-  'assets/weddell-pup-v5-1.webp',
-  'assets/weddell-pup-v5-2.webp',
-  'assets/weddell-pup-v5-3.webp',
-  'assets/porbeagle-v4-0.webp',
-  'assets/porbeagle-v4-1.webp',
-  'assets/porbeagle-v4-2.webp',
-  'assets/porbeagle-v4-3.webp',
-  'assets/white-shark-v4-0.webp',
-  'assets/white-shark-v4-1.webp',
-  'assets/white-shark-v4-2.webp',
-  'assets/white-shark-v4-3.webp',
-  'assets/galapagos-shark-v5-0.webp',
-  'assets/galapagos-shark-v5-1.webp',
-  'assets/galapagos-shark-v5-2.webp',
-  'assets/galapagos-shark-v5-3.webp',
-  'assets/tiger-shark-v4-0.webp',
-  'assets/tiger-shark-v4-1.webp',
-  'assets/tiger-shark-v4-2.webp',
-  'assets/tiger-shark-v4-3.webp',
-  'assets/orca-northern-v5-0.webp',
-  'assets/orca-northern-v5-1.webp',
-  'assets/orca-northern-v5-2.webp',
-  'assets/orca-northern-v5-3.webp',
-  'assets/orca-antarctic-v4-0.webp',
-  'assets/orca-antarctic-v4-1.webp',
-  'assets/orca-antarctic-v4-2.webp',
-  'assets/orca-antarctic-v4-3.webp',
-  'assets/grey-seal-v4-0.webp',
-  'assets/grey-seal-v4-1.webp',
-  'assets/grey-seal-v4-2.webp',
-  'assets/grey-seal-v4-3.webp',
+  'render/atlas-data.js',
+  'assets/porbeagle-atlas-v6.webp',
+  'assets/white-shark-atlas-v6.webp',
+  'assets/galapagos-shark-atlas-v6.webp',
+  'assets/tiger-shark-atlas-v6.webp',
+  'assets/orca-northern-atlas-v6.webp',
+  'assets/orca-antarctic-atlas-v6.webp',
+  'assets/weddell-pup-atlas-v6.webp',
+  'assets/grey-seal-atlas-v6.webp',
+  'assets/polar-bear-atlas-v6.webp',
+  'assets/leopard-seal-atlas-v6.webp',
   'assets/boat-coastal-v4-hull.webp',
   'assets/boat-coastal-v3-propeller.webp',
   'assets/boat-atlantis-v4-hull.webp',
@@ -46,19 +25,11 @@ const FILES = [
   'assets/boat-arctic-v3-propeller.webp',
   'assets/boat-antarctic-v4-hull.webp',
   'assets/boat-antarctic-v3-propeller.webp',
-  'assets/polar-bear-v3-0.webp',
-  'assets/polar-bear-v3-1.webp',
-  'assets/polar-bear-v3-2.webp',
-  'assets/polar-bear-v3-3.webp',
-  'assets/leopard-seal-v3-0.webp',
-  'assets/leopard-seal-v3-1.webp',
-  'assets/leopard-seal-v3-2.webp',
-  'assets/leopard-seal-v3-3.webp',
-  'assets/coastal-panorama-v2.webp',
-  'assets/atlantis-panorama-v2.webp',
-  'assets/tropical-panorama-v2.webp',
-  'assets/arctic-panorama-v2.webp',
-  'assets/antarctic-panorama-v2.webp',
+  'assets/coastal-panorama-mobile-v6.webp',
+  'assets/atlantis-panorama-mobile-v6.webp',
+  'assets/tropical-panorama-mobile-v6.webp',
+  'assets/arctic-panorama-mobile-v6.webp',
+  'assets/antarctic-panorama-mobile-v6.webp',
   'assets/scenery-kelp-v2.webp',
   'assets/scenery-boulders-v2.webp',
   'assets/scenery-arch-v2.webp',
@@ -114,12 +85,16 @@ const FILES = [
   'render/motion.js',
   'vendor/phaser.esm.js',
 ]
-const ASSETS = new Set(FILES.map((file) => ROOT + file))
+// Precache native-height panoramas; large desktop variants are cached on demand.
+const OPTIONAL = ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic'].map(
+  (b) => 'assets/' + b + '-panorama-v2.webp',
+)
+const ASSETS = new Set([...FILES, ...OPTIONAL].map((file) => ROOT + file))
 self.addEventListener('install', (event) =>
   event.waitUntil(
     caches
       .open(VERSION)
-      .then((cache) => cache.addAll([...ASSETS]))
+      .then((cache) => cache.addAll(FILES.map((file) => ROOT + file)))
       .then(() => self.skipWaiting()),
   ),
 )
@@ -151,8 +126,22 @@ self.addEventListener('fetch', (event) => {
     return
   }
   event.respondWith(
-    caches
-      .open(VERSION)
-      .then(async (cache) => (await cache.match(url.pathname)) || fetch(event.request)),
+    caches.open(VERSION).then(async (cache) => {
+      const hit = await cache.match(url.pathname)
+      if (hit) return hit
+      try {
+        const response = await fetch(event.request)
+        if (response.ok) await cache.put(url.pathname, response.clone())
+        return response
+      } catch (error) {
+        if (url.pathname.endsWith('-panorama-v2.webp')) {
+          const compact = await cache.match(
+            url.pathname.replace('-panorama-v2.webp', '-panorama-mobile-v6.webp'),
+          )
+          if (compact) return compact
+        }
+        throw error
+      }
+    }),
   )
 })
