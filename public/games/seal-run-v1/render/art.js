@@ -41,6 +41,9 @@ function drawFishSmall(ctx, w, h) {
     [1, E.belly],
   ])
   ctx.fill(body)
+  ctx.strokeStyle = '#ecf5d9'
+  ctx.lineWidth = 1.15
+  ctx.stroke(body)
   ctx.fillStyle = E.eye
   ctx.beginPath()
   ctx.arc(w * 0.74, h * 0.42, 1.6, 0, Math.PI * 2)
@@ -68,6 +71,9 @@ function drawFishRare(ctx, w, h) {
     [1, E.belly],
   ])
   ctx.fill(body)
+  ctx.strokeStyle = '#ecf5d9'
+  ctx.lineWidth = 1.15
+  ctx.stroke(body)
   ctx.fillStyle = E.eye
   ctx.beginPath()
   ctx.arc(w * 0.72, h * 0.42, 1.8, 0, Math.PI * 2)

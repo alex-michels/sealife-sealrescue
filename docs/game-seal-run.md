@@ -6,8 +6,8 @@ coastal prototype is now a five-chapter expedition (SR-07…SR-20).
 
 ## Player experience
 
-- **Explore** opens any of five waters, with a new generated route on demand and an optional
-  gentle pace (80% speed). It works without a leaderboard connection. Runs exist in tab memory.
+- **Explore** opens any of five waters, with a new generated route on demand and a default slow, steady
+  current (120 lu/s). Optional 35/50/75/100% playback rates retain ordinary accelerations. It works without a leaderboard connection. Runs exist in tab memory.
 - **Weekly expedition** obtains a signed server ticket before starting. Everyone swims the
   same five 900 m chapters for that ISO week. Each chapter has three fresh lives and full energy.
 - Pointer/drag chooses depth; ↑/↓ or W/S steers. Space spends 18 energy on an 800 ms burst,
@@ -15,8 +15,8 @@ coastal prototype is now a five-chapter expedition (SR-07…SR-20).
 - Escape/P, the pause button, blur and a hidden tab pause the simulation and clear input.
   Returning to the tab requires an explicit resume. Pauses consume no gameplay time.
 - Reaching 900 m freezes simulation, score and input. The seal glides out for 950 ms
-  (180 ms with reduced motion); the HTML result then offers the next chapter or banking the score.
-  Timeout at 150 seconds ends a chapter without awarding completion.
+  (no exit swim with reduced motion or steady practice; result after 180 ms); the HTML result then offers the next chapter or banking the score.
+  Timeout at 150 simulation seconds ends a chapter without awarding completion.
 - Weekly results are sent only on the result screen. A failed request can be retried while
   that result remains open. There is no persistent submission queue.
 
@@ -37,7 +37,7 @@ biome backgrounds and rock/ice, polar bear and leopard seal variants. Paired hin
 a separate short tail, upright near/far webbed feet whose projected breadth changes with the lateral stroke, short foreflippers with claws, small ear openings and no external pinnae distinguish seals from sea lions.
 `render/art.js` supplies common fish/debris and legacy texture helpers. `render/hazards.js` supplies the live generated regional fauna and full-length submerged hulls; `core/fauna.js` maps species and registered body origins.
 
-All players see a 960 × 540 logical field, contained inside portrait or landscape screens.
+All players see a 960 × 540 logical field, contained inside portrait or landscape screens. The opaque HUD touches the field; status sits below it, and low landscape controls use external side rails. Settings remain available in pause.
 The pure fixed-step simulation (120 Hz) owns movement, collision and scoring; Phaser does
 not run a second physics engine. Sprites are pooled and simulation positions are interpolated. The hull and rotor are paired pooled images: a static hull and a compact eight-frame rotor atlas keep the same collision origin.
 The moving seal stays axis-aligned to avoid a reproduced Phaser 4 WebGL quad corruption;
@@ -45,12 +45,10 @@ flipper frames provide its swimming motion (see the SR review for the upstream r
 The cover seal is a separate contained canvas, with its caption in a content-sized grid.
 Pixel regressions check player and predator collision circles inside the visible bodies, and scan complete regional predator alpha planes for stray neighbouring-frame fragments.
 The shortened tail blends into the rump without a closed root outline; the near eye moves
-forward and a partially visible far eye gives the muzzle a slight three-quarter view.
+forward and two visible eyes give every species a softer three-quarter face; generated grey/Weddell use v7 atlases.
 [Photographic references for all five playable species](seal-run-anatomy-references.md) record the visual review.
-The panorama pans from its left edge to its right edge over 900 m. Separate scenery moves
-at 0.16×, 0.40× and 0.72× world speed, with nearer props larger and clearer. Phaser TileSprite
-shimmer, subtle kelp sway and a ParticleEmitter capped at 36 motes add water motion.
-Chapter panorama/prop/animal/procedural-player GPU textures are released on shutdown; decoded loaders retain only the current chapter assets. Generated players do not allocate procedural game frames. Only common fish, debris, rock-cap and tiny shimmer/mote textures are shared. Obsolete generic predators and background layers are no longer built. Fish bob by at most 8 lu in rendering only;
+The calm default keeps two faint distant scenery planes (target factors 0.06/0.16), disables particles, shimmer and fish bob, and clears the central tracking corridor. Rich uses three planes (0.16/0.40/0.72), shimmer, kelp sway and at most 36 motes. Decorative speed is smoothed, and switching presets preserves positions. Minimum motion freezes decor and never catches up the missed distance on resume. Fish have 20% larger presentation bounds and a quiet outline; terrain has a continuous rim. Collision/pickup geometry is unchanged.
+Chapter panorama/prop/animal/procedural-player GPU textures are released on shutdown; decoded loaders retain only the current chapter assets. Generated players do not allocate procedural game frames. Only common fish, debris, rock-cap and tiny shimmer/mote textures are shared. Obsolete generic predators and background layers are no longer built. In Rich, fish bob by at most 8 lu in rendering only;
 pickup coordinates remain unchanged. Reduced motion disables parallax, bobbing and seal
 frame animation, and hides shimmer/motes. Pause/finish freeze scenery and particles. Invulnerability uses steady transparency instead of flashing.
 
@@ -81,6 +79,10 @@ Arctic surface ambushes make that chapter comparatively forgiving; higher speed 
 imply every biome is harder. All 100 templates and 260 generated routes pass the conservative
 reachability, fish-budget and corridor checks.
 
+## Practice presentation clock (SR-23)
+
+Explore defaults to a 120 lu/s steady current. render/motion.js computes the expected next tick speed, including pending burst and fish buffs; the renderer budgets real milliseconds per unchanged 120 Hz simulation tick. Thus resources, collisions and timers stay coherent while real time passes more slowly. 35/50/75/100% rates are also available, adjustable before Play and in pause. Weekly forces rate 1, and server rules remain expedition-3. See [visual comfort review](seal-run-visual-comfort-review.md) for limits and validation.
+
 ## Server and storage
 
 `src/games/sealRun.ts` imports the **same** generator used in the browser.
@@ -93,8 +95,8 @@ This is budget/plausibility validation, not replay verification or cheat-proof c
 Starting Weekly creates a signed, HttpOnly, SameSite=Lax `seal_run_player` cookie for seven
 days, restricted to `/api/leaderboard` (Secure in production). The server derives a weekly
 alias and player key; the personal best lives in Postgres. No email is collected.
-Only explicit language/sound/motion choices write `seal_run_lang`, `seal_run_sound`,
-`seal_run_motion` to localStorage. No score, seed or outbox is stored there.
+Only explicit language/sound/background/tempo choices write `seal_run_lang`, `seal_run_sound`,
+`seal_run_background`, `seal_run_tempo` to localStorage. Legacy `seal_run_motion` is read for compatibility. No score, seed or outbox is stored there.
 
 A service worker registers after Play and caches an explicit list of game files.
 It never caches API responses or other sites' files. Navigation tries the network first.

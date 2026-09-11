@@ -1,5 +1,5 @@
 // SR-11: only this game's immutable assets. Never cache APIs, cookies or scores.
-const VERSION = 'seal-run-expedition-packed-art-7'
+const VERSION = 'seal-run-steady-practice-9'
 const ROOT = new URL('./', self.location.href).pathname
 const FILES = [
   'index.html',
@@ -11,8 +11,8 @@ const FILES = [
   'assets/tiger-shark-atlas-v6.webp',
   'assets/orca-northern-atlas-v6.webp',
   'assets/orca-antarctic-atlas-v6.webp',
-  'assets/weddell-pup-atlas-v6.webp',
-  'assets/grey-seal-atlas-v6.webp',
+  'assets/weddell-pup-atlas-v7.webp',
+  'assets/grey-seal-atlas-v7.webp',
   'assets/polar-bear-atlas-v6.webp',
   'assets/leopard-seal-atlas-v6.webp',
   'assets/boat-coastal-v4-hull.webp',

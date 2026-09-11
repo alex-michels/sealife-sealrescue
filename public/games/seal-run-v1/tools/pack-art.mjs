@@ -50,7 +50,8 @@ for (const id of [...Object.keys(FAUNA), 'polar_bear', 'leopard_seal']) {
     )
     .webp({ quality: 90, alphaQuality: 100, smartSubsample: true })
     .toBuffer()
-  const file = id.replaceAll('_', '-') + '-atlas-v6.webp'
+  const file =
+    id.replaceAll('_', '-') + (FAUNA[id]?.artVersion === 'v7' ? '-atlas-v7.webp' : '-atlas-v6.webp')
   await writeFile(new URL(file, assets), packed)
   atlases[id] = {
     file,

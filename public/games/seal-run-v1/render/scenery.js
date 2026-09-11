@@ -143,7 +143,18 @@ export function createScenery(scene, course) {
         .setAlpha(plane.alpha)
         .setTint(Number.parseInt(palette.scenery.slice(1), 16))
         .setFlipX(i % 2 === 1)
-      props.push({ sprite, id, plane, height, width: sprite.displayWidth, y, base })
+      props.push({
+        sprite,
+        id,
+        plane,
+        planeIndex,
+        index: i,
+        height,
+        width: sprite.displayWidth,
+        y,
+        base,
+        offset: 0,
+      })
     }
   }
   canvasTexture(scene, 'ocean_shimmer', 512, 256, (c, w) => {
@@ -190,38 +201,79 @@ export function createScenery(scene, course) {
     // Phaser destroys display objects; release chapter-specific GPU images afterwards.
     for (const key of owned) scene.textures.remove(key)
   })
-  let lastDistance = null
+  let lastDistance = null,
+    lastTime = null,
+    speed = 0,
+    initialized = false,
+    panoramaDistance = 0
   return {
     panorama,
     props,
     shimmer,
     motes,
-    setPaused(paused, reduced) {
-      motes.active = !paused && !reduced
-      motes.visible = !reduced
+    setPaused(paused, profile) {
+      motes.active = !paused && profile === 'rich'
+      motes.visible = profile === 'rich'
     },
-    update(distance, timeMs, reduced) {
-      // Reduced motion freezes decor; normal motion projects the current route distance.
-      const delta = lastDistance == null ? 0 : Math.max(0, distance - lastDistance)
+    update(distance, timeMs, profile = 'calm') {
+      const first = lastDistance === null || timeMs < lastTime
+      const delta = first ? 0 : Math.max(0, distance - lastDistance)
+      const dt = first ? 0 : Math.max(0, (timeMs - lastTime) / 1000)
+      if (first) {
+        panoramaDistance = distance
+        speed = 0
+        initialized = false
+        for (const prop of props) {
+          prop.offset = 0
+          prop.factor = null
+          prop.sway = null
+        }
+      } else if (profile !== 'minimum') panoramaDistance += delta
       lastDistance = distance
-      if (reduced) {
-        shimmer.visible = false
+      lastTime = timeMs
+      const rich = profile === 'rich'
+      shimmer.visible = rich
+      motes.visible = rich
+      if (!rich) motes.active = false
+      // Freeze at the current position; returning to motion never catches up lost distance.
+      if (profile === 'minimum' && initialized) {
+        speed = 0
         return
       }
-      shimmer.visible = true
-      // Full left edge at launch, exact right edge at the chapter finish.
-      panorama.x = -(panoramaWidth - FIELD_W) * Math.min(1, Math.max(0, distance / course.lengthLu))
-      shimmer.tilePositionX += delta * 0.09
+      const targetSpeed = dt > 0 ? Math.min(900, delta / dt) : 0
+      const decay = Math.exp(-dt / 0.75)
+      const travel = targetSpeed * dt + (speed - targetSpeed) * 0.75 * (1 - decay)
+      speed = targetSpeed + (speed - targetSpeed) * decay
+      const blend = first ? 1 : 1 - Math.exp(-dt / 0.3)
+      const targetPan =
+        -(panoramaWidth - FIELD_W) * Math.min(1, Math.max(0, panoramaDistance / course.lengthLu))
+      if (profile !== 'minimum') {
+        panorama.x += (targetPan - panorama.x) * (first ? 1 : 1 - Math.exp(-dt / 0.75))
+        if (panoramaDistance >= course.lengthLu) panorama.x = targetPan
+      }
+      shimmer.tilePositionX += travel * 0.09
       shimmer.tilePositionY = Math.sin(timeMs / 5000) * 6
       for (const prop of props) {
+        const keep = prop.planeIndex < 2 && prop.index % 2 === 0
+        const alpha = rich ? prop.plane.alpha : keep ? [0.19, 0.27][prop.planeIndex] : 0
+        const height = prop.height * (rich ? 1 : prop.planeIndex === 0 ? 0.8 : 0.65)
+        prop.sprite.alpha += (alpha - prop.sprite.alpha) * (initialized ? blend : 1)
+        prop.sprite.visible = prop.sprite.alpha > 0.005
+        prop.sprite.displayHeight +=
+          (height - prop.sprite.displayHeight) * (initialized ? blend : 1)
+        const size = prop.sprite.displayHeight / prop.height
+        // Incremental per-plane displacement keeps positions continuous when switching presets.
+        const factor = rich ? prop.plane.factor : [0.06, 0.16, 0][prop.planeIndex]
+        prop.factor = prop.factor == null ? factor : prop.factor + (factor - prop.factor) * blend
+        if (profile !== 'minimum') prop.offset += travel * prop.factor
         prop.sprite.x =
-          ((((prop.base - distance * prop.plane.factor) % prop.plane.span) + prop.plane.span) %
-            prop.plane.span) -
+          ((((prop.base - prop.offset) % prop.plane.span) + prop.plane.span) % prop.plane.span) -
           450
-        // Scale-only kelp sway avoids Phaser 4's rotating/moving-quad issue.
-        if (prop.id === 'kelp')
-          prop.sprite.displayWidth = prop.width * (1 + Math.sin(timeMs / 1300 + prop.base) * 0.045)
+        const sway = rich && prop.id === 'kelp' ? Math.sin(timeMs / 1300 + prop.base) * 0.045 : 0
+        prop.sway = prop.sway == null ? sway : prop.sway + (sway - prop.sway) * blend
+        prop.sprite.displayWidth = prop.width * size * (1 + prop.sway)
       }
+      initialized = true
     },
   }
 }

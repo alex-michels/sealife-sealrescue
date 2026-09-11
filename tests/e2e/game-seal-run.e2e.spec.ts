@@ -58,6 +58,7 @@ test('SR-07/15: keyboard, burst, pause, focus trap and read-only snapshots', asy
     window.dispatchEvent(new Event('blur'))
   })
   await expect.poll(() => page.evaluate(() => window.SealRun!.state!.d)).toBe(snapshot!.d)
+  await page.locator('#pause-settings button').first().focus()
   await page.keyboard.press('Shift+Tab')
   await expect(page.locator('#end-swim')).toBeFocused()
   await page.locator('#end-swim').click()
@@ -92,9 +93,21 @@ test('SR-07: portrait and landscape retain identical playfield and usable contro
         const canvas = await page.locator('#stage canvas').boundingBox()
         const hud = await page.locator('#hud').boundingBox()
         const controls = await page.locator('#play-controls').boundingBox()
-        return canvas!.y >= hud!.y + hud!.height && canvas!.y + canvas!.height <= controls!.y
+        const buttons = await page.locator('#play-controls button').all()
+        const clear = await Promise.all(
+          buttons.map(async (button) => {
+            const b = (await button.boundingBox())!
+            return (
+              b.x + b.width <= canvas!.x ||
+              b.x >= canvas!.x + canvas!.width ||
+              b.y >= canvas!.y + canvas!.height
+            )
+          }),
+        )
+        return canvas!.y >= hud!.y + hud!.height - 1 && clear.every(Boolean) && controls!.height > 0
       })
       .toBe(true)
+    await expect(page.locator('#hud [data-lang=ru]')).toBeVisible()
     const burst = await page.locator('#burst').boundingBox()
     expect(burst!.width).toBeGreaterThanOrEqual(24)
     expect(burst!.height).toBeGreaterThanOrEqual(24)
@@ -462,7 +475,7 @@ test('SR-06: every generated swim frame covers its collision circle and has real
         const key = hazardTexture(kind, biome) + '_' + frame
         const source = textures.get(key)!
         c.drawImage(source, 0, 0, w, h)
-        if (faunaId(kind, biome) && kind !== 'seal') {
+        if (faunaId(kind, biome)) {
           // Corner transparency alone misses a neighbouring atlas frame's tail
           // leaking ahead of the snout. Inspect the complete source alpha plane.
           const pixels = source
@@ -600,11 +613,11 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
       state.predators = predators
       state.debrisUntilMs = 0
       state.lag = 0
-      scenery.update(0, 0, false)
+      scenery.update(0, 0, 'rich')
       const start = scenery.panorama.x
       const moving = scenery.props.filter((prop: { base: number }) => prop.base > 1000)
       const before = moving.map((prop: { sprite: { x: number } }) => prop.sprite.x)
-      scenery.update(100, 1000, false)
+      scenery.update(100, 1000, 'rich')
       const shifts = moving.map(
         (prop: { sprite: { x: number }; plane: { depth: number } }, i: number) => ({
           shift: before[i] - prop.sprite.x,
@@ -615,8 +628,8 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
         scenery.panorama.x,
         ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
       ]
-      scenery.setPaused(true, true)
-      scenery.update(200, 2000, true)
+      scenery.setPaused(true, 'minimum')
+      scenery.update(200, 2000, 'minimum')
       const reducedFrozen =
         JSON.stringify(frozen) ===
           JSON.stringify([
@@ -632,10 +645,10 @@ test('SR-05/14: every full-length biome renders its rocks and hazards without st
         state.d = distance
         state.worldD = distance
         play.syncWorld(distance)
-        scenery.update(distance, distance * 3, false)
+        scenery.update(distance, distance * 3, 'rich')
         for (const rec of play.bound.values()) kinds.add(rec.kind)
       }
-      scenery.update(course.lengthLu, 120000, false)
+      scenery.update(course.lengthLu, 120000, 'rich')
       results.push({
         biome,
         kinds: [...kinds],
@@ -691,6 +704,7 @@ test('SR-14: tropical play keeps advancing after the first rocks enter the viewp
   await config(page)
   await page.goto(url)
   await page.locator('[data-biome="tropical"]').click()
+  await page.locator('#tempo-menu').selectOption('1')
   await page.locator('#start').click()
   await page.waitForFunction(() => (window.SealRun?.state?.d ?? 0) > 7000, undefined, {
     timeout: 45000,
@@ -877,5 +891,257 @@ test('SR-21: offline cache serves a compact panorama when the desktop variant wa
     expect(size).toEqual([1620, 540])
   } finally {
     await context.close()
+  }
+})
+
+test('SR-22: calm defaults, explicit background presets and readable play status', async ({
+  page,
+}) => {
+  await config(page)
+  await page.goto(url)
+  await expect(page.locator('#background-menu')).toHaveValue('calm')
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual([])
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(page.locator('#background-menu')).toHaveValue('minimum')
+  await page.locator('#background-menu').selectOption('rich')
+  await page.reload()
+  await expect(page.locator('#background-menu')).toHaveValue('rich')
+  await page.setViewportSize({ width: 844, height: 390 })
+  await page.locator('#start').click()
+  await expect(page.locator('#stage canvas')).toBeVisible()
+  const canvas = (await page.locator('#stage canvas').boundingBox())!
+  expect(canvas.width).toBeGreaterThan(440)
+  const status = (await page.locator('#toast').boundingBox())!
+  expect(status.y).toBeGreaterThanOrEqual(canvas.y + canvas.height - 1)
+  expect(
+    await page
+      .locator('#hud-energy-value')
+      .evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize)),
+  ).toBeGreaterThanOrEqual(14)
+  await page.keyboard.press('Escape')
+  await page.locator('#background-pause').selectOption('calm')
+  await page.locator('#resume').click()
+  await expect(page.locator('#stage canvas')).toBeVisible()
+  expect(await page.evaluate(() => localStorage.getItem('seal_run_background'))).toBe('calm')
+})
+
+test('SR-22: calm scenery clears the target corridor and preset/boost transitions stay continuous', async ({
+  page,
+}) => {
+  await config(page)
+  await page.goto(url)
+  const report = await page.evaluate(async () => {
+    const root = '/games/seal-run-v1/'
+    const Phaser = (await import(root + 'vendor/phaser.esm.js')).default
+    const { createScenery, loadScenery } = await import(root + 'render/scenery.js')
+    const { generateCourse } = await import(root + 'core/course.js')
+    const host = document.createElement('div')
+    document.body.replaceChildren(host)
+    const rows = []
+    for (const biome of ['coastal', 'atlantis', 'tropical', 'arctic', 'antarctic']) {
+      await loadScenery(biome)
+      const game = new Phaser.Game({
+        type: Phaser.WEBGL,
+        parent: host,
+        width: 960,
+        height: 540,
+        audio: { noAudio: true },
+        scene: { create() {} },
+      })
+      await new Promise<void>((resolve) => game.events.once('postrender', resolve))
+      game.loop.stop()
+      const scenery = createScenery(game.scene.scenes[0], generateCourse('comfort-review', biome))
+      let maxVisible = 0,
+        middle = 0
+      scenery.update(0, 0, 'calm')
+      for (let distance = 300; distance <= 36000; distance += 300) {
+        scenery.update(distance, distance / 0.3, 'calm')
+        const visible = scenery.props.filter(
+          (p: {
+            sprite: {
+              visible: boolean
+              getBounds: () => { left: number; right: number; top: number; bottom: number }
+            }
+          }) => {
+            const b = p.sprite.getBounds()
+            return p.sprite.visible && b.right > 0 && b.left < 960 && b.bottom > 0 && b.top < 540
+          },
+        )
+        maxVisible = Math.max(maxVisible, visible.length)
+        middle += visible.filter(
+          (p: { sprite: { getBounds: () => { top: number; bottom: number } } }) => {
+            const b = p.sprite.getBounds()
+            return b.top < 340 && b.bottom > 200
+          },
+        ).length
+      }
+      const noEffects = !scenery.shimmer.visible && !scenery.motes.visible
+      // Method shorthand stays self-contained when CI's tsx loader serializes evaluate().
+      const snapshot = {
+        positions() {
+          return [
+            scenery.panorama.x,
+            ...scenery.props.map((p: { sprite: { x: number } }) => p.sprite.x),
+          ]
+        },
+      }
+      const frozen = snapshot.positions()
+      scenery.update(36100, 120100, 'minimum')
+      const freezes = JSON.stringify(frozen) === JSON.stringify(snapshot.positions())
+      scenery.update(36100, 120100, 'rich')
+      const switchContinuous = JSON.stringify(frozen) === JSON.stringify(snapshot.positions())
+      // Once moving steadily, a 35% speed boost must not hit decor as a one-frame step.
+      let d = 36100,
+        t = 120100
+      for (let i = 0; i < 180; i++) {
+        d += 5
+        t += 1000 / 60
+        scenery.update(d, t, 'rich')
+      }
+      const prop = scenery.props[0]
+      let before = prop.sprite.x
+      d += 5
+      t += 1000 / 60
+      scenery.update(d, t, 'rich')
+      const normal = before - prop.sprite.x
+      before = prop.sprite.x
+      d += 6.75
+      t += 1000 / 60
+      scenery.update(d, t, 'rich')
+      const boosted = before - prop.sprite.x
+      rows.push({
+        biome,
+        maxVisible,
+        middle,
+        noEffects,
+        freezes,
+        switchContinuous,
+        ratio: boosted / normal,
+      })
+      game.destroy(true)
+      game.runDestroy()
+    }
+    return rows
+  })
+  for (const row of report) {
+    expect(row.maxVisible, row.biome).toBeLessThanOrEqual(5)
+    expect(row.middle, row.biome).toBe(0)
+    expect(row.noEffects && row.freezes && row.switchContinuous, row.biome).toBe(true)
+    expect(row.ratio).toBeGreaterThan(1)
+    expect(row.ratio).toBeLessThan(1.03)
+  }
+})
+
+test('SR-23: slow clocks preserve simulation state and steady practice holds current speed through boosts', async ({
+  page,
+}) => {
+  await config(page)
+  await page.goto(url)
+  await expect(page.locator('#tempo-menu')).toHaveValue('steady')
+  const report = await page.evaluate(async () => {
+    const root = '/games/seal-run-v1/'
+    const Phaser = (await import(root + 'vendor/phaser.esm.js')).default
+    const { createSim, applyInput, step } = await import(root + 'core/sim.js')
+    const { createPlayScene } = await import(root + 'render/scene.js')
+    const { loadScenery } = await import(root + 'render/scenery.js')
+    const { loadHazardArt } = await import(root + 'render/hazards.js')
+    await Promise.all([loadScenery('coastal'), loadHazardArt('coastal')])
+    const host = document.createElement('div')
+    document.body.replaceChildren(host)
+    const rows = []
+    for (const tempo of ['1', '0.5', '0.35', 'steady']) {
+      const course = { biome: 'coastal', lengthLu: 36000, seed: 'clock', fish: [], obstacles: [] }
+      const state = createSim(course)
+      if (tempo === 'steady') {
+        state.d = state.worldD = 12000
+        state.buffLeftMs = 1000
+      }
+      let burst = false
+      const Play = createPlayScene(Phaser, {
+        state,
+        course,
+        currentCtrl() {
+          return { keyDir: 1, burst }
+        },
+        updateHud() {},
+        onEvents() {},
+        onEnd() {},
+        isPaused() {
+          return false
+        },
+        isReduced() {
+          return true
+        },
+        tempo() {
+          return tempo
+        },
+      })
+      const game = new Phaser.Game({
+        type: Phaser.WEBGL,
+        parent: host,
+        width: 960,
+        height: 540,
+        audio: { noAudio: true },
+        scene: [Play],
+      })
+      while (!game.scene.getScene('play')?.scenery)
+        await new Promise<void>((r) => requestAnimationFrame(() => r()))
+      game.loop.stop()
+      const play = game.scene.getScene('play')
+      // Fresh clock, before any automatic frame advanced the fixture.
+      Object.assign(state, createSim(course))
+      play.acc = 0
+      play.pendingBurst = false
+      if (tempo === 'steady') {
+        state.d = state.worldD = 12000
+        state.buffLeftMs = 1000
+      }
+      play.prev = { d: state.d, worldD: state.worldD, y: state.y }
+      const initialD = state.worldD
+      for (let frame = 0; frame < 600; frame++) {
+        burst = tempo === 'steady' && frame === 240
+        play.update(0, 1000 / 60)
+      }
+      const reference = createSim(course)
+      const ticks = Math.round(state.tMs / (1000 / 120))
+      if (tempo !== 'steady')
+        for (let tick = 0; tick < ticks; tick++) {
+          applyInput(reference, { keyDir: 1 })
+          step(reference)
+        }
+      rows.push({
+        tempo,
+        simMs: state.tMs,
+        travel: state.worldD - initialD,
+        renderTravel:
+          play.prev.worldD -
+          initialD +
+          (play.acc / (1000 / 120)) * (state.worldD - play.prev.worldD),
+        stamina: state.stamina,
+        referenceStamina: reference.stamina,
+        y: state.y,
+        referenceY: reference.y,
+        worldD: state.worldD,
+        referenceD: reference.worldD,
+        burstUsed: state.burstReadyMs > 0,
+      })
+      game.destroy(true)
+      game.runDestroy()
+    }
+    return rows
+  })
+  for (const row of report) {
+    if (row.tempo === 'steady') {
+      expect(row.travel).toBeGreaterThan(1193)
+      expect(row.travel).toBeLessThanOrEqual(1201)
+      expect(row.burstUsed).toBe(true)
+    } else {
+      expect(Math.abs(row.simMs - 10000 * Number(row.tempo))).toBeLessThanOrEqual(
+        1000 / 120 + 0.001,
+      )
+      expect(row.stamina).toBeCloseTo(row.referenceStamina, 6)
+      expect(row.y).toBeCloseTo(row.referenceY, 6)
+      expect(row.worldD).toBeCloseTo(row.referenceD, 6)
+    }
   }
 })
