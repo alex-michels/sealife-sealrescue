@@ -199,7 +199,7 @@ Run score ≤494500 (API cap 500000); сортировка по score и created
 | `agent-proposals` | logged-in | +agent | editor² | editor |
 | `agent-runs` | logged-in | +agent | translator/+agent | editor |
 | `reactions` | public | editor | editor | editor |
-| `users` | self only (admin: все) | admin | admin | admin |
+| `users` | self only (admin: все) | admin | admin | admin⁴ |
 
 ¹ публичная запись — только через endpoint лидерборда (валидация + local API). · ² коллекционный `isEditor`
 (агент не редактирует предложение вообще после создания, не только `status`) — доп. field-access
@@ -213,3 +213,7 @@ Run score ≤494500 (API cap 500000); сортировка по score и created
 > `tests/int/access-matrix.int.spec.ts` (**QA-13**): расхождение кода с этой таблицей валит CI.
 
 M2-T11: агенты создают Sources с trustLevel=0; URL/type/trust существующего источника меняют только editor/admin. M2-T12/T13: applied ставится только через транзакционный apply; applied-предложения неизменяемы.
+⁴ плюс `unlock` (снять блокировку после неудачных входов) — тоже только **admin** (**SEC-08**). По
+умолчанию у Payload там `Boolean(user)`, то есть любой вошедший — включая `agent` с API-ключом — мог
+сбросить блокировку чужого аккаунта и обнулить защиту от перебора пароля (Dependabot #54,
+GHSA-jg8r-5jh2-v2xj; патча у Payload нет). Закреплено `tests/int/users-unlock.int.spec.ts`.
