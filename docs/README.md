@@ -32,6 +32,7 @@
 | [seal-run-current-comparison.json](seal-run-current-comparison.json) | Парное сравнение старой и новой физики течения: 780 пар на одинаковых трассах |
 | [seal-run-expedition-balance.json](seal-run-expedition-balance.json) | Воспроизводимый отчёт 780 полных chapter-runs, SR-18/20 |
 | [local-development.md](local-development.md) | Локальная разработка: prereqs, ENV, скрипты, БД push-режим, сиды, тесты, Docker |
+| [migrations/M2-T16-verification.md](migrations/M2-T16-verification.md) | Проверка rescue schema repair на полной копии, результаты dev-rollout и безопасный выбор миграции |
 
 ## Стратегические / governance доки
 

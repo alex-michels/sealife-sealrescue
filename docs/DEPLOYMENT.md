@@ -144,6 +144,15 @@
 Переключение — только сменой `DATABASE_URI`. Миграция Neon→self-hosted при текущем объёме = один
 `pg_dump | pg_restore` (минуты).
 
+**Rescue schema rollout (M2-T16):** до Payload boot/build сначала классифицировать схему по
+[runbook](agents/proposal-review.md#database-rollout). Legacy M2-T13 и пустой partial repair M2-T16
+не взаимозаменяемы. Каждую выбранную SQL-миграцию ревьюить и проверять на полной восстановленной
+копии с отключённым schema push (`PAYLOAD_MIGRATING=true`). Файл M2-T16 содержит свою транзакцию;
+запуск через `psql --set ON_ERROR_STOP=1` **без** `--single-transaction`. Он не публикует записи
+и отвергает непустое неоднозначное partial-состояние. [Протокол проверки](migrations/M2-T16-verification.md)
+фиксирует конкретное окружение/результат; подготовка repair не заменяет baseline-цепочку M0-T02
+и не означает изменения prod.
+
 > **Почему Neon ОК для игрового окружения, но не для prod-сайтов:** Neon — US-компания. Лидерборд
 > **анонимен** (`game-scores`: ни email, ни аккаунтов, ни сырого seed, ни IP — см.
 > `src/endpoints/leaderboard.ts`), поэтому персональных данных там нет и Schrems-II/transfer-вопрос

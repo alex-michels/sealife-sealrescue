@@ -92,10 +92,51 @@ CI зелёный — код не при чём.
 | `npm test` | `test:unit` + `test:int` + `test:e2e` подряд |
 
 ## База данных
-- **Dev — push-режим:** Payload синхронизирует схему с Postgres автоматически, миграций пока нет.
-  Удобно итерировать, но **перед запуском в прод** нужен baseline-снимок миграции (см. [DEPLOYMENT.md](DEPLOYMENT.md)).
+- **Dev — push-режим:** Payload обычно синхронизирует схему с Postgres автоматически. Полноценной
+  baseline-цепочки миграций пока нет (M0-T02), но есть отдельные SQL-upgrade/repair файлы в
+  `docs/migrations/`. **Перед запуском в прод** нужны baseline и управляемый rollout
+  (см. [DEPLOYMENT.md](DEPLOYMENT.md)). Перед проверкой существующей БД автоматический push выключать:
+  он изменяет сам объект проверки.
 - После изменения коллекций/полей: `npm run generate:types`, затем ревью diff `payload-types.ts`.
 - Прод-БД — self-hosted Postgres на VPS с бэкапами; dev/test — Neon (EU). Переключение — `DATABASE_URI`.
+
+### Проверка rescue-миграции на копии (M2-T16)
+
+Сначала определить форму существующей схемы по
+[таблице выбора миграции](agents/proposal-review.md#database-rollout): legacy M2-T13 и пустое
+частичное состояние M2-T16 требуют разных файлов. M2-T16 отказывается менять непустую частичную
+схему, чтобы не назначить неподтверждённый статус публикации.
+
+Для репетиции восстановить **полный** `pg_dump` в отдельную БД/ветку в EU/EEA: источник и копия
+должны иметь разные connection strings. Дамп содержит staff-данные и секреты аутентификации;
+держать его вне Git, не выводить содержимое/URI в логи. Использовать клиента `pg_dump` той же или
+новее основной версии PostgreSQL и доступный на копии PostGIS. Подробные pre/post checks и результаты —
+[протокол M2-T16](migrations/M2-T16-verification.md).
+
+Репетиция M2-T16 выполнена на полной локальной копии в Docker (PostgreSQL 18.6 + PostGIS 3.6.4,
+только localhost); исходная Neon EU-БД использовалась для read-only дампа. После успешной репетиции
+миграция применена к dev, данные всех 71 таблицы не изменились. Продакшен не затронут. Локальные рабочие
+файлы `.db-work/m2t16/` и `.env.m2t16.local` не коммитить.
+
+До импорта `payload.config` задать `DATABASE_URI_TEST` на копию и `PAYLOAD_MIGRATING=true`:
+это отключает Drizzle push при Payload boot, поэтому тест действительно проверяет результат SQL.
+`vitest.setup.ts` перенаправит интеграционные тесты на `DATABASE_URI_TEST`; без него обычные
+int-тесты используют dev-БД. Целевой `rescue-schema-repair.int.spec.ts` использует только `pg`,
+требует явную `DATABASE_URI_TEST` и проверяет схему в изолированных транзакциях; Payload CRUD
+проверяется отдельно, с тем же запретом push. У миграционного SQL свои `BEGIN`/`COMMIT`, поэтому для `psql`
+нужен `ON_ERROR_STOP=1`, **без** `--single-transaction`.
+
+```powershell
+# Переменные подключения заполнить локально, без записи секретов в командную историю.
+$env:PAYLOAD_MIGRATING = 'true'
+psql "$env:DATABASE_URI_TEST" --set ON_ERROR_STOP=1 --file docs/migrations/M2-T16-rescue-center-schema-repair.sql
+npm run test:int -- tests/int/rescue-schema-repair.int.spec.ts
+Remove-Item Env:PAYLOAD_MIGRATING
+```
+
+Успешный запуск на копии не означает применения к исходной БД или продакшену. Обновить протокол
+после проверки повторного запуска, сохранения данных и Payload draft/published поведения. Откат —
+через проверенный backup/release, автоматического destructive down нет.
 
 ## Сиды (демо-данные)
 ```bash

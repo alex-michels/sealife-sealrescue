@@ -43,6 +43,8 @@ jobs:
 
     env:
       DATABASE_URI: postgres://postgres:postgres@localhost:5432/sealife_test
+      # M2-T16: DDL repair tests require an explicit isolated test database.
+      DATABASE_URI_TEST: postgres://postgres:postgres@localhost:5432/sealife_test
       PAYLOAD_SECRET: ci-only-secret-never-prod
       SERVER_URL: http://localhost:3000
 
