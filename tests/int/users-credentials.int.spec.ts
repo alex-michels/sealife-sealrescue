@@ -3,6 +3,7 @@
 // Uint8Array»: TextEncoder jsdom отдаёт Uint8Array из другого realm) — артефакт среды, как в
 // media-upload.int.spec.ts. Здесь проверяется именно успешный вход, поэтому — настоящий Node.
 import { pbkdf2Sync, randomBytes, randomUUID } from 'node:crypto'
+import { readFile } from 'node:fs/promises'
 import { getPayload, type Payload } from 'payload'
 import type { User } from '@/payload-types'
 import config from '@/payload.config'
@@ -21,6 +22,9 @@ import { describe, it, beforeAll, afterAll, expect } from 'vitest'
  *    (GHSA-238x-w2j9-gwwr, Dependabot #92): ключ больше не читается НИКЕМ — ни admin, ни агентом,
  *    ни через REST/GraphQL/local API. Он виден один раз, в момент генерации в админке. Агенты
  *    при этом обязаны по-прежнему входить по ключу — иначе встанет очередь `agent-proposals`.
+ * 3. **Схема без push.** 3.90 читает новую колонку `users.reset_password_requested_at` в каждом
+ *    запросе к `users`. Там, где push выключен (`PAYLOAD_MIGRATING=true`, репетиции M2-T16), её
+ *    добавляет `docs/migrations/SEC-09-…sql` — и она обязана совпадать с тем, что создаёт push.
  */
 
 const RUN = `cred-${Date.now()}`
@@ -161,5 +165,45 @@ describe('API-ключ агента', () => {
       headers: new Headers({ Authorization: `users API-Key ${KEY}` }),
     })
     expect(stillOk.user?.id).toBe(agent.id)
+  })
+})
+
+describe('SQL для БД без push (docs/migrations/SEC-09-users-reset-password-requested-at.sql)', () => {
+  it('создаёт колонку ровно такой, какой её создаёт push Payload, и повторный запуск — no-op', async () => {
+    const sql = await readFile(
+      'docs/migrations/SEC-09-users-reset-password-requested-at.sql',
+      'utf8',
+    )
+    const client = await payload.db.pool.connect()
+    const schema = `sec09_${randomUUID().replaceAll('-', '')}`
+    const column = async (tableSchema: string) =>
+      (
+        await client.query(
+          `SELECT data_type, datetime_precision, is_nullable, column_default
+             FROM information_schema.columns
+            WHERE table_schema = $1 AND table_name = 'users'
+              AND column_name = 'reset_password_requested_at'`,
+          [tableSchema],
+        )
+      ).rows
+    try {
+      await client.query('BEGIN')
+      await client.query(`CREATE SCHEMA "${schema}"`)
+      await client.query(`SET LOCAL search_path TO "${schema}"`)
+      // `users` в том виде, в каком его оставила 3.85: текущая таблица без новой колонки.
+      await client.query('CREATE TABLE users (LIKE public.users INCLUDING ALL)')
+      await client.query('ALTER TABLE users DROP COLUMN reset_password_requested_at')
+      expect(await column(schema)).toEqual([])
+
+      await client.query(sql)
+      await client.query(sql)
+
+      const pushed = await column('public')
+      expect(pushed).toHaveLength(1)
+      expect(await column(schema)).toEqual(pushed)
+    } finally {
+      await client.query('ROLLBACK')
+      client.release()
+    }
   })
 })

@@ -153,6 +153,13 @@
 фиксирует конкретное окружение/результат; подготовка repair не заменяет baseline-цепочку M0-T02
 и не означает изменения prod.
 
+**Payload 3.90 (SEC-09):** новая колонка `users.reset_password_requested_at` читается в каждом
+запросе к `users` — без неё не работают вход и любой Payload CRUD. Где push работает (шаг «Sync DB
+schema», CI, `npm run dev`), Payload добавляет её сам; где push выключен (`PAYLOAD_MIGRATING=true`,
+репетиции на копиях, будущий prod на миграциях) — до старта 3.90 прогнать
+[`SEC-09-users-reset-password-requested-at.sql`](migrations/SEC-09-users-reset-password-requested-at.sql)
+(`--single-transaction`, идемпотентно, только `users`). Rescue-таблицы push 3.90.2 не меняет.
+
 > **Почему Neon ОК для игрового окружения, но не для prod-сайтов:** Neon — US-компания. Лидерборд
 > **анонимен** (`game-scores`: ни email, ни аккаунтов, ни сырого seed, ни IP — см.
 > `src/endpoints/leaderboard.ts`), поэтому персональных данных там нет и Schrems-II/transfer-вопрос

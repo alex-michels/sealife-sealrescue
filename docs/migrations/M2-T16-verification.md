@@ -59,9 +59,15 @@ This explicit repair does not establish the baseline Payload migration chain; M0
    with no-owner / no-acl into the copy, with the required PostGIS extension available. Fail on the
    first restore error. Verify the restored data before executing any repair.
 3. Load private copy credentials from an ignored file. Set DATABASE_URI_TEST explicitly and
-   PAYLOAD_MIGRATING=true before importing payload.config. The installed adapter 3.85.1 uses that
-   guard to disable automatic Drizzle push; otherwise a test could silently repair its own subject.
-   CI's test job also explicitly sets DATABASE_URI_TEST to its ephemeral service database.
+   PAYLOAD_MIGRATING=true before importing payload.config. The Postgres adapter (3.85.1 when this
+   was recorded; unchanged in 3.90.2) uses that guard to disable automatic Drizzle push; otherwise a
+   test could silently repair its own subject. CI's test job also explicitly sets DATABASE_URI_TEST
+   to its ephemeral service database.
+   **Since Payload 3.90 (SEC-09)** every `users` query selects `reset_password_requested_at`. A copy
+   of a database that predates the upgrade does not have it, and with push disabled nothing adds it,
+   so every Payload CRUD suite fails before reaching rescue logic. Apply the additive, idempotent
+   [SEC-09 migration](SEC-09-users-reset-password-requested-at.sql) to the copy first. It touches
+   only `users`, so it does not change the rescue-schema classification.
 4. Run the SQL against the copy with ON_ERROR_STOP=1. Do not add --single-transaction: this file
    already contains its transaction. Run the targeted suites below, then run the SQL a second time.
 5. Confirm lifecycle defaults, constraints/indexes, anonymous draft visibility, preservation of
@@ -75,6 +81,7 @@ credential values. psql / pg_dump / pg_restore can read standard PG* environment
 pg_dump --format=custom --no-owner --no-acl --file .db-work/m2t16/source.dump
 pg_restore --exit-on-error --single-transaction --no-owner --no-acl --dbname sealrescue_copy .db-work/m2t16/source.dump
 psql --set ON_ERROR_STOP=1 --file docs/migrations/M2-T16-rescue-center-schema-repair.sql
+psql --single-transaction --set ON_ERROR_STOP=1 --file docs/migrations/SEC-09-users-reset-password-requested-at.sql
 npm run test:int -- tests/int/rescue-schema-repair.int.spec.ts
 npm run test:int -- tests/int/proposal-review.int.spec.ts tests/int/rescue-draft-migration.int.spec.ts
 ```
@@ -115,6 +122,26 @@ Types were regenerated; TypeScript passed. The changed test passed ESLint. The u
 npm run lint encountered the pre-existing ignored-by-Git Playwright cache, including copied vendor
 bundles. Re-running ESLint across source files with playwright/.cache/** and .db-work/** excluded
 passed with zero errors (15 existing warnings). No broad lint-rule change was made for this task.
+
+## Re-verification on Payload 3.90.2 (SEC-09, 2026-10-11)
+
+Done on throwaway local PostGIS 17-3.5 databases, not on Neon or a restored dev copy:
+
+- **Rescue schema shape is unchanged.** A database pushed by Payload 3.85.1 and then pushed by
+  3.90.2 differs from the 3.85.1 schema-only dump in one line: `users.reset_password_requested_at`.
+  All ten rescue tables, both enums, foreign keys and indexes are identical. A fresh 3.90.2 push is
+  identical to the upgraded one apart from that column's position. A later push therefore does not
+  touch a repaired rescue schema.
+- **The M2-T16 SQL accepts 3.90.2 schemas.** Run twice on a fresh 3.90.2 database and on the
+  upgraded one, it reported "repaired schema verified; no changes" both times. The schema dumps
+  were byte-identical afterwards. The committed file still hashes to the SHA256 recorded above
+  (a CRLF working copy on Windows hashes differently; psql runs it the same way).
+- **The push-disabled procedure needs the SEC-09 column.** With `PAYLOAD_MIGRATING=true` on a
+  3.85.1-shaped database, `proposal-review.int.spec.ts` failed before any test with
+  `column users.reset_password_requested_at does not exist` (6 skipped). After the SEC-09 migration
+  (run twice; the second run is a no-op), still with push disabled,
+  `rescue-schema-repair` (9), `proposal-review` (6), `rescue-draft-migration` (1) and
+  `users-credentials` all passed, and no push ran. The schema matched the 3.90.2 push result exactly.
 
 ## Local review artifacts
 

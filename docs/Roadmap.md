@@ -1012,8 +1012,13 @@ players (auth: true)
   - **Схема:** новая nullable-колонка `users.reset_password_requested_at` (троттлинг forgot-password).
     Без неё новый код не читает `users` — вход ломается, поэтому колонка должна появиться ДО старта
     3.90. Push её добавляет без вопросов (CI, шаг «Sync DB schema» в `deploy.yml`, `npm run dev`);
-    БД с выключенным push — вручную:
-    `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "reset_password_requested_at" timestamp(3) with time zone;`
+    БД с выключенным push (`PAYLOAD_MIGRATING=true`) — `docs/migrations/SEC-09-users-reset-password-requested-at.sql`
+    (идемпотентно; совпадение с push закреплено тестом). Остальная схема — включая все rescue-таблицы
+    M2-T16 — побайтно та же, что у 3.85.1 (сверено по `pg_dump -s`).
+  - **M2-T16 перепроверен на 3.90.2:** SQL-ремонт признаёт схему 3.90.2 «уже отремонтированной»
+    (no-op, дважды); `rescue-schema-repair`/`proposal-review`/`rescue-draft-migration` зелёные при
+    выключенном push. Но на копии БД старше апгрейда без SEC-09-колонки любой Payload CRUD падает —
+    шаг добавлен в процедуру (`docs/migrations/M2-T16-verification.md`, `local-development.md`).
   - Сброс пароля теперь снимает блокировку, forgot-password троттлится (15 с). Правило
     `unlock: isAdmin` из SEC-08 **остаётся**: дефолт 3.90.2 — «любой пользователь admin-коллекции»,
     а у нас в ней все роли, включая `agent`.
