@@ -10,7 +10,7 @@
 ## Стек
 
 - **Next.js 16** (App Router, server components по умолчанию) + **React 19**
-- **Payload v3.85** (CMS внутри Next), rich text — lexical
+- **Payload v3.90** (CMS внутри Next), rich text — lexical
 - **Postgres** (`@payloadcms/db-postgres`) — БД в EU/EEA-регионе (персональные данные)
 - **Tailwind CSS v4** + CSS-переменные (токены `primitive → semantic`, два режима через `data-site`)
 - Self-host шрифты через `next/font`; аналитика — Plausible (cookieless, только после opt-in)

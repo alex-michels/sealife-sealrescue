@@ -1,3 +1,7 @@
+// @vitest-environment node
+// Вход подписывает JWT через `jose`, а тот в jsdom падает («payload must be an instance of
+// Uint8Array»: TextEncoder jsdom отдаёт Uint8Array из другого realm). До SEC-09 `isLocked()`
+// считал эту ошибку «не заблокирован», и проверка «владелец снова входит» проходила вхолостую.
 import { getPayload, type Payload } from 'payload'
 import type { User } from '@/payload-types'
 import config from '@/payload.config'
@@ -40,13 +44,22 @@ async function lockTarget() {
   }
 }
 
-/** Заблокирован ли аккаунт — проверяем входом с ВЕРНЫМ паролем, как это увидит владелец. */
+/**
+ * Заблокирован ли аккаунт — проверяем входом с ВЕРНЫМ паролем, как это увидит владелец.
+ * Любая другая ошибка пробрасывается: иначе «не заблокирован» засчитывалось бы и тогда, когда
+ * вход просто сломан (так и было в jsdom — см. комментарий в шапке файла, SEC-09).
+ */
 async function isLocked(): Promise<boolean> {
   try {
-    await payload.login({ collection: 'users', data: { email: TARGET, password: PASSWORD } })
+    const { token } = await payload.login({
+      collection: 'users',
+      data: { email: TARGET, password: PASSWORD },
+    })
+    expect(token).toBeTruthy()
     return false
   } catch (e) {
-    return /lock/i.test(String((e as Error).name) + String((e as Error).message))
+    if (/lock/i.test(String((e as Error).name) + String((e as Error).message))) return true
+    throw e
   }
 }
 

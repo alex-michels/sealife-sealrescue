@@ -199,7 +199,17 @@ Run score ≤494500 (API cap 500000); сортировка по score и created
 `auth.useAPIKey: true` — у агентов свой API-ключ на аккаунт). `role` (admin/editor/translator/viewer/agent),
 `email`, `displayName`. **Доступ:** create/update/delete `isAdmin`; **read — только себя, КРОМЕ `admin`**
 (видит всех) — не «себя/staff» в широком смысле: editor/translator/viewer/agent не видят чужие записи
-`users` вообще (least-privilege на список email/API-ключей). Публичных user-аккаунтов нет (вне MVP).
+`users` вообще (least-privilege на список email). Публичных user-аккаунтов нет (вне MVP).
+
+**API-ключ** (Payload ≥3.90, **SEC-09**) не читается никем — ни admin, ни владельцем, ни через
+REST/GraphQL/local API, ни в админке: он виден один раз, в момент генерации; в БД лежит
+зашифрованным (`api_key`) + HMAC-индекс для входа (`api_key_index`). Наружу отдаётся только
+виртуальный `hasAPIKey`. Выдать/перевыпустить ключ может только admin (`update` = `isAdmin`), сам
+агент — нет. `useAPIKey.reveal` сознательно не включён. Закреплено `tests/int/users-credentials.int.spec.ts`.
+
+**Пароли** — PBKDF2-SHA256: новые хеши `pbkdf2-sha256-v1:…` (600 000 итераций); хеши Payload
+≤3.89 (25 000 итераций, без префикса) принимаются и перехешируются при первом успешном входе.
+`resetPasswordRequestedAt` — служебное поле Payload 3.90 (троттлинг forgot-password).
 
 ## Матрица доступа (read · create · update · delete)
 
@@ -230,6 +240,8 @@ Run score ≤494500 (API cap 500000); сортировка по score и created
 
 M2-T11: агенты создают Sources с trustLevel=0; URL/type/trust существующего источника меняют только editor/admin. M2-T12/T13: applied ставится только через транзакционный apply; applied-предложения неизменяемы.
 ⁴ плюс `unlock` (снять блокировку после неудачных входов) — тоже только **admin** (**SEC-08**). По
-умолчанию у Payload там `Boolean(user)`, то есть любой вошедший — включая `agent` с API-ключом — мог
-сбросить блокировку чужого аккаунта и обнулить защиту от перебора пароля (Dependabot #54,
-GHSA-jg8r-5jh2-v2xj; патча у Payload нет). Закреплено `tests/int/users-unlock.int.spec.ts`.
+умолчанию у Payload там «любой вошедший пользователь admin-коллекции» (до 3.90 — `Boolean(user)`), а
+у нас в ней все роли, то есть любой вошедший — включая `agent` с API-ключом — мог сбросить
+блокировку чужого аккаунта и обнулить защиту от перебора пароля (Dependabot #54,
+GHSA-jg8r-5jh2-v2xj; патча у Payload нет и в 3.90.2). Закреплено `tests/int/users-unlock.int.spec.ts`.
+С 3.90 блокировку снимает и успешный сброс пароля по токену из письма.
