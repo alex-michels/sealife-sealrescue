@@ -126,10 +126,17 @@ int-тесты используют dev-БД. Целевой `rescue-schema-repa
 проверяется отдельно, с тем же запретом push. У миграционного SQL свои `BEGIN`/`COMMIT`, поэтому для `psql`
 нужен `ON_ERROR_STOP=1`, **без** `--single-transaction`.
 
+С Payload 3.90 (**SEC-09**) у копии БД, снятой до апгрейда, нет колонки
+`users.reset_password_requested_at`, а push выключен — любой Payload CRUD падает на
+«column … does not exist» раньше, чем дойдёт до rescue-логики. Поэтому до тестов прогнать
+аддитивную идемпотентную [SEC-09-миграцию](migrations/SEC-09-users-reset-password-requested-at.sql):
+она трогает только `users` и классификацию rescue-схемы не меняет.
+
 ```powershell
 # Переменные подключения заполнить локально, без записи секретов в командную историю.
 $env:PAYLOAD_MIGRATING = 'true'
 psql "$env:DATABASE_URI_TEST" --set ON_ERROR_STOP=1 --file docs/migrations/M2-T16-rescue-center-schema-repair.sql
+psql "$env:DATABASE_URI_TEST" --single-transaction --set ON_ERROR_STOP=1 --file docs/migrations/SEC-09-users-reset-password-requested-at.sql
 npm run test:int -- tests/int/rescue-schema-repair.int.spec.ts
 Remove-Item Env:PAYLOAD_MIGRATING
 ```
@@ -244,8 +251,15 @@ npm run test:e2e      # затронутые спеки, если менял e2e
   `seed-guard.int.spec.ts` — CR-03: опубликованная человеком запись переживает
   повторный сид, `force` осознанно возвращает демо-эталон; `media-upload.int.spec.ts` — CR-04: загрузка пишется в настроенный `staticDir` (и он
   не внутри `releases/`), производные размеры генерируются, оригинал пережат в webp без EXIF.
-  ⚠️ Единственная спека с `// @vitest-environment node`: проверка типа файла в Payload идёт через
+  ⚠️ Спека с `// @vitest-environment node`: проверка типа файла в Payload идёт через
   `file-type`, а тот падает в jsdom — артефакт среды, в реальном Node загрузка работает;
+  `users-unlock.int.spec.ts` — SEC-08: снять чужую блокировку может только admin;
+  `users-credentials.int.spec.ts` — SEC-09: хеши паролей Payload ≤3.89 пускают и перехешируются,
+  API-ключ агента аутентифицирует, но не читается никем, а SQL для БД без push создаёт колонку
+  `reset_password_requested_at` ровно такой, как push. ⚠️ Обе — тоже на
+  `// @vitest-environment node`: успешный `payload.login` подписывает JWT через `jose`, а тот в
+  jsdom падает («payload must be an instance of Uint8Array»). Любая новая int-спека, которой нужен
+  успешный вход, — туда же, иначе ошибка входа легко принимается за ожидаемый отказ;
   `provenance.int.spec.ts` — поля шкалы провенанса на живом Payload, включая локализацию
   флагов и `isEditorField` на «человек проверил» (EU-11); `locale-fallback.int.spec.ts` —
   контракт CR-01: непереведённый документ не виден в чужой локали, плюс ЗАПИСЬ измеренного

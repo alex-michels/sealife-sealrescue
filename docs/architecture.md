@@ -20,7 +20,7 @@ sealrescue.info ▶│   ├─ (frontend)  app/(frontend)/[site]/[locale]/…  
                  └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Стек: Next 16 + React 19 · Payload 3.85 (lexical rich text) · Postgres · Tailwind v4 + CSS-переменные ·
+Стек: Next 16 + React 19 · Payload 3.90 (lexical rich text) · Postgres · Tailwind v4 + CSS-переменные ·
 self-host шрифты (`next/font`) · аналитика Plausible (cookieless, только после opt-in).
 
 ## Жизненный цикл запроса (публичный фронтенд)

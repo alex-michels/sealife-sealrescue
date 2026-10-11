@@ -963,15 +963,6 @@ players (auth: true)
   QA-13 (2026-07-02): inline `Media` в `payload.config.ts` получил `create/update/delete: isEditor`
   (до этого Payload-дефолт пускал ЛЮБОГО залогиненного, включая agent); мёртвый
   `src/collections/Media.ts` удалён; матрица в `data-model.md` обновлена и закреплена тестом.
-
-### EU — Compliance (GDPR / TDDDG / DDG / BFSG / DSA / AI Act) — см. `COMPLIANCE_EU_DE.md`
-
-* [ ] **EU-01** Аудит собираемых персональных данных (цель — почти ноль). *[S]*
-* [ ] **EU-02** Процедура «право на удаление/доступ». *[S]*
-* [x] **EU-03** Маркировка AI-контента видна пользователю (база; полная схема — EU-11). *[S]*
-  — **аудит 2026-07-26:** базовая пользовательская метка есть и рендерится (`aiGenerated` + `AiBadge` на
-  детали контента и вида). Осталось: тест (в tests/ ноль упоминаний) и покрытие rescue-данных.
-  — **закрыто 2026-07-26 (PR EU-11 + biology):** метка покрыта тестом
 * [x] **SEC-08** Зачистка Dependabot-алертов + блокировка `unlock` в `users`. *[S]*
   — **сделано 2026-10-11.** Открытых алертов было **42 по 14 пакетам**, из них 6 critical
   (`next`: RCE в `next/og` ImageResponse и в Image Optimization API). Девять dependabot-PR покрывали
@@ -993,6 +984,63 @@ players (auth: true)
   ДО правки: без правила agent/viewer/translator/editor снимали блокировку админа все четверо.
   Сам алерт #54 после мержа останется открытым (у GitHub нет версии-фикса) — закрывать вручную
   как mitigated со ссылкой на это правило.
+* [x] **SEC-09** Payload 3.85.1 → 3.90.2 — весь стек `@payloadcms/*` одной версией. *[S]*
+  — **сделано 2026-10-11.** Сразу после мержа SEC-08 Dependabot выложил новую пачку адвайзори
+  Payload (опубликованы 2026-10-06/07) — **22 алерта**: 19 × `payload`, из них 4 critical
+  (SQL-инъекция в Postgres-адаптере <3.88; обход field-access на auth-коллекциях,
+  несанкционированный update документов и обработка поля auth-токена <3.90) и high (RCE через
+  first-register, раскрытие API-ключей обычным чтением документа, обход санитизации SVG, XML с
+  same-origin JS, валидация жизненного цикла загрузки, ReDoS в multipart и др.); 1 × `@payloadcms/next`
+  (open redirect <3.88); `fast-copy`; `braces`. Payload требует совпадающих версий всех пакетов —
+  поэтому dependabot-PR #131 (только `payload`) закрыт как superseded, а `payload`, `db-postgres`,
+  `next`, `richtext-lexical`, `ui` подняты вместе.
+  Lockfile проверен на скачки от `legacy-peer-deps`: единственный 0.x-скачок — `lexical`/`@lexical/*`
+  0.41 → 0.50; его пинит сам `@payloadcms/richtext-lexical` (заявлен в release notes 3.90.0), своих
+  lexical-фич у нас нет. `image-size` из Payload ушёл (3.87 заменил его на `image-dimensions`) —
+  override из SEC-08 удалён как мёртвый. `fast-copy` 3.0.2 → 3.1.0 — в пределах `^3.0.2` у
+  `pino-pretty`, без override.
+  Что поменялось для нас:
+  - **Пароли.** Новые хеши — `pbkdf2-sha256-v1:…` (600 000 итераций вместо 25 000, GHSA-q6mq-ch85-c8mm).
+    Старые хеши проверяются как раньше и перехешируются при первом успешном входе — staff доступ
+    не теряет. Проверено на хешах, записанных именно 3.85.1 (вход → перехеш → повторный вход), и
+    закреплено `tests/int/users-credentials.int.spec.ts`. Аккаунты, в которые паролем не входят
+    (агенты ходят по API-ключу), остаются на старом хеше до смены пароля.
+  - **API-ключи** больше не читаются никем — ни admin, ни самим агентом, ни через REST/GraphQL/local
+    API, ни в админке (GHSA-238x-w2j9-gwwr): ключ виден один раз, при генерации. Потерян — выпустить
+    новый, это и есть ротация (см. `docs/agents/researcher-runner.md`). Ключи, выданные до апгрейда,
+    продолжают работать (проверено). Опцию `useAPIKey: { reveal: true }` сознательно НЕ включаем.
+  - **Схема:** новая nullable-колонка `users.reset_password_requested_at` (троттлинг forgot-password).
+    Без неё новый код не читает `users` — вход ломается, поэтому колонка должна появиться ДО старта
+    3.90. Push её добавляет без вопросов (CI, шаг «Sync DB schema» в `deploy.yml`, `npm run dev`);
+    БД с выключенным push (`PAYLOAD_MIGRATING=true`) — `docs/migrations/SEC-09-users-reset-password-requested-at.sql`
+    (идемпотентно; совпадение с push закреплено тестом). Остальная схема — включая все rescue-таблицы
+    M2-T16 — побайтно та же, что у 3.85.1 (сверено по `pg_dump -s`).
+  - **M2-T16 перепроверен на 3.90.2:** SQL-ремонт признаёт схему 3.90.2 «уже отремонтированной»
+    (no-op, дважды); `rescue-schema-repair`/`proposal-review`/`rescue-draft-migration` зелёные при
+    выключенном push. Но на копии БД старше апгрейда без SEC-09-колонки любой Payload CRUD падает —
+    шаг добавлен в процедуру (`docs/migrations/M2-T16-verification.md`, `local-development.md`).
+  - Сброс пароля теперь снимает блокировку, forgot-password троттлится (15 с). Правило
+    `unlock: isAdmin` из SEC-08 **остаётся**: дефолт 3.90.2 — «любой пользователь admin-коллекции»,
+    а у нас в ней все роли, включая `agent`.
+  - Не затронуто: jobs/`schedulePublish`, polymorphic joins, client uploads, кастомные lexical-фичи у
+    нас не используются; `media` принимает только `image/*`, отдельных XML-сценариев нет.
+  - Попутно: int-спеки со входом (`users-unlock`, `users-credentials`) переведены на
+    `// @vitest-environment node` — в jsdom `jose` не подписывает JWT, и проверка «владелец снова
+    входит» в `users-unlock` (SEC-08) проходила вхолостую: `isLocked()` считал любую ошибку входа
+    «не заблокирован». Теперь он пробрасывает всё, кроме блокировки.
+  `braces` ≤3.0.3 патча не имеет вовсе. Тянут его только `@payloadcms/next` → `sass@1.77.4` →
+  `chokidar` (режим `sass --watch` в CLI, globbing выключен — `disableGlobbing: true`) и
+  `eslint-config-next` → `fast-glob` → `micromatch` (lint, dev): паттерны — наши собственные, внешнего
+  ввода нет. Алерт закрыт как tolerable risk с этим обоснованием; вернуться, когда выйдет патч.
+
+### EU — Compliance (GDPR / TDDDG / DDG / BFSG / DSA / AI Act) — см. `COMPLIANCE_EU_DE.md`
+
+* [ ] **EU-01** Аудит собираемых персональных данных (цель — почти ноль). *[S]*
+* [ ] **EU-02** Процедура «право на удаление/доступ». *[S]*
+* [x] **EU-03** Маркировка AI-контента видна пользователю (база; полная схема — EU-11). *[S]*
+  — **аудит 2026-07-26:** базовая пользовательская метка есть и рендерится (`aiGenerated` + `AiBadge` на
+  детали контента и вида). Осталось: тест (в tests/ ноль упоминаний) и покрытие rescue-данных.
+  — **закрыто 2026-07-26 (PR EU-11 + biology):** метка покрыта тестом
   (`tests/unit/ai-badge.unit.spec.ts`, 11 кейсов) и переведена на полную шкалу — база выполнена.
   Rescue-данные остаются за EU-11 / M2-T02, там их место.
 * [~] **EU-04** **WCAG 2.2 AA:** контраст, alt, клавиатура, семантика, видимый focus, target size, reduced motion. *[M]* → DESIGN

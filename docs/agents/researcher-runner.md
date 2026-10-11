@@ -10,9 +10,14 @@ abstention with zero proposals. Neither this runner nor its client applies or pu
 ## Manual operation
 
 An administrator creates a dedicated internal Users account with role `agent` and enables its
-API key in Payload. Keep the key in the worker's environment, never in arguments or committed
-files. Rotate it by replacing the key in the account and worker environment; disable the account's
-API key to revoke access. Staff account email is internal authentication data, not public-user input.
+API key in Payload. **Copy the key when it is generated:** since Payload 3.90 (SEC-09) an API key is
+shown only once and cannot be read back afterwards by anyone, including admins (REST, GraphQL, local
+API and the admin UI all omit it). Keep the key in the worker's environment, never in arguments or
+committed files. A lost key is not recoverable — generate a new one, which is also how you rotate:
+replace the key in the account and the worker environment; disable the account's API key to revoke
+access. Only an admin can issue or replace a key; the agent account cannot change its own. Keys
+issued before the upgrade keep working. Staff account email is internal authentication data, not
+public-user input.
 
 Set `AGENT_CMS_URL` to the CMS origin and `RESEARCHER_API_KEY` to that account's key. HTTPS is
 required except for loopback development. Redirects are rejected, so credentials stay on the

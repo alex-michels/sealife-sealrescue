@@ -48,6 +48,13 @@ Payload's generated-name collision when enabling drafts on a collection that alr
 Classify the existing database before choosing a migration. The migration files are not an
 ordered baseline chain and must not be applied blindly to every environment.
 
+Independently of the rescue classification: Payload ≥3.90 (SEC-09) reads
+`users.reset_password_requested_at` in every `users` query. Wherever schema push is disabled
+(`PAYLOAD_MIGRATING=true` rehearsals, migrations-only environments), apply the additive, idempotent
+[SEC-09 migration](../migrations/SEC-09-users-reset-password-requested-at.sql) before Payload
+starts. Otherwise login and every Payload CRUD check fail. The 3.90.2 push leaves rescue tables
+unchanged (verified in the [M2-T16 protocol](../migrations/M2-T16-verification.md)).
+
 | Existing rescue schema | Action |
 | --- | --- |
 | True pre-M2-T13 schema: operational enum under its old name, no draft/version tables | Use the legacy M2-T13 migration below, once, after backup and review. |
