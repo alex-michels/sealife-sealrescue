@@ -56,3 +56,6 @@ node_modules/
 # Source art for game backdrops/covers — kept local (large, and would ship from public/).
 # The optimized AVIF/WebP/JPEG outputs in assets/ are committed; re-encode via tools/encode-image.mjs.
 public/games/seal-hunt-v1/**/*-src.png
+
+# Local database backups / rehearsal artifacts may contain staff data.
+/.db-work/

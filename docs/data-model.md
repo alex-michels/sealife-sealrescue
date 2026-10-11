@@ -89,7 +89,22 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 
 ### `rescue-centers` — справочник центров
 
-**M2-T13:** native drafts/versions включены. Публичное чтение — только published; staff читает drafts. `status` описывает состояние центра, `_status` — draft/published; их PostgreSQL enum-разделение задано явно. Для существующей БД обязательна [миграция перед rollout](agents/proposal-review.md#database-rollout), сохраняющая прежнюю публичность и данные. Применение agent-proposal создаёт только draft и сбрасывает его проверочные отметки; Publish делает человек.
+**M2-T13:** в схеме коллекции включены native drafts/versions. Публичное чтение — только published;
+staff читает drafts. `status` описывает состояние центра (PostgreSQL
+`rescue_center_operating_status`), `_status` — draft/published (отдельный
+`enum_rescue_centers_status`). Применение agent-proposal создаёт только draft и сбрасывает его
+проверочные отметки; Publish делает человек.
+
+**M2-T16, аудит 2026-10-11:** dev-БД расходилась с этой схемой: не было основной `_status`,
+`status` использовал старый enum, обязательные поля ещё имели `NOT NULL`, а существующие таблицы
+версий не имели нужных FK/индексов. Все таблицы центров и их версий были пусты. Подготовлена
+[защищённая миграция пустого промежуточного состояния](migrations/M2-T16-rescue-center-schema-repair.sql);
+проверена на полной локальной копии (71 таблица, 16 тестов) и применена к dev Neon EU.
+Контрольные суммы всех данных dev остались неизменными; prod не затронут. Эта миграция не публикует
+и не создаёт записи, а при
+неоднозначных данных останавливается. Старую M2-T13 применять только к настоящей legacy-схеме;
+[выбор миграции и rollout](agents/proposal-review.md#database-rollout),
+[результат проверки](migrations/M2-T16-verification.md). Baseline-цепочка миграций остаётся M0-T02.
 
 Публичный справочник. `name` (**не** локализуется — имя центра не переводим, правило глоссария),
 `slug` (unique), `country`*/`region`, `website`, `email`/`phone`, `address`, `location` (point
@@ -99,7 +114,8 @@ Payload **global** (не коллекция): массив `overrides` — `sect
 `active`/`unconfirmed`/`link_broken`/`needs_check` — код использует `unconfirmed`, а не `unverified`
 из CLAUDE.md §7; терминология не 1:1, свериться при следующей правке схемы), `verificationScore`
 (0–1), `lastCheckedAt`/`verifiedByAgentAt`/`verifiedByHumanAt` (даты, рендерятся в «штампе проверки»),
-`sources[]` (→`sources`). **Доступ:** read публичный; create/update/**delete** — `isEditor` (агент НЕ
+`sources[]` (→`sources`). **Доступ:** read `readPublishedOrStaff` (публично — published,
+staff — drafts); create/update/**delete** — `isEditor` (агент НЕ
 пишет напрямую; предлагает через `agent-proposals`). Инвариант: не перетирать verified-контакты слабым
 источником без ревью.
 > ⚠️ **Фронтенд пока не читает эту коллекцию.** `rescue-centers/page.tsx` и `[slug]/page.tsx`

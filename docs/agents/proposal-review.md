@@ -45,7 +45,18 @@ are retained alongside newly cited sources. The published record's verification 
 The operational `status` and publication `_status` have distinct PostgreSQL enum names. This avoids
 Payload's generated-name collision when enabling drafts on a collection that already has `status`.
 
-For an **existing pre-M2-T13 database**, stop writes, take a backup, review and run
+Classify the existing database before choosing a migration. The migration files are not an
+ordered baseline chain and must not be applied blindly to every environment.
+
+| Existing rescue schema | Action |
+| --- | --- |
+| True pre-M2-T13 schema: operational enum under its old name, no draft/version tables | Use the legacy M2-T13 migration below, once, after backup and review. |
+| Empty partial M2-T13 schema: canonical operational enum and version tables exist, but main `_status`, version foreign keys/indexes and draft-compatible nullability are missing | Use the guarded M2-T16 repair below. |
+| Already repaired M2-T16 schema | Re-running the M2-T16 repair preserves all records and publication states. |
+| Nonempty partial schema or an unexpected object definition | Stop; review the actual data/schema and prepare a separate migration. Do not infer publication state. |
+| New empty database without the existing application schema | Provision a reviewed baseline; do not run either incremental rescue migration as a baseline. |
+
+For a **true pre-M2-T13 database**, stop writes, take a backup, review and run
 [`M2-T13-rescue-center-drafts.sql`](../migrations/M2-T13-rescue-center-drafts.sql) **once**, before
 starting the new code:
 
@@ -60,9 +71,46 @@ rollback requires the reviewed backup/old release. New empty databases use Paylo
 do **not** run this incremental migration. Do not first push the new schema onto an existing database:
 that would lose the migration's distinction between legacy public records and newly created drafts.
 
-The repository has no established baseline Payload migration chain (M0-T02); this is an explicit SQL
-upgrade for the existing schema, not a replacement for that infrastructure. No production migration,
-publication or deployment is performed by the PR.
+### Empty partial schema repair (M2-T16)
+
+The development database audit on **2026-10-11** found the partial state described above, with no
+centre records, localized descriptions, array/relationship rows or versions. The old operational
+`enum_rescue_centers_status` still typed the main `status` field; the canonical
+`rescue_center_operating_status` already existed for versions. Running the legacy M2-T13 migration
+in this state would fail and would not safely classify any subsequently added records.
+
+[`M2-T16-rescue-center-schema-repair.sql`](../migrations/M2-T16-rescue-center-schema-repair.sql)
+repairs only that empty partial state. It validates object definitions, locks the rescue tables,
+sets lock/statement timeouts and performs the repair in one transaction. It moves the main operational
+field to the canonical enum, creates the separate draft/publication enum and `_status` with a
+`draft` default, relaxes field nullability for incomplete drafts, and restores missing version
+foreign keys and indexes. It uses no `CASCADE` drop, record backfill or publication. An ambiguous
+nonempty partial schema or unexpected dependency/object definition aborts before the repair commits.
+A repeat run against the repaired schema leaves data and publication states intact.
+
+Run it first against a **full restored copy**, with Payload schema push disabled. The SQL contains
+its own `BEGIN`/`COMMIT`, so do **not** add `--single-transaction`:
+
+```sh
+psql "$DATABASE_URI_TEST" --set ON_ERROR_STOP=1 --file docs/migrations/M2-T16-rescue-center-schema-repair.sql
+```
+
+The rehearsal passed on a full **local Docker copy** (PostgreSQL 18.6 + PostGIS 3.6.4, localhost only),
+restored from a read-only dump of the Neon EU source. Temporary dumps/credentials are excluded
+from Git. The SQL test is `tests/int/rescue-schema-repair.int.spec.ts` and requires an explicit
+`DATABASE_URI_TEST`; it uses `pg` and rolls its isolated schemas back. Payload CRUD is verified
+separately with push disabled.
+
+See the [M2-T16 verification runbook](../migrations/M2-T16-verification.md) for copy isolation,
+pre/post checks and the recorded rehearsal result. All 71 table data fingerprints matched before
+repair; 9 repair tests and 7 Payload/legacy tests passed with schema push disabled. After rehearsal,
+the same reviewed SQL repaired the development Neon EU database. All 71 data fingerprints stayed
+unchanged; 11 rescue foreign keys and 32 non-primary indexes were verified. Production was not touched.
+There is no automatic destructive down migration: use the reviewed pre-repair backup/release.
+
+The repository still has no established baseline Payload migration chain (M0-T02). These explicit
+SQL upgrades do not replace that infrastructure. Production migration, publication and deployment
+require their own rollout.
 
 Tests cover API authorization, malformed input, stale revisions, draft visibility, audit history,
 re-review after editing, concurrent/idempotent application, rollback after a forced second-write failure,
